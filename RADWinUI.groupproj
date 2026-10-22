@@ -1,0 +1,66 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!--
+      Everything RADWinUI needs in the 64-bit IDE, built from source.
+      Open this group, Build All, then right-click RADWinUIWizard.bpl > Install. The classic 32-bit IDE
+      uses RADWinUI32.groupproj. Every project has one platform (the tools are Win64), so Build All
+      needs no platform choice.
+    -->
+    <PropertyGroup>
+        <ProjectGuid>{56B1CA99-4360-49B6-8138-65951E8C7AC1}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="tools\XamlCodeGen\XamlCodeGen.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="src\IDE\Preview\RADWinUIPreview.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="packages\RADWinUIWizard.dproj">
+            <Dependencies>tools\XamlCodeGen\XamlCodeGen.dproj;src\IDE\Preview\RADWinUIPreview.dproj</Dependencies>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="XamlCodeGen">
+        <MSBuild Projects="tools\XamlCodeGen\XamlCodeGen.dproj"/>
+    </Target>
+    <Target Name="XamlCodeGen:Clean">
+        <MSBuild Projects="tools\XamlCodeGen\XamlCodeGen.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="XamlCodeGen:Make">
+        <MSBuild Projects="tools\XamlCodeGen\XamlCodeGen.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="RADWinUIPreview">
+        <MSBuild Projects="src\IDE\Preview\RADWinUIPreview.dproj"/>
+    </Target>
+    <Target Name="RADWinUIPreview:Clean">
+        <MSBuild Projects="src\IDE\Preview\RADWinUIPreview.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="RADWinUIPreview:Make">
+        <MSBuild Projects="src\IDE\Preview\RADWinUIPreview.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="RADWinUIWizard" DependsOnTargets="XamlCodeGen;RADWinUIPreview">
+        <MSBuild Projects="packages\RADWinUIWizard.dproj"/>
+    </Target>
+    <Target Name="RADWinUIWizard:Clean" DependsOnTargets="XamlCodeGen:Clean;RADWinUIPreview:Clean">
+        <MSBuild Projects="packages\RADWinUIWizard.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="RADWinUIWizard:Make" DependsOnTargets="XamlCodeGen:Make;RADWinUIPreview:Make">
+        <MSBuild Projects="packages\RADWinUIWizard.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="XamlCodeGen;RADWinUIPreview;RADWinUIWizard"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="XamlCodeGen:Clean;RADWinUIPreview:Clean;RADWinUIWizard:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="XamlCodeGen:Make;RADWinUIPreview:Make;RADWinUIWizard:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

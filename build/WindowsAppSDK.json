@@ -1,0 +1,12 @@
+{
+  "release": "2.5.1",
+  "majorMinor": "0x00020005",
+  "runtimeVersion": "2.5.1.0",
+  "packages": {
+    "Microsoft.WindowsAppSDK.Foundation": "2.3.12",
+    "Microsoft.WindowsAppSDK.WinUI": "2.3.9",
+    "Microsoft.WindowsAppSDK.InteractiveExperiences": "2.1.9",
+    "Microsoft.WindowsAppSDK.Runtime": "2.5.1",
+    "Microsoft.Web.WebView2": "1.0.3719.77"
+  }
+}

@@ -1,0 +1,20 @@
+* text=auto
+
+*.pas    text eol=crlf
+*.dpr    text eol=crlf
+*.dpk    text eol=crlf
+*.dproj  text eol=crlf
+*.groupproj text eol=crlf
+*.inc    text eol=crlf
+*.dfm    text eol=crlf
+*.xaml   text eol=crlf
+*.ps1    text eol=crlf
+*.cmd    text eol=crlf
+*.md     text eol=crlf
+*.json   text eol=crlf
+*.manifest text eol=crlf
+
+*.res    binary
+*.ico    binary
+*.png    binary
+*.winmd  binary

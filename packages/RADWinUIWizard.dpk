@@ -1,0 +1,55 @@
+package RADWinUIWizard;
+
+{ Design-time package for the 64-bit IDE: File > New > RADWinUI Application and
+  RADWinUI Window, and Tools > RADWinUI Preview and Docked Preview.
+  RADWinUIWizard32.dpk holds the same units for the classic 32-bit IDE. Each package targets
+  only its own platform, because the IDE offers Install only when a design package's
+  platform matches the IDE. Test-WizardPackage.ps1 checks that both list the same units.
+  The package name must not be the name of a unit it contains, or the IDE calls that
+  unit's Register twice. The .bpl is written to build\packages\<platform>, where the
+  wizard finds the RADWinUI folder. }
+
+{$ALIGN 8}
+{$ASSERTIONS ON}
+{$BOOLEVAL OFF}
+{$DEBUGINFO OFF}
+{$EXTENDEDSYNTAX ON}
+{$IMPORTEDDATA ON}
+{$IOCHECKS ON}
+{$LOCALSYMBOLS OFF}
+{$LONGSTRINGS ON}
+{$OPENSTRINGS ON}
+{$OPTIMIZATION ON}
+{$OVERFLOWCHECKS OFF}
+{$RANGECHECKS OFF}
+{$REFERENCEINFO OFF}
+{$SAFEDIVIDE OFF}
+{$STACKFRAMES OFF}
+{$TYPEDADDRESS OFF}
+{$VARSTRINGCHECKS ON}
+{$WRITEABLECONST OFF}
+{$MINENUMSIZE 1}
+{$IMAGEBASE $400000}
+{$DESCRIPTION 'RADWinUI: File > New RADWinUI Application, Tools > RADWinUI Preview and Docked Preview'}
+{$DESIGNONLY}
+{$IMPLICITBUILD OFF}
+
+requires
+  rtl,
+  vcl,
+  designide;
+
+contains
+  RADWinUI.Wizard.Templates in '..\src\IDE\Wizard\RADWinUI.Wizard.Templates.pas',
+  RADWinUI.Wizard.Registration in '..\src\IDE\Wizard\RADWinUI.Wizard.Registration.pas',
+  RADWinUI.Preview.Client in '..\src\IDE\Preview\RADWinUI.Preview.Client.pas',
+  RADWinUI.Preview.Menu in '..\src\IDE\Preview\RADWinUI.Preview.Menu.pas',
+  RADWinUI.Designer.XamlEdit in '..\src\IDE\Designer\RADWinUI.Designer.XamlEdit.pas',
+  RADWinUI.Designer.Model in '..\src\IDE\Designer\RADWinUI.Designer.Model.pas',
+  RADWinUI.Designer.PaletteIcons in '..\src\IDE\Designer\RADWinUI.Designer.PaletteIcons.pas',
+  RADWinUI.Designer.Palette in '..\src\IDE\Designer\RADWinUI.Designer.Palette.pas',
+  RADWinUI.Designer.ObjectInspector in '..\src\IDE\Designer\RADWinUI.Designer.ObjectInspector.pas',
+  RADWinUI.Designer.Structure in '..\src\IDE\Designer\RADWinUI.Designer.Structure.pas',
+  RADWinUI.Preview.Command in '..\src\IDE\Preview\RADWinUI.Preview.Command.pas';
+
+end.

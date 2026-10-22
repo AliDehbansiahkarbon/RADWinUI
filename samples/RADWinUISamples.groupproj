@@ -1,0 +1,50 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!-- The demos, built from source. Build RADWinUI.groupproj (or RADWinUI32.groupproj) first: their
+         pre-build event runs bin\XamlCodeGen.exe. -->
+    <PropertyGroup>
+        <ProjectGuid>{51C6AF69-A754-4F86-A11D-ADBF4C2F4A26}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Gallery\Gallery.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Luma\Luma.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Gallery">
+        <MSBuild Projects="Gallery\Gallery.dproj"/>
+    </Target>
+    <Target Name="Gallery:Clean">
+        <MSBuild Projects="Gallery\Gallery.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Gallery:Make">
+        <MSBuild Projects="Gallery\Gallery.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Luma">
+        <MSBuild Projects="Luma\Luma.dproj"/>
+    </Target>
+    <Target Name="Luma:Clean">
+        <MSBuild Projects="Luma\Luma.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Luma:Make">
+        <MSBuild Projects="Luma\Luma.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Gallery;Luma"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Gallery:Clean;Luma:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Gallery:Make;Luma:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

@@ -1,0 +1,12 @@
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="TGreetWindow"
+    Title="Greeter" Width="480" Height="320" MinWidth="360" MinHeight="240"
+    Backdrop="Mica" WindowStartupLocation="CenterScreen">
+    <StackPanel Spacing="12" Padding="32">
+        <TextBox x:Name="NameBox" Header="Name" PlaceholderText="Type your name"/>
+        <Button x:Name="GreetButton" Content="Greet"/>
+        <TextBlock x:Name="Greeting" FontSize="24"/>
+    </StackPanel>
+</Window>

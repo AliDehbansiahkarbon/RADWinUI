@@ -1,0 +1,35 @@
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    x:Class="TContactsWindow"
+    Title="Contacts" Width="460" Height="540">
+    <StackPanel Spacing="12" Padding="24">
+        <ListView x:Name="ContactList" Height="300">
+            <!-- Sample rows appear in Design only; Pascal supplies real contacts at run time. -->
+            <d:ListView.Items>
+                <x:String>Alex Morgan</x:String>
+                <x:String>Bea Chen</x:String>
+                <x:String>Cyrus Patel</x:String>
+            </d:ListView.Items>
+            <ListView.ItemTemplate>
+                <DataTemplate x:DataType="TContact">
+                    <StackPanel Padding="0,6">
+                        <TextBlock Text="{Binding Name}" d:Text="{Binding}" FontSize="16"/>
+                        <TextBlock Text="{Binding Email}" d:Text="contact@example.com" Opacity="0.7"/>
+                    </StackPanel>
+                </DataTemplate>
+            </ListView.ItemTemplate>
+        </ListView>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBox x:Name="NameBox" PlaceholderText="Name" Width="180"/>
+            <Button Content="Add" Click="AddClick"/>
+            <Button Content="Rename" Click="RenameClick"/>
+            <Button Content="Remove" Click="RemoveClick"/>
+        </StackPanel>
+        <!-- Set from code; d:Text shows in the live preview only -->
+        <TextBlock x:Name="Status" d:Text="3 contacts"/>
+    </StackPanel>
+</Window>

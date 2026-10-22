@@ -1,0 +1,110 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <ProjectGuid>{AC6B88CF-7B61-4052-B938-97A08A7719E5}</ProjectGuid>
+        <MainSource>RADWinUIWizard32.dpk</MainSource>
+        <ProjectVersion>20.4</ProjectVersion>
+        <FrameworkType>VCL</FrameworkType>
+        <Base>True</Base>
+        <Config Condition="'$(Config)'==''">Release</Config>
+        <Platform Condition="'$(Platform)'==''">Win32</Platform>
+        <ProjectName Condition="'$(ProjectName)'==''">RADWinUIWizard32</ProjectName>
+        <TargetedPlatforms>1</TargetedPlatforms>
+        <AppType>Package</AppType>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Base)'=='true') or '$(Base_Win32)'!=''">
+        <Base_Win32>true</Base_Win32>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Base)'=='true') or '$(Base_Win64)'!=''">
+        <Base_Win64>true</Base_Win64>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Debug' or '$(Cfg_1)'!=''">
+        <Cfg_1>true</Cfg_1>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
+        <Cfg_2>true</Cfg_2>
+        <CfgParent>Base</CfgParent>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Base)'!=''">
+        <SanitizedProjectName>RADWinUIWizard32</SanitizedProjectName>
+        <GenDll>true</GenDll>
+        <GenPackage>true</GenPackage>
+        <DesignOnlyPackage>true</DesignOnlyPackage>
+        <DCC_Description>RADWinUI (32-bit IDE): File &gt; New RADWinUI Application and RADWinUI Window</DCC_Description>
+        <DCC_ImageBase>00400000</DCC_ImageBase>
+        <DCC_Namespace>System;Winapi;System.Win;Vcl;$(DCC_Namespace)</DCC_Namespace>
+        <!-- The wizard finds the RADWinUI checkout from the .bpl folder: build\packages\<platform> -->
+        <DCC_BplOutput>..\build\packages\$(Platform)</DCC_BplOutput>
+        <DCC_DcpOutput>..\build\packages\$(Platform)</DCC_DcpOutput>
+        <DCC_DcuOutput>..\build\packages\$(Platform)\dcu</DCC_DcuOutput>
+        <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
+        <DCC_UNIT_PLATFORM>false</DCC_UNIT_PLATFORM>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1)'!=''">
+        <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
+        <DCC_Optimize>false</DCC_Optimize>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_2)'!=''">
+        <DCC_Define>RELEASE;$(DCC_Define)</DCC_Define>
+        <DCC_DebugInformation>0</DCC_DebugInformation>
+        <DCC_LocalDebugSymbols>false</DCC_LocalDebugSymbols>
+        <DCC_SymbolReferenceInfo>0</DCC_SymbolReferenceInfo>
+    </PropertyGroup>
+    <ItemGroup>
+        <DelphiCompile Include="$(MainSource)">
+            <MainSource>MainSource</MainSource>
+        </DelphiCompile>
+        <DCCReference Include="rtl.dcp"/>
+        <DCCReference Include="vcl.dcp"/>
+        <DCCReference Include="designide.dcp"/>
+        <DCCReference Include="..\src\IDE\Wizard\RADWinUI.Wizard.Templates.pas"/>
+        <DCCReference Include="..\src\IDE\Wizard\RADWinUI.Wizard.Registration.pas"/>
+        <DCCReference Include="..\src\IDE\Preview\RADWinUI.Preview.Client.pas"/>
+        <DCCReference Include="..\src\IDE\Preview\RADWinUI.Preview.Menu.pas"/>
+        <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.XamlEdit.pas"/>
+        <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Model.pas"/>
+        <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.PaletteIcons.pas"/>
+        <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Palette.pas"/>
+        <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.ObjectInspector.pas"/>
+        <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Structure.pas"/>
+        <DCCReference Include="..\src\IDE\Preview\RADWinUI.Preview.Command.pas"/>
+        <BuildConfiguration Include="Base">
+            <Key>Base</Key>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Debug">
+            <Key>Cfg_1</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+        <BuildConfiguration Include="Release">
+            <Key>Cfg_2</Key>
+            <CfgParent>Base</CfgParent>
+        </BuildConfiguration>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Delphi.Personality.12</Borland.Personality>
+        <Borland.ProjectType>Package</Borland.ProjectType>
+        <BorlandProject>
+            <Delphi.Personality>
+                <Source>
+                    <Source Name="MainSource">RADWinUIWizard32.dpk</Source>
+                </Source>
+            </Delphi.Personality>
+            <Platforms>
+                <Platform value="Win32">True</Platform>
+                <Platform value="Win64">False</Platform>
+            </Platforms>
+        </BorlandProject>
+        <ProjectFileVersion>12</ProjectFileVersion>
+    </ProjectExtensions>
+    <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>
+    <Import Project="$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj" Condition="Exists('$(APPDATA)\Embarcadero\$(BDSAPPDATABASEDIR)\$(PRODUCTVERSION)\UserTools.proj')"/>
+</Project>

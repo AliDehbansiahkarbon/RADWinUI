@@ -1,0 +1,65 @@
+# Delphi build output
+*.dcu
+*.exe
+*.dll
+*.bpl
+*.bpi
+*.dcp
+*.so
+*.apk
+*.drc
+*.map
+*.dres
+*.rsm
+*.tds
+*.lib
+*.a
+*.o
+*.ocx
+Win32/
+Win64/
+Win64x/
+Debug/
+Release/
+bin/
+dcu/
+
+# Delphi IDE and local files
+__history/
+__recovery/
+*.~*
+*.local
+*.identcache
+*.projdata
+*.tvsconfig
+*.dsk
+*.dsv
+*.stat
+*.cbk
+*.res.bak
+ModelSupport_*/
+
+# Downloaded third-party packages (fetched by scripts/Get-WindowsAppSDK.ps1)
+third_party/
+build/cppwinrt/
+build/wizard-test/
+build/preview-test/
+build/deploy/
+build/logs/
+build/temp/
+build/release/
+
+# Tools and OS
+.vs/
+.vscode/
+Thumbs.db
+Desktop.ini
+*.log
+
+# Resource file MSBuild writes for the wizard package
+packages/*.res
+samples/Luma/Luma.res
+samples/Gallery/Gallery.res
+src/IDE/Preview/RADWinUIPreview.res
+tests/Designer/XamlEditTest.res
+tools/XamlCodeGen/XamlCodeGen.res

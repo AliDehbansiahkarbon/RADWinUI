@@ -1,0 +1,19 @@
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="TListWindow"
+    Title="List demo" Width="420" Height="520">
+    <StackPanel Spacing="12" Padding="24">
+        <ListView x:Name="Fruits" Height="300">
+            <x:String>Apple</x:String>
+            <x:String>Banana</x:String>
+            <x:String>Cherry</x:String>
+        </ListView>
+        <StackPanel Orientation="Horizontal" Spacing="8">
+            <TextBox x:Name="NewItem" PlaceholderText="New item" Width="200"/>
+            <Button Content="Add" Click="AddClick"/>
+            <Button Content="Remove" Click="RemoveClick"/>
+        </StackPanel>
+        <TextBlock x:Name="Status"/>
+    </StackPanel>
+</Window>

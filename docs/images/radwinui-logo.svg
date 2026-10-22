@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <title>RADWinUI</title>
+  <defs>
+    <linearGradient id="tile" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#E5322D"/>
+      <stop offset="0.55" stop-color="#8A3FA8"/>
+      <stop offset="1" stop-color="#0A6CD6"/>
+    </linearGradient>
+    <linearGradient id="shine" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#FFFFFF" stop-opacity="0.22"/>
+      <stop offset="0.5" stop-color="#FFFFFF" stop-opacity="0"/>
+    </linearGradient>
+  </defs>
+  <!-- the tile: Delphi red into Windows blue -->
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#tile)"/>
+  <rect x="16" y="16" width="480" height="480" rx="108" fill="url(#shine)"/>
+  <!-- a WinUI window: frame, title bar and caption buttons -->
+  <rect x="96" y="120" width="320" height="272" rx="34" fill="none" stroke="#FFFFFF" stroke-width="22"/>
+  <line x1="107" y1="188" x2="405" y2="188" stroke="#FFFFFF" stroke-width="18"/>
+  <circle cx="316" cy="154" r="10" fill="#FFFFFF"/>
+  <circle cx="352" cy="154" r="10" fill="#FFFFFF"/>
+  <!-- Object Pascal braces inside -->
+  <path d="M222 222 C196 222 190 236 190 254 L190 272 C190 284 182 292 168 292 C182 292 190 300 190 312 L190 330 C190 348 196 360 222 360"
+        fill="none" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M290 222 C316 222 322 236 322 254 L322 272 C322 284 330 292 344 292 C330 292 322 300 322 312 L322 330 C322 348 316 360 290 360"
+        fill="none" stroke="#FFFFFF" stroke-width="18" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
