@@ -14,13 +14,16 @@ type
   private
     FTimer: TWinUITimer;
     FSmokeStep: Integer;
-    procedure SmokeTick(Sender: TObject);
+    procedure TimerTick(Sender: TObject);
+    procedure SmokeStep;
   public
     constructor Create; override;
     destructor Destroy; override;
   published
     procedure GoalClick(Sender: TObject; E: TWinUIItemClickEventArgs);
-    procedure NewGoalClick(Sender: TObject);
+    procedure AddMoneyClick(Sender: TObject);
+    procedure PlayClick(Sender: TObject);
+    procedure PauseClick(Sender: TObject);
   end;
 
 implementation
@@ -30,22 +33,30 @@ uses
   System.IOUtils;
 
 const
-  AddAmount = 100;
+  AddAmount = 50;
 
 constructor TMainWindow.Create;
 begin
   inherited;
   ViewModel := TMainViewModel.Create;
-  GoalGrid.ItemsSource := ViewModel.Goals;
+  GoalList.ItemsSource := ViewModel.Goals;
   SetTitleBar(DragRegion);
-  AppWindow.TitleBar.PreferredTheme := TWinUITitleBarTheme.Light;
-  if FindCmdLineSwitch('smoke-test') then
+  AppWindow.TitleBar.PreferredTheme := TWinUITitleBarTheme.UseDefaultAppMode;
+  // -light and -dark pick a theme without changing the Windows setting, for screenshots
+  if FindCmdLineSwitch('light') then
   begin
-    FTimer := TWinUITimer.Create;
-    FTimer.Interval := 500;
-    FTimer.OnTimer := SmokeTick;
-    FTimer.Enabled := True;
+    Surface.RequestedTheme := TWinUIElementTheme.Light;
+    AppWindow.TitleBar.PreferredTheme := TWinUITitleBarTheme.Light;
+  end
+  else if FindCmdLineSwitch('dark') then
+  begin
+    Surface.RequestedTheme := TWinUIElementTheme.Dark;
+    AppWindow.TitleBar.PreferredTheme := TWinUITitleBarTheme.Dark;
   end;
+  FTimer := TWinUITimer.Create;
+  FTimer.Interval := 1000;
+  FTimer.OnTimer := TimerTick;
+  FTimer.Enabled := True;
 end;
 
 destructor TMainWindow.Destroy;
@@ -53,6 +64,13 @@ begin
   FTimer.Free;
   ViewModel.Free;
   inherited;
+end;
+
+procedure TMainWindow.TimerTick(Sender: TObject);
+begin
+  ViewModel.Tick;
+  if FindCmdLineSwitch('smoke-test') then
+    SmokeStep;
 end;
 
 procedure TMainWindow.GoalClick(Sender: TObject; E: TWinUIItemClickEventArgs);
@@ -65,43 +83,55 @@ begin
   for I := 0 to ViewModel.Goals.Count - 1 do
     if (ViewModel.Goals.BindableAt(I) as IInterface) = Clicked then
     begin
-      if ViewModel.Goals[I].IsNewCard then
-        ViewModel.AddGoal
-      else
-        ViewModel.AddMoney(I, AddAmount);
+      ViewModel.ToggleGoal(I);
       Exit;
     end;
 end;
 
-procedure TMainWindow.NewGoalClick(Sender: TObject);
+procedure TMainWindow.AddMoneyClick(Sender: TObject);
 begin
-  ViewModel.AddGoal;
+  ViewModel.AddMoney(AddAmount);
 end;
 
-procedure TMainWindow.SmokeTick(Sender: TObject);
+procedure TMainWindow.PlayClick(Sender: TObject);
+begin
+  ViewModel.Start;
+end;
+
+procedure TMainWindow.PauseClick(Sender: TObject);
+begin
+  ViewModel.Pause;
+end;
+
+procedure TMainWindow.SmokeStep;
 begin
   Inc(FSmokeStep);
   try
     case FSmokeStep of
-      2:
+      1:
         begin
-          if (TotalLabel.Text <> '$10,937.95') or (AutoSaveLabel.Text <> '2 on') or
-            (ProgressLabel.Text <> '45% of $24,300 across 5 goals') or (WelcomeText.Text <> 'Welcome, Alex') then
-            raise Exception.Create('Initial bindings show ' + TotalLabel.Text + ' / ' + AutoSaveLabel.Text + ' / ' +
-              ProgressLabel.Text + ' / ' + WelcomeText.Text);
-          ViewModel.AddMoney(0, AddAmount);
-          SweepSwitch.IsOn := True; // two-way: the view model and the "N on" pill follow
-          NewGoalClick(nil);
+          if (TotalLabel.Text <> '$10,937') or (WeekLabel.Text <> '$610') or (GoalCaptionLabel.Text <> '2/5') or
+            (AutoSaveLabel.Text <> '2 on') or (CountdownLabel.Text <> '02:35') then
+            raise Exception.Create('Initial bindings show ' + TotalLabel.Text + ' / ' + WeekLabel.Text + ' / ' +
+              GoalCaptionLabel.Text + ' / ' + AutoSaveLabel.Text + ' / ' + CountdownLabel.Text);
+          ViewModel.ToggleGoal(2);
+          AddMoneyClick(nil);
+          PlayClick(nil);
+          RulesExpander.IsExpanded := True; // the toggles bind once the expander shows them
         end;
+      2:
+        SweepSwitch.IsOn := True; // two-way: the view model and the "N on" pill follow
       4:
         begin
-          if (TotalLabel.Text <> '$11,037.95') or (ViewModel.Goals[0].PercentText <> '77%') then
-            raise Exception.Create('Add money did not update the total or the goal: ' + TotalLabel.Text);
+          if (GoalCaptionLabel.Text <> '3/5') or not ViewModel.Goals[2].Done then
+            raise Exception.Create('Toggling a goal did not update the caption: ' + GoalCaptionLabel.Text);
           if (AutoSaveLabel.Text <> '3 on') or not ViewModel.SmartSweep then
             raise Exception.Create('The Smart sweep toggle did not reach the view model: ' + AutoSaveLabel.Text);
-          if (ViewModel.GoalCount <> 6) or not ViewModel.Goals[ViewModel.Goals.Count - 1].IsNewCard then
-            raise Exception.Create('New goal was not inserted before the New goal card');
-          TFile.WriteAllText(ParamStr(2), 'PASS: glass dashboard, totals, goal rings, add money, two-way toggles, new goal');
+          if (TotalLabel.Text <> '$10,987') or (WeekLabel.Text <> '$660') then
+            raise Exception.Create('Add money did not update the totals: ' + TotalLabel.Text + ' / ' + WeekLabel.Text);
+          if CountdownLabel.Text = '02:35' then
+            raise Exception.Create('The countdown did not run');
+          TFile.WriteAllText(ParamStr(2), 'PASS: bento dashboard, totals, goal toggle, two-way toggles, add money, countdown');
           Close;
         end;
     end;

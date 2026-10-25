@@ -5,399 +5,576 @@
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
     x:Class="TMainWindow" DataContextType="TMainViewModel"
-    Title="Haven - savings and goals" Width="1360" Height="900" MinWidth="980" MinHeight="680"
+    Title="Haven - savings dashboard" Width="1440" Height="940" MinWidth="900" MinHeight="640"
     WindowStartupLocation="CenterScreen" ExtendsContentIntoTitleBar="True">
-  <!-- Glass over our own warm background: the cards use an in-app AcrylicBrush,
-       which blurs the soft colour blobs drawn behind them. -->
-  <Grid x:Name="Surface" RequestedTheme="Light" Background="#C9AE93">
+  <!-- Follows the Windows theme and accent colour: every colour below is a theme
+       resource, and the yellow of a classic dashboard is the system accent. -->
+  <Grid x:Name="Surface">
     <Grid.Resources>
-      <AcrylicBrush x:Key="GlassBrush" TintColor="#FFF8F0" TintOpacity="0.08" TintLuminosityOpacity="0.32" FallbackColor="#D9EFE4D8"/>
-      <AcrylicBrush x:Key="GlassStrongBrush" TintColor="#FFFFFF" TintOpacity="0.20" TintLuminosityOpacity="0.55" FallbackColor="#E6F7F1EA"/>
-      <SolidColorBrush x:Key="GlassBorderBrush" Color="#8CFFFFFF"/>
-      <SolidColorBrush x:Key="CoralBrush" Color="#F26B4F"/>
-      <SolidColorBrush x:Key="InkBrush" Color="#2B2622"/>
-      <SolidColorBrush x:Key="MutedBrush" Color="#7A6F66"/>
-      <SolidColorBrush x:Key="ToggleSwitchFillOn" Color="#F26B4F"/>
-      <SolidColorBrush x:Key="ToggleSwitchFillOnPointerOver" Color="#F47E65"/>
-      <SolidColorBrush x:Key="ToggleSwitchFillOnPressed" Color="#D95A40"/>
-      <Style x:Key="GlassCard" TargetType="Border">
-        <Setter Property="Background" Value="{StaticResource GlassBrush}"/>
-        <Setter Property="BorderBrush" Value="{StaticResource GlassBorderBrush}"/>
-        <Setter Property="BorderThickness" Value="1"/>
-        <Setter Property="CornerRadius" Value="26"/>
-      </Style>
-      <Style x:Key="RailButton" TargetType="Button">
-        <Setter Property="Width" Value="44"/>
-        <Setter Property="Height" Value="44"/>
-        <Setter Property="Padding" Value="0"/>
-        <Setter Property="CornerRadius" Value="22"/>
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
-      </Style>
-      <Style x:Key="TabButton" TargetType="Button">
-        <Setter Property="Padding" Value="16,8"/>
-        <Setter Property="CornerRadius" Value="18"/>
-        <Setter Property="Background" Value="Transparent"/>
-        <Setter Property="BorderThickness" Value="0"/>
-        <Setter Property="FontSize" Value="13"/>
-        <Setter Property="Foreground" Value="{StaticResource InkBrush}"/>
-      </Style>
+      <ResourceDictionary>
+        <ResourceDictionary.ThemeDictionaries>
+          <ResourceDictionary x:Key="Light">
+            <LinearGradientBrush x:Key="HavenBackground" StartPoint="0,0" EndPoint="1,1">
+              <GradientStop Color="#DCDFE5" Offset="0"/>
+              <GradientStop Color="#EEECE6" Offset="0.55"/>
+              <GradientStop Color="#F7EFD2" Offset="1"/>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="PanelBrush" Color="#66FFFFFF"/>
+            <SolidColorBrush x:Key="CardBrush" Color="#C7FFFFFF"/>
+            <SolidColorBrush x:Key="InkBrush" Color="#1E1E1E"/>
+            <SolidColorBrush x:Key="OnInkBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="OnInkMutedBrush" Color="#99FFFFFF"/>
+            <SolidColorBrush x:Key="OnInkFaintBrush" Color="#26FFFFFF"/>
+            <SolidColorBrush x:Key="FaintBrush" Color="#1F000000"/>
+            <SolidColorBrush x:Key="LineBrush" Color="#24000000"/>
+          </ResourceDictionary>
+          <ResourceDictionary x:Key="Dark">
+            <LinearGradientBrush x:Key="HavenBackground" StartPoint="0,0" EndPoint="1,1">
+              <GradientStop Color="#16181C" Offset="0"/>
+              <GradientStop Color="#1E1F22" Offset="0.55"/>
+              <GradientStop Color="{ThemeResource SystemAccentColorDark3}" Offset="1.6"/>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="PanelBrush" Color="#14FFFFFF"/>
+            <SolidColorBrush x:Key="CardBrush" Color="#E62B2C30"/>
+            <SolidColorBrush x:Key="InkBrush" Color="#F2F2F2"/>
+            <SolidColorBrush x:Key="OnInkBrush" Color="#1E1E1E"/>
+            <SolidColorBrush x:Key="OnInkMutedBrush" Color="#99000000"/>
+            <SolidColorBrush x:Key="OnInkFaintBrush" Color="#1A000000"/>
+            <SolidColorBrush x:Key="FaintBrush" Color="#2EFFFFFF"/>
+            <SolidColorBrush x:Key="LineBrush" Color="#2EFFFFFF"/>
+          </ResourceDictionary>
+        </ResourceDictionary.ThemeDictionaries>
+        <Style x:Key="Card" TargetType="Border">
+          <Setter Property="Background" Value="{ThemeResource CardBrush}"/>
+          <Setter Property="CornerRadius" Value="24"/>
+          <Setter Property="Padding" Value="22,20"/>
+        </Style>
+        <Style x:Key="NavButton" TargetType="Button">
+          <Setter Property="Padding" Value="14,8"/>
+          <Setter Property="CornerRadius" Value="18"/>
+          <Setter Property="Background" Value="Transparent"/>
+          <Setter Property="BorderThickness" Value="0"/>
+          <Setter Property="FontSize" Value="13"/>
+        </Style>
+        <Style x:Key="RoundButton" TargetType="Button">
+          <Setter Property="Width" Value="38"/>
+          <Setter Property="Height" Value="38"/>
+          <Setter Property="Padding" Value="0"/>
+          <Setter Property="CornerRadius" Value="19"/>
+          <Setter Property="Background" Value="{ThemeResource CardBrush}"/>
+          <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+      </ResourceDictionary>
     </Grid.Resources>
     <Grid.RowDefinitions>
-      <RowDefinition Height="36"/>
-      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="32"/>
       <RowDefinition Height="*"/>
-      <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
-
-    <!-- The warm abstract background: large soft colour blobs -->
-    <Grid Grid.RowSpan="4" IsHitTestVisible="False">
-      <Ellipse Width="900" Height="700" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-220,-180,0,0">
-        <Ellipse.Fill>
-          <RadialGradientBrush>
-            <GradientStop Color="#F0E0965F" Offset="0"/>
-            <GradientStop Color="#00E0965F" Offset="1"/>
-          </RadialGradientBrush>
-        </Ellipse.Fill>
-      </Ellipse>
-      <Ellipse Width="1000" Height="820" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-120,-260,0">
-        <Ellipse.Fill>
-          <RadialGradientBrush>
-            <GradientStop Color="#E8B07A4E" Offset="0"/>
-            <GradientStop Color="#00B07A4E" Offset="1"/>
-          </RadialGradientBrush>
-        </Ellipse.Fill>
-      </Ellipse>
-      <Ellipse Width="1100" Height="760" HorizontalAlignment="Center" VerticalAlignment="Bottom" Margin="0,0,0,-300">
-        <Ellipse.Fill>
-          <RadialGradientBrush>
-            <GradientStop Color="#D8F6E7D2" Offset="0"/>
-            <GradientStop Color="#00F6E7D2" Offset="1"/>
-          </RadialGradientBrush>
-        </Ellipse.Fill>
-      </Ellipse>
-      <Ellipse Width="620" Height="620" HorizontalAlignment="Left" VerticalAlignment="Bottom" Margin="80,0,0,-160">
-        <Ellipse.Fill>
-          <RadialGradientBrush>
-            <GradientStop Color="#D86E4630" Offset="0"/>
-            <GradientStop Color="#006E4630" Offset="1"/>
-          </RadialGradientBrush>
-        </Ellipse.Fill>
-      </Ellipse>
-      <Ellipse Width="520" Height="520" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,120,40">
-        <Ellipse.Fill>
-          <RadialGradientBrush>
-            <GradientStop Color="#B0E2795A" Offset="0"/>
-            <GradientStop Color="#00E2795A" Offset="1"/>
-          </RadialGradientBrush>
-        </Ellipse.Fill>
-      </Ellipse>
-    </Grid>
-
+    <Border Grid.RowSpan="2" Background="{ThemeResource HavenBackground}"/>
     <Grid x:Name="DragRegion" Background="Transparent"/>
 
-    <!-- Top bar -->
-    <Border Grid.Row="1" Style="{StaticResource GlassCard}" CornerRadius="30" Margin="28,0,28,0" Padding="10,8">
-      <Grid ColumnSpacing="16">
-        <Grid.ColumnDefinitions>
-          <ColumnDefinition Width="Auto"/>
-          <ColumnDefinition Width="*"/>
-          <ColumnDefinition Width="Auto"/>
-        </Grid.ColumnDefinitions>
-        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
-          <PersonPicture DisplayName="{Binding UserName}" d:DisplayName="Alex" Width="40" Height="40"/>
-          <TextBlock x:Name="WelcomeText" Text="{Binding UserName, Converter={StaticResource Format}, ConverterParameter='Welcome, %s'}"
-                     d:Text="Welcome, Alex" FontSize="15" FontWeight="SemiBold" VerticalAlignment="Center" Foreground="{StaticResource InkBrush}"/>
-        </StackPanel>
-        <Border Grid.Column="1" MaxWidth="560" HorizontalAlignment="Center" CornerRadius="22" Padding="12,0,6,0"
-                Background="{StaticResource GlassStrongBrush}" BorderBrush="{StaticResource GlassBorderBrush}" BorderThickness="1">
+    <Border Grid.Row="1" Margin="24,0,24,24" CornerRadius="32" Background="{ThemeResource PanelBrush}">
+      <ScrollViewer HorizontalScrollBarVisibility="Auto" VerticalScrollBarVisibility="Auto">
+        <Grid MinWidth="1180" Padding="28,24,28,28" RowSpacing="20">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+          </Grid.RowDefinitions>
+
+          <!-- Header -->
           <Grid ColumnSpacing="10">
             <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
               <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Border HorizontalAlignment="Left" CornerRadius="22" Padding="18,7" BorderThickness="1"
+                    BorderBrush="{ThemeResource InkBrush}">
+              <TextBlock Text="Haven" FontSize="20" FontFamily="Segoe UI Variable Display" FontWeight="SemiLight"/>
+            </Border>
+            <Border Grid.Column="1" CornerRadius="22" Padding="4" Background="{ThemeResource CardBrush}">
+              <StackPanel Orientation="Horizontal" Spacing="2">
+                <Button Style="{StaticResource NavButton}" Content="Dashboard" Background="{ThemeResource InkBrush}" Foreground="{ThemeResource OnInkBrush}"/>
+                <Button Style="{StaticResource NavButton}" Content="Goals"/>
+                <Button Style="{StaticResource NavButton}" Content="Activity"/>
+                <Button Style="{StaticResource NavButton}" Content="Cards"/>
+                <Button Style="{StaticResource NavButton}" Content="Budget"/>
+                <Button Style="{StaticResource NavButton}" Content="Reports"/>
+                <Button Style="{StaticResource NavButton}" Content="Calendar"/>
+              </StackPanel>
+            </Border>
+            <Button Grid.Column="2" CornerRadius="19" Height="38" Padding="14,0" BorderThickness="0" Background="{ThemeResource CardBrush}">
+              <StackPanel Orientation="Horizontal" Spacing="8">
+                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE713;" FontSize="14"/>
+                <TextBlock Text="Settings" FontSize="13"/>
+              </StackPanel>
+            </Button>
+            <Grid Grid.Column="3">
+              <Button Style="{StaticResource RoundButton}" ToolTipService.ToolTip="Notifications" AutomationProperties.Name="Notifications">
+                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEA8F;" FontSize="15"/>
+              </Button>
+              <Ellipse Width="8" Height="8" Fill="{ThemeResource AccentFillColorDefaultBrush}" HorizontalAlignment="Right"
+                       VerticalAlignment="Top" Margin="0,6,7,0" IsHitTestVisible="False"/>
+            </Grid>
+            <Button Grid.Column="4" Style="{StaticResource RoundButton}" ToolTipService.ToolTip="Profile" AutomationProperties.Name="Profile">
+              <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE77B;" FontSize="15"/>
+            </Button>
+          </Grid>
+
+          <TextBlock Grid.Row="1" x:Name="WelcomeText" Text="Welcome in, Alex" FontSize="44"
+                     FontFamily="Segoe UI Variable Display" FontWeight="Light"/>
+
+          <!-- Capsule strip and head counts -->
+          <Grid Grid.Row="2" ColumnSpacing="40">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid ColumnSpacing="6" RowSpacing="6" VerticalAlignment="Bottom">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="15*"/>
+                <ColumnDefinition Width="15*"/>
+                <ColumnDefinition Width="60*"/>
+                <ColumnDefinition Width="12*"/>
+              </Grid.ColumnDefinitions>
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="38"/>
+              </Grid.RowDefinitions>
+              <TextBlock Text="Saved" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+              <TextBlock Grid.Column="1" Text="Invested" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+              <TextBlock Grid.Column="2" Text="Planned" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+              <TextBlock Grid.Column="3" Text="Spent" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+              <Border Grid.Row="1" CornerRadius="19" Padding="14,0" Background="{ThemeResource InkBrush}">
+                <TextBlock Text="15%" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource OnInkBrush}"/>
+              </Border>
+              <Border Grid.Row="1" Grid.Column="1" CornerRadius="19" Padding="14,0" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                <TextBlock Text="15%" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/>
+              </Border>
+              <Border Grid.Row="1" Grid.Column="2" CornerRadius="19" Padding="14,0">
+                <Border.Background>
+                  <LinearGradientBrush MappingMode="Absolute" StartPoint="0,0" EndPoint="7,7" SpreadMethod="Repeat">
+                    <GradientStop Color="#00000000" Offset="0"/>
+                    <GradientStop Color="#00000000" Offset="0.55"/>
+                    <GradientStop Color="{ThemeResource TextFillColorTertiary}" Offset="0.55"/>
+                    <GradientStop Color="{ThemeResource TextFillColorTertiary}" Offset="1"/>
+                  </LinearGradientBrush>
+                </Border.Background>
+                <Border HorizontalAlignment="Left" VerticalAlignment="Center" CornerRadius="9" Padding="6,1" Background="{ThemeResource CardBrush}">
+                  <TextBlock Text="60%" FontSize="11"/>
+                </Border>
+              </Border>
+              <Border Grid.Row="1" Grid.Column="3" CornerRadius="19" Padding="14,0" BorderThickness="1" BorderBrush="{ThemeResource TextFillColorSecondaryBrush}">
+                <TextBlock Text="10%" FontSize="11" VerticalAlignment="Center"/>
+              </Border>
+            </Grid>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="36">
+              <StackPanel>
+                <TextBlock Text="5" FontSize="56" FontFamily="Segoe UI Variable Display" FontWeight="Light" HorizontalAlignment="Right"/>
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                  <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE734;" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  <TextBlock Text="Goals" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+              </StackPanel>
+              <StackPanel>
+                <TextBlock Text="56" FontSize="56" FontFamily="Segoe UI Variable Display" FontWeight="Light" HorizontalAlignment="Right"/>
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                  <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8C7;" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  <TextBlock Text="Deposits" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+              </StackPanel>
+              <StackPanel>
+                <TextBlock Text="203" FontSize="56" FontFamily="Segoe UI Variable Display" FontWeight="Light" HorizontalAlignment="Right"/>
+                <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right">
+                  <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE945;" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  <TextBlock Text="Day streak" FontSize="12" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                </StackPanel>
+              </StackPanel>
+            </StackPanel>
+          </Grid>
+
+          <!-- The bento grid -->
+          <Grid Grid.Row="3" ColumnSpacing="16" RowSpacing="16">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="*"/>
               <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
-            <Ellipse Width="20" Height="20" VerticalAlignment="Center">
-              <Ellipse.Fill>
+            <Grid.RowDefinitions>
+              <RowDefinition Height="270"/>
+              <RowDefinition Height="300"/>
+            </Grid.RowDefinitions>
+
+            <!-- Profile -->
+            <Border CornerRadius="24" Padding="20">
+              <Border.Background>
                 <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
-                  <GradientStop Color="#7B8CFF" Offset="0"/>
-                  <GradientStop Color="#C56CF0" Offset="0.5"/>
-                  <GradientStop Color="#F26B4F" Offset="1"/>
+                  <GradientStop Color="{ThemeResource SystemAccentColorLight2}" Offset="0"/>
+                  <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="0.7"/>
+                  <GradientStop Color="{ThemeResource SystemAccentColorDark1}" Offset="1"/>
                 </LinearGradientBrush>
-              </Ellipse.Fill>
-            </Ellipse>
-            <TextBox x:Name="AskBox" Grid.Column="1" MinWidth="380" BorderThickness="0" Background="Transparent"
-                     PlaceholderText="Ask anything, e.g. move $250 to Travel" VerticalAlignment="Center"
-                     AutomationProperties.Name="Ask Haven"/>
-          </Grid>
-        </Border>
-        <Grid Grid.Column="2">
-          <Button Width="40" Height="40" CornerRadius="20" Padding="0" Background="White" BorderThickness="0"
-                  ToolTipService.ToolTip="Notifications" AutomationProperties.Name="Notifications">
-            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEA8F;" FontSize="16" Foreground="{StaticResource InkBrush}"/>
-          </Button>
-          <Ellipse Width="9" Height="9" Fill="{StaticResource CoralBrush}" HorizontalAlignment="Right" VerticalAlignment="Top"
-                   Margin="0,6,7,0" IsHitTestVisible="False"/>
-        </Grid>
-      </Grid>
-    </Border>
+              </Border.Background>
+              <Grid>
+                <PersonPicture DisplayName="Alex Morgan" Width="112" Height="112" HorizontalAlignment="Center" VerticalAlignment="Center" Margin="0,0,0,40"/>
+                <Grid VerticalAlignment="Bottom">
+                  <StackPanel>
+                    <TextBlock Text="Alex Morgan" FontSize="18" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/>
+                    <TextBlock Text="Personal saver" FontSize="11" Foreground="{ThemeResource TextOnAccentFillColorSecondaryBrush}"/>
+                  </StackPanel>
+                  <Border HorizontalAlignment="Right" VerticalAlignment="Center" CornerRadius="18" Padding="14,6" BorderThickness="1"
+                          BorderBrush="{ThemeResource TextOnAccentFillColorPrimaryBrush}" Background="#26FFFFFF">
+                    <TextBlock x:Name="TotalLabel" Text="{Binding TotalText}" d:Text="$10,937" FontSize="13" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/>
+                  </Border>
+                </Grid>
+              </Grid>
+            </Border>
 
-    <Grid Grid.Row="2" Margin="20,20,28,16" ColumnSpacing="18">
-      <Grid.ColumnDefinitions>
-        <ColumnDefinition Width="Auto"/>
-        <ColumnDefinition Width="*"/>
-      </Grid.ColumnDefinitions>
-
-      <!-- Icon rail -->
-      <Border Style="{StaticResource GlassCard}" CornerRadius="32" Padding="8,12" VerticalAlignment="Center">
-        <StackPanel Spacing="8">
-          <Button Style="{StaticResource RailButton}" ToolTipService.ToolTip="Home" AutomationProperties.Name="Home">
-            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE80F;" FontSize="16"/>
-          </Button>
-          <Button Style="{StaticResource RailButton}" ToolTipService.ToolTip="Activity" AutomationProperties.Name="Activity">
-            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE945;" FontSize="16"/>
-          </Button>
-          <Button Style="{StaticResource RailButton}" Background="White" ToolTipService.ToolTip="Savings" AutomationProperties.Name="Savings">
-            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE825;" FontSize="16"/>
-          </Button>
-          <Button Style="{StaticResource RailButton}" ToolTipService.ToolTip="Schedule" AutomationProperties.Name="Schedule">
-            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE787;" FontSize="16"/>
-          </Button>
-          <Button Style="{StaticResource RailButton}" ToolTipService.ToolTip="Reports" AutomationProperties.Name="Reports">
-            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEB05;" FontSize="16"/>
-          </Button>
-          <Button Style="{StaticResource RailButton}" ToolTipService.ToolTip="Video call" AutomationProperties.Name="Video call">
-            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE714;" FontSize="16"/>
-          </Button>
-          <Button Style="{StaticResource RailButton}" ToolTipService.ToolTip="Settings" AutomationProperties.Name="Settings">
-            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE713;" FontSize="16"/>
-          </Button>
-          <Button Style="{StaticResource RailButton}" ToolTipService.ToolTip="More" AutomationProperties.Name="More">
-            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE70D;" FontSize="12"/>
-          </Button>
-        </StackPanel>
-      </Border>
-
-      <!-- The main glass panel -->
-      <Border Grid.Column="1" Style="{StaticResource GlassCard}" CornerRadius="34">
-        <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto">
-          <StackPanel Padding="40,32,40,32" Spacing="24">
-            <Grid>
-              <StackPanel Spacing="6">
-                <TextBlock Text="Savings &amp; Goals" FontSize="34" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}"/>
-                <TextBlock Text="Set money aside for the things that matter and watch it grow." FontSize="14" Foreground="{StaticResource MutedBrush}"/>
-              </StackPanel>
-              <Button x:Name="NewGoalButton" Click="NewGoalClick" HorizontalAlignment="Right" VerticalAlignment="Top"
-                      CornerRadius="20" Padding="16,9" Background="{StaticResource GlassStrongBrush}"
-                      BorderBrush="{StaticResource GlassBorderBrush}" AutomationProperties.Name="New goal">
-                <StackPanel Orientation="Horizontal" Spacing="8">
+            <!-- Progress: this week's deposits -->
+            <Border Grid.Column="1" Style="{StaticResource Card}">
+              <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Progress" FontSize="18"/>
+                <Button x:Name="AddMoneyButton" Click="AddMoneyClick" Style="{StaticResource RoundButton}" HorizontalAlignment="Right"
+                        Background="{ThemeResource PanelBrush}" ToolTipService.ToolTip="Add $50 today" AutomationProperties.Name="Add money">
                   <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE710;" FontSize="12"/>
-                  <TextBlock Text="New goal" FontSize="13"/>
+                </Button>
+                <StackPanel Grid.Row="1" Orientation="Horizontal" Spacing="10">
+                  <TextBlock x:Name="WeekLabel" Text="{Binding WeekText}" d:Text="$610" FontSize="34" FontFamily="Segoe UI Variable Display" FontWeight="Light"/>
+                  <TextBlock Text="Saved&#x0a;this week" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                 </StackPanel>
-              </Button>
-            </Grid>
-
-            <Grid ColumnSpacing="20">
-              <Grid.ColumnDefinitions>
-                <ColumnDefinition Width="2*"/>
-                <ColumnDefinition Width="*" MinWidth="300"/>
-              </Grid.ColumnDefinitions>
-
-              <!-- Total saved and the monthly chart -->
-              <Border Style="{StaticResource GlassCard}" Padding="26,22">
-                <Grid ColumnSpacing="28">
+                <Grid Grid.Row="2" ColumnSpacing="6">
                   <Grid.ColumnDefinitions>
                     <ColumnDefinition Width="*"/>
                     <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
                   </Grid.ColumnDefinitions>
-                  <StackPanel Spacing="8" VerticalAlignment="Center">
-                    <TextBlock Text="Total saved" FontSize="13" Foreground="{StaticResource MutedBrush}"/>
-                    <TextBlock x:Name="TotalLabel" Text="{Binding TotalText}" d:Text="$10,937.95" FontSize="40" FontWeight="SemiBold"
-                               FontFamily="Segoe UI Variable Display" Foreground="{StaticResource InkBrush}"/>
-                    <StackPanel Orientation="Horizontal" Spacing="8">
-                      <Border Background="#2629A36A" CornerRadius="9" Padding="7,2">
-                        <TextBlock Text="+2%" FontSize="11" FontWeight="SemiBold" Foreground="#1F7A4D"/>
-                      </Border>
-                      <TextBlock Text="more than last quarter" FontSize="12" Foreground="{StaticResource MutedBrush}" VerticalAlignment="Center"/>
-                    </StackPanel>
-                    <ProgressBar Value="{Binding TotalProgress}" d:Value="45" Maximum="100" Height="6" Margin="0,18,0,0"
-                                 Foreground="{StaticResource CoralBrush}" Background="#40FFFFFF" CornerRadius="3"/>
-                    <TextBlock x:Name="ProgressLabel" Text="{Binding ProgressCaption}" d:Text="45% of $24,300 across 5 goals"
-                               FontSize="12" Foreground="{StaticResource MutedBrush}"/>
+                  <StackPanel VerticalAlignment="Bottom" Spacing="5">
+                    <Rectangle Width="6" Height="{Binding Day1}" d:Height="16" RadiusX="3" RadiusY="3" Fill="{ThemeResource FaintBrush}"/>
+                    <Ellipse Width="6" Height="6" Fill="{ThemeResource FaintBrush}"/>
+                    <TextBlock Text="S" FontSize="11" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                   </StackPanel>
-                  <StackPanel Grid.Column="1" Spacing="10">
-                    <TextBlock Text="Monthly contributions" FontSize="13" Foreground="{StaticResource MutedBrush}"/>
-                    <Grid Height="160" ColumnSpacing="14">
-                      <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                      </Grid.ColumnDefinitions>
-                      <Border Height="{Binding Bar1}" d:Height="60" VerticalAlignment="Bottom" CornerRadius="10" Background="#B3FFFFFF" BorderBrush="#E6FFFFFF" BorderThickness="1"/>
-                      <Border Grid.Column="1" Height="{Binding Bar2}" d:Height="90" VerticalAlignment="Bottom" CornerRadius="10" Background="#B3FFFFFF" BorderBrush="#E6FFFFFF" BorderThickness="1"/>
-                      <Border Grid.Column="2" Height="{Binding Bar3}" d:Height="56" VerticalAlignment="Bottom" CornerRadius="10" Background="#B3FFFFFF" BorderBrush="#E6FFFFFF" BorderThickness="1"/>
-                      <Border Grid.Column="3" Height="{Binding Bar4}" d:Height="110" VerticalAlignment="Bottom" CornerRadius="10" Background="#B3FFFFFF" BorderBrush="#E6FFFFFF" BorderThickness="1"/>
-                      <Border Grid.Column="4" Height="{Binding Bar5}" d:Height="86" VerticalAlignment="Bottom" CornerRadius="10" Background="#B3FFFFFF" BorderBrush="#E6FFFFFF" BorderThickness="1"/>
-                      <Border Grid.Column="5" x:Name="CurrentMonthBar" Height="{Binding Bar6}" d:Height="130" VerticalAlignment="Bottom" CornerRadius="10" Background="{StaticResource CoralBrush}" Opacity="0.85"/>
-                    </Grid>
-                    <Grid ColumnSpacing="14">
-                      <Grid.ColumnDefinitions>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                        <ColumnDefinition Width="*"/>
-                      </Grid.ColumnDefinitions>
-                      <TextBlock Text="Nov" FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
-                      <TextBlock Grid.Column="1" Text="Dec" FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
-                      <TextBlock Grid.Column="2" Text="Jan" FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
-                      <TextBlock Grid.Column="3" Text="Feb" FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
-                      <TextBlock Grid.Column="4" Text="Mar" FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
-                      <TextBlock Grid.Column="5" Text="Apr" FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
-                    </Grid>
+                  <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Spacing="5">
+                    <Rectangle Width="6" Height="{Binding Day2}" d:Height="64" RadiusX="3" RadiusY="3" Fill="{ThemeResource InkBrush}"/>
+                    <Ellipse Width="6" Height="6" Fill="{ThemeResource InkBrush}"/>
+                    <TextBlock Text="M" FontSize="11" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="2" VerticalAlignment="Bottom" Spacing="5">
+                    <Rectangle Width="6" Height="{Binding Day3}" d:Height="80" RadiusX="3" RadiusY="3" Fill="{ThemeResource InkBrush}"/>
+                    <Ellipse Width="6" Height="6" Fill="{ThemeResource InkBrush}"/>
+                    <TextBlock Text="T" FontSize="11" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="3" VerticalAlignment="Bottom" Spacing="5">
+                    <Rectangle Width="6" Height="{Binding Day4}" d:Height="38" RadiusX="3" RadiusY="3" Fill="{ThemeResource InkBrush}"/>
+                    <Ellipse Width="6" Height="6" Fill="{ThemeResource InkBrush}"/>
+                    <TextBlock Text="W" FontSize="11" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="4" VerticalAlignment="Bottom" Spacing="5">
+                    <Rectangle Width="6" Height="{Binding Day5}" d:Height="86" RadiusX="3" RadiusY="3" Fill="{ThemeResource InkBrush}"/>
+                    <Ellipse Width="6" Height="6" Fill="{ThemeResource InkBrush}"/>
+                    <TextBlock Text="T" FontSize="11" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="5" VerticalAlignment="Bottom" Spacing="5">
+                    <Border CornerRadius="9" Padding="6,2" HorizontalAlignment="Center" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                      <TextBlock Text="Today" FontSize="10" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/>
+                    </Border>
+                    <Rectangle Width="6" Height="{Binding Day6}" d:Height="120" RadiusX="3" RadiusY="3" Fill="{ThemeResource AccentFillColorDefaultBrush}"/>
+                    <Ellipse Width="6" Height="6" Fill="{ThemeResource AccentFillColorDefaultBrush}"/>
+                    <TextBlock Text="F" FontSize="11" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="6" VerticalAlignment="Bottom" Spacing="5">
+                    <Rectangle Width="6" Height="{Binding Day7}" d:Height="10" RadiusX="3" RadiusY="3" Fill="{ThemeResource FaintBrush}"/>
+                    <Ellipse Width="6" Height="6" Fill="{ThemeResource FaintBrush}"/>
+                    <TextBlock Text="S" FontSize="11" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
                   </StackPanel>
                 </Grid>
-              </Border>
+              </Grid>
+            </Border>
 
-              <!-- Auto-save rules -->
-              <Border Grid.Column="1" Style="{StaticResource GlassCard}" Padding="22,20">
-                <StackPanel Spacing="14">
-                  <Grid>
-                    <TextBlock Text="Auto-save" FontSize="17" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}"/>
-                    <Border HorizontalAlignment="Right" Background="#2629A36A" CornerRadius="10" Padding="9,3">
-                      <TextBlock x:Name="AutoSaveLabel" Text="{Binding AutoSaveCaption}" d:Text="2 on" FontSize="11" FontWeight="SemiBold" Foreground="#1F7A4D"/>
-                    </Border>
-                  </Grid>
-                  <Grid ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto"/>
-                      <ColumnDefinition Width="*"/>
-                      <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Border Width="38" Height="38" CornerRadius="12" Background="#99FFFFFF">
-                      <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE895;" FontSize="15" Foreground="{StaticResource InkBrush}"/>
-                    </Border>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                      <TextBlock Text="Round-ups" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}"/>
-                      <TextBlock Text="Round every card payment up to the next dollar" FontSize="11" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}"/>
-                    </StackPanel>
-                    <ToggleSwitch x:Name="RoundUpsSwitch" Grid.Column="2" IsOn="{Binding RoundUps, Mode=TwoWay}" OnContent="" OffContent=""
-                                  MinWidth="0" AutomationProperties.Name="Round-ups"/>
-                  </Grid>
-                  <Grid ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto"/>
-                      <ColumnDefinition Width="*"/>
-                      <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Border Width="38" Height="38" CornerRadius="12" Background="#99FFFFFF">
-                      <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8C7;" FontSize="15" Foreground="{StaticResource InkBrush}"/>
-                    </Border>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                      <TextBlock Text="Payday boost" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}"/>
-                      <TextBlock Text="Move 10% of every salary into your goals" FontSize="11" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}"/>
-                    </StackPanel>
-                    <ToggleSwitch x:Name="PaydaySwitch" Grid.Column="2" IsOn="{Binding PaydayBoost, Mode=TwoWay}" OnContent="" OffContent=""
-                                  MinWidth="0" AutomationProperties.Name="Payday boost"/>
-                  </Grid>
-                  <Grid ColumnSpacing="12">
-                    <Grid.ColumnDefinitions>
-                      <ColumnDefinition Width="Auto"/>
-                      <ColumnDefinition Width="*"/>
-                      <ColumnDefinition Width="Auto"/>
-                    </Grid.ColumnDefinitions>
-                    <Border Width="38" Height="38" CornerRadius="12" Background="#99FFFFFF">
-                      <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8AB;" FontSize="15" Foreground="{StaticResource InkBrush}"/>
-                    </Border>
-                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
-                      <TextBlock Text="Smart sweep" FontSize="13" FontWeight="SemiBold" Foreground="{StaticResource InkBrush}"/>
-                      <TextBlock Text="Sweep what is left at the end of the month" FontSize="11" TextWrapping="Wrap" Foreground="{StaticResource MutedBrush}"/>
-                    </StackPanel>
-                    <ToggleSwitch x:Name="SweepSwitch" Grid.Column="2" IsOn="{Binding SmartSweep, Mode=TwoWay}" OnContent="" OffContent=""
-                                  MinWidth="0" AutomationProperties.Name="Smart sweep"/>
-                  </Grid>
-                </StackPanel>
-              </Border>
-            </Grid>
+            <!-- Next auto-save: a dial -->
+            <Border Grid.Column="2" Style="{StaticResource Card}">
+              <Grid RowSpacing="6">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="*"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Next auto-save" FontSize="18"/>
+                <Grid Grid.Row="1" Width="150" Height="150">
+                  <Ellipse Margin="10" Stroke="{ThemeResource TextFillColorTertiaryBrush}" StrokeThickness="8" StrokeDashArray="0.25,1.6"/>
+                  <ProgressRing IsIndeterminate="False" Value="{Binding CountdownProgress}" Maximum="100" Width="150" Height="150"
+                                Foreground="{ThemeResource AccentFillColorDefaultBrush}" Background="Transparent"/>
+                  <StackPanel HorizontalAlignment="Center" VerticalAlignment="Center">
+                    <TextBlock x:Name="CountdownLabel" Text="{Binding CountdownText}" d:Text="02:35" FontSize="32"
+                               FontFamily="Segoe UI Variable Display" FontWeight="Light" HorizontalAlignment="Center"/>
+                    <TextBlock Text="until payday boost" FontSize="10" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  </StackPanel>
+                </Grid>
+                <Grid Grid.Row="2">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <Button x:Name="PlayButton" Click="PlayClick" Style="{StaticResource RoundButton}" Background="{ThemeResource PanelBrush}"
+                            AutomationProperties.Name="Start countdown">
+                      <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE768;" FontSize="12"/>
+                    </Button>
+                    <Button x:Name="PauseButton" Click="PauseClick" Style="{StaticResource RoundButton}" Background="{ThemeResource PanelBrush}"
+                            AutomationProperties.Name="Pause countdown">
+                      <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE769;" FontSize="12"/>
+                    </Button>
+                  </StackPanel>
+                  <Button Style="{StaticResource RoundButton}" HorizontalAlignment="Right" Background="{ThemeResource InkBrush}"
+                          ToolTipService.ToolTip="Remind me" AutomationProperties.Name="Remind me">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE823;" FontSize="13" Foreground="{ThemeResource OnInkBrush}"/>
+                  </Button>
+                </Grid>
+              </Grid>
+            </Border>
 
-            <!-- Goal cards: click a card (or its Add money pill) to add $100 -->
-            <GridView x:Name="GoalGrid" SelectionMode="None" IsItemClickEnabled="True"
-                      ItemClick="GoalClick" Padding="0" AutomationProperties.Name="Goals">
-              <GridView.ItemTemplate>
-                <DataTemplate x:DataType="TGoal">
-                  <Grid Width="176" Height="276">
-                    <Border Style="{StaticResource GlassCard}" CornerRadius="24" Padding="16"
-                            Visibility="{Binding IsNewCard, Converter={StaticResource InverseBoolToVisibility}}">
-                      <Grid RowSpacing="10">
-                        <Grid.RowDefinitions>
-                          <RowDefinition Height="Auto"/>
-                          <RowDefinition Height="*"/>
-                          <RowDefinition Height="Auto"/>
-                          <RowDefinition Height="Auto"/>
-                        </Grid.RowDefinitions>
-                        <Grid>
-                          <Border Width="34" Height="34" CornerRadius="11" Background="#99FFFFFF" HorizontalAlignment="Left">
-                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="{Binding Glyph}" FontSize="14" Foreground="{StaticResource CoralBrush}"/>
-                          </Border>
-                          <Border HorizontalAlignment="Right" VerticalAlignment="Center" CornerRadius="9" Padding="8,2" Background="#99FFFFFF">
-                            <TextBlock Text="{Binding DueText}" FontSize="10" Foreground="{StaticResource MutedBrush}"/>
-                          </Border>
-                        </Grid>
-                        <Grid Grid.Row="1" Width="100" Height="100">
-                          <ProgressRing IsIndeterminate="False" Value="{Binding Percent}" Maximum="100" Width="100" Height="100"
-                                        Foreground="{StaticResource CoralBrush}" Background="#66FFFFFF"/>
-                          <TextBlock Text="{Binding PercentText}" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center"
-                                     VerticalAlignment="Center" Foreground="{StaticResource InkBrush}"/>
-                        </Grid>
-                        <StackPanel Grid.Row="2" Spacing="2">
-                          <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" Foreground="{StaticResource InkBrush}"/>
-                          <TextBlock Text="{Binding AmountText}" FontSize="11" Foreground="{StaticResource MutedBrush}"/>
-                        </StackPanel>
-                        <Border Grid.Row="3" CornerRadius="16" Padding="0,7" Background="#CCFFFFFF">
-                          <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Center">
-                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE710;" FontSize="10" Foreground="{StaticResource InkBrush}"/>
-                            <TextBlock Text="Add money" FontSize="12" Foreground="{StaticResource InkBrush}"/>
-                          </StackPanel>
+            <!-- Budget used -->
+            <Border Grid.Column="3" Style="{StaticResource Card}">
+              <StackPanel Spacing="18">
+                <Grid>
+                  <TextBlock Text="Budget used" FontSize="18"/>
+                  <TextBlock Text="18%" FontSize="34" FontFamily="Segoe UI Variable Display" FontWeight="Light" HorizontalAlignment="Right"/>
+                </Grid>
+                <Grid ColumnSpacing="4" RowSpacing="6">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="30*"/>
+                    <ColumnDefinition Width="25*"/>
+                    <ColumnDefinition Width="12*"/>
+                  </Grid.ColumnDefinitions>
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="44"/>
+                  </Grid.RowDefinitions>
+                  <TextBlock Text="30%" FontSize="11"/>
+                  <Border Grid.Column="1" BorderThickness="1,0,0,0" BorderBrush="{ThemeResource LineBrush}" Padding="6,0,0,0">
+                    <TextBlock Text="25%" FontSize="11"/>
+                  </Border>
+                  <Border Grid.Column="2" BorderThickness="1,0,0,0" BorderBrush="{ThemeResource LineBrush}" Padding="6,0,0,0">
+                    <TextBlock Text="0%" FontSize="11"/>
+                  </Border>
+                  <Border Grid.Row="1" CornerRadius="12" Padding="12,0" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                    <TextBlock Text="Bills" FontSize="12" VerticalAlignment="Center" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/>
+                  </Border>
+                  <Border Grid.Row="1" Grid.Column="1" CornerRadius="12" Background="{ThemeResource InkBrush}"/>
+                  <Border Grid.Row="1" Grid.Column="2" CornerRadius="12" Background="{ThemeResource FaintBrush}"/>
+                </Grid>
+                <TextBlock Text="Bills, groceries and fun money this month" FontSize="11" TextWrapping="Wrap"
+                           Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+              </StackPanel>
+            </Border>
+
+            <!-- Auto-save rules and linked cards -->
+            <Border Grid.Row="1" Style="{StaticResource Card}" Padding="12">
+              <ScrollViewer VerticalScrollBarVisibility="Auto">
+                <StackPanel Spacing="6">
+                  <Expander x:Name="RulesExpander" HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch">
+                    <Expander.Header>
+                      <Grid>
+                        <TextBlock Text="Auto-save rules" FontSize="13" VerticalAlignment="Center"/>
+                        <Border HorizontalAlignment="Right" CornerRadius="9" Padding="8,2" Background="{ThemeResource AccentFillColorDefaultBrush}">
+                          <TextBlock x:Name="AutoSaveLabel" Text="{Binding AutoSaveCaption}" d:Text="2 on" FontSize="10"
+                                     Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/>
                         </Border>
                       </Grid>
-                    </Border>
-                    <Grid Visibility="{Binding IsNewCard, Converter={StaticResource BoolToVisibility}}">
-                      <Rectangle RadiusX="24" RadiusY="24" Stroke="#B3FFFFFF" StrokeThickness="1.5" StrokeDashArray="5,4" Fill="#1AFFFFFF"/>
-                      <StackPanel Spacing="10" HorizontalAlignment="Center" VerticalAlignment="Center">
-                        <Border Width="52" Height="52" CornerRadius="26" Background="#CCFFFFFF" HorizontalAlignment="Center">
-                          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE710;" FontSize="18" Foreground="{StaticResource InkBrush}"/>
-                        </Border>
-                        <TextBlock Text="New goal" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center" Foreground="{StaticResource InkBrush}"/>
-                        <TextBlock Text="Start saving for something new" FontSize="11" HorizontalAlignment="Center" Foreground="{StaticResource MutedBrush}"/>
+                    </Expander.Header>
+                    <StackPanel Spacing="4">
+                      <ToggleSwitch x:Name="RoundUpsSwitch" Header="Round-ups" IsOn="{Binding RoundUps, Mode=TwoWay}"/>
+                      <ToggleSwitch x:Name="PaydaySwitch" Header="Payday boost" IsOn="{Binding PaydayBoost, Mode=TwoWay}"/>
+                      <ToggleSwitch x:Name="SweepSwitch" Header="Smart sweep" IsOn="{Binding SmartSweep, Mode=TwoWay}"/>
+                    </StackPanel>
+                  </Expander>
+                  <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" IsExpanded="True" Header="Linked cards">
+                    <Grid ColumnSpacing="12">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
+                      <Border Width="44" Height="30" CornerRadius="6" Background="{ThemeResource InkBrush}">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8C7;" FontSize="14" Foreground="{ThemeResource OnInkBrush}"/>
+                      </Border>
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="Visa Debit" FontSize="13"/>
+                        <TextBlock Text="ending 4821" FontSize="11" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                      </StackPanel>
+                      <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE712;" FontSize="14"/>
+                    </Grid>
+                  </Expander>
+                  <Expander HorizontalAlignment="Stretch" HorizontalContentAlignment="Stretch" Header="Interest summary">
+                    <TextBlock Text="$38.20 earned this year at 2.4% a year" FontSize="12" TextWrapping="Wrap"/>
+                  </Expander>
+                </StackPanel>
+              </ScrollViewer>
+            </Border>
+
+            <!-- Calendar -->
+            <Border Grid.Row="1" Grid.Column="1" Grid.ColumnSpan="2" Style="{StaticResource Card}">
+              <Grid RowSpacing="10">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid>
+                  <Border HorizontalAlignment="Left" CornerRadius="12" Padding="12,4" Background="{ThemeResource FaintBrush}">
+                    <TextBlock Text="October" FontSize="11"/>
+                  </Border>
+                  <TextBlock Text="November 2026" FontSize="14" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  <Border HorizontalAlignment="Right" CornerRadius="12" Padding="12,4" Background="{ThemeResource FaintBrush}">
+                    <TextBlock Text="December" FontSize="11"/>
+                  </Border>
+                </Grid>
+                <Grid Grid.Row="1">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                  </Grid.ColumnDefinitions>
+                  <StackPanel Grid.Column="1" HorizontalAlignment="Center">
+                    <TextBlock Text="Mon" FontSize="11" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="23" FontSize="13" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="2" HorizontalAlignment="Center">
+                    <TextBlock Text="Tue" FontSize="11" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="24" FontSize="13" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="3" HorizontalAlignment="Center">
+                    <TextBlock Text="Wed" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                    <TextBlock Text="25" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="4" HorizontalAlignment="Center">
+                    <TextBlock Text="Thu" FontSize="11" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="26" FontSize="13" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="5" HorizontalAlignment="Center">
+                    <TextBlock Text="Fri" FontSize="11" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="27" FontSize="13" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  </StackPanel>
+                  <StackPanel Grid.Column="6" HorizontalAlignment="Center">
+                    <TextBlock Text="Sat" FontSize="11" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                    <TextBlock Text="28" FontSize="13" HorizontalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                  </StackPanel>
+                </Grid>
+                <Grid Grid.Row="2">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="70"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                  </Grid.ColumnDefinitions>
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                    <RowDefinition Height="*"/>
+                  </Grid.RowDefinitions>
+                  <Line Grid.Column="1" Grid.RowSpan="4" X1="0" Y1="0" X2="0" Y2="400" HorizontalAlignment="Center" Stroke="{ThemeResource LineBrush}" StrokeDashArray="3,3"/>
+                  <Line Grid.Column="2" Grid.RowSpan="4" X1="0" Y1="0" X2="0" Y2="400" HorizontalAlignment="Center" Stroke="{ThemeResource LineBrush}" StrokeDashArray="3,3"/>
+                  <Line Grid.Column="3" Grid.RowSpan="4" X1="0" Y1="0" X2="0" Y2="400" HorizontalAlignment="Center" Stroke="{ThemeResource LineBrush}" StrokeDashArray="3,3"/>
+                  <Line Grid.Column="4" Grid.RowSpan="4" X1="0" Y1="0" X2="0" Y2="400" HorizontalAlignment="Center" Stroke="{ThemeResource LineBrush}" StrokeDashArray="3,3"/>
+                  <Line Grid.Column="5" Grid.RowSpan="4" X1="0" Y1="0" X2="0" Y2="400" HorizontalAlignment="Center" Stroke="{ThemeResource LineBrush}" StrokeDashArray="3,3"/>
+                  <Line Grid.Column="6" Grid.RowSpan="4" X1="0" Y1="0" X2="0" Y2="400" HorizontalAlignment="Center" Stroke="{ThemeResource LineBrush}" StrokeDashArray="3,3"/>
+                  <TextBlock Text="8:00 am" FontSize="11" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Row="1" Text="9:00 am" FontSize="11" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Row="2" Text="10:00 am" FontSize="11" VerticalAlignment="Center"/>
+                  <TextBlock Grid.Row="3" Text="11:00 am" FontSize="11" VerticalAlignment="Center"/>
+                  <Border Grid.Row="0" Grid.RowSpan="2" Grid.Column="2" Grid.ColumnSpan="2" VerticalAlignment="Center" Margin="10,0"
+                          CornerRadius="12" Padding="12,8" Background="{ThemeResource InkBrush}">
+                    <Grid>
+                      <StackPanel Margin="0,0,48,0">
+                        <TextBlock Text="Payday boost" FontSize="12" Foreground="{ThemeResource OnInkBrush}"/>
+                        <TextBlock Text="Move 10% to goals" FontSize="10" Foreground="{ThemeResource OnInkMutedBrush}"/>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="-6">
+                        <PersonPicture DisplayName="Alex Morgan" Width="24" Height="24"/>
+                        <PersonPicture DisplayName="Sam Lee" Width="24" Height="24"/>
                       </StackPanel>
                     </Grid>
-                  </Grid>
-                </DataTemplate>
-              </GridView.ItemTemplate>
-            </GridView>
-          </StackPanel>
-        </ScrollViewer>
-      </Border>
-    </Grid>
+                  </Border>
+                  <Border Grid.Row="2" Grid.RowSpan="2" Grid.Column="4" Grid.ColumnSpan="2" VerticalAlignment="Center" Margin="10,0"
+                          CornerRadius="12" Padding="12,8" Background="{ThemeResource PanelBrush}" BorderThickness="1" BorderBrush="{ThemeResource LineBrush}">
+                    <Grid>
+                      <StackPanel Margin="0,0,48,0">
+                        <TextBlock Text="Travel goal check-in" FontSize="12"/>
+                        <TextBlock Text="Review progress" FontSize="10" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                      </StackPanel>
+                      <StackPanel Orientation="Horizontal" HorizontalAlignment="Right" VerticalAlignment="Center" Spacing="-6">
+                        <PersonPicture DisplayName="Alex Morgan" Width="24" Height="24"/>
+                        <PersonPicture DisplayName="Rita Cho" Width="24" Height="24"/>
+                      </StackPanel>
+                    </Grid>
+                  </Border>
+                </Grid>
+              </Grid>
+            </Border>
 
-    <!-- Bottom tab bar -->
-    <Border Grid.Row="3" Style="{StaticResource GlassCard}" CornerRadius="28" Padding="10,6" Margin="0,0,0,20" HorizontalAlignment="Center">
-      <StackPanel Orientation="Horizontal" Spacing="4">
-        <Button Style="{StaticResource TabButton}" Content="Overview"/>
-        <Button Style="{StaticResource TabButton}" Content="Activity"/>
-        <Button Style="{StaticResource TabButton}" Content="Manage" Background="#B3FFFFFF"/>
-        <Button Style="{StaticResource TabButton}" Content="Program"/>
-        <Button Style="{StaticResource TabButton}" Content="Account"/>
-        <Button Style="{StaticResource TabButton}" Content="Reports"/>
-        <Button x:Name="QuickAddButton" Click="NewGoalClick" Width="40" Height="40" CornerRadius="20" Padding="0" Margin="8,0,0,0"
-                Background="White" BorderThickness="0" ToolTipService.ToolTip="New goal" AutomationProperties.Name="Add a goal">
-          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE710;" FontSize="14" Foreground="{StaticResource InkBrush}"/>
-        </Button>
-      </StackPanel>
+            <!-- Goals: a dark card in light theme, a light one in dark theme -->
+            <Border Grid.Row="1" Grid.Column="3" CornerRadius="24" Padding="18,18,18,10" Background="{ThemeResource InkBrush}">
+              <Grid RowSpacing="8">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="*"/>
+                </Grid.RowDefinitions>
+                <Grid>
+                  <TextBlock Text="Goals" FontSize="18" Foreground="{ThemeResource OnInkBrush}" VerticalAlignment="Center"/>
+                  <TextBlock x:Name="GoalCaptionLabel" Text="{Binding GoalCaption}" d:Text="2/5" FontSize="30" FontFamily="Segoe UI Variable Display"
+                             FontWeight="Light" HorizontalAlignment="Right" Foreground="{ThemeResource OnInkBrush}"/>
+                </Grid>
+                <ListView x:Name="GoalList" Grid.Row="1" SelectionMode="None" IsItemClickEnabled="True" ItemClick="GoalClick"
+                          Margin="-12,0" AutomationProperties.Name="Goals">
+                  <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="TGoal">
+                      <Grid ColumnSpacing="10" Padding="0,5">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto"/>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Width="34" Height="34" CornerRadius="17" Background="{ThemeResource OnInkFaintBrush}">
+                          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="{Binding Glyph}" FontSize="13" Foreground="{ThemeResource OnInkBrush}"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                          <TextBlock Text="{Binding Title}" FontSize="13" TextDecorations="Strikethrough" Foreground="{ThemeResource OnInkMutedBrush}"
+                                     Visibility="{Binding Done, Converter={StaticResource BoolToVisibility}}"/>
+                          <TextBlock Text="{Binding Title}" FontSize="13" Foreground="{ThemeResource OnInkBrush}"
+                                     Visibility="{Binding Done, Converter={StaticResource InverseBoolToVisibility}}"/>
+                          <TextBlock Text="{Binding When}" FontSize="10" Foreground="{ThemeResource OnInkMutedBrush}"/>
+                        </StackPanel>
+                        <Grid Grid.Column="2" Width="22" Height="22">
+                          <Ellipse Fill="{ThemeResource AccentFillColorDefaultBrush}" Visibility="{Binding Done, Converter={StaticResource BoolToVisibility}}"/>
+                          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE73E;" FontSize="11"
+                                    Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}" Visibility="{Binding Done, Converter={StaticResource BoolToVisibility}}"/>
+                          <Ellipse Width="12" Height="12" Fill="{ThemeResource OnInkFaintBrush}" Visibility="{Binding Done, Converter={StaticResource InverseBoolToVisibility}}"/>
+                        </Grid>
+                      </Grid>
+                    </DataTemplate>
+                  </ListView.ItemTemplate>
+                </ListView>
+              </Grid>
+            </Border>
+          </Grid>
+        </Grid>
+      </ScrollViewer>
     </Border>
   </Grid>
 </Window>

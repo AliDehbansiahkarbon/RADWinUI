@@ -1,6 +1,6 @@
 program Haven;
 
-{ A glassy savings dashboard: acrylic cards over a warm background, bound to a Delphi view model. }
+{ A bento-style savings dashboard that follows the Windows theme and accent colour, bound to a Delphi view model. }
 
 uses
   RADWinUI.Forms,

@@ -1,8 +1,9 @@
 unit MainViewModel;
 
-{ The data behind Haven's dashboard: savings goals, monthly contributions and
-  the auto-save rules. Every number the window shows is a published property,
-  so the XAML binds to it and follows every change. }
+{ The data behind Haven's savings dashboard: the total saved, this week's
+  deposits, the countdown to the next auto-save, the auto-save rules and the
+  savings goals. Every value the window shows is a published property, so the
+  XAML binds to it and follows every change. }
 
 interface
 
@@ -10,74 +11,73 @@ uses
   RADWinUI.Binding;
 
 type
-  { One savings goal card. The last card of the list is the "New goal" card. }
+  { One savings goal in the Goals list. }
   TGoal = class(TWinUIBindableObject)
   private
-    FName, FGlyph, FDueText: string;
-    FSaved, FTarget: Double;
-    FIsNewCard: Boolean;
-    function GetPercent: Double;
-    function GetPercentText: string;
-    function GetAmountText: string;
+    FTitle, FWhen, FGlyph: string;
+    FDone: Boolean;
   public
-    constructor Create(const AName, AGlyph, ADueText: string; ASaved, ATarget: Double);
-    constructor CreateNewCard;
-    procedure AddMoney(AAmount: Double);
-    property Saved: Double read FSaved;
-    property Target: Double read FTarget;
+    constructor Create(const ATitle, AWhen, AGlyph: string; ADone: Boolean);
+    procedure Toggle;
   published
-    property Name: string read FName;
+    property Title: string read FTitle;
+    property When: string read FWhen;
     property Glyph: string read FGlyph;
-    property DueText: string read FDueText;
-    property Percent: Double read GetPercent;
-    property PercentText: string read GetPercentText;
-    property AmountText: string read GetAmountText;
-    property IsNewCard: Boolean read FIsNewCard;
+    property Done: Boolean read FDone;
   end;
 
   TMainViewModel = class(TWinUIBindableObject)
   private
     FGoals: TWinUIBindableList<TGoal>;
-    FMonths: array[0..5] of Double;
+    FDays: array[0..6] of Double;
+    FCountdown: Integer;
+    FRunning: Boolean;
     FRoundUps, FPaydayBoost, FSmartSweep: Boolean;
-    FUserName: string;
+    function GetGoalCaption: string;
     function GetTotalText: string;
-    function GetTotalProgress: Double;
-    function GetProgressCaption: string;
+    function GetWeekText: string;
+    function GetCountdownText: string;
+    function GetCountdownProgress: Double;
     function GetAutoSaveCaption: string;
-    function GetBar(AIndex: Integer): Double;
+    function GetDay(AIndex: Integer): Double;
     procedure SetRoundUps(AValue: Boolean);
     procedure SetPaydayBoost(AValue: Boolean);
     procedure SetSmartSweep(AValue: Boolean);
-    procedure TotalsChanged;
   public
     constructor Create;
     destructor Destroy; override;
-    { Adds AAmount to the goal at AIndex and to this month's contribution. }
-    procedure AddMoney(AIndex: Integer; AAmount: Double);
-    { Adds a new, empty goal before the "New goal" card and returns its index. }
-    function AddGoal: Integer;
-    function GoalCount: Integer;
+    { Marks the goal at AIndex done or open again. }
+    procedure ToggleGoal(AIndex: Integer);
+    { Adds AAmount to today's deposits. }
+    procedure AddMoney(AAmount: Double);
+    procedure Start;
+    procedure Pause;
+    { One second of the countdown while it runs. }
+    procedure Tick;
+    function DoneCount: Integer;
+    property Running: Boolean read FRunning;
   published
-    property UserName: string read FUserName;
     property Goals: TWinUIBindableList<TGoal> read FGoals;
+    property GoalCaption: string read GetGoalCaption;
     property TotalText: string read GetTotalText;
-    property TotalProgress: Double read GetTotalProgress;
-    property ProgressCaption: string read GetProgressCaption;
+    property WeekText: string read GetWeekText;
+    property CountdownText: string read GetCountdownText;
+    property CountdownProgress: Double read GetCountdownProgress;
     property AutoSaveCaption: string read GetAutoSaveCaption;
-    property Bar1: Double index 0 read GetBar;
-    property Bar2: Double index 1 read GetBar;
-    property Bar3: Double index 2 read GetBar;
-    property Bar4: Double index 3 read GetBar;
-    property Bar5: Double index 4 read GetBar;
-    property Bar6: Double index 5 read GetBar;
+    property Day1: Double index 0 read GetDay;
+    property Day2: Double index 1 read GetDay;
+    property Day3: Double index 2 read GetDay;
+    property Day4: Double index 3 read GetDay;
+    property Day5: Double index 4 read GetDay;
+    property Day6: Double index 5 read GetDay;
+    property Day7: Double index 6 read GetDay;
     property RoundUps: Boolean read FRoundUps write SetRoundUps;
     property PaydayBoost: Boolean read FPaydayBoost write SetPaydayBoost;
     property SmartSweep: Boolean read FSmartSweep write SetSmartSweep;
   end;
 
-{ Money as the dashboard shows it, the same on every PC: $10,937.95 }
-function MoneyText(AValue: Double; ADecimals: Integer = 2): string;
+{ Money as the dashboard shows it, the same on every PC: $10,937 }
+function MoneyText(AValue: Double): string;
 
 implementation
 
@@ -86,85 +86,54 @@ uses
   System.Math;
 
 const
-  BarScale = 130; // pixels of the tallest monthly bar
-  NewGoalTarget = 1000;
+  BarScale = 120;               // pixels of the best day
+  CountdownStart = 2 * 60 + 35; // minutes and seconds shown as 02:35
+  CountdownFull = 5 * 60;       // the dial is full five minutes before an auto-save
+  BaseTotal = 10327;
 
 var
   UsFormat: TFormatSettings;
 
-function MoneyText(AValue: Double; ADecimals: Integer): string;
+function MoneyText(AValue: Double): string;
 begin
-  if ADecimals > 0 then
-    Result := '$' + FormatFloat('#,##0.' + StringOfChar('0', ADecimals), AValue, UsFormat)
-  else
-    Result := '$' + FormatFloat('#,##0', AValue, UsFormat);
+  Result := '$' + FormatFloat('#,##0', AValue, UsFormat);
 end;
 
 { TGoal }
 
-constructor TGoal.Create(const AName, AGlyph, ADueText: string; ASaved, ATarget: Double);
+constructor TGoal.Create(const ATitle, AWhen, AGlyph: string; ADone: Boolean);
 begin
   inherited Create;
-  FName := AName;
+  FTitle := ATitle;
+  FWhen := AWhen;
   FGlyph := AGlyph;
-  FDueText := ADueText;
-  FSaved := ASaved;
-  FTarget := ATarget;
+  FDone := ADone;
 end;
 
-constructor TGoal.CreateNewCard;
+procedure TGoal.Toggle;
 begin
-  inherited Create;
-  FName := 'New goal';
-  FGlyph := #$E710;
-  FIsNewCard := True;
-end;
-
-function TGoal.GetPercent: Double;
-begin
-  if FTarget <= 0 then
-    Result := 0
-  else
-    Result := Min(100, 100 * FSaved / FTarget);
-end;
-
-function TGoal.GetPercentText: string;
-begin
-  Result := IntToStr(Round(GetPercent)) + '%';
-end;
-
-function TGoal.GetAmountText: string;
-begin
-  Result := MoneyText(FSaved, 0) + ' of ' + MoneyText(FTarget, 0);
-end;
-
-procedure TGoal.AddMoney(AAmount: Double);
-begin
-  FSaved := Min(FTarget, FSaved + AAmount);
-  Changed('Percent');
-  Changed('PercentText');
-  Changed('AmountText');
+  FDone := not FDone;
+  Changed('Done');
 end;
 
 { TMainViewModel }
 
 constructor TMainViewModel.Create;
 const
-  Contributions: array[0..5] of Double = (420, 610, 380, 720, 560, 840);
+  Deposits: array[0..6] of Double = (24, 96, 120, 58, 130, 182, 0);
 var
   I: Integer;
 begin
   inherited;
-  FUserName := 'Alex';
   FGoals := TWinUIBindableList<TGoal>.Create;
-  FGoals.Add(TGoal.Create('Summer in Lisbon', #$E709, 'Jun 2026', 2220, 3000));
-  FGoals.Add(TGoal.Create('New laptop', #$E7F8, 'Aug 2026', 1536, 2400));
-  FGoals.Add(TGoal.Create('Emergency fund', #$EA18, 'Dec 2026', 4860, 10000));
-  FGoals.Add(TGoal.Create('Home studio', #$E8D6, 'Mar 2027', 1180, 4200));
-  FGoals.Add(TGoal.Create('Wedding gift', #$EB51, 'May 2027', 1141.95, 4700));
-  FGoals.Add(TGoal.CreateNewCard);
-  for I := 0 to High(FMonths) do
-    FMonths[I] := Contributions[I];
+  FGoals.Add(TGoal.Create('Emergency fund', 'Done Sep 2026', #$EA18, True));
+  FGoals.Add(TGoal.Create('New laptop', 'Done Oct 2026', #$E7F8, True));
+  FGoals.Add(TGoal.Create('Summer in Lisbon', 'Due Jun 2027', #$E709, False));
+  FGoals.Add(TGoal.Create('Home studio', 'Due Mar 2027', #$E8D6, False));
+  FGoals.Add(TGoal.Create('Wedding gift', 'Due May 2027', #$EB51, False));
+  for I := 0 to High(FDays) do
+    FDays[I] := Deposits[I];
+  FCountdown := CountdownStart;
   FRoundUps := True;
   FPaydayBoost := True;
 end;
@@ -175,49 +144,39 @@ begin
   inherited;
 end;
 
-function TMainViewModel.GoalCount: Integer;
+function TMainViewModel.DoneCount: Integer;
+var
+  I: Integer;
 begin
-  Result := FGoals.Count - 1;
+  Result := 0;
+  for I := 0 to FGoals.Count - 1 do
+    if FGoals[I].Done then
+      Inc(Result);
+end;
+
+function TMainViewModel.GetGoalCaption: string;
+begin
+  Result := IntToStr(DoneCount) + '/' + IntToStr(FGoals.Count);
 end;
 
 function TMainViewModel.GetTotalText: string;
-var
-  I: Integer;
-  Total: Double;
 begin
-  Total := 0;
-  for I := 0 to GoalCount - 1 do
-    Total := Total + FGoals[I].Saved;
-  Result := MoneyText(Total);
+  Result := MoneyText(BaseTotal + Sum(FDays));
 end;
 
-function TMainViewModel.GetTotalProgress: Double;
-var
-  I: Integer;
-  Saved, Target: Double;
+function TMainViewModel.GetWeekText: string;
 begin
-  Saved := 0;
-  Target := 0;
-  for I := 0 to GoalCount - 1 do
-  begin
-    Saved := Saved + FGoals[I].Saved;
-    Target := Target + FGoals[I].Target;
-  end;
-  if Target <= 0 then
-    Result := 0
-  else
-    Result := 100 * Saved / Target;
+  Result := MoneyText(Sum(FDays));
 end;
 
-function TMainViewModel.GetProgressCaption: string;
-var
-  I: Integer;
-  Target: Double;
+function TMainViewModel.GetCountdownText: string;
 begin
-  Target := 0;
-  for I := 0 to GoalCount - 1 do
-    Target := Target + FGoals[I].Target;
-  Result := Format('%d%% of %s across %d goals', [Round(GetTotalProgress), MoneyText(Target, 0), GoalCount]);
+  Result := Format('%.2d:%.2d', [FCountdown div 60, FCountdown mod 60]);
+end;
+
+function TMainViewModel.GetCountdownProgress: Double;
+begin
+  Result := 100 * (1 - FCountdown / CountdownFull);
 end;
 
 function TMainViewModel.GetAutoSaveCaption: string;
@@ -225,9 +184,9 @@ begin
   Result := IntToStr(Ord(FRoundUps) + Ord(FPaydayBoost) + Ord(FSmartSweep)) + ' on';
 end;
 
-function TMainViewModel.GetBar(AIndex: Integer): Double;
+function TMainViewModel.GetDay(AIndex: Integer): Double;
 begin
-  Result := Max(12, BarScale * FMonths[AIndex] / MaxValue(FMonths));
+  Result := Max(10, BarScale * FDays[AIndex] / MaxValue(FDays));
 end;
 
 procedure TMainViewModel.SetRoundUps(AValue: Boolean);
@@ -248,33 +207,47 @@ begin
   Changed('AutoSaveCaption');
 end;
 
-procedure TMainViewModel.TotalsChanged;
+procedure TMainViewModel.ToggleGoal(AIndex: Integer);
+begin
+  if (AIndex < 0) or (AIndex >= FGoals.Count) then
+    Exit;
+  FGoals[AIndex].Toggle;
+  Changed('GoalCaption');
+end;
+
+procedure TMainViewModel.AddMoney(AAmount: Double);
 const
-  Bars: array[0..5] of string = ('Bar1', 'Bar2', 'Bar3', 'Bar4', 'Bar5', 'Bar6');
+  Days: array[0..6] of string = ('Day1', 'Day2', 'Day3', 'Day4', 'Day5', 'Day6', 'Day7');
 var
   Name: string;
 begin
+  FDays[5] := FDays[5] + AAmount; // today, Friday
   Changed('TotalText');
-  Changed('TotalProgress');
-  Changed('ProgressCaption');
-  for Name in Bars do
+  Changed('WeekText');
+  for Name in Days do
     Changed(Name);
 end;
 
-procedure TMainViewModel.AddMoney(AIndex: Integer; AAmount: Double);
+procedure TMainViewModel.Start;
 begin
-  if (AIndex < 0) or (AIndex >= GoalCount) then
-    Exit;
-  FGoals[AIndex].AddMoney(AAmount);
-  FMonths[High(FMonths)] := FMonths[High(FMonths)] + AAmount;
-  TotalsChanged;
+  FRunning := True;
 end;
 
-function TMainViewModel.AddGoal: Integer;
+procedure TMainViewModel.Pause;
 begin
-  Result := GoalCount;
-  FGoals.Insert(Result, TGoal.Create('Goal ' + IntToStr(Result + 1), #$E734, 'No date', 0, NewGoalTarget));
-  TotalsChanged;
+  FRunning := False;
+end;
+
+procedure TMainViewModel.Tick;
+begin
+  if not FRunning then
+    Exit;
+  if FCountdown > 0 then
+    Dec(FCountdown)
+  else
+    FCountdown := CountdownFull;
+  Changed('CountdownText');
+  Changed('CountdownProgress');
 end;
 
 initialization

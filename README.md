@@ -63,7 +63,7 @@ RADWinUI works the way a Delphi developer expects. File > New creates the projec
 
 ![The designer with the Structure view, Object Inspector and the RADWinUI Tool Palette, light theme](docs/images/ide-gallery-palette-light.png)
 
-![Haven, a glassy savings dashboard built with RADWinUI](docs/images/app-haven.png)
+![Haven, a savings dashboard built with RADWinUI](docs/images/app-haven.png)
 
 ## Supported IDE And Requirements
 
@@ -148,7 +148,7 @@ Open `samples\RADWinUISamples.groupproj`, Build All, and run:
 
 - **[Gallery](docs/samples-Gallery.md):** 30 controls in seven guided demos, search, themes, Mica and Acrylic, XAML and Pascal source, and live Pascal binding.
 - **[Luma](docs/samples-Luma.md):** an Acrylic desktop companion with a live clock, battery and memory readings, a focus timer and a calendar.
-- **[Haven](docs/samples-Haven.md):** a glassy savings dashboard: acrylic cards over a warm background, goal rings, a monthly chart and auto-save toggles, all bound to a Delphi view model.
+- **[Haven](docs/samples-Haven.md):** a bento-style savings dashboard that follows the Windows theme and accent colour, with a weekly chart, a countdown dial, a calendar and a goals checklist, all bound to a Delphi view model.
 
 Smaller samples (Counter, Greeter, ListDemo, Contacts, Profile) show one topic each, build them with `scripts\Build.ps1 -Project samples\Counter\Counter.dpr`.
 

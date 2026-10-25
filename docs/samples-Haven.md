@@ -1,8 +1,10 @@
 # Haven
 
-A glassy savings dashboard made with Delphi and WinUI 3: frosted acrylic cards over a warm background, a monthly contributions chart, auto-save rules and savings goals with progress rings. Every number and toggle is bound to a Delphi view model.
+A bento-style savings dashboard made with Delphi and WinUI 3: a weekly deposits chart, a countdown dial, a budget bar, auto-save rules, a calendar and a goals checklist. It follows the Windows theme and accent colour live, and every number and toggle is bound to a Delphi view model.
 
-![Haven, a glassy savings dashboard](images/app-haven.png)
+![Haven in the light theme](images/app-haven.png)
+
+![Haven in the dark theme](images/app-haven-dark.png)
 
 Open `samples\Haven\Haven.dproj` in RAD Studio 13 and run Win64. Or, from the repository root:
 
@@ -12,15 +14,17 @@ Open `samples\Haven\Haven.dproj` in RAD Studio 13 and run Win64. Or, from the re
 .\scripts\Test-Haven.ps1 -NoBuild
 ```
 
+Pass `-light` or `-dark` to `Haven.exe` to pick a theme without changing the Windows setting.
+
 ## How it is made
 
-- **Glass.** The cards use an in-app `AcrylicBrush` (white tint, low opacity) with a 1 px light border and large corner radii. Behind them the window draws its own warm background in XAML: a few large `RadialGradientBrush` blobs. The acrylic blurs those blobs, so the glass looks the same on every desktop. No image file is used.
-- **Binding.** `MainWindow.xaml` binds to `TMainViewModel` (`DataContextType`). The total, the progress caption, the monthly bars and the "N on" pill are read-only properties that the view model updates with `Changed`. The three toggles bind two-way (`IsOn="{Binding RoundUps, Mode=TwoWay}"`), so switching one updates the pill.
-- **Goals.** `GoalGrid` is a `GridView` whose `ItemsSource` is a `TWinUIBindableList<TGoal>`. The item template binds each card's ring, percentage and amount. Clicking a card (or its Add money pill) adds $100 through `ItemClick`: the ring, the total and this month's bar all follow. The last item is the "New goal" card, shown by the same template with the `BoolToVisibility` converters.
-- **Lightweight styling.** The coral toggle colour comes from `ToggleSwitchFillOn` resources on the root grid, the card look from one `Style`.
+- **Theme and accent.** Every colour is a `ThemeResource`. The page's own brushes (background, cards, the "ink" pills) live in `ThemeDictionaries` with a Light and a Dark entry, so the dark theme inverts them: charcoal cards, a light Goals card. Highlights use the system accent (`AccentFillColorDefaultBrush`, `SystemAccentColor` and its lighter and darker shades), so changing the accent in Windows recolours the dashboard at once.
+- **Binding.** `MainWindow.xaml` binds to `TMainViewModel` (`DataContextType`). The total, this week's bars, the countdown, the "N on" pill and the goal caption are read-only properties that the view model updates with `Changed`. The three toggles bind two-way (`IsOn="{Binding RoundUps, Mode=TwoWay}"`), so switching one updates the pill.
+- **Goals.** `GoalList` is a `ListView` whose `ItemsSource` is a `TWinUIBindableList<TGoal>`. Clicking a goal marks it done or open through `ItemClick`: the strikethrough, the accent check and the "2/5" caption follow, using the `BoolToVisibility` converters.
+- **Interaction.** The + button adds $50 to today, and play and pause run the countdown dial (a `ProgressRing` over a dashed `Ellipse`).
 
-The cards wrap when the window gets narrower, and the page scrolls.
+The page scrolls when the window is smaller than the dashboard.
 
 ## Automated check
 
-`scripts\Test-Haven.ps1` builds Haven and runs a smoke test: the initial totals, adding money to a goal, a two-way toggle and a new goal. Pass `-Monitor offscreen` on a PC with one screen: the window then opens outside every monitor and never takes the focus.
+`scripts\Test-Haven.ps1` builds Haven and runs a smoke test: the initial values, toggling a goal, a two-way toggle, adding money and the countdown. Pass `-Monitor offscreen` on a PC with one screen: the window then opens outside every monitor and never takes the focus.
