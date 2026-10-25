@@ -23,6 +23,7 @@ Open an issue with:
 .\scripts\Test-Wizard.ps1                    # File > New project built with MSBuild and run
 .\scripts\Test-Gallery.ps1                   # Gallery
 .\scripts\Test-Luma.ps1                      # Luma
+.\scripts\Test-Haven.ps1                     # Haven
 ```
 
 UI tests open their windows on a secondary monitor when there is one and never take the focus.

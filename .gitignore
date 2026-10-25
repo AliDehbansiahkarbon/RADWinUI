@@ -59,6 +59,7 @@ Desktop.ini
 # Resource file MSBuild writes for the wizard package
 packages/*.res
 samples/Luma/Luma.res
+samples/Haven/Haven.res
 samples/Gallery/Gallery.res
 src/IDE/Preview/RADWinUIPreview.res
 tests/Designer/XamlEditTest.res

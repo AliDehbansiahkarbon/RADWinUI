@@ -342,6 +342,15 @@ var
   Info: TMonitorInfo;
   Monitor: HMONITOR;
 begin
+  // offscreen: far outside every monitor, for runs while someone uses the only monitor
+  if SameText(GetEnvironmentVariable('RADWINUI_TEST_MONITOR'), 'offscreen') then
+  begin
+    AArea.Left := -32000;
+    AArea.Top := -32000;
+    AArea.Right := AArea.Left + 3840;
+    AArea.Bottom := AArea.Top + 2160;
+    Exit(True);
+  end;
   Result := SameText(GetEnvironmentVariable('RADWINUI_TEST_MONITOR'), 'secondary');
   if not Result then
     Exit;

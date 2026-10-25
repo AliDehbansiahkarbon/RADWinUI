@@ -4,6 +4,8 @@ All notable changes to RADWinUI.
 
 ## Unreleased (0.9.3)
 
+- New sample: Haven, a glassy savings dashboard with acrylic cards, goal rings and two-way bound toggles.
+- `RADWINUI_TEST_MONITOR=offscreen` runs a test window outside every monitor, for machines with one screen.
 - The 32-bit IDE can install RADWinUI: one package per IDE, `RADWinUIWizard` (64-bit IDE) and `RADWinUIWizard32` (32-bit IDE).
 - One project group per IDE: `RADWinUI.groupproj` (64-bit IDE) and `RADWinUI32.groupproj` (32-bit IDE), so each shows only its own package.
 - Repository cleanup for publishing: the Python XamlCodeGen, the early prototypes and internal notes are gone, the generator's tests are Delphi programs.

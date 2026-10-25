@@ -11,6 +11,9 @@
         <Projects Include="Luma\Luma.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Haven\Haven.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -37,14 +40,23 @@
     <Target Name="Luma:Make">
         <MSBuild Projects="Luma\Luma.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Haven">
+        <MSBuild Projects="Haven\Haven.dproj"/>
+    </Target>
+    <Target Name="Haven:Clean">
+        <MSBuild Projects="Haven\Haven.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Haven:Make">
+        <MSBuild Projects="Haven\Haven.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="Gallery;Luma"/>
+        <CallTarget Targets="Gallery;Luma;Haven"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Gallery:Clean;Luma:Clean"/>
+        <CallTarget Targets="Gallery:Clean;Luma:Clean;Haven:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Gallery:Make;Luma:Make"/>
+        <CallTarget Targets="Gallery:Make;Luma:Make;Haven:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

@@ -11,7 +11,7 @@
                                 the IDE package on the user's machine (64-bit IDE)
     RADWinUI32.groupproj        the same for the classic 32-bit IDE
     samples\RADWinUISamples.groupproj
-                                the Gallery and Luma demos
+                                the Gallery, Luma and Haven demos
     third_party\WindowsAppSDK\<release>\Microsoft.WindowsAppSDK.Foundation
                                 the bootstrap DLL (signed by Microsoft) and its
                                 license.txt only
@@ -97,7 +97,7 @@ $UsesPython = @(Get-ChildItem $Release -Recurse -File -Include *.dproj, *.groupp
 Check ($UsesPython.Count -eq 0) "no project or unit runs Python (found: $(($UsesPython | Select-Object -First 3).Name -join ', '))"
 Check (Test-Path (Join-Path $Release 'RADWinUI.groupproj')) 'RADWinUI.groupproj (XamlCodeGen, preview host, package of the 64-bit IDE)'
 Check (Test-Path (Join-Path $Release 'RADWinUI32.groupproj')) 'RADWinUI32.groupproj (XamlCodeGen, preview host, package of the 32-bit IDE)'
-Check (Test-Path (Join-Path $Release 'samples\RADWinUISamples.groupproj')) 'samples\RADWinUISamples.groupproj (Gallery, Luma)'
+Check (Test-Path (Join-Path $Release 'samples\RADWinUISamples.groupproj')) 'samples\RADWinUISamples.groupproj (Gallery, Luma, Haven)'
 Check (Test-Path (Join-Path $Release 'docs\THIRD-PARTY-NOTICES.md')) 'docs\THIRD-PARTY-NOTICES.md'
 Check ((Get-Content (Join-Path $Release 'LICENSE') -TotalCount 1) -eq 'MIT License') 'LICENSE: MIT'
 Check (Test-Path (Join-Path $Release 'docs\GETTING-STARTED.md')) 'docs\GETTING-STARTED.md'
@@ -135,12 +135,12 @@ try {
     $Exports = & $Tdump -ee "$TryRoot\build\packages\$Bpl" 2>&1 | Select-String -Pattern "8RegisterEv'|::Register\(\)'"
     Check (@($Exports).Count -eq 1) "$Bpl exports one Register"
   }
-  foreach ($Demo in 'Gallery', 'Luma') {
+  foreach ($Demo in 'Gallery', 'Luma', 'Haven') {
     Remove-Item "$TryRoot\samples\$Demo\MainWindow.Xaml.pas"
   }
   $Log = Join-Path $LogDir 'Release-samples.log'
   cmd /c "`"$RsVars`" && msbuild `"$TryRoot\samples\RADWinUISamples.groupproj`" /t:Build /p:Config=Release /p:Platform=Win64 /nologo /v:minimal" > $Log 2>&1
-  foreach ($Demo in 'Gallery', 'Luma') {
+  foreach ($Demo in 'Gallery', 'Luma', 'Haven') {
     Check (($LASTEXITCODE -eq 0) -and (Test-Path "$TryRoot\samples\$Demo\MainWindow.Xaml.pas") -and
       (Test-Path "$TryRoot\samples\$Demo\Win64\Release\$Demo.exe")) "$Demo builds; its pre-build event regenerated MainWindow.Xaml.pas (log: $Log)"
   }
