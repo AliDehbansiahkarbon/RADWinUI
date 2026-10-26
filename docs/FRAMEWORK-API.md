@@ -188,6 +188,9 @@ public
   property Width, Height: Integer;         // client size in effective pixels
   property MinWidth, MinHeight: Integer;
   property Backdrop: TWinUIBackdrop;       // None, Mica, MicaAlt, Acrylic
+  property Transparency: Boolean;          // False: the root panel gets a solid theme colour instead of the backdrop
+  class function SystemTransparency: Boolean; // False while Energy saver is on or Transparency effects is off
+  procedure BindTransparencySwitch(ASwitch: TWinUIToggleSwitch); // a ready-made on/off switch with an honest tooltip
   property OnClosed: TWinUIWindowEventHandler;
 end;
 
@@ -195,6 +198,8 @@ begin
   TWinUIApp.Run(TMainWindow);   // bootstrap, DPI awareness, Application.Start, create and show the window
 end.
 ```
+
+Mica and Acrylic show a solid colour whenever Windows turns transparency off (Energy saver, or Transparency effects off in Settings > Personalization > Colors) and while the window is inactive. An app cannot override that, `SystemTransparency` tells whether Windows allows it right now.
 
 `TWinUITimer` is a repeating UI-thread timer like the VCL `TTimer` (`Interval` in milliseconds, `Enabled`, `OnTimer`).
 

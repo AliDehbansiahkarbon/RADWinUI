@@ -148,6 +148,7 @@ begin
   ViewModel := TMainViewModel.Create;
   SetTitleBar(DragRegion);
   AppWindow.TitleBar.PreferredTheme := TWinUITitleBarTheme.UseDefaultAppMode;
+  BindTransparencySwitch(TransparencySwitch);
   FPages[0] := HomePage; FPages[1] := InputsPage; FPages[2] := CollectionsPage;
   FPages[3] := DatesPage; FPages[4] := FeedbackPage; FPages[5] := LayoutPage;
   FPages[6] := MaterialsPage; FPages[7] := BindingPage; FPages[8] := ExplorerPage;

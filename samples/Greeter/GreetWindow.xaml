@@ -8,5 +8,6 @@
         <TextBox x:Name="NameBox" Header="Name" PlaceholderText="Type your name"/>
         <Button x:Name="GreetButton" Content="Greet"/>
         <TextBlock x:Name="Greeting" FontSize="24"/>
+        <ToggleSwitch x:Name="TransparencySwitch" Header="Transparency"/>
     </StackPanel>
 </Window>

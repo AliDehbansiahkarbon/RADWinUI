@@ -45,6 +45,11 @@ type
   TWinUIWindow = class(TWinUICustomWindow)
   strict private
     FBackdrop: TWinUIBackdrop;
+    FTransparency: Boolean;
+    FSystemBackdrop: TWinUISystemBackdrop;
+    FOpaqueBrush: TWinUISolidColorBrush;
+    FPlainBackground: TWinUIBrush;
+    FThemeHooked: Boolean;
     FMinWidth: Integer;
     FMinHeight: Integer;
     FClosedToken: EventRegistrationToken;
@@ -59,6 +64,10 @@ type
     procedure SetMinWidth(AValue: Integer);
     procedure SetMinHeight(AValue: Integer);
     procedure SetBackdrop(AValue: TWinUIBackdrop);
+    procedure SetTransparency(AValue: Boolean);
+    procedure ApplyBackdrop;
+    procedure UpdateOpaqueFill;
+    procedure ExplainTransparency(ASwitch: TWinUIToggleSwitch);
     procedure ResizeClientArea(AWidth, AHeight: Integer);
     function GetDataContext: TWinValue;
     procedure SetDataContext(const AValue: TWinValue);
@@ -78,6 +87,17 @@ type
     function FindElement<T: TWinUIObject>(const AName: string): T;
     /// <summary>Loads a XAML string, sets it as the content and returns its root.</summary>
     function LoadContent(const AXaml: string): TWinUIFrameworkElement;
+    /// <summary>
+    ///   True when Windows draws translucent backdrops right now: Transparency
+    ///   effects is on and Energy saver is off. When False, Mica and Acrylic show
+    ///   a solid colour whatever the app asks for.
+    /// </summary>
+    class function SystemTransparency: Boolean; static;
+    /// <summary>
+    ///   Makes ASwitch turn Transparency on and off, and explains in its tooltip
+    ///   when Windows itself has transparency off.
+    /// </summary>
+    procedure BindTransparencySwitch(ASwitch: TWinUIToggleSwitch);
   protected
     /// <summary>
     ///   The published method AName of this window, for event wiring by
@@ -92,6 +112,11 @@ type
     property MinWidth: Integer read FMinWidth write SetMinWidth;
     property MinHeight: Integer read FMinHeight write SetMinHeight;
     property Backdrop: TWinUIBackdrop read FBackdrop write SetBackdrop;
+    /// <summary>
+    ///   True (the default) shows the Backdrop, False paints the content's root
+    ///   panel with the solid page colour of its theme instead. Backdrop keeps its value.
+    /// </summary>
+    property Transparency: Boolean read FTransparency write SetTransparency;
     /// <summary>
     ///   The DataContext of the content, for {Binding} in the window's XAML:
     ///   DataContext := FViewModel (a TWinUIBindableObject).
@@ -166,6 +191,7 @@ constructor TWinUIWindow.Create;
 begin
   inherited CreateFrom(nil, RADWinUI.Abi.Window.New);
   FWindows := FWindows + [Self];
+  FTransparency := True;
   // Free the wrapper after Closed has reached every handler (user OnClosed included).
   FClosedToken := Intf.add_Closed(TTypedEventHandler_Object_WindowEventArgs.Create(
     procedure(ASender: IInspectable; AArgs: IWindowEventArgs)
@@ -273,20 +299,131 @@ procedure TWinUIWindow.SetBackdrop(AValue: TWinUIBackdrop);
 var
   Mica: TWinUIMicaBackdrop;
 begin
+  FreeAndNil(FSystemBackdrop);
   case AValue of
-    TWinUIBackdrop.None:
-      SystemBackdrop := nil;
     TWinUIBackdrop.Mica, TWinUIBackdrop.MicaAlt:
       begin
         Mica := TWinUIMicaBackdrop.Create(Self);
         if AValue = TWinUIBackdrop.MicaAlt then
           Mica.Kind := MicaKind.BaseAlt;
-        SystemBackdrop := Mica;
+        FSystemBackdrop := Mica;
       end;
     TWinUIBackdrop.Acrylic:
-      SystemBackdrop := TWinUIDesktopAcrylicBackdrop.Create(Self);
+      FSystemBackdrop := TWinUIDesktopAcrylicBackdrop.Create(Self);
   end;
   FBackdrop := AValue;
+  ApplyBackdrop;
+end;
+
+procedure TWinUIWindow.SetTransparency(AValue: Boolean);
+begin
+  if AValue = FTransparency then
+    Exit;
+  FTransparency := AValue;
+  ApplyBackdrop;
+end;
+
+procedure TWinUIWindow.ApplyBackdrop;
+begin
+  if FTransparency then
+    SystemBackdrop := FSystemBackdrop
+  else
+    SystemBackdrop := nil;
+  UpdateOpaqueFill;
+end;
+
+procedure TWinUIWindow.UpdateOpaqueFill;
+const
+  // SolidBackgroundFillColorBase, the colour Mica and Acrylic fall back to
+  PageColors: array[Boolean] of Cardinal = ($FFF3F3F3, $FF202020);
+var
+  Root: TWinUIPanel;
+  Color: TWinUIColor;
+  Dark: Boolean;
+begin
+  if not (Content is TWinUIPanel) then
+    Exit;
+  Root := TWinUIPanel(Content);
+  if FTransparency or (FBackdrop = TWinUIBackdrop.None) then
+  begin
+    if FOpaqueBrush <> nil then
+      Root.Background := FPlainBackground;
+    Exit;
+  end;
+  if FOpaqueBrush = nil then
+  begin
+    FPlainBackground := Root.Background;
+    FOpaqueBrush := TWinUISolidColorBrush.Create(Self);
+  end;
+  if not FThemeHooked then
+  begin
+    // The solid colour follows the content's light or dark theme
+    FThemeHooked := True;
+    Root.ActualThemeChanged.Add(
+      procedure(Sender: TObject; E: TWinValue)
+      begin
+        UpdateOpaqueFill;
+      end);
+  end;
+  Dark := Root.ActualTheme = TWinUIElementTheme.Dark;
+  Color.A := PageColors[Dark] shr 24;
+  Color.R := (PageColors[Dark] shr 16) and $FF;
+  Color.G := (PageColors[Dark] shr 8) and $FF;
+  Color.B := PageColors[Dark] and $FF;
+  FOpaqueBrush.Color := Color;
+  Root.Background := FOpaqueBrush;
+end;
+
+type
+  // Windows.UI.ViewManagement.IUISettings4, not in the generated projection
+  IUISettings4 = interface(IInspectable)
+    ['{52BB3002-919B-4D6B-9B78-8DD66FF4B93B}']
+    function get_AdvancedEffectsEnabled: Boolean; safecall;
+  end;
+
+class function TWinUIWindow.SystemTransparency: Boolean;
+var
+  Instance: Pointer;
+  Settings: IInspectable;
+  Effects: IUISettings4;
+  Power: TSystemPowerStatus;
+begin
+  Result := True;
+  // Energy saver: SystemStatusFlag 1. PowerManager.EnergySaverStatus only covers
+  // battery saver and reads Disabled on mains power, so it is not used.
+  if GetSystemPowerStatus(Power) and (Power.Reserved1 = 1) then
+    Exit(False);
+  if Succeeded(RoActivateInstance(WinStr('Windows.UI.ViewManagement.UISettings'), Instance)) then
+  begin
+    Pointer(Settings) := Instance; // takes over the reference RoActivateInstance returned
+    if Supports(Settings, IUISettings4, Effects) then
+      Result := Effects.get_AdvancedEffectsEnabled;
+  end;
+end;
+
+procedure TWinUIWindow.ExplainTransparency(ASwitch: TWinUIToggleSwitch);
+var
+  Tip: string;
+begin
+  if SystemTransparency then
+    Tip := 'Show what is behind the window, blurred'
+  else
+    Tip := 'Windows has transparency off (Energy saver, or Settings > Personalization > Colors > ' +
+      'Transparency effects), so the window stays solid even when this is on';
+  ToolTipService.SetToolTip(TWinUIObject.IntfOf(ASwitch, IDependencyObject) as IDependencyObject,
+    PropertyValue.CreateString(WinStr(Tip)));
+end;
+
+procedure TWinUIWindow.BindTransparencySwitch(ASwitch: TWinUIToggleSwitch);
+begin
+  ASwitch.IsOn := FTransparency;
+  ExplainTransparency(ASwitch);
+  ASwitch.Toggled.Add(
+    procedure(Sender: TObject; E: TWinUIRoutedEventArgs)
+    begin
+      Transparency := ASwitch.IsOn;
+      ExplainTransparency(ASwitch);
+    end);
 end;
 
 class procedure TWinUIWindow.FreeAll;

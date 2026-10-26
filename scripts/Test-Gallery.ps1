@@ -3,7 +3,13 @@
   Builds Gallery and runs its native control checks without mouse or UI Automation.
 #>
 [CmdletBinding()]
-param([string]$Dcc64, [switch]$NoBuild)
+param(
+  [string]$Dcc64,
+  [switch]$NoBuild,
+  # secondary: another monitor without the focus, offscreen: outside every monitor
+  [ValidateSet('secondary', 'offscreen')]
+  [string]$Monitor = 'secondary'
+)
 
 $ErrorActionPreference = 'Stop'
 $RepoRoot = Split-Path -Parent $PSScriptRoot
@@ -20,7 +26,7 @@ $SavedMonitor = $env:RADWINUI_TEST_MONITOR
 $Log = Join-Path $Logs 'GalleryNativeTest.log'
 $Process = $null
 try {
-  $env:RADWINUI_TEST_MONITOR = 'secondary'
+  $env:RADWINUI_TEST_MONITOR = $Monitor
   $Process = Start-Process -FilePath $Exe -WorkingDirectory (Split-Path $Exe) -WindowStyle Hidden `
     -RedirectStandardOutput $Log -RedirectStandardError (Join-Path $Logs 'GalleryNativeTest.err') -PassThru
   $null = $Process.Handle # without it ExitCode stays empty after the process ends

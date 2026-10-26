@@ -4,6 +4,8 @@ All notable changes to RADWinUI.
 
 ## Unreleased (0.9.3)
 
+- Windows have a `Transparency` property, `SystemTransparency` and `BindTransparencySwitch`: Gallery, Luma, Greeter and Lucent have a Transparency switch.
+- `Test-Gallery.ps1`, `Test-Luma.ps1` and `Test-Samples.ps1` take `-Monitor offscreen` too.
 - New sample: Lucent, an app publishing studio with frosted glass, eight animated pages, live simulated data and a drag-and-drop release board.
 - New unit `RADWinUI.Motion`: entrance, exit, drift, reveal, grow, sweep, hero, lift and pulse animations that run on the compositor.
 - A published property that returns a view model or a bindable list now passes its own bindable to XAML, so nested `{Binding}` paths follow its changes.

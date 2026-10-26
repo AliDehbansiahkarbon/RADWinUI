@@ -28,18 +28,19 @@ type
     FViewModel: TMainViewModel;
     procedure SetViewModel(AValue: TMainViewModel);
   protected
-    Surface: TWinUIGrid;                // MainWindow.xaml(12) <Grid>
-    DragRegion: TWinUIGrid;             // MainWindow.xaml(18) <Grid>
-    LumaGlyph: TWinUIFontIcon;          // MainWindow.xaml(20) <FontIcon>
-    ClockLabel: TWinUITextBlock;        // MainWindow.xaml(30) <TextBlock>
-    DateLabel: TWinUITextBlock;         // MainWindow.xaml(41) <TextBlock>
-    FocusButton: TWinUIButton;          // MainWindow.xaml(82) <Button>
-    PowerGlyph: TWinUIFontIcon;         // MainWindow.xaml(103) <FontIcon>
-    MemoryGlyph: TWinUIFontIcon;        // MainWindow.xaml(116) <FontIcon>
-    MonthCalendar: TWinUICalendarView;  // MainWindow.xaml(128) <CalendarView>
-    ThemeChoice: TWinUIComboBox;        // MainWindow.xaml(140) <ComboBox>
-    PinButton: TWinUIToggleButton;      // MainWindow.xaml(146) <ToggleButton>
-    PinGlyph: TWinUIFontIcon;           // MainWindow.xaml(148) <FontIcon>
+    Surface: TWinUIGrid;                     // MainWindow.xaml(12) <Grid>
+    DragRegion: TWinUIGrid;                  // MainWindow.xaml(18) <Grid>
+    LumaGlyph: TWinUIFontIcon;               // MainWindow.xaml(20) <FontIcon>
+    ClockLabel: TWinUITextBlock;             // MainWindow.xaml(30) <TextBlock>
+    DateLabel: TWinUITextBlock;              // MainWindow.xaml(41) <TextBlock>
+    FocusButton: TWinUIButton;               // MainWindow.xaml(82) <Button>
+    PowerGlyph: TWinUIFontIcon;              // MainWindow.xaml(103) <FontIcon>
+    MemoryGlyph: TWinUIFontIcon;             // MainWindow.xaml(116) <FontIcon>
+    MonthCalendar: TWinUICalendarView;       // MainWindow.xaml(128) <CalendarView>
+    ThemeChoice: TWinUIComboBox;             // MainWindow.xaml(141) <ComboBox>
+    TransparencySwitch: TWinUIToggleSwitch;  // MainWindow.xaml(147) <ToggleSwitch>
+    PinButton: TWinUIToggleButton;           // MainWindow.xaml(148) <ToggleButton>
+    PinGlyph: TWinUIFontIcon;                // MainWindow.xaml(150) <FontIcon>
   public
     constructor Create; override;
     /// <summary>
@@ -161,13 +162,15 @@ const
     '      <Grid.ColumnDefinitions>' + sLineBreak +
     '        <ColumnDefinition Width="*" />' + sLineBreak +
     '        <ColumnDefinition Width="Auto" />' + sLineBreak +
+    '        <ColumnDefinition Width="Auto" />' + sLineBreak +
     '      </Grid.ColumnDefinitions>' + sLineBreak +
     '      <ComboBox x:Name="ThemeChoice" SelectedIndex="0" AutomationProperties.Name="Appearance" VerticalAlignment="Center" MinWidth="146">' + sLineBreak +
     '        <ComboBoxItem Content="Windows theme" />' + sLineBreak +
     '        <ComboBoxItem Content="Light" />' + sLineBreak +
     '        <ComboBoxItem Content="Dark" />' + sLineBreak +
     '      </ComboBox>' + sLineBreak +
-    '      <ToggleButton x:Name="PinButton" Grid.Column="1" VerticalAlignment="Center" ToolTipService.ToolTip="Keep Luma above other windows" AutomationProperties.Name="Keep on top">' + sLineBreak +
+    '      <ToggleSwitch x:Name="TransparencySwitch" OnContent="Transparency" OffContent="Transparency" MinWidth="0" VerticalAlignment="Center" AutomationProperties.Name="Transparency" Grid.Column="1" />' + sLineBreak +
+    '      <ToggleButton x:Name="PinButton" Grid.Column="2" VerticalAlignment="Center" ToolTipService.ToolTip="Keep Luma above other windows" AutomationProperties.Name="Keep on top">' + sLineBreak +
     '        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" x:Name="PinGlyph" Glyph="" FontSize="14" />' + sLineBreak +
     '      </ToggleButton>' + sLineBreak +
     '    </Grid>' + sLineBreak +
@@ -196,6 +199,7 @@ begin
   MemoryGlyph := FindElement<TWinUIFontIcon>('MemoryGlyph');
   MonthCalendar := FindElement<TWinUICalendarView>('MonthCalendar');
   ThemeChoice := FindElement<TWinUIComboBox>('ThemeChoice');
+  TransparencySwitch := FindElement<TWinUIToggleSwitch>('TransparencySwitch');
   PinButton := FindElement<TWinUIToggleButton>('PinButton');
   PinGlyph := FindElement<TWinUIFontIcon>('PinGlyph');
   // Event wiring
@@ -203,9 +207,9 @@ begin
   FocusButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('FocusClick'));
   // MainWindow.xaml(85): Click="ResetClick"
   FindElement<TWinUIButton>('_rw1').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ResetClick'));
-  // MainWindow.xaml(140): SelectionChanged="ThemeChanged"
+  // MainWindow.xaml(141): SelectionChanged="ThemeChanged"
   ThemeChoice.OnSelectionChanged := TWinUISelectionChangedEventHandler(PublishedMethod('ThemeChanged'));
-  // MainWindow.xaml(146): Click="PinClick"
+  // MainWindow.xaml(148): Click="PinClick"
   PinButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('PinClick'));
 end;
 

@@ -9,12 +9,20 @@ uses
 
 type
   TGreetWindow = class(TGreetWindowBase)   // generated from GreetWindow.xaml
+  public
+    constructor Create; override;
   published
     procedure GreetButtonClick(Sender: TObject; E: TWinUIRoutedEventArgs);
     procedure NameBoxTextChanged(Sender: TObject; E: TWinUITextChangedEventArgs);
   end;
 
 implementation
+
+constructor TGreetWindow.Create;
+begin
+  inherited;
+  BindTransparencySwitch(TransparencySwitch); // Mica on or off
+end;
 
 procedure TGreetWindow.GreetButtonClick(Sender: TObject; E: TWinUIRoutedEventArgs);
 var

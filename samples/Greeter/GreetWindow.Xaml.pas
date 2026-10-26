@@ -24,9 +24,10 @@ type
   {$M+}
   TGreetWindowBase = class(TWinUIWindow)
   protected
-    NameBox: TWinUITextBox;     // GreetWindow.xaml(8) <TextBox>
-    GreetButton: TWinUIButton;  // GreetWindow.xaml(9) <Button>
-    Greeting: TWinUITextBlock;  // GreetWindow.xaml(10) <TextBlock>
+    NameBox: TWinUITextBox;                  // GreetWindow.xaml(8) <TextBox>
+    GreetButton: TWinUIButton;               // GreetWindow.xaml(9) <Button>
+    Greeting: TWinUITextBlock;               // GreetWindow.xaml(10) <TextBlock>
+    TransparencySwitch: TWinUIToggleSwitch;  // GreetWindow.xaml(11) <ToggleSwitch>
   public
     constructor Create; override;
   end;
@@ -42,6 +43,7 @@ const
     '        <TextBox x:Name="NameBox" Header="Name" PlaceholderText="Type your name" />' + sLineBreak +
     '        <Button x:Name="GreetButton" Content="Greet" />' + sLineBreak +
     '        <TextBlock x:Name="Greeting" FontSize="24" />' + sLineBreak +
+    '        <ToggleSwitch x:Name="TransparencySwitch" Header="Transparency" />' + sLineBreak +
     '    </StackPanel>' + sLineBreak;
 
 constructor TGreetWindowBase.Create;
@@ -60,6 +62,7 @@ begin
   NameBox := FindElement<TWinUITextBox>('NameBox');
   GreetButton := FindElement<TWinUIButton>('GreetButton');
   Greeting := FindElement<TWinUITextBlock>('Greeting');
+  TransparencySwitch := FindElement<TWinUIToggleSwitch>('TransparencySwitch');
   // Event wiring
   // GreetWindow.xaml(8): NameBoxTextChanged by name
   NameBox.OnTextChanged := TWinUITextChangedEventHandler(PublishedMethod('NameBoxTextChanged'));

@@ -16,14 +16,17 @@
 param(
   [string]$Config = 'Debug',
   # Run only these samples (for example -Only Counter), all when empty
-  [string[]]$Only = @()
+  [string[]]$Only = @(),
+  # secondary: another monitor without the focus, offscreen: outside every monitor
+  [ValidateSet('secondary', 'offscreen')]
+  [string]$Monitor = 'secondary'
 )
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
 # Test windows open on a secondary monitor without taking the focus (TWinUIWindow.Show),
 # the test drives them only through UI Automation patterns, which need no focus.
-$env:RADWINUI_TEST_MONITOR = 'secondary'
+$env:RADWINUI_TEST_MONITOR = $Monitor
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 # Full output of every run, for failures that do not reproduce
 $LogFile = Join-Path $RepoRoot "build\logs\Test-Samples-$Config.log"

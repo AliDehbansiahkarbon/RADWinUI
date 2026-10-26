@@ -136,6 +136,7 @@
       <Grid.ColumnDefinitions>
         <ColumnDefinition Width="*"/>
         <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
       <ComboBox x:Name="ThemeChoice" SelectedIndex="0" SelectionChanged="ThemeChanged"
                 AutomationProperties.Name="Appearance" VerticalAlignment="Center" MinWidth="146">
@@ -143,7 +144,8 @@
         <ComboBoxItem Content="Light"/>
         <ComboBoxItem Content="Dark"/>
       </ComboBox>
-      <ToggleButton x:Name="PinButton" Grid.Column="1" Click="PinClick" VerticalAlignment="Center"
+      <ToggleSwitch x:Name="TransparencySwitch" OnContent="Transparency" OffContent="Transparency" MinWidth="0" VerticalAlignment="Center" AutomationProperties.Name="Transparency" Grid.Column="1"/>
+      <ToggleButton x:Name="PinButton" Grid.Column="2" Click="PinClick" VerticalAlignment="Center"
                     ToolTipService.ToolTip="Keep Luma above other windows" AutomationProperties.Name="Keep on top">
         <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" x:Name="PinGlyph" Glyph="&#xE718;" FontSize="14"/>
       </ToggleButton>

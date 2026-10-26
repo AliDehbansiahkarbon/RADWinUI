@@ -3,7 +3,10 @@ param(
   [ValidateSet('Debug', 'Release')]
   [string]$Config = 'Release',
   [string]$Dcc64,
-  [switch]$NoBuild
+  [switch]$NoBuild,
+  # secondary: another monitor without the focus, offscreen: outside every monitor
+  [ValidateSet('secondary', 'offscreen')]
+  [string]$Monitor = 'secondary'
 )
 
 $ErrorActionPreference = 'Stop'
@@ -12,7 +15,7 @@ if (-not $NoBuild) {
   & (Join-Path $PSScriptRoot 'Build.ps1') -Project samples\Luma\Luma.dpr -Config $Config -Dcc64 $Dcc64
   if ($LASTEXITCODE -ne 0) { throw 'Luma build failed' }
 }
-$env:RADWINUI_TEST_MONITOR = 'secondary'
+$env:RADWINUI_TEST_MONITOR = $Monitor
 $LogDir = Join-Path $RepoRoot 'build\logs'
 New-Item -ItemType Directory -Force -Path $LogDir | Out-Null
 $Report = Join-Path $LogDir "Luma-smoke-$PID.txt"

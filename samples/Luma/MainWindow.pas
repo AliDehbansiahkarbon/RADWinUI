@@ -41,6 +41,7 @@ begin
   ViewModel := TMainViewModel.Create;
   SetTitleBar(DragRegion);
   AppWindow.TitleBar.PreferredTheme := TWinUITitleBarTheme.UseDefaultAppMode;
+  BindTransparencySwitch(TransparencySwitch);
   with AppWindow.Presenter as TWinUIOverlappedPresenter do
     IsMaximizable := False;
   FTimer := TWinUITimer.Create;
@@ -126,8 +127,11 @@ begin
           if (Surface.ActualTheme <> TWinUIElementTheme.Dark) or not ViewModel.Running or
             (FocusButton.Content.AsString <> 'Pause focus') or (ViewModel.FocusProgress <= 0) then
             raise Exception.Create('Dark theme or focus binding failed');
+          if not Transparency or (SystemBackdrop = nil) or not TransparencySwitch.IsOn then
+            raise Exception.Create('Transparency is not on at start');
           Surface.RequestedTheme := TWinUIElementTheme.Light;
           ResetClick(nil);
+          TransparencySwitch.IsOn := False; // the window turns opaque
         end;
       8:
         begin
@@ -136,7 +140,18 @@ begin
             (FocusButton.Content.AsString <> 'Start focus') or (LumaGlyph.Glyph <> #$E8A9) or
             (PowerGlyph.Glyph <> #$E83E) or (MemoryGlyph.Glyph <> #$E950) or (PinGlyph.Glyph <> #$E718) then
             raise Exception.Create('Light theme, clock, reset binding or Unicode glyph failed');
-          TFile.WriteAllText(ParamStr(2), 'PASS: Acrylic window, Unicode glyphs, clock/date, system readings, focus binding, dark/light themes');
+          if Transparency or (SystemBackdrop <> nil) or not (Surface.Background is TWinUISolidColorBrush) or
+            (TWinUISolidColorBrush(Surface.Background).Color.R <> $F3) then
+            raise Exception.Create('Turning transparency off did not give a solid light background');
+          TransparencySwitch.IsOn := True;
+        end;
+      10:
+        begin
+          if not Transparency or (SystemBackdrop = nil) or (Surface.Background is TWinUISolidColorBrush) and
+            (TWinUISolidColorBrush(Surface.Background).Color.A = $FF) then
+            raise Exception.Create('Turning transparency back on did not restore the Acrylic backdrop');
+          TFile.WriteAllText(ParamStr(2), 'PASS: Acrylic window, Unicode glyphs, clock/date, system readings, focus binding, ' +
+            'dark/light themes, transparency switch');
           Close;
         end;
     end;

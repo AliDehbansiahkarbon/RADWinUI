@@ -31,91 +31,92 @@ type
     Surface: TWinUIGrid;                                 // MainWindow.xaml(10) <Grid>
     SolidLayer: TWinUIBorder;                            // MainWindow.xaml(16) <Border>
     DragRegion: TWinUIGrid;                              // MainWindow.xaml(20) <Grid>
-    ThemeChoice: TWinUIComboBox;                         // MainWindow.xaml(30) <ComboBox>
-    Navigation: TWinUINavigationView;                    // MainWindow.xaml(35) <NavigationView>
-    SearchBox: TWinUIAutoSuggestBox;                     // MainWindow.xaml(39) <AutoSuggestBox>
-    NavHome: TWinUINavigationViewItem;                   // MainWindow.xaml(44) <NavigationViewItem>
-    NavExplorer: TWinUINavigationViewItem;               // MainWindow.xaml(45) <NavigationViewItem>
-    NavInputs: TWinUINavigationViewItem;                 // MainWindow.xaml(48) <NavigationViewItem>
-    NavCollections: TWinUINavigationViewItem;            // MainWindow.xaml(49) <NavigationViewItem>
-    NavDates: TWinUINavigationViewItem;                  // MainWindow.xaml(50) <NavigationViewItem>
-    NavFeedback: TWinUINavigationViewItem;               // MainWindow.xaml(51) <NavigationViewItem>
-    NavLayout: TWinUINavigationViewItem;                 // MainWindow.xaml(52) <NavigationViewItem>
-    NavMaterials: TWinUINavigationViewItem;              // MainWindow.xaml(53) <NavigationViewItem>
-    NavBinding: TWinUINavigationViewItem;                // MainWindow.xaml(56) <NavigationViewItem>
-    PageScroll: TWinUIScrollViewer;                      // MainWindow.xaml(58) <ScrollViewer>
-    PageTitle: TWinUITextBlock;                          // MainWindow.xaml(61) <TextBlock>
-    PageDescription: TWinUITextBlock;                    // MainWindow.xaml(62) <TextBlock>
-    HomePage: TWinUIStackPanel;                          // MainWindow.xaml(66) <StackPanel>
-    InputsPage: TWinUIStackPanel;                        // MainWindow.xaml(129) <StackPanel>
-    NameEntry: TWinUITextBox;                            // MainWindow.xaml(133) <TextBox>
-    GreetingText: TWinUITextBlock;                       // MainWindow.xaml(135) <TextBlock>
-    DemoSwitch: TWinUIToggleSwitch;                      // MainWindow.xaml(136) <ToggleSwitch>
-    VolumeText: TWinUITextBlock;                         // MainWindow.xaml(147) <TextBlock>
-    IntensitySlider: TWinUISlider;                       // MainWindow.xaml(148) <Slider>
-    IntensityProgress: TWinUIProgressBar;                // MainWindow.xaml(149) <ProgressBar>
-    CollectionsPage: TWinUIStackPanel;                   // MainWindow.xaml(155) <StackPanel>
-    NewItemText: TWinUITextBox;                          // MainWindow.xaml(160) <TextBox>
-    DemoList: TWinUIListView;                            // MainWindow.xaml(164) <ListView>
-    SelectionText: TWinUITextBlock;                      // MainWindow.xaml(165) <TextBlock>
-    DatesPage: TWinUIStackPanel;                         // MainWindow.xaml(180) <StackPanel>
-    FeedbackPage: TWinUIStackPanel;                      // MainWindow.xaml(194) <StackPanel>
-    FeedbackBar: TWinUIInfoBar;                          // MainWindow.xaml(195) <InfoBar>
-    ActivitySwitch: TWinUIToggleSwitch;                  // MainWindow.xaml(199) <ToggleSwitch>
-    ActivityRing: TWinUIProgressRing;                    // MainWindow.xaml(200) <ProgressRing>
-    ActivityProgress: TWinUIProgressBar;                 // MainWindow.xaml(201) <ProgressBar>
-    LayoutPage: TWinUIStackPanel;                        // MainWindow.xaml(207) <StackPanel>
-    MaterialsPage: TWinUIStackPanel;                     // MainWindow.xaml(224) <StackPanel>
-    BackdropChoice: TWinUIComboBox;                      // MainWindow.xaml(227) <ComboBox>
-    DemoColorPicker: TWinUIColorPicker;                  // MainWindow.xaml(234) <ColorPicker>
-    ColorSwatch: TWinUIBorder;                           // MainWindow.xaml(235) <Border>
-    ColorValue: TWinUITextBlock;                         // MainWindow.xaml(236) <TextBlock>
-    BindingPage: TWinUIStackPanel;                       // MainWindow.xaml(244) <StackPanel>
-    ExplorerPage: TWinUIGrid;                            // MainWindow.xaml(258) <Grid>
-    ExplorerFilter: TWinUITextBox;                       // MainWindow.xaml(261) <TextBox>
-    ExplorerCount: TWinUITextBlock;                      // MainWindow.xaml(262) <TextBlock>
-    ExplorerList: TWinUIListView;                        // MainWindow.xaml(263) <ListView>
-    ControlTitle: TWinUITextBlock;                       // MainWindow.xaml(267) <TextBlock>
-    ControlCategory: TWinUITextBlock;                    // MainWindow.xaml(268) <TextBlock>
-    ControlDescription: TWinUITextBlock;                 // MainWindow.xaml(269) <TextBlock>
-    ExplorerSamples: TWinUIStackPanel;                   // MainWindow.xaml(274) <StackPanel>
-    SampleButton: TWinUIButton;                          // MainWindow.xaml(275) <Button>
-    SampleToggleButton: TWinUIToggleButton;              // MainWindow.xaml(276) <ToggleButton>
-    SampleRepeatButton: TWinUIRepeatButton;              // MainWindow.xaml(277) <RepeatButton>
-    SampleSplitButton: TWinUISplitButton;                // MainWindow.xaml(278) <SplitButton>
-    SampleHyperlinkButton: TWinUIHyperlinkButton;        // MainWindow.xaml(279) <HyperlinkButton>
-    SampleTextBox: TWinUITextBox;                        // MainWindow.xaml(280) <TextBox>
-    SamplePasswordBox: TWinUIPasswordBox;                // MainWindow.xaml(281) <PasswordBox>
-    SampleRichEditBox: TWinUIRichEditBox;                // MainWindow.xaml(282) <RichEditBox>
-    SampleNumberBox: TWinUINumberBox;                    // MainWindow.xaml(283) <NumberBox>
-    SampleSlider: TWinUISlider;                          // MainWindow.xaml(284) <Slider>
-    SampleToggleSwitch: TWinUIToggleSwitch;              // MainWindow.xaml(285) <ToggleSwitch>
-    SampleCheckBox: TWinUICheckBox;                      // MainWindow.xaml(286) <CheckBox>
-    SampleRadioButtons: TWinUIRadioButtons;              // MainWindow.xaml(287) <RadioButtons>
-    SampleComboBox: TWinUIComboBox;                      // MainWindow.xaml(288) <ComboBox>
-    SampleListBox: TWinUIListBox;                        // MainWindow.xaml(289) <ListBox>
-    SampleGridView: TWinUIGridView;                      // MainWindow.xaml(290) <GridView>
-    SampleExpander: TWinUIExpander;                      // MainWindow.xaml(291) <Expander>
-    SampleTabView: TWinUITabView;                        // MainWindow.xaml(292) <TabView>
-    SampleCalendarDatePicker: TWinUICalendarDatePicker;  // MainWindow.xaml(293) <CalendarDatePicker>
-    SampleDatePicker: TWinUIDatePicker;                  // MainWindow.xaml(294) <DatePicker>
-    SampleTimePicker: TWinUITimePicker;                  // MainWindow.xaml(295) <TimePicker>
-    SampleProgressBar: TWinUIProgressBar;                // MainWindow.xaml(296) <ProgressBar>
-    SampleProgressRing: TWinUIProgressRing;              // MainWindow.xaml(297) <ProgressRing>
-    SampleRatingControl: TWinUIRatingControl;            // MainWindow.xaml(298) <RatingControl>
-    SampleColorPicker: TWinUIColorPicker;                // MainWindow.xaml(299) <ColorPicker>
-    SampleInfoBar: TWinUIInfoBar;                        // MainWindow.xaml(300) <InfoBar>
-    SampleMenuBar: TWinUIMenuBar;                        // MainWindow.xaml(301) <MenuBar>
-    SampleCommandBar: TWinUICommandBar;                  // MainWindow.xaml(302) <CommandBar>
-    SamplePersonPicture: TWinUIPersonPicture;            // MainWindow.xaml(303) <PersonPicture>
-    SampleTextBlock: TWinUITextBlock;                    // MainWindow.xaml(304) <TextBlock>
-    ExplorerEnabled: TWinUIToggleSwitch;                 // MainWindow.xaml(310) <ToggleSwitch>
-    ExplorerFlow: TWinUIComboBox;                        // MainWindow.xaml(311) <ComboBox>
-    ExplorerValue: TWinUITextBlock;                      // MainWindow.xaml(315) <TextBlock>
-    SourcePanel: TWinUIExpander;                         // MainWindow.xaml(321) <Expander>
-    XamlSource: TWinUITextBox;                           // MainWindow.xaml(324) <TextBox>
-    PascalSource: TWinUITextBox;                         // MainWindow.xaml(326) <TextBox>
-    StatusText: TWinUITextBlock;                         // MainWindow.xaml(333) <TextBlock>
+    TransparencySwitch: TWinUIToggleSwitch;              // MainWindow.xaml(30) <ToggleSwitch>
+    ThemeChoice: TWinUIComboBox;                         // MainWindow.xaml(31) <ComboBox>
+    Navigation: TWinUINavigationView;                    // MainWindow.xaml(36) <NavigationView>
+    SearchBox: TWinUIAutoSuggestBox;                     // MainWindow.xaml(40) <AutoSuggestBox>
+    NavHome: TWinUINavigationViewItem;                   // MainWindow.xaml(45) <NavigationViewItem>
+    NavExplorer: TWinUINavigationViewItem;               // MainWindow.xaml(46) <NavigationViewItem>
+    NavInputs: TWinUINavigationViewItem;                 // MainWindow.xaml(49) <NavigationViewItem>
+    NavCollections: TWinUINavigationViewItem;            // MainWindow.xaml(50) <NavigationViewItem>
+    NavDates: TWinUINavigationViewItem;                  // MainWindow.xaml(51) <NavigationViewItem>
+    NavFeedback: TWinUINavigationViewItem;               // MainWindow.xaml(52) <NavigationViewItem>
+    NavLayout: TWinUINavigationViewItem;                 // MainWindow.xaml(53) <NavigationViewItem>
+    NavMaterials: TWinUINavigationViewItem;              // MainWindow.xaml(54) <NavigationViewItem>
+    NavBinding: TWinUINavigationViewItem;                // MainWindow.xaml(57) <NavigationViewItem>
+    PageScroll: TWinUIScrollViewer;                      // MainWindow.xaml(59) <ScrollViewer>
+    PageTitle: TWinUITextBlock;                          // MainWindow.xaml(62) <TextBlock>
+    PageDescription: TWinUITextBlock;                    // MainWindow.xaml(63) <TextBlock>
+    HomePage: TWinUIStackPanel;                          // MainWindow.xaml(67) <StackPanel>
+    InputsPage: TWinUIStackPanel;                        // MainWindow.xaml(130) <StackPanel>
+    NameEntry: TWinUITextBox;                            // MainWindow.xaml(134) <TextBox>
+    GreetingText: TWinUITextBlock;                       // MainWindow.xaml(136) <TextBlock>
+    DemoSwitch: TWinUIToggleSwitch;                      // MainWindow.xaml(137) <ToggleSwitch>
+    VolumeText: TWinUITextBlock;                         // MainWindow.xaml(148) <TextBlock>
+    IntensitySlider: TWinUISlider;                       // MainWindow.xaml(149) <Slider>
+    IntensityProgress: TWinUIProgressBar;                // MainWindow.xaml(150) <ProgressBar>
+    CollectionsPage: TWinUIStackPanel;                   // MainWindow.xaml(156) <StackPanel>
+    NewItemText: TWinUITextBox;                          // MainWindow.xaml(161) <TextBox>
+    DemoList: TWinUIListView;                            // MainWindow.xaml(165) <ListView>
+    SelectionText: TWinUITextBlock;                      // MainWindow.xaml(166) <TextBlock>
+    DatesPage: TWinUIStackPanel;                         // MainWindow.xaml(181) <StackPanel>
+    FeedbackPage: TWinUIStackPanel;                      // MainWindow.xaml(195) <StackPanel>
+    FeedbackBar: TWinUIInfoBar;                          // MainWindow.xaml(196) <InfoBar>
+    ActivitySwitch: TWinUIToggleSwitch;                  // MainWindow.xaml(200) <ToggleSwitch>
+    ActivityRing: TWinUIProgressRing;                    // MainWindow.xaml(201) <ProgressRing>
+    ActivityProgress: TWinUIProgressBar;                 // MainWindow.xaml(202) <ProgressBar>
+    LayoutPage: TWinUIStackPanel;                        // MainWindow.xaml(208) <StackPanel>
+    MaterialsPage: TWinUIStackPanel;                     // MainWindow.xaml(225) <StackPanel>
+    BackdropChoice: TWinUIComboBox;                      // MainWindow.xaml(228) <ComboBox>
+    DemoColorPicker: TWinUIColorPicker;                  // MainWindow.xaml(235) <ColorPicker>
+    ColorSwatch: TWinUIBorder;                           // MainWindow.xaml(236) <Border>
+    ColorValue: TWinUITextBlock;                         // MainWindow.xaml(237) <TextBlock>
+    BindingPage: TWinUIStackPanel;                       // MainWindow.xaml(245) <StackPanel>
+    ExplorerPage: TWinUIGrid;                            // MainWindow.xaml(259) <Grid>
+    ExplorerFilter: TWinUITextBox;                       // MainWindow.xaml(262) <TextBox>
+    ExplorerCount: TWinUITextBlock;                      // MainWindow.xaml(263) <TextBlock>
+    ExplorerList: TWinUIListView;                        // MainWindow.xaml(264) <ListView>
+    ControlTitle: TWinUITextBlock;                       // MainWindow.xaml(268) <TextBlock>
+    ControlCategory: TWinUITextBlock;                    // MainWindow.xaml(269) <TextBlock>
+    ControlDescription: TWinUITextBlock;                 // MainWindow.xaml(270) <TextBlock>
+    ExplorerSamples: TWinUIStackPanel;                   // MainWindow.xaml(275) <StackPanel>
+    SampleButton: TWinUIButton;                          // MainWindow.xaml(276) <Button>
+    SampleToggleButton: TWinUIToggleButton;              // MainWindow.xaml(277) <ToggleButton>
+    SampleRepeatButton: TWinUIRepeatButton;              // MainWindow.xaml(278) <RepeatButton>
+    SampleSplitButton: TWinUISplitButton;                // MainWindow.xaml(279) <SplitButton>
+    SampleHyperlinkButton: TWinUIHyperlinkButton;        // MainWindow.xaml(280) <HyperlinkButton>
+    SampleTextBox: TWinUITextBox;                        // MainWindow.xaml(281) <TextBox>
+    SamplePasswordBox: TWinUIPasswordBox;                // MainWindow.xaml(282) <PasswordBox>
+    SampleRichEditBox: TWinUIRichEditBox;                // MainWindow.xaml(283) <RichEditBox>
+    SampleNumberBox: TWinUINumberBox;                    // MainWindow.xaml(284) <NumberBox>
+    SampleSlider: TWinUISlider;                          // MainWindow.xaml(285) <Slider>
+    SampleToggleSwitch: TWinUIToggleSwitch;              // MainWindow.xaml(286) <ToggleSwitch>
+    SampleCheckBox: TWinUICheckBox;                      // MainWindow.xaml(287) <CheckBox>
+    SampleRadioButtons: TWinUIRadioButtons;              // MainWindow.xaml(288) <RadioButtons>
+    SampleComboBox: TWinUIComboBox;                      // MainWindow.xaml(289) <ComboBox>
+    SampleListBox: TWinUIListBox;                        // MainWindow.xaml(290) <ListBox>
+    SampleGridView: TWinUIGridView;                      // MainWindow.xaml(291) <GridView>
+    SampleExpander: TWinUIExpander;                      // MainWindow.xaml(292) <Expander>
+    SampleTabView: TWinUITabView;                        // MainWindow.xaml(293) <TabView>
+    SampleCalendarDatePicker: TWinUICalendarDatePicker;  // MainWindow.xaml(294) <CalendarDatePicker>
+    SampleDatePicker: TWinUIDatePicker;                  // MainWindow.xaml(295) <DatePicker>
+    SampleTimePicker: TWinUITimePicker;                  // MainWindow.xaml(296) <TimePicker>
+    SampleProgressBar: TWinUIProgressBar;                // MainWindow.xaml(297) <ProgressBar>
+    SampleProgressRing: TWinUIProgressRing;              // MainWindow.xaml(298) <ProgressRing>
+    SampleRatingControl: TWinUIRatingControl;            // MainWindow.xaml(299) <RatingControl>
+    SampleColorPicker: TWinUIColorPicker;                // MainWindow.xaml(300) <ColorPicker>
+    SampleInfoBar: TWinUIInfoBar;                        // MainWindow.xaml(301) <InfoBar>
+    SampleMenuBar: TWinUIMenuBar;                        // MainWindow.xaml(302) <MenuBar>
+    SampleCommandBar: TWinUICommandBar;                  // MainWindow.xaml(303) <CommandBar>
+    SamplePersonPicture: TWinUIPersonPicture;            // MainWindow.xaml(304) <PersonPicture>
+    SampleTextBlock: TWinUITextBlock;                    // MainWindow.xaml(305) <TextBlock>
+    ExplorerEnabled: TWinUIToggleSwitch;                 // MainWindow.xaml(311) <ToggleSwitch>
+    ExplorerFlow: TWinUIComboBox;                        // MainWindow.xaml(312) <ComboBox>
+    ExplorerValue: TWinUITextBlock;                      // MainWindow.xaml(316) <TextBlock>
+    SourcePanel: TWinUIExpander;                         // MainWindow.xaml(322) <Expander>
+    XamlSource: TWinUITextBox;                           // MainWindow.xaml(325) <TextBox>
+    PascalSource: TWinUITextBox;                         // MainWindow.xaml(327) <TextBox>
+    StatusText: TWinUITextBlock;                         // MainWindow.xaml(334) <TextBlock>
   public
     constructor Create; override;
     /// <summary>
@@ -140,7 +141,7 @@ const
     '    </Grid.RowDefinitions>' + sLineBreak +
     '    <Border x:Name="SolidLayer" Grid.RowSpan="3" Visibility="Collapsed" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" />' + sLineBreak +
     '    <Grid ColumnSpacing="24" Margin="20,0,148,0">' + sLineBreak +
-    '      <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="180" /></Grid.ColumnDefinitions>' + sLineBreak +
+    '      <Grid.ColumnDefinitions><ColumnDefinition Width="*" /><ColumnDefinition Width="Auto" /><ColumnDefinition Width="180" /></Grid.ColumnDefinitions>' + sLineBreak +
     '      <Grid x:Name="DragRegion" Background="Transparent">' + sLineBreak +
     '        <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">' + sLineBreak +
     '          <FontIcon Glyph="" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="18" Foreground="{ThemeResource SystemControlForegroundAccentBrush}" />' + sLineBreak +
@@ -150,7 +151,8 @@ const
     '          </Border>' + sLineBreak +
     '        </StackPanel>' + sLineBreak +
     '      </Grid>' + sLineBreak +
-    '      <ComboBox x:Name="ThemeChoice" Grid.Column="1" SelectedIndex="0" VerticalAlignment="Center" HorizontalAlignment="Stretch" AutomationProperties.Name="Appearance">' + sLineBreak +
+    '      <ToggleSwitch x:Name="TransparencySwitch" OnContent="Transparency" OffContent="Transparency" MinWidth="0" VerticalAlignment="Center" AutomationProperties.Name="Transparency" Grid.Column="1" />' + sLineBreak +
+    '      <ComboBox x:Name="ThemeChoice" Grid.Column="2" SelectedIndex="0" VerticalAlignment="Center" HorizontalAlignment="Stretch" AutomationProperties.Name="Appearance">' + sLineBreak +
     '        <ComboBoxItem Content="Windows theme" /><ComboBoxItem Content="Light" /><ComboBoxItem Content="Dark" />' + sLineBreak +
     '      </ComboBox>' + sLineBreak +
     '    </Grid>' + sLineBreak +
@@ -519,6 +521,7 @@ begin
   Surface := FindElement<TWinUIGrid>('Surface');
   SolidLayer := FindElement<TWinUIBorder>('SolidLayer');
   DragRegion := FindElement<TWinUIGrid>('DragRegion');
+  TransparencySwitch := FindElement<TWinUIToggleSwitch>('TransparencySwitch');
   ThemeChoice := FindElement<TWinUIComboBox>('ThemeChoice');
   Navigation := FindElement<TWinUINavigationView>('Navigation');
   SearchBox := FindElement<TWinUIAutoSuggestBox>('SearchBox');
@@ -605,77 +608,77 @@ begin
   PascalSource := FindElement<TWinUITextBox>('PascalSource');
   StatusText := FindElement<TWinUITextBlock>('StatusText');
   // Event wiring
-  // MainWindow.xaml(30): SelectionChanged="ThemeChanged"
+  // MainWindow.xaml(31): SelectionChanged="ThemeChanged"
   ThemeChoice.OnSelectionChanged := TWinUISelectionChangedEventHandler(PublishedMethod('ThemeChanged'));
-  // MainWindow.xaml(35): SelectionChanged="NavigationChanged"
+  // MainWindow.xaml(36): SelectionChanged="NavigationChanged"
   Navigation.OnSelectionChanged := TWinUINavigationViewSelectionChangedEventHandler(PublishedMethod('NavigationChanged'));
-  // MainWindow.xaml(39): QuerySubmitted="SearchSubmitted"
+  // MainWindow.xaml(40): QuerySubmitted="SearchSubmitted"
   SearchBox.OnQuerySubmitted := TWinUIAutoSuggestBoxQuerySubmittedEventHandler(PublishedMethod('SearchSubmitted'));
-  // MainWindow.xaml(39): SuggestionChosen="SearchSuggestionChosen"
+  // MainWindow.xaml(40): SuggestionChosen="SearchSuggestionChosen"
   SearchBox.OnSuggestionChosen := TWinUIAutoSuggestBoxSuggestionChosenEventHandler(PublishedMethod('SearchSuggestionChosen'));
-  // MainWindow.xaml(39): TextChanged="SearchChanged"
+  // MainWindow.xaml(40): TextChanged="SearchChanged"
   SearchBox.OnTextChanged := TWinUIAutoSuggestBoxTextChangedEventHandler(PublishedMethod('SearchChanged'));
-  // MainWindow.xaml(79): Click="CategoryClick"
+  // MainWindow.xaml(80): Click="CategoryClick"
   FindElement<TWinUIButton>('_rw1').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CategoryClick'));
-  // MainWindow.xaml(98): Click="CategoryClick"
+  // MainWindow.xaml(99): Click="CategoryClick"
   FindElement<TWinUIButton>('_rw2').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CategoryClick'));
-  // MainWindow.xaml(102): Click="CategoryClick"
+  // MainWindow.xaml(103): Click="CategoryClick"
   FindElement<TWinUIButton>('_rw3').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CategoryClick'));
-  // MainWindow.xaml(106): Click="CategoryClick"
+  // MainWindow.xaml(107): Click="CategoryClick"
   FindElement<TWinUIButton>('_rw4').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CategoryClick'));
-  // MainWindow.xaml(110): Click="CategoryClick"
+  // MainWindow.xaml(111): Click="CategoryClick"
   FindElement<TWinUIButton>('_rw5').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CategoryClick'));
-  // MainWindow.xaml(114): Click="CategoryClick"
+  // MainWindow.xaml(115): Click="CategoryClick"
   FindElement<TWinUIButton>('_rw6').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CategoryClick'));
-  // MainWindow.xaml(118): Click="CategoryClick"
+  // MainWindow.xaml(119): Click="CategoryClick"
   FindElement<TWinUIButton>('_rw7').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CategoryClick'));
-  // MainWindow.xaml(122): Click="CategoryClick"
+  // MainWindow.xaml(123): Click="CategoryClick"
   FindElement<TWinUIButton>('_rw8').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CategoryClick'));
-  // MainWindow.xaml(134): Click="GreetClick"
+  // MainWindow.xaml(135): Click="GreetClick"
   FindElement<TWinUIButton>('_rw9').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('GreetClick'));
-  // MainWindow.xaml(148): ValueChanged="IntensityChanged"
+  // MainWindow.xaml(149): ValueChanged="IntensityChanged"
   IntensitySlider.OnValueChanged := TWinUIRangeBaseValueChangedEventHandler(PublishedMethod('IntensityChanged'));
-  // MainWindow.xaml(161): Click="AddItemClick"
+  // MainWindow.xaml(162): Click="AddItemClick"
   FindElement<TWinUIButton>('_rw10').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('AddItemClick'));
-  // MainWindow.xaml(162): Click="RemoveItemClick"
+  // MainWindow.xaml(163): Click="RemoveItemClick"
   FindElement<TWinUIButton>('_rw11').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RemoveItemClick'));
-  // MainWindow.xaml(164): SelectionChanged="ListChanged"
+  // MainWindow.xaml(165): SelectionChanged="ListChanged"
   DemoList.OnSelectionChanged := TWinUISelectionChangedEventHandler(PublishedMethod('ListChanged'));
-  // MainWindow.xaml(198): Click="FeedbackClick"
+  // MainWindow.xaml(199): Click="FeedbackClick"
   FindElement<TWinUIButton>('_rw12').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('FeedbackClick'));
-  // MainWindow.xaml(198): Click="FeedbackClick"
+  // MainWindow.xaml(199): Click="FeedbackClick"
   FindElement<TWinUIButton>('_rw13').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('FeedbackClick'));
-  // MainWindow.xaml(198): Click="DialogClick"
+  // MainWindow.xaml(199): Click="DialogClick"
   FindElement<TWinUIButton>('_rw14').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('DialogClick'));
-  // MainWindow.xaml(199): Toggled="ActivityChanged"
+  // MainWindow.xaml(200): Toggled="ActivityChanged"
   ActivitySwitch.OnToggled := TWinUIRoutedEventHandler(PublishedMethod('ActivityChanged'));
-  // MainWindow.xaml(227): SelectionChanged="BackdropChanged"
+  // MainWindow.xaml(228): SelectionChanged="BackdropChanged"
   BackdropChoice.OnSelectionChanged := TWinUISelectionChangedEventHandler(PublishedMethod('BackdropChanged'));
-  // MainWindow.xaml(234): ColorChanged="ColorChanged"
+  // MainWindow.xaml(235): ColorChanged="ColorChanged"
   DemoColorPicker.OnColorChanged := TWinUIColorChangedEventHandler(PublishedMethod('ColorChanged'));
-  // MainWindow.xaml(249): Click="IncrementClick"
+  // MainWindow.xaml(250): Click="IncrementClick"
   FindElement<TWinUIButton>('_rw15').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('IncrementClick'));
-  // MainWindow.xaml(249): Click="ResetClick"
+  // MainWindow.xaml(250): Click="ResetClick"
   FindElement<TWinUIButton>('_rw16').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ResetClick'));
-  // MainWindow.xaml(261): TextChanged="ExplorerFilterChanged"
+  // MainWindow.xaml(262): TextChanged="ExplorerFilterChanged"
   ExplorerFilter.OnTextChanged := TWinUITextChangedEventHandler(PublishedMethod('ExplorerFilterChanged'));
-  // MainWindow.xaml(263): SelectionChanged="ExplorerSelectionChanged"
+  // MainWindow.xaml(264): SelectionChanged="ExplorerSelectionChanged"
   ExplorerList.OnSelectionChanged := TWinUISelectionChangedEventHandler(PublishedMethod('ExplorerSelectionChanged'));
-  // MainWindow.xaml(275): Click="ExplorerButtonClick"
+  // MainWindow.xaml(276): Click="ExplorerButtonClick"
   SampleButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ExplorerButtonClick'));
-  // MainWindow.xaml(277): Click="ExplorerButtonClick"
+  // MainWindow.xaml(278): Click="ExplorerButtonClick"
   SampleRepeatButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ExplorerButtonClick'));
-  // MainWindow.xaml(279): Click="ExplorerButtonClick"
+  // MainWindow.xaml(280): Click="ExplorerButtonClick"
   SampleHyperlinkButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ExplorerButtonClick'));
-  // MainWindow.xaml(310): Toggled="ExplorerOptionsChanged"
+  // MainWindow.xaml(311): Toggled="ExplorerOptionsChanged"
   ExplorerEnabled.OnToggled := TWinUIRoutedEventHandler(PublishedMethod('ExplorerOptionsChanged'));
-  // MainWindow.xaml(311): SelectionChanged="ExplorerFlowChanged"
+  // MainWindow.xaml(312): SelectionChanged="ExplorerFlowChanged"
   ExplorerFlow.OnSelectionChanged := TWinUISelectionChangedEventHandler(PublishedMethod('ExplorerFlowChanged'));
-  // MainWindow.xaml(314): Click="ExplorerValueClick"
+  // MainWindow.xaml(315): Click="ExplorerValueClick"
   FindElement<TWinUIButton>('_rw17').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ExplorerValueClick'));
-  // MainWindow.xaml(323): Click="CopyXamlClick"
+  // MainWindow.xaml(324): Click="CopyXamlClick"
   FindElement<TWinUIButton>('_rw18').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CopyXamlClick'));
-  // MainWindow.xaml(325): Click="CopyPascalClick"
+  // MainWindow.xaml(326): Click="CopyPascalClick"
   FindElement<TWinUIButton>('_rw19').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CopyPascalClick'));
 end;
 

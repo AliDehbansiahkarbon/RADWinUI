@@ -38,7 +38,7 @@ in `MainWindow.xaml`. The excerpts are property/handler snippets, not full apps.
 | Date and time | CalendarDatePicker, DatePicker, TimePicker and CalendarView. Native localization and keyboard behavior. |
 | Feedback and dialogs | InfoBar severity changes, ProgressRing, indeterminate progress, Flyout and an asynchronous ContentDialog with a Pascal result handler. |
 | Layout and navigation | Grid proportions, StackPanel, Expander and TabView. |
-| Materials and color | Switch between Mica, Mica Alt, desktop Acrylic and a themed solid surface. ColorPicker updates a Delphi-owned brush and an ARGB label. |
+| Materials and color | Switch between Mica, Mica Alt, desktop Acrylic and a themed solid surface. ColorPicker updates a Delphi-owned brush and an ARGB label. The Transparency switch in the title bar turns the backdrop off and on on every page. |
 | Live Pascal binding | Two-way string binding, a counter, a derived summary and a live footer clock from a typed Delphi view model. |
 
 The navigation search accepts a control name or category, and suggests matching

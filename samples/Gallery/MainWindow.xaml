@@ -16,7 +16,7 @@
     <Border x:Name="SolidLayer" Grid.RowSpan="3" Visibility="Collapsed"
             Background="{ThemeResource ApplicationPageBackgroundThemeBrush}"/>
     <Grid ColumnSpacing="24" Margin="20,0,148,0">
-      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="180"/></Grid.ColumnDefinitions>
+      <Grid.ColumnDefinitions><ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/><ColumnDefinition Width="180"/></Grid.ColumnDefinitions>
       <Grid x:Name="DragRegion" Background="Transparent">
         <StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">
           <FontIcon Glyph="&#xE8D4;" FontFamily="{ThemeResource SymbolThemeFontFamily}" FontSize="18"
@@ -27,7 +27,8 @@
           </Border>
         </StackPanel>
       </Grid>
-      <ComboBox x:Name="ThemeChoice" Grid.Column="1" SelectedIndex="0" VerticalAlignment="Center"
+      <ToggleSwitch x:Name="TransparencySwitch" OnContent="Transparency" OffContent="Transparency" MinWidth="0" VerticalAlignment="Center" AutomationProperties.Name="Transparency" Grid.Column="1"/>
+      <ComboBox x:Name="ThemeChoice" Grid.Column="2" SelectedIndex="0" VerticalAlignment="Center"
                 HorizontalAlignment="Stretch" SelectionChanged="ThemeChanged" AutomationProperties.Name="Appearance">
         <ComboBoxItem Content="Windows theme"/><ComboBoxItem Content="Light"/><ComboBoxItem Content="Dark"/>
       </ComboBox>

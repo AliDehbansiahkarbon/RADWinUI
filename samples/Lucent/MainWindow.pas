@@ -44,7 +44,6 @@ type
     procedure ReleaseMoved(ARelease: TRelease; AFrom, ATo: Integer);
     procedure SeriesChanged;
     procedure ApplyTheme(ADark: Boolean);
-    procedure ApplyTransparency(AOn: Boolean);
     procedure OpenApp(AApp: TStudioApp; AFrom: TWinUIListViewBase; const AItem: TWinValue);
     procedure SetBoard(ATimeline: Boolean);
     procedure SmokeStep;
@@ -103,7 +102,6 @@ implementation
 uses
   Winapi.Windows,
   System.SysUtils,
-  RADWinUI.Interop.Core,
   System.IOUtils,
   System.Math,
   RADWinUI.Abi,
@@ -127,28 +125,6 @@ function ChartX(AWidth: Double; AIndex: Integer): Double;
 begin
   // Points stay clear of the card edge, so the last dot is never cut off
   Result := ChartPad + (AWidth - 2 * ChartPad) * AIndex / 11;
-end;
-
-type
-  // Windows.UI.ViewManagement.IUISettings4, not in the generated projection
-  IUISettings4 = interface(IInspectable)
-    ['{52BB3002-919B-4D6B-9B78-8DD66FF4B93B}']
-    function get_AdvancedEffectsEnabled: Boolean; safecall;
-  end;
-
-{ The Windows "Transparency effects" setting, True when it cannot be read. }
-function TransparencyEffects: Boolean;
-var
-  Instance: Pointer;
-  Settings: IInspectable;
-  Effects: IUISettings4;
-begin
-  Result := True;
-  if Failed(RoActivateInstance(WinStr('Windows.UI.ViewManagement.UISettings'), Instance)) then
-    Exit;
-  Pointer(Settings) := Instance; // takes over the reference RoActivateInstance returned
-  if Supports(Settings, IUISettings4, Effects) then
-    Result := Effects.get_AdvancedEffectsEnabled;
 end;
 
 function Margin(ALeft, ATop: Double): TWinUIThickness;
@@ -184,7 +160,7 @@ begin
   ViewModel.OnSeries := SeriesChanged;
   SetTitleBar(DragRegion);
   AppWindow.TitleBar.PreferredTheme := TWinUITitleBarTheme.UseDefaultAppMode;
-  ApplyTransparency(TransparencyEffects);
+  BindTransparencySwitch(TransparencySwitch);
   if FindCmdLineSwitch('light') then
     ApplyTheme(False)
   else if FindCmdLineSwitch('dark') then
@@ -720,26 +696,13 @@ begin
   end;
 end;
 
-procedure TMainWindow.ApplyTransparency(AOn: Boolean);
-begin
-  // The desktop Acrylic backdrop blurs what is behind the window, the page fill above it is translucent
-  if AOn then
-  begin
-    Backdrop := TWinUIBackdrop.Acrylic;
-    SolidBase.Visibility := TWinUIVisibility.Collapsed;
-  end
-  else
-  begin
-    Backdrop := TWinUIBackdrop.None;
-    SolidBase.Visibility := TWinUIVisibility.Visible;
-  end;
-  if TransparencySwitch.IsOn <> AOn then
-    TransparencySwitch.IsOn := AOn;
-end;
-
 procedure TMainWindow.TransparencySwitchToggled(Sender: TObject);
 begin
-  ApplyTransparency(TransparencySwitch.IsOn);
+  // BindTransparencySwitch turns the desktop Acrylic backdrop on and off, Lucent's own dark base follows
+  if TransparencySwitch.IsOn then
+    SolidBase.Visibility := TWinUIVisibility.Collapsed
+  else
+    SolidBase.Visibility := TWinUIVisibility.Visible;
 end;
 
 procedure TMainWindow.ThemeClick(Sender: TObject);
