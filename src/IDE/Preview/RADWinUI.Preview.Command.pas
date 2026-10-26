@@ -617,6 +617,7 @@ begin
     (Context as TDesignerStructure).DispatchSelection;
     if not FDesignViewActive or (Context <> FStructureContext) then Exit;
     Xaml := SourceText(FXamlPath);
+    FStructure.RegisterImages; // icons nodes built inside an IDE callback could not get
     if not FStructure.Update(Xaml, FIndex) then Exit;
     if (FSelection.Name <> '') and SameText(FSelectionPath, FXamlPath) then
     begin

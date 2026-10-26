@@ -368,11 +368,22 @@ begin
     for I := 1 to 3 do
       Retained.Add(TProbeNode.Create);
     Retained.Renew;
-    Check(TProbeNode.Live = 3, 'a refresh keeps the shown nodes alive for the IDE''s deferred rebuild');
     for I := 1 to 2 do
       Retained.Add(TProbeNode.Create);
+    Check(TProbeNode.Live = 5, 'a refresh keeps the shown nodes alive until the IDE has rebuilt its tree');
     Retained.Renew;
-    Check(TProbeNode.Live = 2, 'the next refresh frees the generation before it (' + IntToStr(TProbeNode.Live) + ' live)');
+    Retained.Add(TProbeNode.Create);
+    Check(TProbeNode.Live = 6, 'two refreshes before the IDE rebuilds keep both older generations');
+    Retained.Trim;
+    Check((TProbeNode.Live = 1) and (Retained.Generations = 1), 'once the IDE has fetched the new roots only they stay (' +
+      IntToStr(TProbeNode.Live) + ' live)');
+    for I := 1 to TRetainedNodes.MaxGenerations + 4 do
+    begin
+      Retained.Renew;
+      Retained.Add(TProbeNode.Create);
+    end;
+    Check(Retained.Generations = TRetainedNodes.MaxGenerations, 'an IDE that never rebuilds keeps at most ' +
+      IntToStr(TRetainedNodes.MaxGenerations) + ' generations');
   finally
     Retained.Free;
   end;

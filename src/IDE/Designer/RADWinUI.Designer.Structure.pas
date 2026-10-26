@@ -33,6 +33,7 @@ type
     FChildren: TInterfaceList;
     FExpanded, FFocused, FSelected: WordBool;
     FData: IntPtr;
+    FImage: Integer;
   public
     constructor Create(const AElement: TXamlElement; AParent: TXamlStructureNode);
     destructor Destroy; override;
@@ -68,6 +69,7 @@ type
     FUpdating: Boolean;
     FPendingNode: IOTAStructureNode;
     FPendingDefault: Boolean;
+    FRootsFetched: Boolean;
     FOnSelect: TProc<TXamlElement, Boolean>;
     FOnEdit: TFunc<TEditAction, Boolean>;
     FOnState: TFunc<TEditState>;
@@ -77,7 +79,13 @@ type
     constructor Create(const APath: string; const ASelect: TProc<TXamlElement, Boolean>;
       const AEdit: TFunc<TEditAction, Boolean>; const AState: TFunc<TEditState>);
     destructor Destroy; override;
-    function Update(const AText: string; AIndex: TDesignerTypeIndex): Boolean;
+    /// <summary>
+    ///   Rebuilds the nodes from AText. ARegisterImages adds missing control
+    ///   icons to the Structure view, never pass it from inside an IDE callback.
+    /// </summary>
+    function Update(const AText: string; AIndex: TDesignerTypeIndex; ARegisterImages: Boolean = True): Boolean;
+    /// <summary>Adds the icons nodes built inside an IDE callback could not get yet.</summary>
+    procedure RegisterImages;
     /// <summary>
     ///   For the IDE's GetStructureContext callback: builds the nodes unless the
     ///   Structure view shows this context. The IDE calls back while it
@@ -123,7 +131,9 @@ var
 
 /// The Structure view image of ATag: the Tool Palette icon, added once per
 /// control type at 16, 24 and 32 px so the view picks the size for its DPI.
-function StructureImageIndex(const ATag: string): Integer;
+/// Without ARegister only icons added before are returned: adding one changes the
+/// view's image list, which must not happen while the IDE initializes a node.
+function StructureImageIndex(const ATag: string; ARegister: Boolean): Integer;
 var
   View: IOTAStructureView280;
   Name: string;
@@ -136,7 +146,7 @@ begin
   if StructureImages.TryGetValue(Name, Result) then
     Exit;
   Result := -1;
-  if not Supports(BorlandIDEServices, IOTAStructureView280, View) then
+  if not ARegister or not Supports(BorlandIDEServices, IOTAStructureView280, View) then
     Exit;
   SetLength(Images, 3);
   try
@@ -190,6 +200,7 @@ begin
   FParent := AParent;
   FChildren := TInterfaceList.Create;
   FExpanded := True;
+  FImage := -1;
 end;
 
 destructor TXamlStructureNode.Destroy;
@@ -227,7 +238,7 @@ begin FFocused := Value; end;
 function TXamlStructureNode.Get_Hint: WideString;
 begin Result := Format('%s (line %d, column %d)', [FElement.Tag, FElement.Line, FElement.Column]); end;
 function TXamlStructureNode.Get_ImageIndex: Integer;
-begin Result := StructureImageIndex(FElement.Tag); end;
+begin Result := FImage; end;
 function TXamlStructureNode.Get_Name: WideString;
 begin
   Result := FElement.Name;
@@ -281,7 +292,7 @@ begin
     end;
   FRoots.Clear;
   // The IDE's tree keeps raw pointers to the shown nodes until its deferred
-  // rebuild, so they are freed one refresh later
+  // rebuild has fetched the new roots, Update frees them after that (Trim)
   FNodes.Renew;
   FObjects := nil;
 end;
@@ -290,7 +301,7 @@ destructor TDesignerStructure.Destroy;
 begin
   ClearNodes;
   FRoots.Free;
-  FNodes.Free;
+  FNodes.Free; // the IDE no longer holds this context, nothing reads the nodes
   inherited;
 end;
 
@@ -307,18 +318,42 @@ end;
 function TDesignerStructure.Shown: Boolean;
 var
   View: IOTAStructureView;
+  Shows: IOTAStructureContext;
 begin
-  Result := Supports(BorlandIDEServices, IOTAStructureView, View) and
-    (View.GetStructureContext = (Self as IOTAStructureContext));
+  // By identity, not by pointer: the view may hand back another interface pointer for this context
+  Result := Supports(BorlandIDEServices, IOTAStructureView, View);
+  if Result then
+  begin
+    Shows := View.GetStructureContext;
+    Result := (Shows <> nil) and ((Shows = (Self as IOTAStructureContext)) or SameContext(Shows));
+  end;
 end;
 
 procedure TDesignerStructure.Provide(const AText: string; AIndex: TDesignerTypeIndex);
 begin
   if not Shown then
-    Update(AText, AIndex);
+    Update(AText, AIndex, False);
 end;
 
-function TDesignerStructure.Update(const AText: string; AIndex: TDesignerTypeIndex): Boolean;
+procedure TDesignerStructure.RegisterImages;
+var
+  Node: TXamlStructureNode;
+  Added: Boolean;
+  View: IOTAStructureView;
+begin
+  if FUpdating then Exit;
+  Added := False;
+  for Node in FObjects do
+    if Node.FImage < 0 then
+    begin
+      Node.FImage := StructureImageIndex(Node.FElement.Tag, True);
+      Added := Added or (Node.FImage >= 0);
+    end;
+  if Added and Shown and Supports(BorlandIDEServices, IOTAStructureView, View) then
+    View.StructureChanged(True);
+end;
+
+function TDesignerStructure.Update(const AText: string; AIndex: TDesignerTypeIndex; ARegisterImages: Boolean): Boolean;
 var
   Elements: TArray<TXamlElement>;
   Map: TArray<TXamlStructureNode>;
@@ -336,14 +371,16 @@ begin
   end;
   SetLength(Map, Length(Elements));
   SetLength(Hidden, Length(Elements));
-  if not Supports(BorlandIDEServices, IOTAStructureView, View) or
-    (View.GetStructureContext <> (Self as IOTAStructureContext)) then
+  if not Shown or not Supports(BorlandIDEServices, IOTAStructureView, View) then
     View := nil;
   FUpdating := True;
   try
     if View <> nil then View.BeginUpdate;
     try
       FPendingNode := nil;
+      // Older nodes go once the IDE has fetched the newest roots, or when it does not show this context
+      if (View = nil) or FRootsFetched then
+        FNodes.Trim;
       ClearNodes;
       SetLength(FObjects, Length(Elements));
       NodeCount := 0;
@@ -361,6 +398,7 @@ begin
           ParentIndex := Elements[ParentIndex].ParentIndex;
         end;
         Node := TXamlStructureNode.Create(Elements[I], Parent);
+        Node.FImage := StructureImageIndex(Elements[I].Tag, ARegisterImages);
         FNodes.Add(Node as IOTAStructureNode);
         FObjects[NodeCount] := Node;
         Inc(NodeCount);
@@ -369,6 +407,7 @@ begin
         else Parent.AddChildNode(Node as IOTAStructureNode);
       end;
       SetLength(FObjects, NodeCount);
+      FRootsFetched := False;
       if View <> nil then View.StructureChanged(True);
     finally
       if View <> nil then View.EndUpdate;
@@ -385,8 +424,7 @@ var
   Node: TXamlStructureNode;
   View: IOTAStructureView;
 begin
-  if FUpdating or not Supports(BorlandIDEServices, IOTAStructureView, View) or
-    (View.GetStructureContext <> (Self as IOTAStructureContext)) then Exit;
+  if FUpdating or not Shown or not Supports(BorlandIDEServices, IOTAStructureView, View) then Exit;
   FUpdating := True;
   try
     View.ClearSelection;
@@ -452,7 +490,10 @@ begin Result := 0; end;
 function TDesignerStructure.Get_RootNodeCount: Integer;
 begin Result := FRoots.Count; end;
 function TDesignerStructure.GetRootStructureNode(Index: Integer): IOTAStructureNode;
-begin Result := FRoots[Index] as IOTAStructureNode; end;
+begin
+  FRootsFetched := True; // the IDE rebuilds its tree from these roots
+  Result := FRoots[Index] as IOTAStructureNode;
+end;
 procedure TDesignerStructure.NodeEdited(const Node: IOTAStructureNode);
 begin end;
 procedure TDesignerStructure.NodeFocused(const Node: IOTAStructureNode);
