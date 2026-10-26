@@ -75,6 +75,7 @@
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.PaletteIcons.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Palette.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.ObjectInspector.pas"/>
+        <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Retention.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Structure.pas"/>
         <DCCReference Include="..\src\IDE\Preview\RADWinUI.Preview.Command.pas"/>
         <BuildConfiguration Include="Base">

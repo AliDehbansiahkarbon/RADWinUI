@@ -591,11 +591,13 @@ begin
       FIndex := TDesignerTypeIndex.Create(TPath.Combine(RootFolder, 'src\Generated\RADWinUI.Xaml.json'));
     if (FStructure = nil) or not SameText(FStructure.Path, AFile) then
     begin
-      if FStructure <> nil then FStructure.Detach;
+      // This runs inside the IDE's GetStructureContext callback: the IDE replaces
+      // the shown context itself, resetting its view here would reenter it
+      if FStructure <> nil then FStructure.Detach(False);
       FStructure := TDesignerStructure.Create(AFile, SelectStructureElement, DesignEditAction, DesignEditState);
       FStructureContext := FStructure;
     end;
-    FStructure.Update(SourceText(AFile), FIndex);
+    FStructure.Provide(SourceText(AFile), FIndex);
   except
     on E: Exception do Log('Structure context failed: ' + E.ClassName + ': ' + E.Message);
   end;

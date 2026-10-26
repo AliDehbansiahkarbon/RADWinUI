@@ -49,6 +49,7 @@ contains
   RADWinUI.Designer.PaletteIcons in '..\src\IDE\Designer\RADWinUI.Designer.PaletteIcons.pas',
   RADWinUI.Designer.Palette in '..\src\IDE\Designer\RADWinUI.Designer.Palette.pas',
   RADWinUI.Designer.ObjectInspector in '..\src\IDE\Designer\RADWinUI.Designer.ObjectInspector.pas',
+  RADWinUI.Designer.Retention in '..\src\IDE\Designer\RADWinUI.Designer.Retention.pas',
   RADWinUI.Designer.Structure in '..\src\IDE\Designer\RADWinUI.Designer.Structure.pas',
   RADWinUI.Preview.Command in '..\src\IDE\Preview\RADWinUI.Preview.Command.pas';
 

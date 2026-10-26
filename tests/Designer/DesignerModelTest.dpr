@@ -24,7 +24,8 @@ uses
   RADWinUI.Designer.PaletteIcons in '..\..\src\IDE\Designer\RADWinUI.Designer.PaletteIcons.pas',
   RADWinUI.Designer.Palette in '..\..\src\IDE\Designer\RADWinUI.Designer.Palette.pas',
   RADWinUI.Designer.Model in '..\..\src\IDE\Designer\RADWinUI.Designer.Model.pas',
-  RADWinUI.Designer.Inspector in '..\..\src\IDE\Designer\RADWinUI.Designer.Inspector.pas';
+  RADWinUI.Designer.Inspector in '..\..\src\IDE\Designer\RADWinUI.Designer.Inspector.pas',
+  RADWinUI.Designer.Retention in '..\..\src\IDE\Designer\RADWinUI.Designer.Retention.pas';
 
 var
   Failures: Integer;
@@ -58,6 +59,27 @@ begin
     if Prop.Name = AName then
       Exit(Prop);
   Result := Default(TDesignerProperty);
+end;
+
+type
+  // Stands in for a Structure view node, counts the live ones
+  TProbeNode = class(TInterfacedObject)
+  public
+    class var Live: Integer;
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
+constructor TProbeNode.Create;
+begin
+  inherited;
+  Inc(Live);
+end;
+
+destructor TProbeNode.Destroy;
+begin
+  Dec(Live);
+  inherited;
 end;
 
 const
@@ -94,6 +116,7 @@ var
   Png: TPngImage;
   Entry: TPaletteEntry;
   Changed, Handled: string;
+  Retained: TRetainedNodes;
 begin
   if ParamCount <> 1 then
   begin
@@ -335,6 +358,25 @@ begin
     Host.Free;
     Index.Free;
   end;
+
+  // The IDE's Structure view reads the shown nodes through raw pointers until its
+  // deferred rebuild: a refresh freeing them at once raised an access violation in
+  // coreide (TStructureViewForm.InitNode) after clicking a node.
+  Writeln('Structure view nodes');
+  Retained := TRetainedNodes.Create;
+  try
+    for I := 1 to 3 do
+      Retained.Add(TProbeNode.Create);
+    Retained.Renew;
+    Check(TProbeNode.Live = 3, 'a refresh keeps the shown nodes alive for the IDE''s deferred rebuild');
+    for I := 1 to 2 do
+      Retained.Add(TProbeNode.Create);
+    Retained.Renew;
+    Check(TProbeNode.Live = 2, 'the next refresh frees the generation before it (' + IntToStr(TProbeNode.Live) + ' live)');
+  finally
+    Retained.Free;
+  end;
+  Check(TProbeNode.Live = 0, 'freeing the context frees every node');
 
   if Failures > 0 then
   begin

@@ -8,7 +8,7 @@ interface
 uses
   Winapi.Windows, Winapi.ActiveX, System.SysUtils, System.Classes,
   ToolsAPI, DesignIntf, StructureViewAPI,
-  RADWinUI.Designer.XamlEdit, RADWinUI.Designer.Model;
+  RADWinUI.Designer.XamlEdit, RADWinUI.Designer.Model, RADWinUI.Designer.Retention;
 
 const
   RADWinUIStructureType = 'RADWinUI.Xaml.Structure';
@@ -62,7 +62,8 @@ type
     IOTAStructureContextEditActions, IOTAStructureContextKeyHandler)
   private
     FPath, FText: string;
-    FRoots, FNodes: TInterfaceList;
+    FRoots: TInterfaceList;
+    FNodes: TRetainedNodes;
     FObjects: TArray<TXamlStructureNode>;
     FUpdating: Boolean;
     FPendingNode: IOTAStructureNode;
@@ -77,9 +78,22 @@ type
       const AEdit: TFunc<TEditAction, Boolean>; const AState: TFunc<TEditState>);
     destructor Destroy; override;
     function Update(const AText: string; AIndex: TDesignerTypeIndex): Boolean;
+    /// <summary>
+    ///   For the IDE's GetStructureContext callback: builds the nodes unless the
+    ///   Structure view shows this context. The IDE calls back while it
+    ///   initializes the shown nodes, rebuilding them there freed the node it
+    ///   was reading. A shown context is refreshed by Update from a timer.
+    /// </summary>
+    procedure Provide(const AText: string; AIndex: TDesignerTypeIndex);
+    /// <summary>True when the IDE's Structure view shows this context.</summary>
+    function Shown: Boolean;
     procedure DispatchSelection;
     procedure Select(ALine, AColumn: Integer);
-    procedure Detach;
+    /// <summary>
+    ///   Stops callbacks. AResetView also clears the Structure view when it shows
+    ///   this context, never pass it from inside an IDE callback.
+    /// </summary>
+    procedure Detach(AResetView: Boolean = True);
     function Get_ContextIdent: WideString; safecall;
     function Get_StructureType: WideString; safecall;
     function Get_ViewOptions: Integer; safecall;
@@ -248,7 +262,7 @@ begin
   FPath := APath;
   FText := #0;
   FRoots := TInterfaceList.Create;
-  FNodes := TInterfaceList.Create;
+  FNodes := TRetainedNodes.Create;
   FOnSelect := ASelect;
   FOnEdit := AEdit;
   FOnState := AState;
@@ -266,7 +280,9 @@ begin
       // Keep its children alive and its ChildCount/Child contract intact.
     end;
   FRoots.Clear;
-  FNodes.Clear;
+  // The IDE's tree keeps raw pointers to the shown nodes until its deferred
+  // rebuild, so they are freed one refresh later
+  FNodes.Renew;
   FObjects := nil;
 end;
 
@@ -278,17 +294,28 @@ begin
   inherited;
 end;
 
-procedure TDesignerStructure.Detach;
-var
-  View: IOTAStructureView;
+procedure TDesignerStructure.Detach(AResetView: Boolean);
 begin
   FOnSelect := nil;
   FOnEdit := nil;
   FOnState := nil;
   FPendingNode := nil;
-  if Supports(BorlandIDEServices, IOTAStructureView, View) and
-    (View.GetStructureContext = (Self as IOTAStructureContext)) then
-    View.SetStructureContext(nil);
+  if AResetView and Shown then
+    (BorlandIDEServices as IOTAStructureView).SetStructureContext(nil);
+end;
+
+function TDesignerStructure.Shown: Boolean;
+var
+  View: IOTAStructureView;
+begin
+  Result := Supports(BorlandIDEServices, IOTAStructureView, View) and
+    (View.GetStructureContext = (Self as IOTAStructureContext));
+end;
+
+procedure TDesignerStructure.Provide(const AText: string; AIndex: TDesignerTypeIndex);
+begin
+  if not Shown then
+    Update(AText, AIndex);
 end;
 
 function TDesignerStructure.Update(const AText: string; AIndex: TDesignerTypeIndex): Boolean;
