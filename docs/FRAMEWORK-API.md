@@ -123,6 +123,7 @@ ViewModel := TProfile.Create;              // generated from DataContextType="TP
 - With `DataContextType="TProfile"` on `<Window>`, the generated base has `property ViewModel: TProfile`, declare `TProfile` in its own unit. Without it, assign `DataContext := FProfile` yourself.
 - The window code frees its view model (`ViewModel.Free` in the destructor), bindings stop reading it once it is freed.
 - Items of a `TWinUIBindableList<T>` that derive from `TWinUIBindableObject` can call `Changed` themselves instead of `ItemChanged`.
+- A published property that returns another `TWinUIBindableObject` or a `TWinUIBindableList<T>` hands XAML that object's own bindable, so `DataContext="{Binding Detail}"` on a panel follows the nested view model's `Changed` calls too.
 
 ### Converters
 
@@ -196,6 +197,29 @@ end.
 ```
 
 `TWinUITimer` is a repeating UI-thread timer like the VCL `TTimer` (`Interval` in milliseconds, `Enabled`, `OnTimer`).
+
+## Animations (RADWinUI.Motion)
+
+`TWinUIMotion` animates any element through the Composition visual behind it. The animations run on the compositor thread, stay smooth while the UI thread works, and need no timer:
+
+```pascal
+TWinUIMotion.Enter(Card, 120);              // fade in and slide up, 120 ms from now
+TWinUIMotion.Leave(Page);                   // fade out and slide away
+TWinUIMotion.Drift(Bubble, 0, -40, 9000);   // float back and forth forever
+TWinUIMotion.Reveal(ChartCanvas, 200, 900); // draw in from left to right
+TWinUIMotion.Grow(Bar, False);              // grow from the left edge
+TWinUIMotion.Sweep(Donut);                  // turn in with a fade
+TWinUIMotion.SlideTo(Indicator, 196, 0);    // move to a new place
+TWinUIMotion.Hero(Hero, DX, DY, SX, SY);    // fly from another element's place and size
+TWinUIMotion.Lift(Card, True);              // a hover lift, False puts it back
+TWinUIMotion.Pulse(Dot);                    // a short pop
+TWinUIMotion.Reset(Card);                   // stop and show the element at rest
+```
+
+- Durations and delays are in milliseconds.
+- Elements keep their XAML layout: the animations use the visual's `Opacity`, `Translation`, `Scale`, `RotationAngleInDegrees` and `Clip`. Do not combine them with the element's own `Opacity`, `Translation` or `Scale` properties.
+- Sizes come from `ActualWidth` and `ActualHeight`, so start size-dependent animations (`Reveal`, `Grow`, `Sweep`, `Lift`) once the element has a layout, for example from a `Loaded` handler.
+- The Lucent sample uses all of them.
 
 ## Samples
 

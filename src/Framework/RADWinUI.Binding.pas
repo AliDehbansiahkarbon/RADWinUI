@@ -197,6 +197,9 @@ begin
           Result := nil
         else if Child is TWinUIObject then
           Result := TWinUIObject(Child).WinRTObject
+        else if Child is TWinUIValueSource then
+          // a view model or a list keeps its own bindable, so its Changed calls reach XAML
+          Result := TWinValue(TWinUIValueSource(Child))
         else
           Result := TWinUIBindable.Create(Child);
       end;

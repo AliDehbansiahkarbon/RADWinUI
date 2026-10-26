@@ -60,6 +60,7 @@ Desktop.ini
 packages/*.res
 samples/Luma/Luma.res
 samples/Haven/Haven.res
+samples/Lucent/Lucent.res
 samples/Gallery/Gallery.res
 src/IDE/Preview/RADWinUIPreview.res
 tests/Designer/XamlEditTest.res

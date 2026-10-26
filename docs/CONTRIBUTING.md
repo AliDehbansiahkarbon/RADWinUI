@@ -24,6 +24,7 @@ Open an issue with:
 .\scripts\Test-Gallery.ps1                   # Gallery
 .\scripts\Test-Luma.ps1                      # Luma
 .\scripts\Test-Haven.ps1                     # Haven
+.\scripts\Test-Lucent.ps1                    # Lucent
 ```
 
 UI tests open their windows on a secondary monitor when there is one and never take the focus.

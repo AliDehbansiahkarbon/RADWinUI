@@ -4,6 +4,9 @@ All notable changes to RADWinUI.
 
 ## Unreleased (0.9.3)
 
+- New sample: Lucent, an app publishing studio with frosted glass, eight animated pages, live simulated data and a drag-and-drop release board.
+- New unit `RADWinUI.Motion`: entrance, exit, drift, reveal, grow, sweep, hero, lift and pulse animations that run on the compositor.
+- A published property that returns a view model or a bindable list now passes its own bindable to XAML, so nested `{Binding}` paths follow its changes.
 - New sample: Haven, a bento-style savings dashboard that follows the Windows theme and accent colour, with two-way bound toggles and a goals checklist.
 - `RADWINUI_TEST_MONITOR=offscreen` runs a test window outside every monitor, for machines with one screen.
 - The 32-bit IDE can install RADWinUI: one package per IDE, `RADWinUIWizard` (64-bit IDE) and `RADWinUIWizard32` (32-bit IDE).

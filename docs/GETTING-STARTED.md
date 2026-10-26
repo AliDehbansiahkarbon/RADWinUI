@@ -37,7 +37,7 @@ In RAD Studio, started **without** administrator rights (WinUI 3 does not run el
 3. Right-click the project group > **Build All**.
 4. Right-click the package > **Install**.
 
-The demos are another group: `samples\RADWinUISamples.groupproj` (Gallery, Luma and Haven).
+The demos are another group: `samples\RADWinUISamples.groupproj` (Gallery, Luma, Haven and Lucent).
 
 ## Scripts do the same from a command line: `scripts\Build-Wizard.ps1`.
 

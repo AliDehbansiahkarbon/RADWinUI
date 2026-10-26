@@ -14,6 +14,9 @@
         <Projects Include="Haven\Haven.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Lucent\Lucent.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -49,14 +52,23 @@
     <Target Name="Haven:Make">
         <MSBuild Projects="Haven\Haven.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Lucent">
+        <MSBuild Projects="Lucent\Lucent.dproj"/>
+    </Target>
+    <Target Name="Lucent:Clean">
+        <MSBuild Projects="Lucent\Lucent.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Lucent:Make">
+        <MSBuild Projects="Lucent\Lucent.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="Gallery;Luma;Haven"/>
+        <CallTarget Targets="Gallery;Luma;Haven;Lucent"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Gallery:Clean;Luma:Clean;Haven:Clean"/>
+        <CallTarget Targets="Gallery:Clean;Luma:Clean;Haven:Clean;Lucent:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Gallery:Make;Luma:Make;Haven:Make"/>
+        <CallTarget Targets="Gallery:Make;Luma:Make;Haven:Make;Lucent:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

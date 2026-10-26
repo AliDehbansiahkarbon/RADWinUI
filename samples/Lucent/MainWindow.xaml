@@ -1,0 +1,2391 @@
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    x:Class="TMainWindow" DataContextType="TMainViewModel"
+    Title="Lucent - app publishing studio" Width="1640" Height="1020" MinWidth="1180" MinHeight="720"
+    WindowStartupLocation="CenterScreen" ExtendsContentIntoTitleBar="True">
+  <!-- Frosted glass over drifting ribbons. Every colour is a theme resource and
+       the highlights are the Windows accent colour, so light, dark and accent
+       changes apply live. -->
+  <Grid x:Name="Surface" SizeChanged="SurfaceSizeChanged">
+    <Grid.Resources>
+      <ResourceDictionary>
+        <ResourceDictionary.ThemeDictionaries>
+          <ResourceDictionary x:Key="Dark">
+            <LinearGradientBrush x:Key="BackdropBrush" StartPoint="0,0" EndPoint="1,1">
+              <GradientStop Color="#0B0B0D" Offset="0"/>
+              <GradientStop Color="#15161A" Offset="0.55"/>
+              <GradientStop Color="#0D0E11" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="RibbonBrush" StartPoint="0,0" EndPoint="1,1">
+              <GradientStop Color="#00FFFFFF" Offset="0"/>
+              <GradientStop Color="#26FFFFFF" Offset="0.3"/>
+              <GradientStop Color="#0AFFFFFF" Offset="0.55"/>
+              <GradientStop Color="#33FFFFFF" Offset="0.8"/>
+              <GradientStop Color="#05FFFFFF" Offset="1"/>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="RibbonRimBrush" Color="#38FFFFFF"/>
+            <RadialGradientBrush x:Key="BubbleBrush" GradientOrigin="0.32,0.26" Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+              <GradientStop Color="#66FFFFFF" Offset="0"/>
+              <GradientStop Color="#14FFFFFF" Offset="0.45"/>
+              <GradientStop Color="#08FFFFFF" Offset="0.8"/>
+              <GradientStop Color="#2EFFFFFF" Offset="1"/>
+            </RadialGradientBrush>
+            <SolidColorBrush x:Key="BubbleRimBrush" Color="#70FFFFFF"/>
+            <AcrylicBrush x:Key="GlassBrush" TintColor="#17181C" TintOpacity="0.32" TintLuminosityOpacity="0.55" FallbackColor="#E61A1B1F"/>
+            <AcrylicBrush x:Key="GlassStrongBrush" TintColor="#1C1D22" TintOpacity="0.5" TintLuminosityOpacity="0.7" FallbackColor="#F21C1D22"/>
+            <LinearGradientBrush x:Key="GlassRimBrush" StartPoint="0,0" EndPoint="0.4,1">
+              <GradientStop Color="#59FFFFFF" Offset="0"/>
+              <GradientStop Color="#14FFFFFF" Offset="0.45"/>
+              <GradientStop Color="#0AFFFFFF" Offset="0.8"/>
+              <GradientStop Color="#1FFFFFFF" Offset="1"/>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="InnerBrush" Color="#0FFFFFFF"/>
+            <SolidColorBrush x:Key="InnerRimBrush" Color="#14FFFFFF"/>
+            <SolidColorBrush x:Key="SelectedPillBrush" Color="#26FFFFFF"/>
+            <SolidColorBrush x:Key="LineBrush" Color="#1AFFFFFF"/>
+            <SolidColorBrush x:Key="MutedBrush" Color="#8CFFFFFF"/>
+            <SolidColorBrush x:Key="FaintBrush" Color="#59FFFFFF"/>
+            <SolidColorBrush x:Key="AvatarBrush" Color="#E6F2F3F5"/>
+            <SolidColorBrush x:Key="AvatarTextBrush" Color="#16171A"/>
+            <SolidColorBrush x:Key="GoodBrush" Color="#4ADE9B"/>
+            <SolidColorBrush x:Key="GoodSoftBrush" Color="#264ADE9B"/>
+            <SolidColorBrush x:Key="BadBrush" Color="#FF7A7A"/>
+            <SolidColorBrush x:Key="BadSoftBrush" Color="#26FF7A7A"/>
+            <SolidColorBrush x:Key="WarnBrush" Color="#F6BE55"/>
+            <SolidColorBrush x:Key="WarnSoftBrush" Color="#26F6BE55"/>
+            <SolidColorBrush x:Key="TealBrush" Color="#4FD1C5"/>
+            <SolidColorBrush x:Key="StarBrush" Color="#F6C453"/>
+          </ResourceDictionary>
+          <ResourceDictionary x:Key="Light">
+            <LinearGradientBrush x:Key="BackdropBrush" StartPoint="0,0" EndPoint="1,1">
+              <GradientStop Color="#EDEFF3" Offset="0"/>
+              <GradientStop Color="#E2E5EA" Offset="0.55"/>
+              <GradientStop Color="#F2F3F6" Offset="1"/>
+            </LinearGradientBrush>
+            <LinearGradientBrush x:Key="RibbonBrush" StartPoint="0,0" EndPoint="1,1">
+              <GradientStop Color="#00FFFFFF" Offset="0"/>
+              <GradientStop Color="#B3FFFFFF" Offset="0.3"/>
+              <GradientStop Color="#14000000" Offset="0.55"/>
+              <GradientStop Color="#CCFFFFFF" Offset="0.8"/>
+              <GradientStop Color="#00FFFFFF" Offset="1"/>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="RibbonRimBrush" Color="#E6FFFFFF"/>
+            <RadialGradientBrush x:Key="BubbleBrush" GradientOrigin="0.32,0.26" Center="0.5,0.5" RadiusX="0.5" RadiusY="0.5">
+              <GradientStop Color="#F2FFFFFF" Offset="0"/>
+              <GradientStop Color="#33FFFFFF" Offset="0.55"/>
+              <GradientStop Color="#14000000" Offset="1"/>
+            </RadialGradientBrush>
+            <SolidColorBrush x:Key="BubbleRimBrush" Color="#F2FFFFFF"/>
+            <AcrylicBrush x:Key="GlassBrush" TintColor="#FFFFFF" TintOpacity="0.38" TintLuminosityOpacity="0.62" FallbackColor="#EBF7F8FA"/>
+            <AcrylicBrush x:Key="GlassStrongBrush" TintColor="#FFFFFF" TintOpacity="0.55" TintLuminosityOpacity="0.8" FallbackColor="#F5FAFBFC"/>
+            <LinearGradientBrush x:Key="GlassRimBrush" StartPoint="0,0" EndPoint="0.4,1">
+              <GradientStop Color="#FFFFFFFF" Offset="0"/>
+              <GradientStop Color="#80FFFFFF" Offset="0.45"/>
+              <GradientStop Color="#0F000000" Offset="0.85"/>
+              <GradientStop Color="#1A000000" Offset="1"/>
+            </LinearGradientBrush>
+            <SolidColorBrush x:Key="InnerBrush" Color="#99FFFFFF"/>
+            <SolidColorBrush x:Key="InnerRimBrush" Color="#14000000"/>
+            <SolidColorBrush x:Key="SelectedPillBrush" Color="#F2FFFFFF"/>
+            <SolidColorBrush x:Key="LineBrush" Color="#1A000000"/>
+            <SolidColorBrush x:Key="MutedBrush" Color="#99000000"/>
+            <SolidColorBrush x:Key="FaintBrush" Color="#4D000000"/>
+            <SolidColorBrush x:Key="AvatarBrush" Color="#1E1F23"/>
+            <SolidColorBrush x:Key="AvatarTextBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="GoodBrush" Color="#178A54"/>
+            <SolidColorBrush x:Key="GoodSoftBrush" Color="#24178A54"/>
+            <SolidColorBrush x:Key="BadBrush" Color="#D23C3C"/>
+            <SolidColorBrush x:Key="BadSoftBrush" Color="#1FD23C3C"/>
+            <SolidColorBrush x:Key="WarnBrush" Color="#B7791F"/>
+            <SolidColorBrush x:Key="WarnSoftBrush" Color="#24B7791F"/>
+            <SolidColorBrush x:Key="TealBrush" Color="#16968A"/>
+            <SolidColorBrush x:Key="StarBrush" Color="#E0A31A"/>
+          </ResourceDictionary>
+        </ResourceDictionary.ThemeDictionaries>
+
+        <Style x:Key="Glass" TargetType="Border">
+          <Setter Property="Background" Value="{ThemeResource GlassBrush}"/>
+          <Setter Property="BorderBrush" Value="{ThemeResource GlassRimBrush}"/>
+          <Setter Property="BorderThickness" Value="1"/>
+          <Setter Property="CornerRadius" Value="26"/>
+          <Setter Property="Padding" Value="24,22"/>
+        </Style>
+        <Style x:Key="GlassPill" TargetType="Border">
+          <Setter Property="Background" Value="{ThemeResource GlassBrush}"/>
+          <Setter Property="BorderBrush" Value="{ThemeResource GlassRimBrush}"/>
+          <Setter Property="BorderThickness" Value="1"/>
+          <Setter Property="CornerRadius" Value="30"/>
+        </Style>
+        <Style x:Key="Inner" TargetType="Border">
+          <Setter Property="Background" Value="{ThemeResource InnerBrush}"/>
+          <Setter Property="BorderBrush" Value="{ThemeResource InnerRimBrush}"/>
+          <Setter Property="BorderThickness" Value="1"/>
+          <Setter Property="CornerRadius" Value="18"/>
+          <Setter Property="Padding" Value="16,14"/>
+        </Style>
+        <Style x:Key="IconDisc" TargetType="Border">
+          <Setter Property="Width" Value="44"/>
+          <Setter Property="Height" Value="44"/>
+          <Setter Property="CornerRadius" Value="22"/>
+          <Setter Property="Background" Value="{ThemeResource InnerBrush}"/>
+          <Setter Property="BorderBrush" Value="{ThemeResource InnerRimBrush}"/>
+          <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style x:Key="Round" TargetType="Button">
+          <Setter Property="Width" Value="42"/>
+          <Setter Property="Height" Value="42"/>
+          <Setter Property="Padding" Value="0"/>
+          <Setter Property="CornerRadius" Value="21"/>
+          <Setter Property="Background" Value="Transparent"/>
+          <Setter Property="BorderThickness" Value="0"/>
+          <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="RoundInner" TargetType="Button">
+          <Setter Property="Width" Value="36"/>
+          <Setter Property="Height" Value="36"/>
+          <Setter Property="Padding" Value="0"/>
+          <Setter Property="CornerRadius" Value="18"/>
+          <Setter Property="Background" Value="{ThemeResource InnerBrush}"/>
+          <Setter Property="BorderBrush" Value="{ThemeResource InnerRimBrush}"/>
+          <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style x:Key="NavTab" TargetType="Button">
+          <Setter Property="Width" Value="98"/>
+          <Setter Property="Height" Value="40"/>
+          <Setter Property="CornerRadius" Value="20"/>
+          <Setter Property="Background" Value="Transparent"/>
+          <Setter Property="BorderThickness" Value="0"/>
+          <Setter Property="FontSize" Value="13"/>
+          <Setter Property="HorizontalContentAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="Chip" TargetType="ToggleButton">
+          <Setter Property="Padding" Value="14,6"/>
+          <Setter Property="MinHeight" Value="32"/>
+          <Setter Property="CornerRadius" Value="16"/>
+          <Setter Property="FontSize" Value="12"/>
+          <Setter Property="Background" Value="{ThemeResource InnerBrush}"/>
+          <Setter Property="BorderBrush" Value="{ThemeResource InnerRimBrush}"/>
+          <Setter Property="BorderThickness" Value="1"/>
+        </Style>
+        <Style x:Key="Accent" TargetType="Button">
+          <Setter Property="Padding" Value="18,9"/>
+          <Setter Property="CornerRadius" Value="20"/>
+          <Setter Property="FontSize" Value="13"/>
+          <Setter Property="Background" Value="{ThemeResource AccentFillColorDefaultBrush}"/>
+          <Setter Property="Foreground" Value="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/>
+          <Setter Property="BorderThickness" Value="0"/>
+        </Style>
+        <Style x:Key="PageFirst" TargetType="TextBlock">
+          <Setter Property="FontSize" Value="46"/>
+          <Setter Property="FontWeight" Value="Light"/>
+          <Setter Property="FontFamily" Value="Segoe UI Variable Display"/>
+          <Setter Property="Foreground" Value="{ThemeResource MutedBrush}"/>
+          <Setter Property="LineHeight" Value="50"/>
+        </Style>
+        <Style x:Key="PageSecond" TargetType="TextBlock">
+          <Setter Property="FontSize" Value="46"/>
+          <Setter Property="FontWeight" Value="SemiBold"/>
+          <Setter Property="FontFamily" Value="Segoe UI Variable Display"/>
+          <Setter Property="LineHeight" Value="50"/>
+        </Style>
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+          <Setter Property="FontSize" Value="18"/>
+          <Setter Property="FontWeight" Value="SemiBold"/>
+        </Style>
+        <Style x:Key="Caption" TargetType="TextBlock">
+          <Setter Property="FontSize" Value="12"/>
+          <Setter Property="Foreground" Value="{ThemeResource MutedBrush}"/>
+        </Style>
+        <Style x:Key="KpiValue" TargetType="TextBlock">
+          <Setter Property="FontSize" Value="22"/>
+          <Setter Property="FontWeight" Value="SemiBold"/>
+          <Setter Property="FontFamily" Value="Segoe UI Variable Display"/>
+        </Style>
+        <Style x:Key="Kpi" TargetType="Border">
+          <Setter Property="Background" Value="{ThemeResource GlassBrush}"/>
+          <Setter Property="BorderBrush" Value="{ThemeResource GlassRimBrush}"/>
+          <Setter Property="BorderThickness" Value="1"/>
+          <Setter Property="CornerRadius" Value="32"/>
+          <Setter Property="Padding" Value="9,9,22,9"/>
+        </Style>
+        <Style x:Key="Bare" TargetType="ListViewItem">
+          <Setter Property="Padding" Value="0"/>
+          <Setter Property="Margin" Value="0,0,0,10"/>
+          <Setter Property="MinHeight" Value="0"/>
+          <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+        </Style>
+        <Style x:Key="BareGrid" TargetType="GridViewItem">
+          <Setter Property="Padding" Value="0"/>
+          <Setter Property="Margin" Value="0,0,16,16"/>
+        </Style>
+        <DataTemplate x:Key="ReleaseCard" x:DataType="TRelease">
+          <Border Padding="14,12" CornerRadius="18" Background="{ThemeResource GlassBrush}" BorderBrush="{ThemeResource GlassRimBrush}" BorderThickness="1">
+            <StackPanel Spacing="10">
+              <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="Auto"/>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <Border Width="34" Height="34" CornerRadius="10" Background="{Binding Tint}">
+                  <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="{Binding Glyph}" FontSize="14" Foreground="White"/>
+                </Border>
+                <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                  <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                  <TextBlock Text="{Binding BuildText}" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+                </StackPanel>
+                <FontIcon Grid.Column="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE712;" FontSize="12" VerticalAlignment="Top"
+                          Foreground="{ThemeResource MutedBrush}"/>
+              </Grid>
+              <TextBlock Text="{Binding Notes}" FontSize="12" TextWrapping="Wrap" MaxLines="2" TextTrimming="CharacterEllipsis" Foreground="{ThemeResource MutedBrush}"/>
+              <StackPanel Spacing="5" Visibility="{Binding Tested, Converter={StaticResource BoolToVisibility}}">
+                <ProgressBar Value="{Binding CrashFree}" Minimum="95" Maximum="100" Foreground="{Binding HealthBrush}"/>
+                <TextBlock Text="{Binding CrashText}" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+              </StackPanel>
+              <Border CornerRadius="9" Padding="8,2" HorizontalAlignment="Left" Background="{ThemeResource InnerBrush}"
+                      Visibility="{Binding Tested, Converter={StaticResource InverseBoolToVisibility}}">
+                <TextBlock Text="Not tested yet" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+              </Border>
+              <Grid>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Border Width="24" Height="24" CornerRadius="12" Background="{ThemeResource AvatarBrush}">
+                    <TextBlock Text="{Binding Owner}" FontSize="9" FontWeight="SemiBold" Foreground="{ThemeResource AvatarTextBrush}" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                  </Border>
+                  <TextBlock Text="{Binding AgeText}" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource MutedBrush}"/>
+                </StackPanel>
+                <Border HorizontalAlignment="Right" CornerRadius="9" Padding="8,2" Background="{ThemeResource GoodSoftBrush}"
+                        Visibility="{Binding Current, Converter={StaticResource BoolToVisibility}}">
+                  <TextBlock Text="Current" FontSize="11" Foreground="{ThemeResource GoodBrush}"/>
+                </Border>
+                <StackPanel Orientation="Horizontal" Spacing="5" HorizontalAlignment="Right" VerticalAlignment="Center"
+                            Visibility="{Binding Current, Converter={StaticResource InverseBoolToVisibility}}">
+                  <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE716;" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+                  <TextBlock Text="{Binding TestersText}" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+                </StackPanel>
+              </Grid>
+            </StackPanel>
+          </Border>
+        </DataTemplate>
+      </ResourceDictionary>
+    </Grid.Resources>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="80"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <Grid.ColumnDefinitions>
+      <ColumnDefinition Width="92"/>
+      <ColumnDefinition Width="*"/>
+    </Grid.ColumnDefinitions>
+
+    <!-- The backdrop: drifting glass ribbons and floating bubbles -->
+    <Grid Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{ThemeResource BackdropBrush}" IsHitTestVisible="False">
+      <Viewbox Stretch="UniformToFill">
+        <Canvas Width="1600" Height="1000">
+          <Ellipse x:Name="Orb1" Canvas.Left="-260" Canvas.Top="-300" Width="640" Height="640" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1" Opacity="0.55"/>
+          <Ellipse x:Name="Orb2" Canvas.Left="1180" Canvas.Top="560" Width="720" Height="720" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1" Opacity="0.45"/>
+          <Canvas x:Name="Ribbon1">
+            <Path Data="M -300,840 C 160,540 560,1000 920,660 S 1480,150 1960,400" Stroke="{ThemeResource RibbonBrush}" StrokeThickness="200"/>
+            <Path Data="M -300,740 C 160,440 560,900 920,560 S 1480,50 1960,300" Stroke="{ThemeResource RibbonRimBrush}" StrokeThickness="1.4" Opacity="0.8"/>
+            <Path Data="M -300,940 C 160,640 560,1100 920,760 S 1480,250 1960,500" Stroke="{ThemeResource RibbonRimBrush}" StrokeThickness="1" Opacity="0.35"/>
+          </Canvas>
+          <Canvas x:Name="Ribbon2">
+            <Path Data="M -260,170 C 260,20 640,430 1080,250 S 1620,-60 1940,110" Stroke="{ThemeResource RibbonBrush}" StrokeThickness="130"/>
+            <Path Data="M -260,105 C 260,-45 640,365 1080,185 S 1620,-125 1940,45" Stroke="{ThemeResource RibbonRimBrush}" StrokeThickness="1.2" Opacity="0.7"/>
+          </Canvas>
+          <Canvas x:Name="Ribbon3">
+            <Path Data="M 380,1180 C 680,900 1000,1120 1300,860 S 1700,620 1940,690" Stroke="{ThemeResource RibbonBrush}" StrokeThickness="110"/>
+            <Path Data="M 380,1125 C 680,845 1000,1065 1300,805 S 1700,565 1940,635" Stroke="{ThemeResource RibbonRimBrush}" StrokeThickness="1.2" Opacity="0.7"/>
+          </Canvas>
+          <Ellipse x:Name="Bubble1" Canvas.Left="210" Canvas.Top="610" Width="86" Height="86" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1"/>
+          <Ellipse x:Name="Bubble2" Canvas.Left="520" Canvas.Top="180" Width="34" Height="34" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1"/>
+          <Ellipse x:Name="Bubble3" Canvas.Left="880" Canvas.Top="760" Width="58" Height="58" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1"/>
+          <Ellipse x:Name="Bubble4" Canvas.Left="1240" Canvas.Top="260" Width="120" Height="120" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1"/>
+          <Ellipse x:Name="Bubble5" Canvas.Left="1460" Canvas.Top="120" Width="22" Height="22" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1"/>
+          <Ellipse x:Name="Bubble6" Canvas.Left="660" Canvas.Top="470" Width="16" Height="16" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1"/>
+          <Ellipse x:Name="Bubble7" Canvas.Left="1080" Canvas.Top="900" Width="40" Height="40" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1"/>
+          <Ellipse x:Name="Bubble8" Canvas.Left="90" Canvas.Top="300" Width="26" Height="26" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1"/>
+          <Ellipse x:Name="Bubble9" Canvas.Left="1520" Canvas.Top="560" Width="64" Height="64" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1"/>
+          <Ellipse x:Name="Bubble10" Canvas.Left="380" Canvas.Top="900" Width="20" Height="20" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1"/>
+          <Ellipse x:Name="Bubble11" Canvas.Left="960" Canvas.Top="90" Width="48" Height="48" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1"/>
+          <Ellipse x:Name="Bubble12" Canvas.Left="740" Canvas.Top="620" Width="12" Height="12" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1"/>
+        </Canvas>
+      </Viewbox>
+    </Grid>
+
+    <Grid x:Name="DragRegion" Grid.ColumnSpan="2" Background="Transparent"/>
+
+    <!-- Top bar: logo, tabs, inbox and profile -->
+    <Grid Grid.ColumnSpan="2" Margin="24,14,150,4" ColumnSpacing="16">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <Border Style="{StaticResource GlassPill}" Padding="6,6,18,6" HorizontalAlignment="Left" VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Spacing="10">
+          <Grid Width="34" Height="34">
+            <Ellipse Fill="{ThemeResource AccentFillColorDefaultBrush}"/>
+            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE706;" FontSize="16" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/>
+          </Grid>
+          <TextBlock Text="lucent" FontSize="18" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display" VerticalAlignment="Center"/>
+        </StackPanel>
+      </Border>
+      <Border Grid.Column="1" Style="{StaticResource GlassPill}" Padding="5" VerticalAlignment="Center">
+        <Grid>
+          <Border x:Name="NavIndicator" Width="98" Height="40" CornerRadius="20" HorizontalAlignment="Left"
+                  Background="{ThemeResource SelectedPillBrush}" BorderBrush="{ThemeResource GlassRimBrush}" BorderThickness="1"/>
+          <StackPanel x:Name="NavBar" Orientation="Horizontal">
+            <Button x:Name="NavOverview" Style="{StaticResource NavTab}" Content="Overview" Tag="0" Click="NavClick"/>
+            <Button x:Name="NavApps" Style="{StaticResource NavTab}" Content="Apps" Tag="1" Click="NavClick"/>
+            <Button x:Name="NavReleases" Style="{StaticResource NavTab}" Content="Releases" Tag="2" Click="NavClick"/>
+            <Button x:Name="NavReviews" Style="{StaticResource NavTab}" Content="Reviews" Tag="3" Click="NavClick"/>
+            <Button x:Name="NavAudience" Style="{StaticResource NavTab}" Content="Audience" Tag="4" Click="NavClick"/>
+            <Button x:Name="NavGrowth" Style="{StaticResource NavTab}" Content="Growth" Tag="5" Click="NavClick"/>
+            <Button x:Name="NavPayouts" Style="{StaticResource NavTab}" Content="Payouts" Tag="6" Click="NavClick"/>
+            <Button x:Name="NavTeam" Style="{StaticResource NavTab}" Content="Team" Tag="7" Click="NavClick"/>
+          </StackPanel>
+        </Grid>
+      </Border>
+      <Border Grid.Column="2" Style="{StaticResource GlassPill}" Padding="5" HorizontalAlignment="Right" VerticalAlignment="Center">
+        <StackPanel Orientation="Horizontal" Spacing="4">
+          <Button x:Name="InboxButton" Style="{StaticResource Round}" ToolTipService.ToolTip="Inbox" AutomationProperties.Name="Inbox">
+            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE715;" FontSize="15"/>
+            <Button.Flyout>
+              <Flyout Placement="BottomEdgeAlignedRight">
+                <StackPanel Width="320" Spacing="10">
+                  <TextBlock Text="Inbox" Style="{StaticResource CardTitle}"/>
+                  <TextBlock Text="Reviews waiting for a reply" Style="{StaticResource Caption}"/>
+                  <ItemsControl x:Name="InboxList">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="TReview">
+                        <Grid Padding="0,8" ColumnSpacing="10">
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                          </Grid.ColumnDefinitions>
+                          <Border Width="30" Height="30" CornerRadius="9" Background="{Binding Tint}">
+                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="{Binding Glyph}" FontSize="13" Foreground="White"/>
+                          </Border>
+                          <StackPanel Grid.Column="1">
+                            <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                            <TextBlock Text="{Binding Meta}" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+                          </StackPanel>
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Flyout>
+            </Button.Flyout>
+          </Button>
+          <Grid>
+            <Button x:Name="BellButton" Style="{StaticResource Round}" Click="BellClick" ToolTipService.ToolTip="Notifications" AutomationProperties.Name="Notifications">
+              <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xEA8F;" FontSize="15"/>
+              <Button.Flyout>
+                <Flyout Placement="BottomEdgeAlignedRight">
+                  <StackPanel Width="340" Spacing="10">
+                    <TextBlock Text="Notifications" Style="{StaticResource CardTitle}"/>
+                    <ItemsControl x:Name="NoticeList">
+                      <ItemsControl.ItemTemplate>
+                        <DataTemplate x:DataType="TNotice">
+                          <Grid Padding="0,8" ColumnSpacing="12">
+                            <Grid.ColumnDefinitions>
+                              <ColumnDefinition Width="Auto"/>
+                              <ColumnDefinition Width="*"/>
+                            </Grid.ColumnDefinitions>
+                            <Border Width="32" Height="32" CornerRadius="16" Background="{ThemeResource InnerBrush}">
+                              <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="{Binding Glyph}" FontSize="13"/>
+                            </Border>
+                            <StackPanel Grid.Column="1">
+                              <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"/>
+                              <TextBlock Text="{Binding Body}" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource MutedBrush}"/>
+                              <TextBlock Text="{Binding Time}" FontSize="11" Foreground="{ThemeResource FaintBrush}"/>
+                            </StackPanel>
+                          </Grid>
+                        </DataTemplate>
+                      </ItemsControl.ItemTemplate>
+                    </ItemsControl>
+                  </StackPanel>
+                </Flyout>
+              </Button.Flyout>
+            </Button>
+            <Ellipse x:Name="BellDot" Width="9" Height="9" Fill="{ThemeResource BadBrush}" HorizontalAlignment="Right" VerticalAlignment="Top"
+                     Margin="0,8,9,0" IsHitTestVisible="False" Visibility="{Binding HasNews, Converter={StaticResource BoolToVisibility}}"/>
+          </Grid>
+          <Button x:Name="AvatarButton" Width="42" Height="42" Padding="0" CornerRadius="21" BorderThickness="0"
+                  Background="{ThemeResource AvatarBrush}" AutomationProperties.Name="Profile">
+            <TextBlock Text="AR" FontSize="13" FontWeight="SemiBold" Foreground="{ThemeResource AvatarTextBrush}"/>
+            <Button.Flyout>
+              <MenuFlyout Placement="BottomEdgeAlignedRight">
+                <MenuFlyoutItem Text="Ari Rowe, studio owner" IsEnabled="False"/>
+                <MenuFlyoutSeparator/>
+                <MenuFlyoutItem x:Name="MenuTheme" Text="Switch light or dark" Click="ThemeClick">
+                  <MenuFlyoutItem.Icon>
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE793;"/>
+                  </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+                <MenuFlyoutItem x:Name="MenuTeam" Text="Manage team" Click="MenuTeamClick">
+                  <MenuFlyoutItem.Icon>
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE716;"/>
+                  </MenuFlyoutItem.Icon>
+                </MenuFlyoutItem>
+              </MenuFlyout>
+            </Button.Flyout>
+          </Button>
+        </StackPanel>
+      </Border>
+    </Grid>
+
+    <!-- The rail -->
+    <Border Grid.Row="1" Style="{StaticResource GlassPill}" Width="58" Padding="7,10" Margin="24,0,0,0"
+            HorizontalAlignment="Left" VerticalAlignment="Center" CornerRadius="29">
+      <StackPanel Spacing="8">
+        <Button x:Name="RailSearch" Style="{StaticResource Round}" Click="RailSearchClick" ToolTipService.ToolTip="Search apps" AutomationProperties.Name="Search apps">
+          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE721;" FontSize="15"/>
+        </Button>
+        <Button x:Name="RailNew" Style="{StaticResource Round}" Click="RailNewClick" Background="{ThemeResource AccentFillColorDefaultBrush}"
+                ToolTipService.ToolTip="New release" AutomationProperties.Name="New release">
+          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE710;" FontSize="15" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/>
+        </Button>
+        <Button x:Name="RailCalendar" Style="{StaticResource Round}" ToolTipService.ToolTip="Release calendar" AutomationProperties.Name="Release calendar">
+          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE787;" FontSize="15"/>
+          <Button.Flyout>
+            <Flyout Placement="RightEdgeAlignedTop">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Release calendar" Style="{StaticResource CardTitle}"/>
+                <CalendarView x:Name="ReleaseCalendar" SelectionMode="Single"/>
+                <TextBlock Text="Next store review window: Thursday" Style="{StaticResource Caption}"/>
+              </StackPanel>
+            </Flyout>
+          </Button.Flyout>
+        </Button>
+        <Button x:Name="RailUndo" Style="{StaticResource Round}" Click="RailUndoClick" ToolTipService.ToolTip="Undo the last move" AutomationProperties.Name="Undo">
+          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE7A7;" FontSize="15"/>
+        </Button>
+        <Button x:Name="RailShare" Style="{StaticResource Round}" Click="RailShareClick" ToolTipService.ToolTip="Copy a studio summary" AutomationProperties.Name="Share">
+          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE72D;" FontSize="15"/>
+        </Button>
+        <Button x:Name="RailUpload" Style="{StaticResource Round}" Click="RailUploadClick" ToolTipService.ToolTip="Upload a build" AutomationProperties.Name="Upload a build">
+          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE898;" FontSize="15"/>
+        </Button>
+        <Rectangle Height="1" Margin="6,4" Fill="{ThemeResource LineBrush}"/>
+        <Button x:Name="RailSettings" Style="{StaticResource Round}" ToolTipService.ToolTip="Settings" AutomationProperties.Name="Settings">
+          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE713;" FontSize="15"/>
+          <Button.Flyout>
+            <Flyout Placement="RightEdgeAlignedBottom">
+              <StackPanel Width="260" Spacing="6">
+                <TextBlock Text="Studio settings" Style="{StaticResource CardTitle}"/>
+                <ToggleSwitch x:Name="LiveSwitch" Header="Live data" IsOn="{Binding Live, Mode=TwoWay}"/>
+                <ToggleSwitch x:Name="MotionSwitch" Header="Animations" IsOn="{Binding Motion, Mode=TwoWay}"/>
+              </StackPanel>
+            </Flyout>
+          </Button.Flyout>
+        </Button>
+        <Button x:Name="RailTheme" Style="{StaticResource Round}" Click="ThemeClick" ToolTipService.ToolTip="Light or dark" AutomationProperties.Name="Switch theme">
+          <FontIcon x:Name="ThemeGlyph" FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE706;" FontSize="15"/>
+        </Button>
+      </StackPanel>
+    </Border>
+    <Button x:Name="LiveButton" Grid.Row="1" Click="LiveClick" Width="48" Height="48" CornerRadius="24" Padding="0" Margin="29,0,0,22"
+            HorizontalAlignment="Left" VerticalAlignment="Bottom" Background="{ThemeResource GlassBrush}" BorderBrush="{ThemeResource GlassRimBrush}"
+            ToolTipService.ToolTip="Pause or resume live data" AutomationProperties.Name="Live data">
+      <Grid>
+        <Ellipse x:Name="LivePulse" Width="12" Height="12" Fill="{ThemeResource GoodBrush}" Visibility="{Binding Live, Converter={StaticResource BoolToVisibility}}"/>
+        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE768;" FontSize="13" Visibility="{Binding Live, Converter={StaticResource InverseBoolToVisibility}}"/>
+      </Grid>
+    </Button>
+
+    <!-- Pages -->
+    <Grid x:Name="PageHost" Grid.Row="1" Grid.Column="1">
+
+      <!-- 1. Overview -->
+      <ScrollViewer x:Name="PageOverview" VerticalScrollBarVisibility="Auto" Padding="10,6,30,26">
+        <StackPanel Spacing="20">
+          <Grid ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel x:Name="OvTitle" VerticalAlignment="Bottom">
+              <TextBlock Text="Studio" Style="{StaticResource PageFirst}"/>
+              <TextBlock Text="Overview" Style="{StaticResource PageSecond}"/>
+            </StackPanel>
+            <StackPanel x:Name="OvKpis" Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Bottom">
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8C7;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock x:Name="OvProceedsLabel" Text="{Binding ProceedsMonthText}" d:Text="$86,420" Style="{StaticResource KpiValue}"/>
+                      <Border CornerRadius="10" Padding="7,2" Background="{ThemeResource GoodSoftBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding ProceedsDeltaText}" d:Text="+12% vs Sept" FontSize="11" Foreground="{ThemeResource GoodBrush}"/>
+                      </Border>
+                    </StackPanel>
+                    <TextBlock Text="proceeds this month" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE896;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="{Binding Downloads7Text}" d:Text="48,210" Style="{StaticResource KpiValue}"/>
+                      <Border CornerRadius="10" Padding="7,2" Background="{ThemeResource BadSoftBrush}" VerticalAlignment="Center">
+                        <TextBlock Text="-4%" FontSize="11" Foreground="{ThemeResource BadBrush}"/>
+                      </Border>
+                    </StackPanel>
+                    <TextBlock Text="downloads, last 7 days" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE735;" FontSize="16" Foreground="{ThemeResource StarBrush}"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding AppRatingText}" d:Text="4.45" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="{Binding AppRatingCaption}" d:Text="average from 73K ratings" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Grid>
+
+          <Grid ColumnSpacing="20">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition x:Name="ProceedsColumn" Width="2*"/>
+              <ColumnDefinition x:Name="RatingsColumn" Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border x:Name="ProceedsCard" Style="{StaticResource Glass}" Height="420">
+              <Grid RowSpacing="14">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="*"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid ColumnSpacing="10">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                    <ColumnDefinition Width="Auto"/>
+                  </Grid.ColumnDefinitions>
+                  <StackPanel>
+                    <TextBlock x:Name="ChartTitle" Text="{Binding ChartTitle}" d:Text="Proceeds" Style="{StaticResource CardTitle}"/>
+                    <TextBlock Text="{Binding ChartCaption}" d:Text="$888,310 in the last 12 months, best month September" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                  <Border Grid.Column="1" CornerRadius="20" Padding="3" Background="{ThemeResource InnerBrush}" BorderBrush="{ThemeResource InnerRimBrush}" BorderThickness="1" VerticalAlignment="Center">
+                    <StackPanel Orientation="Horizontal" Spacing="2">
+                      <ToggleButton x:Name="SeriesProceeds" Content="Proceeds" Style="{StaticResource Chip}" IsChecked="True" Click="SeriesClick" BorderThickness="0"/>
+                      <ToggleButton x:Name="SeriesDownloads" Content="Downloads" Style="{StaticResource Chip}" Click="SeriesClick" BorderThickness="0"/>
+                    </StackPanel>
+                  </Border>
+                  <Button Grid.Column="2" Style="{StaticResource RoundInner}" VerticalAlignment="Center" AutomationProperties.Name="More">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE712;" FontSize="13"/>
+                    <Button.Flyout>
+                      <MenuFlyout>
+                        <MenuFlyoutItem x:Name="MenuExportChart" Text="Export as CSV" Click="ExportChartClick"/>
+                        <ToggleMenuFlyoutItem x:Name="MenuLastYear" Text="Show last year" IsChecked="True" Click="LastYearClick"/>
+                      </MenuFlyout>
+                    </Button.Flyout>
+                  </Button>
+                  <Button x:Name="ExpandButton" Grid.Column="3" Style="{StaticResource RoundInner}" Click="ExpandClick" VerticalAlignment="Center"
+                          ToolTipService.ToolTip="Expand" AutomationProperties.Name="Expand chart">
+                    <FontIcon x:Name="ExpandGlyph" FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE740;" FontSize="12"/>
+                  </Button>
+                </Grid>
+                <Grid Grid.Row="1" ColumnSpacing="10">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="46"/>
+                    <ColumnDefinition Width="*"/>
+                  </Grid.ColumnDefinitions>
+                  <Grid>
+                    <TextBlock Text="{Binding ChartTop}" d:Text="$100K" Style="{StaticResource Caption}" VerticalAlignment="Top" Margin="0,-8,0,0"/>
+                    <TextBlock Text="{Binding ChartMid}" d:Text="$50K" Style="{StaticResource Caption}" VerticalAlignment="Center"/>
+                    <TextBlock Text="0" Style="{StaticResource Caption}" VerticalAlignment="Bottom" Margin="0,0,0,-8"/>
+                  </Grid>
+                  <Grid Grid.Column="1">
+                    <Rectangle Height="1" VerticalAlignment="Top" Fill="{ThemeResource LineBrush}"/>
+                    <Rectangle Height="1" VerticalAlignment="Center" Fill="{ThemeResource LineBrush}"/>
+                    <Rectangle Height="1" VerticalAlignment="Bottom" Fill="{ThemeResource LineBrush}"/>
+                    <Canvas x:Name="ProceedsCanvas" SizeChanged="ChartSizeChanged">
+                      <Polygon x:Name="ProceedsArea" Opacity="0.9">
+                        <Polygon.Fill>
+                          <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="{ThemeResource SystemAccentColorLight1}" Offset="0"/>
+                            <GradientStop Color="Transparent" Offset="1"/>
+                          </LinearGradientBrush>
+                        </Polygon.Fill>
+                      </Polygon>
+                      <Polyline x:Name="ProceedsLastYear" Stroke="{ThemeResource FaintBrush}" StrokeThickness="1.6" StrokeDashArray="3,3"/>
+                      <Polyline x:Name="ProceedsLine" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="2.6" StrokeLineJoin="Round"/>
+                      <Ellipse x:Name="ProceedsGlow" Width="22" Height="22" Fill="{ThemeResource AccentFillColorDefaultBrush}" Opacity="0.3"/>
+                      <Ellipse x:Name="ProceedsDot" Width="10" Height="10" Fill="{ThemeResource AccentFillColorDefaultBrush}" Stroke="White" StrokeThickness="2"/>
+                    </Canvas>
+                  </Grid>
+                </Grid>
+                <Grid Grid.Row="2" Margin="56,0,0,0">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                    <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Grid.Column="0" Text="Nov" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="1" Text="Dec" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="2" Text="Jan" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="3" Text="Feb" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="4" Text="Mar" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="5" Text="Apr" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="6" Text="May" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="7" Text="Jun" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="8" Text="Jul" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="9" Text="Aug" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="10" Text="Sep" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="11" Text="Oct" Style="{StaticResource Caption}"/>
+                </Grid>
+              </Grid>
+            </Border>
+            <Border x:Name="RatingsCard" Grid.Column="1" Style="{StaticResource Glass}" Height="420">
+              <Grid RowSpacing="12">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="*"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Ratings" Style="{StaticResource CardTitle}"/>
+                <StackPanel Grid.Row="1" Spacing="2">
+                  <StackPanel Orientation="Horizontal" Spacing="14">
+                    <TextBlock Text="{Binding RatingText}" d:Text="4.10" FontSize="52" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
+                    <TextBlock Text="&#x2605;&#x2605;&#x2605;&#x2605;&#x2605;" FontSize="20" VerticalAlignment="Center" Foreground="{ThemeResource StarBrush}"/>
+                  </StackPanel>
+                  <TextBlock Text="{Binding RatingCountCaption}" d:Text="73,028 ratings, 6 apps" Style="{StaticResource Caption}"/>
+                </StackPanel>
+                <ItemsControl x:Name="StarBarList" Grid.Row="2" VerticalAlignment="Center">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="TBar">
+                      <Grid ColumnSpacing="10" Margin="0,4">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="28"/>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="40"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Name}" FontSize="12" Foreground="{ThemeResource MutedBrush}"/>
+                        <Border Grid.Column="1" Height="8" CornerRadius="4" Background="{ThemeResource InnerBrush}">
+                          <Border Height="8" CornerRadius="4" HorizontalAlignment="Left" Width="{Binding Size}" Background="{ThemeResource AccentFillColorDefaultBrush}"/>
+                        </Border>
+                        <TextBlock Grid.Column="2" Text="{Binding ValueText}" FontSize="12" HorizontalAlignment="Right" Foreground="{ThemeResource MutedBrush}"/>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Border Grid.Row="3" Style="{StaticResource Inner}">
+                  <Grid>
+                    <StackPanel>
+                      <TextBlock Text="Last 30 days" Style="{StaticResource Caption}"/>
+                      <TextBlock Text="{Binding RecentRatingText}" d:Text="4.00 from 22 written reviews" FontSize="14"/>
+                    </StackPanel>
+                    <Border HorizontalAlignment="Right" VerticalAlignment="Center" CornerRadius="10" Padding="8,3" Background="{ThemeResource BadSoftBrush}">
+                      <TextBlock Text="&#x25BC; 0.10" FontSize="11" Foreground="{ThemeResource BadBrush}"/>
+                    </Border>
+                  </Grid>
+                </Border>
+              </Grid>
+            </Border>
+          </Grid>
+
+          <Border x:Name="YourAppsCard" Style="{StaticResource Glass}">
+            <Grid RowSpacing="16">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="Auto"/>
+              </Grid.RowDefinitions>
+              <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <TextBlock Text="Your apps" Style="{StaticResource CardTitle}"/>
+                  <TextBlock Text="October, month to date" Style="{StaticResource Caption}" VerticalAlignment="Center"/>
+                </StackPanel>
+                <Button Grid.Column="1" Style="{StaticResource RoundInner}" Click="RailNewClick" ToolTipService.ToolTip="New release" AutomationProperties.Name="New release">
+                  <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE710;" FontSize="12"/>
+                </Button>
+                <Button x:Name="AllAppsButton" Grid.Column="2" Style="{StaticResource RoundInner}" Click="AllAppsClick" ToolTipService.ToolTip="All apps" AutomationProperties.Name="All apps">
+                  <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE72A;" FontSize="12"/>
+                </Button>
+              </Grid>
+              <GridView x:Name="OverviewApps" Grid.Row="1" SelectionMode="None" IsItemClickEnabled="True" ItemClick="AppClick"
+                        ItemContainerStyle="{StaticResource BareGrid}" ScrollViewer.HorizontalScrollMode="Disabled">
+                <GridView.ItemContainerTransitions>
+                  <TransitionCollection>
+                    <EntranceThemeTransition IsStaggeringEnabled="True" FromVerticalOffset="40"/>
+                    <RepositionThemeTransition/>
+                  </TransitionCollection>
+                </GridView.ItemContainerTransitions>
+                <GridView.ItemTemplate>
+                  <DataTemplate x:DataType="TStudioApp">
+                    <Grid Width="206" Height="132">
+                      <Border CornerRadius="22" Background="{Binding Tint}"/>
+                      <Border CornerRadius="22" BorderBrush="#40FFFFFF" BorderThickness="1">
+                        <Border.Background>
+                          <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                            <GradientStop Color="#40FFFFFF" Offset="0"/>
+                            <GradientStop Color="#00FFFFFF" Offset="0.5"/>
+                            <GradientStop Color="#33000000" Offset="1"/>
+                          </LinearGradientBrush>
+                        </Border.Background>
+                      </Border>
+                      <Grid Padding="16,14">
+                        <Grid.RowDefinitions>
+                          <RowDefinition Height="Auto"/>
+                          <RowDefinition Height="*"/>
+                          <RowDefinition Height="Auto"/>
+                        </Grid.RowDefinitions>
+                        <Border Width="36" Height="36" CornerRadius="11" Background="#33FFFFFF" HorizontalAlignment="Left">
+                          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="{Binding Glyph}" FontSize="16" Foreground="White"/>
+                        </Border>
+                        <Border CornerRadius="10" Padding="7,2" Background="#33000000" HorizontalAlignment="Right" VerticalAlignment="Top">
+                          <TextBlock Text="{Binding RatingChip}" FontSize="11" Foreground="White"/>
+                        </Border>
+                        <StackPanel Grid.Row="2">
+                          <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold" Foreground="White"/>
+                          <TextBlock Text="{Binding ProceedsText}" FontSize="12" Foreground="#D9FFFFFF"/>
+                        </StackPanel>
+                        <FontIcon Grid.Row="2" FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE712;" FontSize="13" Foreground="#CCFFFFFF"
+                                  HorizontalAlignment="Right" VerticalAlignment="Bottom"/>
+                      </Grid>
+                    </Grid>
+                  </DataTemplate>
+                </GridView.ItemTemplate>
+              </GridView>
+            </Grid>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- 2. Apps -->
+      <ScrollViewer x:Name="PageApps" VerticalScrollBarVisibility="Auto" Padding="10,6,30,26" Visibility="Collapsed">
+        <StackPanel Spacing="20">
+          <Grid ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel x:Name="ApTitle" VerticalAlignment="Bottom">
+              <TextBlock Text="Your" Style="{StaticResource PageFirst}"/>
+              <TextBlock Text="Apps" Style="{StaticResource PageSecond}"/>
+            </StackPanel>
+            <StackPanel x:Name="ApKpis" Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Bottom">
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE71D;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding AppsLiveText}" d:Text="5" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="apps live" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE735;" FontSize="16" Foreground="{ThemeResource StarBrush}"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding RatingCountText}" d:Text="73,028" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="ratings" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE716;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SubscribersText}" d:Text="21,113" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="active subscribers" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Grid>
+          <Grid x:Name="ApToolbar" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <TextBox x:Name="AppSearch" Width="340" CornerRadius="20" Padding="16,9" PlaceholderText="Search apps or categories"
+                     TextChanged="AppSearchChanged" Background="{ThemeResource GlassBrush}" BorderBrush="{ThemeResource GlassRimBrush}"/>
+            <StackPanel Grid.Column="2" Orientation="Horizontal" Spacing="6">
+              <TextBlock Text="Sort by" Style="{StaticResource Caption}" VerticalAlignment="Center" Margin="0,0,6,0"/>
+              <ToggleButton x:Name="SortProceeds" Content="Proceeds" Style="{StaticResource Chip}" IsChecked="True" Tag="0" Click="SortClick"/>
+              <ToggleButton x:Name="SortDownloads" Content="Downloads" Style="{StaticResource Chip}" Tag="1" Click="SortClick"/>
+              <ToggleButton x:Name="SortRating" Content="Rating" Style="{StaticResource Chip}" Tag="2" Click="SortClick"/>
+            </StackPanel>
+          </Grid>
+          <GridView x:Name="AppGrid" SelectionMode="None" IsItemClickEnabled="True" ItemClick="AppClick" ItemContainerStyle="{StaticResource BareGrid}">
+            <GridView.ItemContainerTransitions>
+              <TransitionCollection>
+                <EntranceThemeTransition IsStaggeringEnabled="True" FromVerticalOffset="60"/>
+                <AddDeleteThemeTransition/>
+                <RepositionThemeTransition/>
+              </TransitionCollection>
+            </GridView.ItemContainerTransitions>
+            <GridView.ItemTemplate>
+              <DataTemplate x:DataType="TStudioApp">
+                <Border Width="356" Padding="20" CornerRadius="26" Background="{ThemeResource GlassBrush}" BorderBrush="{ThemeResource GlassRimBrush}" BorderThickness="1">
+                  <StackPanel Spacing="14">
+                    <Grid ColumnSpacing="12">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="Auto"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
+                      <Grid Width="52" Height="52">
+                        <Border CornerRadius="15" Background="{Binding Tint}"/>
+                        <Border CornerRadius="15">
+                          <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                              <GradientStop Color="#4DFFFFFF" Offset="0"/>
+                              <GradientStop Color="#00FFFFFF" Offset="0.6"/>
+                            </LinearGradientBrush>
+                          </Border.Background>
+                        </Border>
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="{Binding Glyph}" FontSize="22" Foreground="White"/>
+                      </Grid>
+                      <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                        <TextBlock Text="{Binding Name}" FontSize="17" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding Tagline}" FontSize="12" Foreground="{ThemeResource MutedBrush}" TextTrimming="CharacterEllipsis"/>
+                      </StackPanel>
+                      <Border Grid.Column="2" CornerRadius="10" Padding="8,3" VerticalAlignment="Top" Background="{ThemeResource InnerBrush}" BorderBrush="{ThemeResource InnerRimBrush}" BorderThickness="1">
+                        <TextBlock Text="{Binding VersionText}" FontSize="11"/>
+                      </Border>
+                    </Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Border CornerRadius="10" Padding="9,3" Background="{ThemeResource InnerBrush}"><TextBlock Text="{Binding Category}" FontSize="11"/></Border>
+                      <Border CornerRadius="10" Padding="9,3" Background="{ThemeResource InnerBrush}"><TextBlock Text="{Binding Pricing}" FontSize="11"/></Border>
+                      <Border CornerRadius="10" Padding="9,3" Background="{ThemeResource WarnSoftBrush}" Visibility="{Binding InReview, Converter={StaticResource BoolToVisibility}}">
+                        <TextBlock Text="In review" FontSize="11" Foreground="{ThemeResource WarnBrush}"/>
+                      </Border>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="{Binding StarsText}" FontSize="14" Foreground="{ThemeResource StarBrush}"/>
+                      <TextBlock Text="{Binding RatingText}" FontSize="13" FontWeight="SemiBold"/>
+                      <TextBlock Text="{Binding RatingCountText}" FontSize="12" Foreground="{ThemeResource MutedBrush}"/>
+                    </StackPanel>
+                    <Border CornerRadius="16" Padding="14,12" Background="{ThemeResource InnerBrush}" BorderBrush="{ThemeResource InnerRimBrush}" BorderThickness="1">
+                      <Grid ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel>
+                          <TextBlock Text="Downloads, 30 days" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+                          <TextBlock Text="{Binding DownloadsText}" FontSize="24" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
+                          <TextBlock Text="{Binding DeltaText}" FontSize="11" Foreground="{ThemeResource BadBrush}" Visibility="{Binding Falling, Converter={StaticResource BoolToVisibility}}"/>
+                          <TextBlock Text="{Binding DeltaText}" FontSize="11" Foreground="{ThemeResource GoodBrush}" Visibility="{Binding Falling, Converter={StaticResource InverseBoolToVisibility}}"/>
+                        </StackPanel>
+                        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="5" VerticalAlignment="Bottom" Height="54">
+                          <Border Width="7" CornerRadius="3.5" VerticalAlignment="Bottom" Height="{Binding Spark1}" Background="{Binding Tint}" Opacity="0.55"/>
+                          <Border Width="7" CornerRadius="3.5" VerticalAlignment="Bottom" Height="{Binding Spark2}" Background="{Binding Tint}" Opacity="0.6"/>
+                          <Border Width="7" CornerRadius="3.5" VerticalAlignment="Bottom" Height="{Binding Spark3}" Background="{Binding Tint}" Opacity="0.65"/>
+                          <Border Width="7" CornerRadius="3.5" VerticalAlignment="Bottom" Height="{Binding Spark4}" Background="{Binding Tint}" Opacity="0.7"/>
+                          <Border Width="7" CornerRadius="3.5" VerticalAlignment="Bottom" Height="{Binding Spark5}" Background="{Binding Tint}" Opacity="0.8"/>
+                          <Border Width="7" CornerRadius="3.5" VerticalAlignment="Bottom" Height="{Binding Spark6}" Background="{Binding Tint}" Opacity="0.9"/>
+                          <Border Width="7" CornerRadius="3.5" VerticalAlignment="Bottom" Height="{Binding Spark7}" Background="{Binding Tint}"/>
+                        </StackPanel>
+                      </Grid>
+                    </Border>
+                    <Grid>
+                      <StackPanel>
+                        <TextBlock Text="Proceeds in October" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+                        <TextBlock Text="{Binding ProceedsText}" FontSize="15" FontWeight="SemiBold"/>
+                      </StackPanel>
+                      <StackPanel HorizontalAlignment="Right">
+                        <TextBlock Text="Crash-free" FontSize="11" Foreground="{ThemeResource MutedBrush}" HorizontalAlignment="Right"/>
+                        <TextBlock Text="{Binding CrashFreeText}" FontSize="15" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                      </StackPanel>
+                    </Grid>
+                  </StackPanel>
+                </Border>
+              </DataTemplate>
+            </GridView.ItemTemplate>
+          </GridView>
+          <TextBlock x:Name="NoAppsText" Text="No app matches your search." Style="{StaticResource Caption}" Visibility="Collapsed"/>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- 2b. App detail -->
+      <ScrollViewer x:Name="PageDetail" DataContext="{Binding Detail}" VerticalScrollBarVisibility="Auto" Padding="10,6,30,26" Visibility="Collapsed">
+        <StackPanel Spacing="20">
+          <Grid ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Button x:Name="BackButton" Click="BackClick" Width="52" Height="52" CornerRadius="26" Padding="0" VerticalAlignment="Bottom" Margin="0,0,0,6"
+                    Background="{ThemeResource GlassBrush}" BorderBrush="{ThemeResource GlassRimBrush}" AutomationProperties.Name="Back to apps">
+              <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE72B;" FontSize="16"/>
+            </Button>
+            <StackPanel x:Name="DeTitle" Grid.Column="1" VerticalAlignment="Bottom">
+              <TextBlock x:Name="DetailNameLabel" Text="{Binding Name}" d:Text="Tally" Style="{StaticResource PageFirst}"/>
+              <TextBlock Text="App" Style="{StaticResource PageSecond}"/>
+            </StackPanel>
+            <StackPanel x:Name="DeKpis" Grid.Column="2" Orientation="Horizontal" Spacing="12" VerticalAlignment="Bottom">
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE896;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding DownloadsText}" d:Text="44.9K" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="downloads, 30 days" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE735;" FontSize="16" Foreground="{ThemeResource StarBrush}"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding RatingText}" d:Text="4.6" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="{Binding RatingCountText}" d:Text="(12,408)" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE9F9;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding CrashFreeText}" d:Text="99.27%" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="crash-free sessions" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Grid>
+          <Grid x:Name="DetailHero" Height="230">
+            <Border CornerRadius="30" Background="{Binding Tint}" Opacity="0.85"/>
+            <Border CornerRadius="30" BorderBrush="#4DFFFFFF" BorderThickness="1">
+              <Border.Background>
+                <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                  <GradientStop Color="#33FFFFFF" Offset="0"/>
+                  <GradientStop Color="#0DFFFFFF" Offset="0.5"/>
+                  <GradientStop Color="#66000000" Offset="1"/>
+                </LinearGradientBrush>
+              </Border.Background>
+            </Border>
+            <Ellipse Width="320" Height="320" HorizontalAlignment="Right" VerticalAlignment="Top" Margin="0,-120,-60,0" Fill="#1AFFFFFF" Stroke="#33FFFFFF"/>
+            <Grid Padding="30,26" ColumnSpacing="26">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+              </Grid.ColumnDefinitions>
+              <Border Width="104" Height="104" CornerRadius="28" Background="#33FFFFFF" BorderBrush="#59FFFFFF" BorderThickness="1" VerticalAlignment="Center">
+                <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="{Binding Glyph}" FontSize="44" Foreground="White"/>
+              </Border>
+              <StackPanel Grid.Column="1" VerticalAlignment="Center" Spacing="6">
+                <TextBlock Text="{Binding Name}" FontSize="34" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display" Foreground="White"/>
+                <TextBlock Text="{Binding Tagline}" FontSize="15" Foreground="#E6FFFFFF"/>
+                <TextBlock Text="{Binding Steward}" FontSize="12" Foreground="#B3FFFFFF"/>
+                <StackPanel Orientation="Horizontal" Spacing="6" Margin="0,6,0,0">
+                  <Border CornerRadius="11" Padding="10,3" Background="#33FFFFFF"><TextBlock Text="{Binding Category}" FontSize="11" Foreground="White"/></Border>
+                  <Border CornerRadius="11" Padding="10,3" Background="#33FFFFFF"><TextBlock Text="{Binding Pricing}" FontSize="11" Foreground="White"/></Border>
+                  <Border CornerRadius="11" Padding="10,3" Background="#33FFFFFF"><TextBlock Text="{Binding RatingChip}" FontSize="11" Foreground="White"/></Border>
+                </StackPanel>
+              </StackPanel>
+              <StackPanel Grid.Column="2" VerticalAlignment="Center" Width="300">
+                <TextBlock Text="Proceeds, 12 months" FontSize="12" Foreground="#CCFFFFFF"/>
+                <TextBlock Text="{Binding Proceeds12Text}" FontSize="34" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display" Foreground="White"/>
+                <Canvas x:Name="DetailSparkCanvas" Height="64" Margin="0,8,0,0">
+                  <Polyline x:Name="DetailSpark" Stroke="White" StrokeThickness="2.4" StrokeLineJoin="Round"/>
+                </Canvas>
+              </StackPanel>
+            </Grid>
+          </Grid>
+          <StackPanel x:Name="DetailTabs" Orientation="Horizontal" Spacing="6">
+            <ToggleButton x:Name="DetailTabOverview" Content="Overview" Style="{StaticResource Chip}" IsChecked="True" Tag="0" Click="DetailTabClick"/>
+            <ToggleButton x:Name="DetailTabVersions" Content="Versions" Style="{StaticResource Chip}" Tag="1" Click="DetailTabClick"/>
+            <ToggleButton x:Name="DetailTabIap" Content="In-app purchases" Style="{StaticResource Chip}" Tag="2" Click="DetailTabClick"/>
+            <ToggleButton x:Name="DetailTabReviews" Content="Reviews" Style="{StaticResource Chip}" Tag="3" Click="DetailTabClick"/>
+          </StackPanel>
+          <Grid x:Name="DetailBody">
+            <Grid x:Name="DetailOverview" ColumnSpacing="20">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="2*"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <Border Style="{StaticResource Glass}" Height="330">
+                <Grid RowSpacing="12">
+                  <Grid.RowDefinitions>
+                    <RowDefinition Height="Auto"/>
+                    <RowDefinition Height="*"/>
+                  </Grid.RowDefinitions>
+                  <StackPanel>
+                    <TextBlock Text="Proceeds" Style="{StaticResource CardTitle}"/>
+                    <TextBlock Text="{Binding ProceedsCaption}" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                  <Grid Grid.Row="1">
+                    <Rectangle Height="1" VerticalAlignment="Top" Fill="{ThemeResource LineBrush}"/>
+                    <Rectangle Height="1" VerticalAlignment="Center" Fill="{ThemeResource LineBrush}"/>
+                    <Rectangle Height="1" VerticalAlignment="Bottom" Fill="{ThemeResource LineBrush}"/>
+                    <Canvas x:Name="DetailCanvas" SizeChanged="ChartSizeChanged">
+                      <Polygon x:Name="DetailArea">
+                        <Polygon.Fill>
+                          <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="{ThemeResource SystemAccentColorLight1}" Offset="0"/>
+                            <GradientStop Color="Transparent" Offset="1"/>
+                          </LinearGradientBrush>
+                        </Polygon.Fill>
+                      </Polygon>
+                      <Polyline x:Name="DetailLine" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="2.6" StrokeLineJoin="Round"/>
+                    </Canvas>
+                  </Grid>
+                </Grid>
+              </Border>
+              <Border Grid.Column="1" Style="{StaticResource Glass}" Height="330">
+                <StackPanel Spacing="14">
+                  <TextBlock Text="Ratings" Style="{StaticResource CardTitle}"/>
+                  <StackPanel Orientation="Horizontal" Spacing="12">
+                    <TextBlock Text="{Binding RatingText}" FontSize="48" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
+                    <TextBlock Text="{Binding StarsText}" FontSize="18" VerticalAlignment="Center" Foreground="{ThemeResource StarBrush}"/>
+                  </StackPanel>
+                  <ItemsControl x:Name="DetailBars">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="TBar">
+                        <Grid ColumnSpacing="10" Margin="0,4">
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="28"/>
+                            <ColumnDefinition Width="*"/>
+                            <ColumnDefinition Width="40"/>
+                          </Grid.ColumnDefinitions>
+                          <TextBlock Text="{Binding Name}" FontSize="12" Foreground="{ThemeResource MutedBrush}"/>
+                          <Border Grid.Column="1" Height="8" CornerRadius="4" Background="{ThemeResource InnerBrush}">
+                            <Border Height="8" CornerRadius="4" HorizontalAlignment="Left" Width="{Binding Size}" Background="{ThemeResource AccentFillColorDefaultBrush}"/>
+                          </Border>
+                          <TextBlock Grid.Column="2" Text="{Binding ValueText}" FontSize="12" HorizontalAlignment="Right" Foreground="{ThemeResource MutedBrush}"/>
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Border>
+            </Grid>
+            <Border x:Name="DetailVersions" Style="{StaticResource Glass}" Visibility="Collapsed">
+              <ItemsControl x:Name="VersionList">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="TListRow">
+                    <Grid Padding="0,12" ColumnSpacing="16" BorderBrush="{ThemeResource LineBrush}" BorderThickness="0,0,0,1">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
+                      <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold"/>
+                      <TextBlock Grid.Column="1" Text="{Binding Detail}" FontSize="13" TextWrapping="Wrap" Foreground="{ThemeResource MutedBrush}"/>
+                      <TextBlock Grid.Column="2" Text="{Binding Value}" FontSize="13"/>
+                      <Border Grid.Column="3" CornerRadius="10" Padding="9,3" Background="{ThemeResource InnerBrush}">
+                        <TextBlock Text="{Binding Status}" FontSize="11"/>
+                      </Border>
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </Border>
+            <Border x:Name="DetailIap" Style="{StaticResource Glass}" Visibility="Collapsed">
+              <ItemsControl x:Name="IapList">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="TListRow">
+                    <Grid Padding="0,12" ColumnSpacing="16" BorderBrush="{ThemeResource LineBrush}" BorderThickness="0,0,0,1">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="*"/>
+                        <ColumnDefinition Width="120"/>
+                        <ColumnDefinition Width="140"/>
+                        <ColumnDefinition Width="Auto"/>
+                      </Grid.ColumnDefinitions>
+                      <TextBlock Text="{Binding Name}" FontSize="15" FontWeight="SemiBold"/>
+                      <TextBlock Grid.Column="1" Text="{Binding Detail}" FontSize="13" Foreground="{ThemeResource MutedBrush}"/>
+                      <TextBlock Grid.Column="2" Text="{Binding Value}" FontSize="13"/>
+                      <Border Grid.Column="3" CornerRadius="10" Padding="9,3" Background="{ThemeResource GoodSoftBrush}">
+                        <TextBlock Text="{Binding Status}" FontSize="11" Foreground="{ThemeResource GoodBrush}"/>
+                      </Border>
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </Border>
+            <Border x:Name="DetailReviews" Style="{StaticResource Glass}" Visibility="Collapsed">
+              <ItemsControl x:Name="DetailReviewList">
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="TReview">
+                    <StackPanel Padding="0,12" Spacing="4" BorderBrush="{ThemeResource LineBrush}" BorderThickness="0,0,0,1">
+                      <StackPanel Orientation="Horizontal" Spacing="10">
+                        <TextBlock Text="{Binding StarsText}" FontSize="13" Foreground="{ThemeResource StarBrush}"/>
+                        <TextBlock Text="{Binding Title}" FontSize="14" FontWeight="SemiBold"/>
+                      </StackPanel>
+                      <TextBlock Text="{Binding Body}" FontSize="13" TextWrapping="Wrap"/>
+                      <TextBlock Text="{Binding Meta}" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+                    </StackPanel>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </Border>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- 3. Releases -->
+      <ScrollViewer x:Name="PageReleases" VerticalScrollBarVisibility="Auto" Padding="10,6,30,26" Visibility="Collapsed">
+        <StackPanel Spacing="20">
+          <Grid ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel x:Name="ReTitle" VerticalAlignment="Bottom">
+              <TextBlock Text="Release" Style="{StaticResource PageFirst}"/>
+              <TextBlock Text="Board" Style="{StaticResource PageSecond}"/>
+            </StackPanel>
+            <StackPanel x:Name="ReKpis" Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Bottom">
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE945;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="InFlightLabel" Text="{Binding InFlightText}" d:Text="7" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="builds in flight" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE823;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding WaitingText}" d:Text="2" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="waiting on store review" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE73E;" FontSize="16" Foreground="{ThemeResource GoodBrush}"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding ShippedText}" d:Text="9" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="shipped, last 30 days" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Grid>
+          <Grid x:Name="ReToolbar" ColumnSpacing="12">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="Auto"/>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <Grid>
+              <Border CornerRadius="24" Margin="-6" Opacity="0.55">
+                <Border.Background>
+                  <RadialGradientBrush>
+                    <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="0"/>
+                    <GradientStop Color="Transparent" Offset="1"/>
+                  </RadialGradientBrush>
+                </Border.Background>
+              </Border>
+              <Button x:Name="NewReleaseButton" Style="{StaticResource Accent}" Click="RailNewClick">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE710;" FontSize="12"/>
+                  <TextBlock Text="New release"/>
+                </StackPanel>
+              </Button>
+            </Grid>
+            <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="6" Margin="8,0,0,0">
+              <ToggleButton x:Name="FilterAll" Content="{Binding FilterText0}" d:Content="All 11" Style="{StaticResource Chip}" IsChecked="True" Tag="-1" Click="FilterClick"/>
+              <ToggleButton x:Name="Filter0" Content="{Binding FilterText1}" Style="{StaticResource Chip}" Tag="0" Click="FilterClick"/>
+              <ToggleButton x:Name="Filter1" Content="{Binding FilterText2}" Style="{StaticResource Chip}" Tag="1" Click="FilterClick"/>
+              <ToggleButton x:Name="Filter2" Content="{Binding FilterText3}" Style="{StaticResource Chip}" Tag="2" Click="FilterClick"/>
+              <ToggleButton x:Name="Filter3" Content="{Binding FilterText4}" Style="{StaticResource Chip}" Tag="3" Click="FilterClick"/>
+              <ToggleButton x:Name="Filter4" Content="{Binding FilterText5}" Style="{StaticResource Chip}" Tag="4" Click="FilterClick"/>
+              <ToggleButton x:Name="Filter5" Content="{Binding FilterText6}" Style="{StaticResource Chip}" Tag="5" Click="FilterClick"/>
+            </StackPanel>
+            <Border Grid.Column="2" CornerRadius="20" Padding="3" Background="{ThemeResource InnerBrush}" BorderBrush="{ThemeResource InnerRimBrush}" BorderThickness="1">
+              <StackPanel Orientation="Horizontal" Spacing="2">
+                <ToggleButton x:Name="ViewBoard" Style="{StaticResource Chip}" IsChecked="True" Click="ViewClick" BorderThickness="0">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xF0E2;" FontSize="12"/>
+                    <TextBlock Text="Board"/>
+                  </StackPanel>
+                </ToggleButton>
+                <ToggleButton x:Name="ViewTimeline" Style="{StaticResource Chip}" Click="ViewClick" BorderThickness="0">
+                  <StackPanel Orientation="Horizontal" Spacing="6">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE81C;" FontSize="12"/>
+                    <TextBlock Text="Timeline"/>
+                  </StackPanel>
+                </ToggleButton>
+              </StackPanel>
+            </Border>
+          </Grid>
+          <Border x:Name="BoardCard" Style="{StaticResource Glass}" Padding="20,18">
+            <Grid RowSpacing="14">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+              </Grid.RowDefinitions>
+              <StackPanel Orientation="Horizontal" Spacing="12">
+                <TextBlock Text="Board" Style="{StaticResource CardTitle}"/>
+                <TextBlock Text="Drag a card to move it" Style="{StaticResource Caption}" VerticalAlignment="Center"/>
+              </StackPanel>
+              <Grid Grid.Row="1" ColumnSpacing="14" MinHeight="520">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <Border Style="{StaticResource Inner}" Padding="10,12">
+                  <Grid RowSpacing="10">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <Grid Margin="4,0">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse Width="8" Height="8" Fill="{ThemeResource MutedBrush}"/>
+                        <TextBlock Text="In development" FontSize="13" FontWeight="SemiBold"/>
+                        <Border CornerRadius="9" Padding="7,1" Background="{ThemeResource InnerBrush}"><TextBlock Text="{Binding Count0}" FontSize="11"/></Border>
+                      </StackPanel>
+                      <Button Style="{StaticResource RoundInner}" Width="28" Height="28" HorizontalAlignment="Right" Tag="0" Click="ColumnAddClick" AutomationProperties.Name="Add to In development">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE710;" FontSize="10"/>
+                      </Button>
+                    </Grid>
+                    <ListView x:Name="Column0" Grid.Row="1" Tag="0" SelectionMode="None" CanDragItems="True" AllowDrop="True" ItemContainerStyle="{StaticResource Bare}" ItemTemplate="{StaticResource ReleaseCard}"
+                              DragItemsStarting="BoardDragStarting" DragOver="BoardDragOver" Drop="BoardDrop" DragItemsCompleted="BoardDragCompleted">
+                      <ListView.ItemContainerTransitions>
+                        <TransitionCollection><AddDeleteThemeTransition/><RepositionThemeTransition/><EntranceThemeTransition IsStaggeringEnabled="True"/></TransitionCollection>
+                      </ListView.ItemContainerTransitions>
+                    </ListView>
+                  </Grid>
+                </Border>
+                <Border Grid.Column="1" Style="{StaticResource Inner}" Padding="10,12">
+                  <Grid RowSpacing="10">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <Grid Margin="4,0">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse Width="8" Height="8" Fill="{ThemeResource TealBrush}"/>
+                        <TextBlock Text="Beta" FontSize="13" FontWeight="SemiBold"/>
+                        <Border CornerRadius="9" Padding="7,1" Background="{ThemeResource InnerBrush}"><TextBlock Text="{Binding Count1}" FontSize="11"/></Border>
+                      </StackPanel>
+                      <Button Style="{StaticResource RoundInner}" Width="28" Height="28" HorizontalAlignment="Right" Tag="1" Click="ColumnAddClick" AutomationProperties.Name="Add to Beta">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE710;" FontSize="10"/>
+                      </Button>
+                    </Grid>
+                    <ListView x:Name="Column1" Grid.Row="1" Tag="1" SelectionMode="None" CanDragItems="True" AllowDrop="True" ItemContainerStyle="{StaticResource Bare}" ItemTemplate="{StaticResource ReleaseCard}"
+                              DragItemsStarting="BoardDragStarting" DragOver="BoardDragOver" Drop="BoardDrop" DragItemsCompleted="BoardDragCompleted">
+                      <ListView.ItemContainerTransitions>
+                        <TransitionCollection><AddDeleteThemeTransition/><RepositionThemeTransition/><EntranceThemeTransition IsStaggeringEnabled="True"/></TransitionCollection>
+                      </ListView.ItemContainerTransitions>
+                    </ListView>
+                  </Grid>
+                </Border>
+                <Border Grid.Column="2" Style="{StaticResource Inner}" Padding="10,12">
+                  <Grid RowSpacing="10">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <Grid Margin="4,0">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse Width="8" Height="8" Fill="{ThemeResource WarnBrush}"/>
+                        <TextBlock Text="In store review" FontSize="13" FontWeight="SemiBold"/>
+                        <Border CornerRadius="9" Padding="7,1" Background="{ThemeResource InnerBrush}"><TextBlock Text="{Binding Count2}" FontSize="11"/></Border>
+                      </StackPanel>
+                      <Button Style="{StaticResource RoundInner}" Width="28" Height="28" HorizontalAlignment="Right" Tag="2" Click="ColumnAddClick" AutomationProperties.Name="Add to In store review">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE710;" FontSize="10"/>
+                      </Button>
+                    </Grid>
+                    <ListView x:Name="Column2" Grid.Row="1" Tag="2" SelectionMode="None" CanDragItems="True" AllowDrop="True" ItemContainerStyle="{StaticResource Bare}" ItemTemplate="{StaticResource ReleaseCard}"
+                              DragItemsStarting="BoardDragStarting" DragOver="BoardDragOver" Drop="BoardDrop" DragItemsCompleted="BoardDragCompleted">
+                      <ListView.ItemContainerTransitions>
+                        <TransitionCollection><AddDeleteThemeTransition/><RepositionThemeTransition/><EntranceThemeTransition IsStaggeringEnabled="True"/></TransitionCollection>
+                      </ListView.ItemContainerTransitions>
+                    </ListView>
+                  </Grid>
+                </Border>
+                <Border Grid.Column="3" Style="{StaticResource Inner}" Padding="10,12">
+                  <Grid RowSpacing="10">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <Grid Margin="4,0">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse Width="8" Height="8" Fill="{ThemeResource AccentFillColorDefaultBrush}"/>
+                        <TextBlock Text="Ready for release" FontSize="13" FontWeight="SemiBold"/>
+                        <Border CornerRadius="9" Padding="7,1" Background="{ThemeResource InnerBrush}"><TextBlock Text="{Binding Count3}" FontSize="11"/></Border>
+                      </StackPanel>
+                      <Button Style="{StaticResource RoundInner}" Width="28" Height="28" HorizontalAlignment="Right" Tag="3" Click="ColumnAddClick" AutomationProperties.Name="Add to Ready for release">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE710;" FontSize="10"/>
+                      </Button>
+                    </Grid>
+                    <ListView x:Name="Column3" Grid.Row="1" Tag="3" SelectionMode="None" CanDragItems="True" AllowDrop="True" ItemContainerStyle="{StaticResource Bare}" ItemTemplate="{StaticResource ReleaseCard}"
+                              DragItemsStarting="BoardDragStarting" DragOver="BoardDragOver" Drop="BoardDrop" DragItemsCompleted="BoardDragCompleted">
+                      <ListView.ItemContainerTransitions>
+                        <TransitionCollection><AddDeleteThemeTransition/><RepositionThemeTransition/><EntranceThemeTransition IsStaggeringEnabled="True"/></TransitionCollection>
+                      </ListView.ItemContainerTransitions>
+                    </ListView>
+                  </Grid>
+                </Border>
+                <Border Grid.Column="4" Style="{StaticResource Inner}" Padding="10,12">
+                  <Grid RowSpacing="10">
+                    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>
+                    <Grid Margin="4,0">
+                      <StackPanel Orientation="Horizontal" Spacing="8">
+                        <Ellipse Width="8" Height="8" Fill="{ThemeResource GoodBrush}"/>
+                        <TextBlock Text="Live" FontSize="13" FontWeight="SemiBold"/>
+                        <Border CornerRadius="9" Padding="7,1" Background="{ThemeResource InnerBrush}"><TextBlock Text="{Binding Count4}" FontSize="11"/></Border>
+                      </StackPanel>
+                      <Button Style="{StaticResource RoundInner}" Width="28" Height="28" HorizontalAlignment="Right" Tag="4" Click="ColumnAddClick" AutomationProperties.Name="Add to Live">
+                        <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE710;" FontSize="10"/>
+                      </Button>
+                    </Grid>
+                    <ListView x:Name="Column4" Grid.Row="1" Tag="4" SelectionMode="None" CanDragItems="True" AllowDrop="True" ItemContainerStyle="{StaticResource Bare}" ItemTemplate="{StaticResource ReleaseCard}"
+                              DragItemsStarting="BoardDragStarting" DragOver="BoardDragOver" Drop="BoardDrop" DragItemsCompleted="BoardDragCompleted">
+                      <ListView.ItemContainerTransitions>
+                        <TransitionCollection><AddDeleteThemeTransition/><RepositionThemeTransition/><EntranceThemeTransition IsStaggeringEnabled="True"/></TransitionCollection>
+                      </ListView.ItemContainerTransitions>
+                    </ListView>
+                  </Grid>
+                </Border>
+              </Grid>
+            </Grid>
+          </Border>
+          <Border x:Name="TimelineCard" Style="{StaticResource Glass}" Visibility="Collapsed">
+            <StackPanel Spacing="10">
+              <Grid Margin="0,0,0,6">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="260"/>
+                  <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                </Grid.ColumnDefinitions>
+                <TextBlock Text="Timeline" Style="{StaticResource CardTitle}"/>
+                <TextBlock Grid.Column="1" Text="In development" Style="{StaticResource Caption}" HorizontalAlignment="Center"/>
+                <TextBlock Grid.Column="2" Text="Beta" Style="{StaticResource Caption}" HorizontalAlignment="Center"/>
+                <TextBlock Grid.Column="3" Text="In store review" Style="{StaticResource Caption}" HorizontalAlignment="Center"/>
+                <TextBlock Grid.Column="4" Text="Ready" Style="{StaticResource Caption}" HorizontalAlignment="Center"/>
+                <TextBlock Grid.Column="5" Text="Live" Style="{StaticResource Caption}" HorizontalAlignment="Center"/>
+              </Grid>
+              <ItemsControl x:Name="TimelineList">
+                <ItemsControl.ItemContainerTransitions>
+                  <TransitionCollection><EntranceThemeTransition IsStaggeringEnabled="True"/><RepositionThemeTransition/></TransitionCollection>
+                </ItemsControl.ItemContainerTransitions>
+                <ItemsControl.ItemTemplate>
+                  <DataTemplate x:DataType="TRelease">
+                    <Grid Height="52">
+                      <Grid.ColumnDefinitions>
+                        <ColumnDefinition Width="260"/>
+                        <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                      </Grid.ColumnDefinitions>
+                      <StackPanel Orientation="Horizontal" Spacing="10">
+                        <Border Width="32" Height="32" CornerRadius="10" Background="{Binding Tint}">
+                          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="{Binding Glyph}" FontSize="14" Foreground="White"/>
+                        </Border>
+                        <StackPanel VerticalAlignment="Center">
+                          <TextBlock Text="{Binding Title}" FontSize="13" FontWeight="SemiBold"/>
+                          <TextBlock Text="{Binding BuildText}" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+                        </StackPanel>
+                      </StackPanel>
+                      <Rectangle Grid.Column="1" Grid.ColumnSpan="5" Height="2" Margin="40,0" Fill="{ThemeResource LineBrush}"/>
+                      <Rectangle Grid.Column="1" Grid.ColumnSpan="5" Height="2" Margin="40,0" HorizontalAlignment="Left" Width="{Binding TrackWidth}" Fill="{ThemeResource AccentFillColorDefaultBrush}"/>
+                      <Ellipse Grid.Column="1" Width="14" Height="14" Fill="{ThemeResource AccentFillColorDefaultBrush}" Opacity="{Binding Step0}"/>
+                      <Ellipse Grid.Column="2" Width="14" Height="14" Fill="{ThemeResource AccentFillColorDefaultBrush}" Opacity="{Binding Step1}"/>
+                      <Ellipse Grid.Column="3" Width="14" Height="14" Fill="{ThemeResource AccentFillColorDefaultBrush}" Opacity="{Binding Step2}"/>
+                      <Ellipse Grid.Column="4" Width="14" Height="14" Fill="{ThemeResource AccentFillColorDefaultBrush}" Opacity="{Binding Step3}"/>
+                      <Ellipse Grid.Column="5" Width="14" Height="14" Fill="{ThemeResource GoodBrush}" Opacity="{Binding Step4}"/>
+                    </Grid>
+                  </DataTemplate>
+                </ItemsControl.ItemTemplate>
+              </ItemsControl>
+            </StackPanel>
+          </Border>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- 4. Reviews -->
+      <ScrollViewer x:Name="PageReviews" VerticalScrollBarVisibility="Auto" Padding="10,6,30,26" Visibility="Collapsed">
+        <StackPanel Spacing="20">
+          <Grid ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel x:Name="RvTitle" VerticalAlignment="Bottom">
+              <TextBlock Text="Ratings and" Style="{StaticResource PageFirst}"/>
+              <TextBlock Text="Reviews" Style="{StaticResource PageSecond}"/>
+            </StackPanel>
+            <StackPanel x:Name="RvKpis" Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Bottom">
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE735;" FontSize="16" Foreground="{ThemeResource StarBrush}"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding RatingText}" d:Text="4.10" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="average rating" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8BD;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="WrittenLabel" Text="{Binding WrittenText}" d:Text="1,284" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="written reviews" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE97A;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding ReplyRateText}" d:Text="86%" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="replied to" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Grid>
+          <Grid ColumnSpacing="20">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="360"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border x:Name="RvSummary" Style="{StaticResource Glass}" VerticalAlignment="Top">
+              <StackPanel Spacing="14">
+                <TextBlock Text="All apps" Style="{StaticResource CardTitle}"/>
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <TextBlock Text="{Binding RatingText}" FontSize="52" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display"/>
+                  <TextBlock Text="&#x2605;&#x2605;&#x2605;&#x2605;&#x2605;" FontSize="20" VerticalAlignment="Center" Foreground="{ThemeResource StarBrush}"/>
+                </StackPanel>
+                <ItemsControl x:Name="ReviewBars">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="TBar">
+                      <Grid ColumnSpacing="10" Margin="0,4">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="28"/>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="40"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Name}" FontSize="12" Foreground="{ThemeResource MutedBrush}"/>
+                        <Border Grid.Column="1" Height="8" CornerRadius="4" Background="{ThemeResource InnerBrush}">
+                          <Border Height="8" CornerRadius="4" HorizontalAlignment="Left" Width="{Binding Size}" Background="{ThemeResource AccentFillColorDefaultBrush}"/>
+                        </Border>
+                        <TextBlock Grid.Column="2" Text="{Binding ValueText}" FontSize="12" HorizontalAlignment="Right" Foreground="{ThemeResource MutedBrush}"/>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+                <Border Style="{StaticResource Inner}">
+                  <StackPanel Spacing="4">
+                    <TextBlock Text="Tip" Style="{StaticResource Caption}"/>
+                    <TextBlock Text="Click a review to reply. Replies within a day lift ratings the most." FontSize="13" TextWrapping="Wrap"/>
+                  </StackPanel>
+                </Border>
+              </StackPanel>
+            </Border>
+            <StackPanel x:Name="RvList" Grid.Column="1" Spacing="14">
+              <Grid ColumnSpacing="10">
+                <Grid.ColumnDefinitions>
+                  <ColumnDefinition Width="*"/>
+                  <ColumnDefinition Width="Auto"/>
+                </Grid.ColumnDefinitions>
+                <StackPanel Orientation="Horizontal" Spacing="6">
+                  <ToggleButton x:Name="StarsAll" Content="All" Style="{StaticResource Chip}" IsChecked="True" Tag="0" Click="StarsClick"/>
+                  <ToggleButton x:Name="Stars5" Content="5 &#x2605;" Style="{StaticResource Chip}" Tag="5" Click="StarsClick"/>
+                  <ToggleButton x:Name="Stars4" Content="4 &#x2605;" Style="{StaticResource Chip}" Tag="4" Click="StarsClick"/>
+                  <ToggleButton x:Name="Stars3" Content="3 &#x2605;" Style="{StaticResource Chip}" Tag="3" Click="StarsClick"/>
+                  <ToggleButton x:Name="Stars2" Content="2 &#x2605;" Style="{StaticResource Chip}" Tag="2" Click="StarsClick"/>
+                  <ToggleButton x:Name="Stars1" Content="1 &#x2605;" Style="{StaticResource Chip}" Tag="1" Click="StarsClick"/>
+                </StackPanel>
+                <ComboBox x:Name="ReviewAppBox" Grid.Column="1" Width="180" CornerRadius="16" SelectionChanged="ReviewAppChanged"
+                          Background="{ThemeResource InnerBrush}" BorderBrush="{ThemeResource InnerRimBrush}"/>
+              </Grid>
+              <ListView x:Name="ReviewList" SelectionMode="None" IsItemClickEnabled="True" ItemClick="ReviewClick" ItemContainerStyle="{StaticResource Bare}">
+                <ListView.ItemContainerTransitions>
+                  <TransitionCollection><AddDeleteThemeTransition/><RepositionThemeTransition/><EntranceThemeTransition IsStaggeringEnabled="True" FromVerticalOffset="30"/></TransitionCollection>
+                </ListView.ItemContainerTransitions>
+                <ListView.ItemTemplate>
+                  <DataTemplate x:DataType="TReview">
+                    <Border Padding="20,16" CornerRadius="22" Background="{ThemeResource GlassBrush}" BorderBrush="{ThemeResource GlassRimBrush}" BorderThickness="1">
+                      <Grid ColumnSpacing="16">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="Auto"/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel Spacing="6">
+                          <StackPanel Orientation="Horizontal" Spacing="10">
+                            <TextBlock Text="{Binding StarsText}" FontSize="14" Foreground="{ThemeResource StarBrush}"/>
+                            <TextBlock Text="{Binding Title}" FontSize="15" FontWeight="SemiBold"/>
+                          </StackPanel>
+                          <TextBlock Text="{Binding Body}" FontSize="13" TextWrapping="Wrap"/>
+                          <StackPanel Orientation="Horizontal" Spacing="8">
+                            <Border CornerRadius="10" Padding="4,2,9,2" Background="{ThemeResource InnerBrush}">
+                              <StackPanel Orientation="Horizontal" Spacing="6">
+                                <Border Width="16" Height="16" CornerRadius="5" Background="{Binding Tint}"/>
+                                <TextBlock Text="{Binding AppName}" FontSize="11"/>
+                              </StackPanel>
+                            </Border>
+                            <TextBlock Text="{Binding Meta}" FontSize="11" Foreground="{ThemeResource MutedBrush}" VerticalAlignment="Center"/>
+                          </StackPanel>
+                          <Border Style="{StaticResource Inner}" Padding="12,8" Visibility="{Binding Replied, Converter={StaticResource BoolToVisibility}}">
+                            <TextBlock Text="{Binding ReplyText}" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource MutedBrush}"/>
+                          </Border>
+                        </StackPanel>
+                        <Border Grid.Column="1" VerticalAlignment="Top" CornerRadius="14" Padding="12,5" Background="{ThemeResource InnerBrush}"
+                                BorderBrush="{ThemeResource InnerRimBrush}" BorderThickness="1" Visibility="{Binding Replied, Converter={StaticResource InverseBoolToVisibility}}">
+                          <StackPanel Orientation="Horizontal" Spacing="6">
+                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE97A;" FontSize="11"/>
+                            <TextBlock Text="Reply" FontSize="12"/>
+                          </StackPanel>
+                        </Border>
+                        <Border Grid.Column="1" VerticalAlignment="Top" CornerRadius="14" Padding="12,5" Background="{ThemeResource GoodSoftBrush}"
+                                Visibility="{Binding Replied, Converter={StaticResource BoolToVisibility}}">
+                          <TextBlock Text="Replied" FontSize="12" Foreground="{ThemeResource GoodBrush}"/>
+                        </Border>
+                      </Grid>
+                    </Border>
+                  </DataTemplate>
+                </ListView.ItemTemplate>
+              </ListView>
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- 5. Audience -->
+      <ScrollViewer x:Name="PageAudience" VerticalScrollBarVisibility="Auto" Padding="10,6,30,26" Visibility="Collapsed">
+        <StackPanel Spacing="20">
+          <Grid ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel x:Name="AuTitle" VerticalAlignment="Bottom">
+              <TextBlock Text="Your" Style="{StaticResource PageFirst}"/>
+              <TextBlock Text="Audience" Style="{StaticResource PageSecond}"/>
+            </StackPanel>
+            <StackPanel x:Name="AuKpis" Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Bottom">
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE716;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding SubscribersText}" d:Text="21,113" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="active subscribers" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8FB;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding TrialRateText}" d:Text="44.9%" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="of trials become paid" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE896;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding Downloads30Text}" d:Text="204,282" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="downloads, last 30 days" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Grid>
+          <StackPanel x:Name="AuFilters" Orientation="Horizontal" Spacing="6">
+            <ToggleButton x:Name="AudAll" Content="{Binding AudText0}" d:Content="All apps" Style="{StaticResource Chip}" IsChecked="True" Tag="-1" Click="AudienceFilterClick"/>
+            <ToggleButton x:Name="Aud0" Content="{Binding AudText1}" Style="{StaticResource Chip}" Tag="0" Click="AudienceFilterClick"/>
+            <ToggleButton x:Name="Aud1" Content="{Binding AudText2}" Style="{StaticResource Chip}" Tag="1" Click="AudienceFilterClick"/>
+            <ToggleButton x:Name="Aud2" Content="{Binding AudText3}" Style="{StaticResource Chip}" Tag="2" Click="AudienceFilterClick"/>
+            <ToggleButton x:Name="Aud3" Content="{Binding AudText4}" Style="{StaticResource Chip}" Tag="3" Click="AudienceFilterClick"/>
+            <ToggleButton x:Name="Aud4" Content="{Binding AudText5}" Style="{StaticResource Chip}" Tag="4" Click="AudienceFilterClick"/>
+            <ToggleButton x:Name="Aud5" Content="{Binding AudText6}" Style="{StaticResource Chip}" Tag="5" Click="AudienceFilterClick"/>
+          </StackPanel>
+          <Grid ColumnSpacing="20">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="2*"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border x:Name="SubsCard" Style="{StaticResource Glass}" Height="420">
+              <Grid RowSpacing="14">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="*"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <Grid>
+                  <StackPanel>
+                    <TextBlock Text="Active subscribers" Style="{StaticResource CardTitle}"/>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <TextBlock Text="{Binding SubsCaption}" d:Text="21,113 paying today" Style="{StaticResource Caption}"/>
+                      <TextBlock Text="&#x25B2; 36% in 12 months" FontSize="12" Foreground="{ThemeResource GoodBrush}"/>
+                    </StackPanel>
+                  </StackPanel>
+                  <StackPanel Orientation="Horizontal" Spacing="16" HorizontalAlignment="Right" VerticalAlignment="Top">
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Rectangle Width="18" Height="3" RadiusX="1.5" RadiusY="1.5" Fill="{ThemeResource AccentFillColorDefaultBrush}" VerticalAlignment="Center"/>
+                      <TextBlock Text="Paying subscribers" Style="{StaticResource Caption}"/>
+                    </StackPanel>
+                    <StackPanel Orientation="Horizontal" Spacing="6">
+                      <Line X1="0" Y1="0" X2="18" Y2="0" Stroke="{ThemeResource TealBrush}" StrokeThickness="2" StrokeDashArray="2,2" VerticalAlignment="Center"/>
+                      <TextBlock Text="Started a trial" Style="{StaticResource Caption}"/>
+                    </StackPanel>
+                  </StackPanel>
+                </Grid>
+                <Grid Grid.Row="1" ColumnSpacing="10">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="46"/>
+                    <ColumnDefinition Width="*"/>
+                  </Grid.ColumnDefinitions>
+                  <Grid>
+                    <TextBlock Text="25K" Style="{StaticResource Caption}" VerticalAlignment="Top" Margin="0,-8,0,0"/>
+                    <TextBlock Text="12.5K" Style="{StaticResource Caption}" VerticalAlignment="Center"/>
+                    <TextBlock Text="0" Style="{StaticResource Caption}" VerticalAlignment="Bottom" Margin="0,0,0,-8"/>
+                  </Grid>
+                  <Grid Grid.Column="1">
+                    <Rectangle Height="1" VerticalAlignment="Top" Fill="{ThemeResource LineBrush}"/>
+                    <Rectangle Height="1" VerticalAlignment="Center" Fill="{ThemeResource LineBrush}"/>
+                    <Rectangle Height="1" VerticalAlignment="Bottom" Fill="{ThemeResource LineBrush}"/>
+                    <Canvas x:Name="SubsCanvas" SizeChanged="ChartSizeChanged">
+                      <Polygon x:Name="SubsArea">
+                        <Polygon.Fill>
+                          <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                            <GradientStop Color="{ThemeResource SystemAccentColorLight1}" Offset="0"/>
+                            <GradientStop Color="Transparent" Offset="1"/>
+                          </LinearGradientBrush>
+                        </Polygon.Fill>
+                      </Polygon>
+                      <Polyline x:Name="TrialLine" Stroke="{ThemeResource TealBrush}" StrokeThickness="2" StrokeDashArray="2,2"/>
+                      <Polyline x:Name="SubsLine" Stroke="{ThemeResource AccentFillColorDefaultBrush}" StrokeThickness="2.6" StrokeLineJoin="Round"/>
+                    </Canvas>
+                    <Grid x:Name="SubsHover" Background="Transparent" PointerMoved="SubsPointerMoved" PointerExited="SubsPointerExited">
+                      <Rectangle x:Name="SubsGuide" Width="1" HorizontalAlignment="Left" Fill="{ThemeResource FaintBrush}" Opacity="0" IsHitTestVisible="False"/>
+                      <Ellipse x:Name="SubsDot" Width="12" Height="12" HorizontalAlignment="Left" VerticalAlignment="Top" Fill="{ThemeResource AccentFillColorDefaultBrush}"
+                               Stroke="White" StrokeThickness="2" Opacity="0" IsHitTestVisible="False"/>
+                      <Ellipse x:Name="TrialDot" Width="10" Height="10" HorizontalAlignment="Left" VerticalAlignment="Top" Fill="{ThemeResource TealBrush}"
+                               Stroke="White" StrokeThickness="2" Opacity="0" IsHitTestVisible="False"/>
+                      <Border x:Name="SubsTip" Width="168" HorizontalAlignment="Left" VerticalAlignment="Top" Padding="14,10" CornerRadius="16" Opacity="0"
+                              IsHitTestVisible="False" Background="{ThemeResource GlassStrongBrush}" BorderBrush="{ThemeResource GlassRimBrush}" BorderThickness="1">
+                        <StackPanel Spacing="4">
+                          <TextBlock x:Name="TipMonth" Text="Jul" FontSize="12" FontWeight="SemiBold"/>
+                          <Grid>
+                            <TextBlock Text="Subscribers" Style="{StaticResource Caption}"/>
+                            <TextBlock x:Name="TipSubs" Text="19.2K" FontSize="12" HorizontalAlignment="Right"/>
+                          </Grid>
+                          <Grid>
+                            <TextBlock Text="Started a trial" Style="{StaticResource Caption}"/>
+                            <TextBlock x:Name="TipTrial" Text="3.8K" FontSize="12" HorizontalAlignment="Right" Foreground="{ThemeResource TealBrush}"/>
+                          </Grid>
+                        </StackPanel>
+                      </Border>
+                    </Grid>
+                  </Grid>
+                </Grid>
+                <Grid Grid.Row="2" Margin="56,0,0,0">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                    <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Grid.Column="0" Text="Nov" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="1" Text="Dec" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="2" Text="Jan" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="3" Text="Feb" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="4" Text="Mar" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="5" Text="Apr" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="6" Text="May" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="7" Text="Jun" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="8" Text="Jul" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="9" Text="Aug" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="10" Text="Sep" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="11" Text="Oct" Style="{StaticResource Caption}"/>
+                </Grid>
+              </Grid>
+            </Border>
+            <Border x:Name="PlansCard" Grid.Column="1" Style="{StaticResource Glass}" Height="420">
+              <Grid RowSpacing="16">
+                <Grid.RowDefinitions>
+                  <RowDefinition Height="Auto"/>
+                  <RowDefinition Height="*"/>
+                  <RowDefinition Height="Auto"/>
+                </Grid.RowDefinitions>
+                <TextBlock Text="Plans" Style="{StaticResource CardTitle}"/>
+                <Grid x:Name="Donut" Grid.Row="1" Width="200" Height="200">
+                  <Ellipse StrokeThickness="22" Stroke="{ThemeResource InnerBrush}"/>
+                  <Ellipse x:Name="PlanArc0" StrokeThickness="22" Stroke="{ThemeResource AccentFillColorDefaultBrush}" RenderTransformOrigin="0.5,0.5">
+                    <Ellipse.RenderTransform><RotateTransform Angle="-90"/></Ellipse.RenderTransform>
+                  </Ellipse>
+                  <Ellipse x:Name="PlanArc1" StrokeThickness="22" Stroke="{ThemeResource TealBrush}" RenderTransformOrigin="0.5,0.5">
+                    <Ellipse.RenderTransform><RotateTransform Angle="-90"/></Ellipse.RenderTransform>
+                  </Ellipse>
+                  <Ellipse x:Name="PlanArc2" StrokeThickness="22" Stroke="{ThemeResource WarnBrush}" RenderTransformOrigin="0.5,0.5">
+                    <Ellipse.RenderTransform><RotateTransform Angle="-90"/></Ellipse.RenderTransform>
+                  </Ellipse>
+                  <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+                    <TextBlock Text="{Binding PlansText}" d:Text="13.8K" FontSize="30" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display" HorizontalAlignment="Center"/>
+                    <TextBlock Text="plans sold" Style="{StaticResource Caption}" HorizontalAlignment="Center"/>
+                  </StackPanel>
+                </Grid>
+                <StackPanel Grid.Row="2" Spacing="8">
+                  <Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Ellipse Width="9" Height="9" Fill="{ThemeResource AccentFillColorDefaultBrush}"/>
+                      <TextBlock Text="Monthly" FontSize="13"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding PlanText0}" d:Text="5,943   43%" FontSize="13" HorizontalAlignment="Right"/>
+                  </Grid>
+                  <Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Ellipse Width="9" Height="9" Fill="{ThemeResource TealBrush}"/>
+                      <TextBlock Text="Yearly" FontSize="13"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding PlanText1}" d:Text="4,712   34%" FontSize="13" HorizontalAlignment="Right"/>
+                  </Grid>
+                  <Grid>
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <Ellipse Width="9" Height="9" Fill="{ThemeResource WarnBrush}"/>
+                      <TextBlock Text="Lifetime and one-time" FontSize="13"/>
+                    </StackPanel>
+                    <TextBlock Text="{Binding PlanText2}" d:Text="3,177   23%" FontSize="13" HorizontalAlignment="Right"/>
+                  </Grid>
+                </StackPanel>
+              </Grid>
+            </Border>
+          </Grid>
+          <Grid ColumnSpacing="20">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="2*"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border x:Name="CohortCard" Style="{StaticResource Glass}">
+              <StackPanel Spacing="12">
+                <Grid>
+                  <StackPanel>
+                    <TextBlock Text="Retention by cohort" Style="{StaticResource CardTitle}"/>
+                    <TextBlock Text="Share of each month's new subscribers still paying" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                  <Button x:Name="ExportCsvButton" HorizontalAlignment="Right" VerticalAlignment="Top" CornerRadius="16" Padding="14,6" Click="ExportCsvClick"
+                          Background="{ThemeResource InnerBrush}" BorderBrush="{ThemeResource InnerRimBrush}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE896;" FontSize="12"/>
+                      <TextBlock Text="Export CSV" FontSize="12"/>
+                    </StackPanel>
+                  </Button>
+                </Grid>
+                <Grid>
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="110"/>
+                    <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Text="Cohort" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="1" Text="Month 1" Style="{StaticResource Caption}" HorizontalAlignment="Center"/>
+                  <TextBlock Grid.Column="2" Text="Month 2" Style="{StaticResource Caption}" HorizontalAlignment="Center"/>
+                  <TextBlock Grid.Column="3" Text="Month 3" Style="{StaticResource Caption}" HorizontalAlignment="Center"/>
+                  <TextBlock Grid.Column="4" Text="Month 4" Style="{StaticResource Caption}" HorizontalAlignment="Center"/>
+                  <TextBlock Grid.Column="5" Text="Month 5" Style="{StaticResource Caption}" HorizontalAlignment="Center"/>
+                  <TextBlock Grid.Column="6" Text="Month 6" Style="{StaticResource Caption}" HorizontalAlignment="Center"/>
+                </Grid>
+                <ItemsControl x:Name="CohortList">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="TCohort">
+                      <Grid Height="40" ColumnSpacing="4" Margin="0,0,0,4">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="106"/>
+                          <ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/><ColumnDefinition/>
+                        </Grid.ColumnDefinitions>
+                        <StackPanel VerticalAlignment="Center">
+                          <TextBlock Text="{Binding Name}" FontSize="13" FontWeight="SemiBold"/>
+                          <TextBlock Text="{Binding SizeText}" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+                        </StackPanel>
+                        <Grid Grid.Column="1"><Border CornerRadius="8" Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="{Binding O1}"/><TextBlock Text="{Binding C1}" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/></Grid>
+                        <Grid Grid.Column="2"><Border CornerRadius="8" Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="{Binding O2}"/><TextBlock Text="{Binding C2}" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/></Grid>
+                        <Grid Grid.Column="3"><Border CornerRadius="8" Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="{Binding O3}"/><TextBlock Text="{Binding C3}" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/></Grid>
+                        <Grid Grid.Column="4"><Border CornerRadius="8" Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="{Binding O4}"/><TextBlock Text="{Binding C4}" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/></Grid>
+                        <Grid Grid.Column="5"><Border CornerRadius="8" Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="{Binding O5}"/><TextBlock Text="{Binding C5}" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/></Grid>
+                        <Grid Grid.Column="6"><Border CornerRadius="8" Background="{ThemeResource AccentFillColorDefaultBrush}" Opacity="{Binding O6}"/><TextBlock Text="{Binding C6}" FontSize="12" HorizontalAlignment="Center" VerticalAlignment="Center" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/></Grid>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+            <Border x:Name="CancelCard" Grid.Column="1" Style="{StaticResource Glass}">
+              <StackPanel Spacing="12">
+                <Grid>
+                  <TextBlock Text="Why they cancel" Style="{StaticResource CardTitle}"/>
+                  <Border HorizontalAlignment="Right" CornerRadius="10" Padding="9,3" Background="{ThemeResource InnerBrush}">
+                    <TextBlock Text="Last 30 days" FontSize="11"/>
+                  </Border>
+                </Grid>
+                <ItemsControl x:Name="CancelList">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="TBar">
+                      <StackPanel Spacing="6" Margin="0,6">
+                        <Grid>
+                          <TextBlock Text="{Binding Name}" FontSize="13"/>
+                          <TextBlock Text="{Binding ValueText}" FontSize="13" HorizontalAlignment="Right" Foreground="{ThemeResource MutedBrush}"/>
+                        </Grid>
+                        <Border Height="6" CornerRadius="3" Background="{ThemeResource InnerBrush}">
+                          <Border Height="6" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Size}" Background="{ThemeResource BadBrush}" Opacity="0.8"/>
+                        </Border>
+                      </StackPanel>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- 6. Growth -->
+      <ScrollViewer x:Name="PageGrowth" VerticalScrollBarVisibility="Auto" Padding="10,6,30,26" Visibility="Collapsed">
+        <StackPanel Spacing="20">
+          <Grid ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel x:Name="GrTitle" VerticalAlignment="Bottom">
+              <TextBlock Text="Store" Style="{StaticResource PageFirst}"/>
+              <TextBlock Text="Growth" Style="{StaticResource PageSecond}"/>
+            </StackPanel>
+            <StackPanel x:Name="GrKpis" Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Bottom">
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE7B3;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding PageViewsText}" d:Text="1,240,400" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="store page views, 30 days" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE9D2;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding ConversionText}" d:Text="16.5%" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="page view to install" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE909;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding RegionsText}" d:Text="64" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="countries with installs" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Grid>
+          <Grid ColumnSpacing="20">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border x:Name="SourcesCard" Style="{StaticResource Glass}">
+              <StackPanel Spacing="12">
+                <StackPanel>
+                  <TextBlock Text="Acquisition sources" Style="{StaticResource CardTitle}"/>
+                  <TextBlock Text="Where installs came from, last 30 days" Style="{StaticResource Caption}"/>
+                </StackPanel>
+                <ItemsControl x:Name="SourceList">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="TBar">
+                      <Grid ColumnSpacing="14" Margin="0,7">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto"/>
+                          <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Width="38" Height="38" CornerRadius="19" Background="{ThemeResource InnerBrush}">
+                          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="{Binding Glyph}" FontSize="14"/>
+                        </Border>
+                        <StackPanel Grid.Column="1" Spacing="6" VerticalAlignment="Center">
+                          <Grid>
+                            <TextBlock Text="{Binding Name}" FontSize="13"/>
+                            <TextBlock Text="{Binding ValueText}" FontSize="13" HorizontalAlignment="Right"/>
+                          </Grid>
+                          <Border Height="6" CornerRadius="3" Background="{ThemeResource InnerBrush}">
+                            <Border Height="6" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Size}" Background="{ThemeResource AccentFillColorDefaultBrush}"/>
+                          </Border>
+                        </StackPanel>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+            <Border x:Name="FunnelCard" Grid.Column="1" Style="{StaticResource Glass}">
+              <StackPanel Spacing="12">
+                <StackPanel>
+                  <TextBlock Text="Conversion funnel" Style="{StaticResource CardTitle}"/>
+                  <TextBlock Text="From a store impression to a paying customer" Style="{StaticResource Caption}"/>
+                </StackPanel>
+                <ItemsControl x:Name="FunnelList">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="TBar">
+                      <Grid Margin="0,5" Height="46">
+                        <Border CornerRadius="14" HorizontalAlignment="Center" Width="{Binding Size}">
+                          <Border.Background>
+                            <LinearGradientBrush StartPoint="0,0" EndPoint="1,0">
+                              <GradientStop Color="{ThemeResource SystemAccentColorLight2}" Offset="0"/>
+                              <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="1"/>
+                            </LinearGradientBrush>
+                          </Border.Background>
+                        </Border>
+                        <Grid Padding="16,0">
+                          <TextBlock Text="{Binding Name}" FontSize="13" VerticalAlignment="Center"/>
+                          <TextBlock Text="{Binding ValueText}" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                        </Grid>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </Grid>
+          <Grid ColumnSpacing="20">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="*"/>
+            </Grid.ColumnDefinitions>
+            <Border x:Name="RegionsCard" Style="{StaticResource Glass}">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Top regions" Style="{StaticResource CardTitle}"/>
+                <ItemsControl x:Name="RegionList">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="TBar">
+                      <Grid ColumnSpacing="12" Margin="0,6">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="40"/>
+                          <ColumnDefinition Width="140"/>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="80"/>
+                        </Grid.ColumnDefinitions>
+                        <Border CornerRadius="8" Padding="0,3" Background="{ThemeResource InnerBrush}">
+                          <TextBlock Text="{Binding Glyph}" FontSize="11" FontWeight="SemiBold" HorizontalAlignment="Center"/>
+                        </Border>
+                        <TextBlock Grid.Column="1" Text="{Binding Name}" FontSize="13" VerticalAlignment="Center"/>
+                        <Border Grid.Column="2" Height="6" CornerRadius="3" Background="{ThemeResource InnerBrush}" VerticalAlignment="Center">
+                          <Border Height="6" CornerRadius="3" HorizontalAlignment="Left" Width="{Binding Size}" Background="{ThemeResource TealBrush}"/>
+                        </Border>
+                        <TextBlock Grid.Column="3" Text="{Binding ValueText}" FontSize="13" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+            <Border x:Name="CampaignCard" Grid.Column="1" Style="{StaticResource Glass}">
+              <StackPanel Spacing="10">
+                <TextBlock Text="Campaigns" Style="{StaticResource CardTitle}"/>
+                <ItemsControl x:Name="CampaignList">
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="TListRow">
+                      <Border Style="{StaticResource Inner}" Margin="0,0,0,10">
+                        <StackPanel Spacing="8">
+                          <Grid>
+                            <StackPanel>
+                              <TextBlock Text="{Binding Name}" FontSize="14" FontWeight="SemiBold"/>
+                              <TextBlock Text="{Binding Detail}" FontSize="12" Foreground="{ThemeResource MutedBrush}"/>
+                            </StackPanel>
+                            <Border HorizontalAlignment="Right" VerticalAlignment="Top" CornerRadius="10" Padding="9,3" Background="{ThemeResource GoodSoftBrush}">
+                              <TextBlock Text="{Binding Status}" FontSize="11" Foreground="{ThemeResource GoodBrush}"/>
+                            </Border>
+                          </Grid>
+                          <ProgressBar Value="{Binding Progress}" Maximum="100"/>
+                          <TextBlock Text="{Binding Value}" FontSize="12" Foreground="{ThemeResource MutedBrush}"/>
+                        </StackPanel>
+                      </Border>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- 7. Payouts -->
+      <ScrollViewer x:Name="PagePayouts" VerticalScrollBarVisibility="Auto" Padding="10,6,30,26" Visibility="Collapsed">
+        <StackPanel Spacing="20">
+          <Grid ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel x:Name="PaTitle" VerticalAlignment="Bottom">
+              <TextBlock Text="Your" Style="{StaticResource PageFirst}"/>
+              <TextBlock Text="Payouts" Style="{StaticResource PageSecond}"/>
+            </StackPanel>
+            <StackPanel x:Name="PaKpis" Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Bottom">
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8C7;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding PendingText}" d:Text="$12,904" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="pending, not yet payable" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE9D9;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding PaidYearText}" d:Text="$716,040" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="paid out this year" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+          </Grid>
+          <Grid ColumnSpacing="20">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="2*"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel Spacing="20">
+              <Grid x:Name="NextPayoutCard" Height="300">
+                <Border CornerRadius="28">
+                  <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                      <GradientStop Color="{ThemeResource SystemAccentColorLight1}" Offset="0"/>
+                      <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="0.6"/>
+                      <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="1"/>
+                    </LinearGradientBrush>
+                  </Border.Background>
+                </Border>
+                <Border CornerRadius="28" BorderBrush="#59FFFFFF" BorderThickness="1">
+                  <Border.Background>
+                    <LinearGradientBrush StartPoint="0,0" EndPoint="0,1">
+                      <GradientStop Color="#33FFFFFF" Offset="0"/>
+                      <GradientStop Color="#00FFFFFF" Offset="0.6"/>
+                    </LinearGradientBrush>
+                  </Border.Background>
+                </Border>
+                <Ellipse Width="260" Height="260" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-80,-120" Fill="#1AFFFFFF" Stroke="#40FFFFFF"/>
+                <Grid Padding="26,24">
+                  <StackPanel Spacing="6">
+                    <TextBlock Text="Next payout" FontSize="14" Foreground="#E6FFFFFF"/>
+                    <TextBlock x:Name="NextPayoutLabel" Text="{Binding NextPayoutText}" d:Text="$74,218" FontSize="44" FontWeight="SemiBold" FontFamily="Segoe UI Variable Display" Foreground="White"/>
+                    <TextBlock Text="Sunday 15 November, to Northwind Bank ending 4821" FontSize="12" TextWrapping="Wrap" Foreground="#CCFFFFFF"/>
+                  </StackPanel>
+                  <Grid HorizontalAlignment="Left" VerticalAlignment="Bottom" ColumnSpacing="14">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto"/>
+                      <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <Grid Width="64" Height="64">
+                      <ProgressRing IsIndeterminate="False" Value="{Binding CycleProgress}" Maximum="100" Width="64" Height="64" Foreground="White" Background="#33FFFFFF"/>
+                      <TextBlock Text="{Binding CycleDaysText}" d:Text="20 d" FontSize="12" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                    </Grid>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                      <TextBlock Text="of the payment cycle" FontSize="12" Foreground="#E6FFFFFF"/>
+                      <TextBlock Text="Payouts are sent 45 days after month end" FontSize="11" Foreground="#B3FFFFFF"/>
+                    </StackPanel>
+                  </Grid>
+                </Grid>
+              </Grid>
+              <Border x:Name="SplitCard" Style="{StaticResource Glass}">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="October by app" Style="{StaticResource CardTitle}"/>
+                  <ItemsControl x:Name="SplitList">
+                    <ItemsControl.ItemTemplate>
+                      <DataTemplate x:DataType="TStudioApp">
+                        <Grid ColumnSpacing="12" Margin="0,6">
+                          <Grid.ColumnDefinitions>
+                            <ColumnDefinition Width="Auto"/>
+                            <ColumnDefinition Width="*"/>
+                          </Grid.ColumnDefinitions>
+                          <Border Width="30" Height="30" CornerRadius="9" Background="{Binding Tint}">
+                            <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="{Binding Glyph}" FontSize="13" Foreground="White"/>
+                          </Border>
+                          <StackPanel Grid.Column="1" Spacing="5">
+                            <Grid>
+                              <TextBlock Text="{Binding Name}" FontSize="13"/>
+                              <TextBlock Text="{Binding ProceedsText}" FontSize="13" HorizontalAlignment="Right"/>
+                            </Grid>
+                            <Border Height="5" CornerRadius="2.5" Background="{ThemeResource InnerBrush}">
+                              <Border Height="5" CornerRadius="2.5" HorizontalAlignment="Left" Width="{Binding ShareWidth}" Background="{Binding Tint}"/>
+                            </Border>
+                          </StackPanel>
+                        </Grid>
+                      </DataTemplate>
+                    </ItemsControl.ItemTemplate>
+                  </ItemsControl>
+                </StackPanel>
+              </Border>
+            </StackPanel>
+            <StackPanel Grid.Column="1" Spacing="20">
+            <Border x:Name="HistoryCard" Style="{StaticResource Glass}" VerticalAlignment="Top">
+              <StackPanel Spacing="6">
+                <Grid Margin="0,0,0,10">
+                  <TextBlock Text="Payout history" Style="{StaticResource CardTitle}"/>
+                  <Button x:Name="StatementButton" HorizontalAlignment="Right" CornerRadius="16" Padding="14,6" Click="StatementClick"
+                          Background="{ThemeResource InnerBrush}" BorderBrush="{ThemeResource InnerRimBrush}">
+                    <StackPanel Orientation="Horizontal" Spacing="8">
+                      <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE896;" FontSize="12"/>
+                      <TextBlock Text="Statement" FontSize="12"/>
+                    </StackPanel>
+                  </Button>
+                </Grid>
+                <Grid Padding="0,0,0,8" BorderBrush="{ThemeResource LineBrush}" BorderThickness="0,0,0,1">
+                  <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1.4*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="*"/>
+                    <ColumnDefinition Width="100"/>
+                  </Grid.ColumnDefinitions>
+                  <TextBlock Text="Month" Style="{StaticResource Caption}"/>
+                  <TextBlock Grid.Column="1" Text="Units" Style="{StaticResource Caption}" HorizontalAlignment="Right"/>
+                  <TextBlock Grid.Column="2" Text="Gross" Style="{StaticResource Caption}" HorizontalAlignment="Right"/>
+                  <TextBlock Grid.Column="3" Text="Store fee" Style="{StaticResource Caption}" HorizontalAlignment="Right"/>
+                  <TextBlock Grid.Column="4" Text="Net" Style="{StaticResource Caption}" HorizontalAlignment="Right"/>
+                  <TextBlock Grid.Column="5" Text="Status" Style="{StaticResource Caption}" HorizontalAlignment="Right"/>
+                </Grid>
+                <ItemsControl x:Name="PayoutList">
+                  <ItemsControl.ItemContainerTransitions>
+                    <TransitionCollection><EntranceThemeTransition IsStaggeringEnabled="True"/></TransitionCollection>
+                  </ItemsControl.ItemContainerTransitions>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="TPayout">
+                      <Grid Padding="0,12" BorderBrush="{ThemeResource LineBrush}" BorderThickness="0,0,0,1">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="1.4*"/>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="*"/>
+                          <ColumnDefinition Width="100"/>
+                        </Grid.ColumnDefinitions>
+                        <TextBlock Text="{Binding Month}" FontSize="13" FontWeight="SemiBold"/>
+                        <TextBlock Grid.Column="1" Text="{Binding Units}" FontSize="13" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="2" Text="{Binding Gross}" FontSize="13" HorizontalAlignment="Right"/>
+                        <TextBlock Grid.Column="3" Text="{Binding Fees}" FontSize="13" HorizontalAlignment="Right" Foreground="{ThemeResource MutedBrush}"/>
+                        <TextBlock Grid.Column="4" Text="{Binding Net}" FontSize="13" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                        <Border Grid.Column="5" HorizontalAlignment="Right" CornerRadius="10" Padding="9,2" Background="{ThemeResource GoodSoftBrush}" Visibility="{Binding Paid, Converter={StaticResource BoolToVisibility}}">
+                          <TextBlock Text="Paid" FontSize="11" Foreground="{ThemeResource GoodBrush}"/>
+                        </Border>
+                        <Border Grid.Column="5" HorizontalAlignment="Right" CornerRadius="10" Padding="9,2" Background="{ThemeResource WarnSoftBrush}" Visibility="{Binding Paid, Converter={StaticResource InverseBoolToVisibility}}">
+                          <TextBlock Text="Scheduled" FontSize="11" Foreground="{ThemeResource WarnBrush}"/>
+                        </Border>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+            <Grid x:Name="AccountRow" ColumnSpacing="20">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="*"/>
+              </Grid.ColumnDefinitions>
+              <Border Style="{StaticResource Glass}">
+                <StackPanel Spacing="12">
+                  <TextBlock Text="Payout account" Style="{StaticResource CardTitle}"/>
+                  <Grid ColumnSpacing="14">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto"/>
+                      <ColumnDefinition Width="*"/>
+                    </Grid.ColumnDefinitions>
+                    <Border Width="58" Height="40" CornerRadius="9" Background="{ThemeResource AvatarBrush}">
+                      <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE825;" FontSize="18" Foreground="{ThemeResource AvatarTextBrush}"/>
+                    </Border>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                      <TextBlock Text="Northwind Bank" FontSize="14" FontWeight="SemiBold"/>
+                      <TextBlock Text="Business account ending 4821, US dollars" Style="{StaticResource Caption}"/>
+                    </StackPanel>
+                  </Grid>
+                  <ToggleSwitch x:Name="InstantSwitch" Header="Send payouts as soon as they clear" IsOn="True"/>
+                </StackPanel>
+              </Border>
+              <Border Grid.Column="1" Style="{StaticResource Glass}">
+                <StackPanel Spacing="10">
+                  <TextBlock Text="Tax and compliance" Style="{StaticResource CardTitle}"/>
+                  <Grid>
+                    <TextBlock Text="W-8BEN tax form" FontSize="13"/>
+                    <Border HorizontalAlignment="Right" CornerRadius="10" Padding="9,2" Background="{ThemeResource GoodSoftBrush}">
+                      <TextBlock Text="Valid until 2028" FontSize="11" Foreground="{ThemeResource GoodBrush}"/>
+                    </Border>
+                  </Grid>
+                  <Grid>
+                    <TextBlock Text="VAT registration" FontSize="13"/>
+                    <Border HorizontalAlignment="Right" CornerRadius="10" Padding="9,2" Background="{ThemeResource GoodSoftBrush}">
+                      <TextBlock Text="Verified" FontSize="11" Foreground="{ThemeResource GoodBrush}"/>
+                    </Border>
+                  </Grid>
+                  <Grid>
+                    <TextBlock Text="Store agreement" FontSize="13"/>
+                    <Border HorizontalAlignment="Right" CornerRadius="10" Padding="9,2" Background="{ThemeResource WarnSoftBrush}">
+                      <TextBlock Text="Renew in 21 days" FontSize="11" Foreground="{ThemeResource WarnBrush}"/>
+                    </Border>
+                  </Grid>
+                </StackPanel>
+              </Border>
+            </Grid>
+            </StackPanel>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+
+      <!-- 8. Team -->
+      <ScrollViewer x:Name="PageTeam" VerticalScrollBarVisibility="Auto" Padding="10,6,30,26" Visibility="Collapsed">
+        <StackPanel Spacing="20">
+          <Grid ColumnSpacing="24">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+            <StackPanel x:Name="TeTitle" VerticalAlignment="Bottom">
+              <TextBlock Text="Your" Style="{StaticResource PageFirst}"/>
+              <TextBlock Text="Team" Style="{StaticResource PageSecond}"/>
+            </StackPanel>
+            <StackPanel x:Name="TeKpis" Grid.Column="1" Orientation="Horizontal" Spacing="12" VerticalAlignment="Bottom">
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE716;" FontSize="16"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock x:Name="MembersLabel" Text="{Binding MembersText}" d:Text="8" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="members" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Border Style="{StaticResource Kpi}">
+                <StackPanel Orientation="Horizontal" Spacing="12">
+                  <Border Style="{StaticResource IconDisc}"><Ellipse Width="12" Height="12" Fill="{ThemeResource GoodBrush}"/></Border>
+                  <StackPanel VerticalAlignment="Center">
+                    <TextBlock Text="{Binding OnlineText}" d:Text="5" Style="{StaticResource KpiValue}"/>
+                    <TextBlock Text="online now" Style="{StaticResource Caption}"/>
+                  </StackPanel>
+                </StackPanel>
+              </Border>
+              <Grid VerticalAlignment="Center">
+                <Border CornerRadius="24" Margin="-6" Opacity="0.55">
+                  <Border.Background>
+                    <RadialGradientBrush>
+                      <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="0"/>
+                      <GradientStop Color="Transparent" Offset="1"/>
+                    </RadialGradientBrush>
+                  </Border.Background>
+                </Border>
+                <Button x:Name="InviteButton" Style="{StaticResource Accent}" Click="InviteClick">
+                  <StackPanel Orientation="Horizontal" Spacing="8">
+                    <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="&#xE8FA;" FontSize="12"/>
+                    <TextBlock Text="Invite"/>
+                  </StackPanel>
+                </Button>
+              </Grid>
+            </StackPanel>
+          </Grid>
+          <Grid ColumnSpacing="20">
+            <Grid.ColumnDefinitions>
+              <ColumnDefinition Width="*"/>
+              <ColumnDefinition Width="380"/>
+            </Grid.ColumnDefinitions>
+            <GridView x:Name="TeamGrid" SelectionMode="None" ItemContainerStyle="{StaticResource BareGrid}">
+              <GridView.ItemContainerTransitions>
+                <TransitionCollection>
+                  <EntranceThemeTransition IsStaggeringEnabled="True" FromVerticalOffset="50"/>
+                  <AddDeleteThemeTransition/>
+                  <RepositionThemeTransition/>
+                </TransitionCollection>
+              </GridView.ItemContainerTransitions>
+              <GridView.ItemTemplate>
+                <DataTemplate x:DataType="TMember">
+                  <Border Width="268" Padding="20" CornerRadius="26" Background="{ThemeResource GlassBrush}" BorderBrush="{ThemeResource GlassRimBrush}" BorderThickness="1">
+                    <StackPanel Spacing="12">
+                      <Grid>
+                        <Grid Width="60" Height="60" HorizontalAlignment="Left">
+                          <Ellipse Fill="{Binding Tint}"/>
+                          <Ellipse>
+                            <Ellipse.Fill>
+                              <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                                <GradientStop Color="#4DFFFFFF" Offset="0"/>
+                                <GradientStop Color="#00FFFFFF" Offset="0.6"/>
+                              </LinearGradientBrush>
+                            </Ellipse.Fill>
+                          </Ellipse>
+                          <TextBlock Text="{Binding Initials}" FontSize="19" FontWeight="SemiBold" Foreground="White" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+                          <Ellipse Width="14" Height="14" HorizontalAlignment="Right" VerticalAlignment="Bottom" Fill="{ThemeResource GoodBrush}" Stroke="{ThemeResource GlassRimBrush}" StrokeThickness="2"
+                                   Visibility="{Binding Online, Converter={StaticResource BoolToVisibility}}"/>
+                        </Grid>
+                        <Border HorizontalAlignment="Right" VerticalAlignment="Top" CornerRadius="10" Padding="9,3" Background="{ThemeResource InnerBrush}">
+                          <TextBlock Text="{Binding Access}" FontSize="11"/>
+                        </Border>
+                      </Grid>
+                      <StackPanel>
+                        <TextBlock Text="{Binding Name}" FontSize="16" FontWeight="SemiBold"/>
+                        <TextBlock Text="{Binding Role}" FontSize="12" Foreground="{ThemeResource MutedBrush}"/>
+                      </StackPanel>
+                      <Border Style="{StaticResource Inner}" Padding="12,8">
+                        <StackPanel Spacing="2">
+                          <TextBlock Text="Looks after" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+                          <TextBlock Text="{Binding Apps}" FontSize="12" TextTrimming="CharacterEllipsis"/>
+                        </StackPanel>
+                      </Border>
+                      <TextBlock Text="{Binding Status}" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+                    </StackPanel>
+                  </Border>
+                </DataTemplate>
+              </GridView.ItemTemplate>
+            </GridView>
+            <Border x:Name="ActivityCard" Grid.Column="1" Style="{StaticResource Glass}" VerticalAlignment="Top">
+              <StackPanel Spacing="10">
+                <Grid>
+                  <TextBlock Text="Activity" Style="{StaticResource CardTitle}"/>
+                  <StackPanel Orientation="Horizontal" Spacing="6" HorizontalAlignment="Right" VerticalAlignment="Center">
+                    <Ellipse Width="7" Height="7" Fill="{ThemeResource GoodBrush}"/>
+                    <TextBlock Text="Live" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+                  </StackPanel>
+                </Grid>
+                <ItemsControl x:Name="ActivityList">
+                  <ItemsControl.ItemContainerTransitions>
+                    <TransitionCollection><AddDeleteThemeTransition/><RepositionThemeTransition/></TransitionCollection>
+                  </ItemsControl.ItemContainerTransitions>
+                  <ItemsControl.ItemTemplate>
+                    <DataTemplate x:DataType="TNotice">
+                      <Grid Padding="0,9" ColumnSpacing="12">
+                        <Grid.ColumnDefinitions>
+                          <ColumnDefinition Width="Auto"/>
+                          <ColumnDefinition Width="*"/>
+                        </Grid.ColumnDefinitions>
+                        <Border Width="34" Height="34" CornerRadius="17" Background="{ThemeResource InnerBrush}">
+                          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="{Binding Glyph}" FontSize="13"/>
+                        </Border>
+                        <StackPanel Grid.Column="1">
+                          <TextBlock Text="{Binding Title}" FontSize="13" TextWrapping="Wrap"/>
+                          <TextBlock Text="{Binding Time}" FontSize="11" Foreground="{ThemeResource MutedBrush}"/>
+                        </StackPanel>
+                      </Grid>
+                    </DataTemplate>
+                  </ItemsControl.ItemTemplate>
+                </ItemsControl>
+              </StackPanel>
+            </Border>
+          </Grid>
+        </StackPanel>
+      </ScrollViewer>
+    </Grid>
+
+    <!-- A toast for live events -->
+    <Border x:Name="Toast" Grid.Row="1" Grid.Column="1" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,30,26" Width="340"
+            Padding="16,12" CornerRadius="20" Background="{ThemeResource GlassStrongBrush}" BorderBrush="{ThemeResource GlassRimBrush}" BorderThickness="1"
+            IsHitTestVisible="False">
+      <Grid ColumnSpacing="12">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="Auto"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Grid Width="36" Height="36">
+          <Ellipse Fill="{ThemeResource AccentFillColorDefaultBrush}"/>
+          <FontIcon FontFamily="{ThemeResource SymbolThemeFontFamily}" Glyph="{Binding ToastGlyph}" FontSize="14" Foreground="{ThemeResource TextOnAccentFillColorPrimaryBrush}"/>
+        </Grid>
+        <StackPanel Grid.Column="1" VerticalAlignment="Center">
+          <TextBlock x:Name="ToastTitleLabel" Text="{Binding ToastTitle}" FontSize="13" FontWeight="SemiBold"/>
+          <TextBlock Text="{Binding ToastBody}" FontSize="12" TextWrapping="Wrap" Foreground="{ThemeResource MutedBrush}"/>
+        </StackPanel>
+      </Grid>
+    </Border>
+  </Grid>
+</Window>
