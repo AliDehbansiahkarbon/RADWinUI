@@ -6,7 +6,7 @@
     mc:Ignorable="d"
     x:Class="TMainWindow" DataContextType="TMainViewModel"
     Title="Lucent - app publishing studio" Width="1640" Height="1020" MinWidth="1180" MinHeight="720"
-    WindowStartupLocation="CenterScreen" ExtendsContentIntoTitleBar="True">
+    WindowStartupLocation="CenterScreen" ExtendsContentIntoTitleBar="True" Backdrop="Acrylic">
   <!-- Frosted glass over drifting ribbons. Every colour is a theme resource and
        the highlights are the Windows accent colour, so light, dark and accent
        changes apply live. -->
@@ -15,11 +15,13 @@
       <ResourceDictionary>
         <ResourceDictionary.ThemeDictionaries>
           <ResourceDictionary x:Key="Dark">
+            <!-- Translucent, so the blurred desktop behind the window shows through -->
             <LinearGradientBrush x:Key="BackdropBrush" StartPoint="0,0" EndPoint="1,1">
-              <GradientStop Color="#0B0B0D" Offset="0"/>
-              <GradientStop Color="#15161A" Offset="0.55"/>
-              <GradientStop Color="#0D0E11" Offset="1"/>
+              <GradientStop Color="#B80B0B0D" Offset="0"/>
+              <GradientStop Color="#9E15161A" Offset="0.55"/>
+              <GradientStop Color="#B80D0E11" Offset="1"/>
             </LinearGradientBrush>
+            <SolidColorBrush x:Key="SolidBaseBrush" Color="#0E0F12"/>
             <LinearGradientBrush x:Key="RibbonBrush" StartPoint="0,0" EndPoint="1,1">
               <GradientStop Color="#00FFFFFF" Offset="0"/>
               <GradientStop Color="#26FFFFFF" Offset="0.3"/>
@@ -62,10 +64,11 @@
           </ResourceDictionary>
           <ResourceDictionary x:Key="Light">
             <LinearGradientBrush x:Key="BackdropBrush" StartPoint="0,0" EndPoint="1,1">
-              <GradientStop Color="#EDEFF3" Offset="0"/>
-              <GradientStop Color="#E2E5EA" Offset="0.55"/>
-              <GradientStop Color="#F2F3F6" Offset="1"/>
+              <GradientStop Color="#B8EDEFF3" Offset="0"/>
+              <GradientStop Color="#9EE2E5EA" Offset="0.55"/>
+              <GradientStop Color="#B8F2F3F6" Offset="1"/>
             </LinearGradientBrush>
+            <SolidColorBrush x:Key="SolidBaseBrush" Color="#E9EBEF"/>
             <LinearGradientBrush x:Key="RibbonBrush" StartPoint="0,0" EndPoint="1,1">
               <GradientStop Color="#00FFFFFF" Offset="0"/>
               <GradientStop Color="#B3FFFFFF" Offset="0.3"/>
@@ -282,7 +285,10 @@
     </Grid.ColumnDefinitions>
 
     <!-- The backdrop: drifting glass ribbons and floating bubbles -->
-    <Grid Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{ThemeResource BackdropBrush}" IsHitTestVisible="False">
+    <Grid Grid.RowSpan="2" Grid.ColumnSpan="2" IsHitTestVisible="False">
+      <!-- Shown when transparency is off: the window is then opaque -->
+      <Border x:Name="SolidBase" Background="{ThemeResource SolidBaseBrush}" Visibility="Collapsed"/>
+      <Border Background="{ThemeResource BackdropBrush}"/>
       <Viewbox Stretch="UniformToFill">
         <Canvas Width="1600" Height="1000">
           <Ellipse x:Name="Orb1" Canvas.Left="-260" Canvas.Top="-300" Width="640" Height="640" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1" Opacity="0.55"/>
@@ -481,6 +487,7 @@
                 <TextBlock Text="Studio settings" Style="{StaticResource CardTitle}"/>
                 <ToggleSwitch x:Name="LiveSwitch" Header="Live data" IsOn="{Binding Live, Mode=TwoWay}"/>
                 <ToggleSwitch x:Name="MotionSwitch" Header="Animations" IsOn="{Binding Motion, Mode=TwoWay}"/>
+                <ToggleSwitch x:Name="TransparencySwitch" Header="Transparency" IsOn="True"/>
               </StackPanel>
             </Flyout>
           </Button.Flyout>

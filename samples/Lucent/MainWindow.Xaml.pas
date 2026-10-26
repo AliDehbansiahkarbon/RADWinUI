@@ -29,222 +29,224 @@ type
     procedure SetViewModel(AValue: TMainViewModel);
   protected
     Surface: TWinUIGrid;                       // MainWindow.xaml(13) <Grid>
-    Orb1: TWinUIEllipse;                       // MainWindow.xaml(288) <Ellipse>
-    Orb2: TWinUIEllipse;                       // MainWindow.xaml(289) <Ellipse>
-    Ribbon1: TWinUICanvas;                     // MainWindow.xaml(290) <Canvas>
-    Ribbon2: TWinUICanvas;                     // MainWindow.xaml(295) <Canvas>
-    Ribbon3: TWinUICanvas;                     // MainWindow.xaml(299) <Canvas>
-    Bubble1: TWinUIEllipse;                    // MainWindow.xaml(303) <Ellipse>
-    Bubble2: TWinUIEllipse;                    // MainWindow.xaml(304) <Ellipse>
-    Bubble3: TWinUIEllipse;                    // MainWindow.xaml(305) <Ellipse>
-    Bubble4: TWinUIEllipse;                    // MainWindow.xaml(306) <Ellipse>
-    Bubble5: TWinUIEllipse;                    // MainWindow.xaml(307) <Ellipse>
-    Bubble6: TWinUIEllipse;                    // MainWindow.xaml(308) <Ellipse>
-    Bubble7: TWinUIEllipse;                    // MainWindow.xaml(309) <Ellipse>
-    Bubble8: TWinUIEllipse;                    // MainWindow.xaml(310) <Ellipse>
-    Bubble9: TWinUIEllipse;                    // MainWindow.xaml(311) <Ellipse>
-    Bubble10: TWinUIEllipse;                   // MainWindow.xaml(312) <Ellipse>
-    Bubble11: TWinUIEllipse;                   // MainWindow.xaml(313) <Ellipse>
-    Bubble12: TWinUIEllipse;                   // MainWindow.xaml(314) <Ellipse>
-    DragRegion: TWinUIGrid;                    // MainWindow.xaml(319) <Grid>
-    NavIndicator: TWinUIBorder;                // MainWindow.xaml(339) <Border>
-    NavBar: TWinUIStackPanel;                  // MainWindow.xaml(341) <StackPanel>
-    NavOverview: TWinUIButton;                 // MainWindow.xaml(342) <Button>
-    NavApps: TWinUIButton;                     // MainWindow.xaml(343) <Button>
-    NavReleases: TWinUIButton;                 // MainWindow.xaml(344) <Button>
-    NavReviews: TWinUIButton;                  // MainWindow.xaml(345) <Button>
-    NavAudience: TWinUIButton;                 // MainWindow.xaml(346) <Button>
-    NavGrowth: TWinUIButton;                   // MainWindow.xaml(347) <Button>
-    NavPayouts: TWinUIButton;                  // MainWindow.xaml(348) <Button>
-    NavTeam: TWinUIButton;                     // MainWindow.xaml(349) <Button>
-    InboxButton: TWinUIButton;                 // MainWindow.xaml(355) <Button>
-    InboxList: TWinUIItemsControl;             // MainWindow.xaml(362) <ItemsControl>
-    BellButton: TWinUIButton;                  // MainWindow.xaml(386) <Button>
-    NoticeList: TWinUIItemsControl;            // MainWindow.xaml(392) <ItemsControl>
-    BellDot: TWinUIEllipse;                    // MainWindow.xaml(416) <Ellipse>
-    AvatarButton: TWinUIButton;                // MainWindow.xaml(419) <Button>
-    MenuTheme: TWinUIMenuFlyoutItem;           // MainWindow.xaml(426) <MenuFlyoutItem>
-    MenuTeam: TWinUIMenuFlyoutItem;            // MainWindow.xaml(431) <MenuFlyoutItem>
-    RailSearch: TWinUIButton;                  // MainWindow.xaml(447) <Button>
-    RailNew: TWinUIButton;                     // MainWindow.xaml(450) <Button>
-    RailCalendar: TWinUIButton;                // MainWindow.xaml(454) <Button>
-    ReleaseCalendar: TWinUICalendarView;       // MainWindow.xaml(460) <CalendarView>
-    RailUndo: TWinUIButton;                    // MainWindow.xaml(466) <Button>
-    RailShare: TWinUIButton;                   // MainWindow.xaml(469) <Button>
-    RailUpload: TWinUIButton;                  // MainWindow.xaml(472) <Button>
-    RailSettings: TWinUIButton;                // MainWindow.xaml(476) <Button>
-    LiveSwitch: TWinUIToggleSwitch;            // MainWindow.xaml(482) <ToggleSwitch>
-    MotionSwitch: TWinUIToggleSwitch;          // MainWindow.xaml(483) <ToggleSwitch>
-    RailTheme: TWinUIButton;                   // MainWindow.xaml(488) <Button>
-    ThemeGlyph: TWinUIFontIcon;                // MainWindow.xaml(489) <FontIcon>
-    LiveButton: TWinUIButton;                  // MainWindow.xaml(493) <Button>
-    LivePulse: TWinUIEllipse;                  // MainWindow.xaml(497) <Ellipse>
-    PageHost: TWinUIGrid;                      // MainWindow.xaml(503) <Grid>
-    PageOverview: TWinUIScrollViewer;          // MainWindow.xaml(506) <ScrollViewer>
-    OvTitle: TWinUIStackPanel;                 // MainWindow.xaml(513) <StackPanel>
-    OvKpis: TWinUIStackPanel;                  // MainWindow.xaml(517) <StackPanel>
-    OvProceedsLabel: TWinUITextBlock;          // MainWindow.xaml(523) <TextBlock>
-    ProceedsColumn: TWinUIColumnDefinition;    // MainWindow.xaml(560) <ColumnDefinition>
-    RatingsColumn: TWinUIColumnDefinition;     // MainWindow.xaml(561) <ColumnDefinition>
-    ProceedsCard: TWinUIBorder;                // MainWindow.xaml(563) <Border>
-    ChartTitle: TWinUITextBlock;               // MainWindow.xaml(578) <TextBlock>
-    SeriesProceeds: TWinUIToggleButton;        // MainWindow.xaml(583) <ToggleButton>
-    SeriesDownloads: TWinUIToggleButton;       // MainWindow.xaml(584) <ToggleButton>
-    MenuExportChart: TWinUIMenuFlyoutItem;     // MainWindow.xaml(591) <MenuFlyoutItem>
-    MenuLastYear: TWinUIToggleMenuFlyoutItem;  // MainWindow.xaml(592) <ToggleMenuFlyoutItem>
-    ExpandButton: TWinUIButton;                // MainWindow.xaml(596) <Button>
-    ExpandGlyph: TWinUIFontIcon;               // MainWindow.xaml(598) <FontIcon>
-    ProceedsCanvas: TWinUICanvas;              // MainWindow.xaml(615) <Canvas>
-    ProceedsArea: TWinUIPolygon;               // MainWindow.xaml(616) <Polygon>
-    ProceedsLastYear: TWinUIPolyline;          // MainWindow.xaml(624) <Polyline>
-    ProceedsLine: TWinUIPolyline;              // MainWindow.xaml(625) <Polyline>
-    ProceedsGlow: TWinUIEllipse;               // MainWindow.xaml(626) <Ellipse>
-    ProceedsDot: TWinUIEllipse;                // MainWindow.xaml(627) <Ellipse>
-    RatingsCard: TWinUIBorder;                 // MainWindow.xaml(651) <Border>
-    StarBarList: TWinUIItemsControl;           // MainWindow.xaml(667) <ItemsControl>
-    YourAppsCard: TWinUIBorder;                // MainWindow.xaml(700) <Border>
-    AllAppsButton: TWinUIButton;               // MainWindow.xaml(719) <Button>
-    OverviewApps: TWinUIGridView;              // MainWindow.xaml(723) <GridView>
-    PageApps: TWinUIScrollViewer;              // MainWindow.xaml(773) <ScrollViewer>
-    ApTitle: TWinUIStackPanel;                 // MainWindow.xaml(780) <StackPanel>
-    ApKpis: TWinUIStackPanel;                  // MainWindow.xaml(784) <StackPanel>
-    ApToolbar: TWinUIGrid;                     // MainWindow.xaml(814) <Grid>
-    AppSearch: TWinUITextBox;                  // MainWindow.xaml(820) <TextBox>
-    SortProceeds: TWinUIToggleButton;          // MainWindow.xaml(824) <ToggleButton>
-    SortDownloads: TWinUIToggleButton;         // MainWindow.xaml(825) <ToggleButton>
-    SortRating: TWinUIToggleButton;            // MainWindow.xaml(826) <ToggleButton>
-    AppGrid: TWinUIGridView;                   // MainWindow.xaml(829) <GridView>
-    NoAppsText: TWinUITextBlock;               // MainWindow.xaml(917) <TextBlock>
-    PageDetail: TWinUIScrollViewer;            // MainWindow.xaml(922) <ScrollViewer>
-    BackButton: TWinUIButton;                  // MainWindow.xaml(930) <Button>
-    DeTitle: TWinUIStackPanel;                 // MainWindow.xaml(934) <StackPanel>
-    DetailNameLabel: TWinUITextBlock;          // MainWindow.xaml(935) <TextBlock>
-    DeKpis: TWinUIStackPanel;                  // MainWindow.xaml(938) <StackPanel>
-    DetailHero: TWinUIGrid;                    // MainWindow.xaml(968) <Grid>
-    DetailSparkCanvas: TWinUICanvas;           // MainWindow.xaml(1002) <Canvas>
-    DetailSpark: TWinUIPolyline;               // MainWindow.xaml(1003) <Polyline>
-    DetailTabs: TWinUIStackPanel;              // MainWindow.xaml(1008) <StackPanel>
-    DetailTabOverview: TWinUIToggleButton;     // MainWindow.xaml(1009) <ToggleButton>
-    DetailTabVersions: TWinUIToggleButton;     // MainWindow.xaml(1010) <ToggleButton>
-    DetailTabIap: TWinUIToggleButton;          // MainWindow.xaml(1011) <ToggleButton>
-    DetailTabReviews: TWinUIToggleButton;      // MainWindow.xaml(1012) <ToggleButton>
-    DetailBody: TWinUIGrid;                    // MainWindow.xaml(1014) <Grid>
-    DetailOverview: TWinUIGrid;                // MainWindow.xaml(1015) <Grid>
-    DetailCanvas: TWinUICanvas;                // MainWindow.xaml(1034) <Canvas>
-    DetailArea: TWinUIPolygon;                 // MainWindow.xaml(1035) <Polygon>
-    DetailLine: TWinUIPolyline;                // MainWindow.xaml(1043) <Polyline>
-    DetailBars: TWinUIItemsControl;            // MainWindow.xaml(1055) <ItemsControl>
-    DetailVersions: TWinUIBorder;              // MainWindow.xaml(1076) <Border>
-    VersionList: TWinUIItemsControl;           // MainWindow.xaml(1077) <ItemsControl>
-    DetailIap: TWinUIBorder;                   // MainWindow.xaml(1098) <Border>
-    IapList: TWinUIItemsControl;               // MainWindow.xaml(1099) <ItemsControl>
-    DetailReviews: TWinUIBorder;               // MainWindow.xaml(1120) <Border>
-    DetailReviewList: TWinUIItemsControl;      // MainWindow.xaml(1121) <ItemsControl>
-    PageReleases: TWinUIScrollViewer;          // MainWindow.xaml(1141) <ScrollViewer>
-    ReTitle: TWinUIStackPanel;                 // MainWindow.xaml(1148) <StackPanel>
-    ReKpis: TWinUIStackPanel;                  // MainWindow.xaml(1152) <StackPanel>
-    InFlightLabel: TWinUITextBlock;            // MainWindow.xaml(1157) <TextBlock>
-    ReToolbar: TWinUIGrid;                     // MainWindow.xaml(1182) <Grid>
-    NewReleaseButton: TWinUIButton;            // MainWindow.xaml(1197) <Button>
-    FilterAll: TWinUIToggleButton;             // MainWindow.xaml(1205) <ToggleButton>
-    Filter0: TWinUIToggleButton;               // MainWindow.xaml(1206) <ToggleButton>
-    Filter1: TWinUIToggleButton;               // MainWindow.xaml(1207) <ToggleButton>
-    Filter2: TWinUIToggleButton;               // MainWindow.xaml(1208) <ToggleButton>
-    Filter3: TWinUIToggleButton;               // MainWindow.xaml(1209) <ToggleButton>
-    Filter4: TWinUIToggleButton;               // MainWindow.xaml(1210) <ToggleButton>
-    Filter5: TWinUIToggleButton;               // MainWindow.xaml(1211) <ToggleButton>
-    ViewBoard: TWinUIToggleButton;             // MainWindow.xaml(1215) <ToggleButton>
-    ViewTimeline: TWinUIToggleButton;          // MainWindow.xaml(1221) <ToggleButton>
-    BoardCard: TWinUIBorder;                   // MainWindow.xaml(1230) <Border>
-    Column0: TWinUIListView;                   // MainWindow.xaml(1257) <ListView>
-    Column1: TWinUIListView;                   // MainWindow.xaml(1278) <ListView>
-    Column2: TWinUIListView;                   // MainWindow.xaml(1299) <ListView>
-    Column3: TWinUIListView;                   // MainWindow.xaml(1320) <ListView>
-    Column4: TWinUIListView;                   // MainWindow.xaml(1341) <ListView>
-    TimelineCard: TWinUIBorder;                // MainWindow.xaml(1352) <Border>
-    TimelineList: TWinUIItemsControl;          // MainWindow.xaml(1366) <ItemsControl>
-    PageReviews: TWinUIScrollViewer;           // MainWindow.xaml(1403) <ScrollViewer>
-    RvTitle: TWinUIStackPanel;                 // MainWindow.xaml(1410) <StackPanel>
-    RvKpis: TWinUIStackPanel;                  // MainWindow.xaml(1414) <StackPanel>
-    WrittenLabel: TWinUITextBlock;             // MainWindow.xaml(1428) <TextBlock>
-    RvSummary: TWinUIBorder;                   // MainWindow.xaml(1449) <Border>
-    ReviewBars: TWinUIItemsControl;            // MainWindow.xaml(1456) <ItemsControl>
-    RvList: TWinUIStackPanel;                  // MainWindow.xaml(1482) <StackPanel>
-    StarsAll: TWinUIToggleButton;              // MainWindow.xaml(1489) <ToggleButton>
-    Stars5: TWinUIToggleButton;                // MainWindow.xaml(1490) <ToggleButton>
-    Stars4: TWinUIToggleButton;                // MainWindow.xaml(1491) <ToggleButton>
-    Stars3: TWinUIToggleButton;                // MainWindow.xaml(1492) <ToggleButton>
-    Stars2: TWinUIToggleButton;                // MainWindow.xaml(1493) <ToggleButton>
-    Stars1: TWinUIToggleButton;                // MainWindow.xaml(1494) <ToggleButton>
-    ReviewAppBox: TWinUIComboBox;              // MainWindow.xaml(1496) <ComboBox>
-    ReviewList: TWinUIListView;                // MainWindow.xaml(1499) <ListView>
-    PageAudience: TWinUIScrollViewer;          // MainWindow.xaml(1552) <ScrollViewer>
-    AuTitle: TWinUIStackPanel;                 // MainWindow.xaml(1559) <StackPanel>
-    AuKpis: TWinUIStackPanel;                  // MainWindow.xaml(1563) <StackPanel>
-    AuFilters: TWinUIStackPanel;               // MainWindow.xaml(1593) <StackPanel>
-    AudAll: TWinUIToggleButton;                // MainWindow.xaml(1594) <ToggleButton>
-    Aud0: TWinUIToggleButton;                  // MainWindow.xaml(1595) <ToggleButton>
-    Aud1: TWinUIToggleButton;                  // MainWindow.xaml(1596) <ToggleButton>
-    Aud2: TWinUIToggleButton;                  // MainWindow.xaml(1597) <ToggleButton>
-    Aud3: TWinUIToggleButton;                  // MainWindow.xaml(1598) <ToggleButton>
-    Aud4: TWinUIToggleButton;                  // MainWindow.xaml(1599) <ToggleButton>
-    Aud5: TWinUIToggleButton;                  // MainWindow.xaml(1600) <ToggleButton>
-    SubsCard: TWinUIBorder;                    // MainWindow.xaml(1607) <Border>
-    SubsCanvas: TWinUICanvas;                  // MainWindow.xaml(1647) <Canvas>
-    SubsArea: TWinUIPolygon;                   // MainWindow.xaml(1648) <Polygon>
-    TrialLine: TWinUIPolyline;                 // MainWindow.xaml(1656) <Polyline>
-    SubsLine: TWinUIPolyline;                  // MainWindow.xaml(1657) <Polyline>
-    SubsHover: TWinUIGrid;                     // MainWindow.xaml(1659) <Grid>
-    SubsGuide: TWinUIRectangle;                // MainWindow.xaml(1660) <Rectangle>
-    SubsDot: TWinUIEllipse;                    // MainWindow.xaml(1661) <Ellipse>
-    TrialDot: TWinUIEllipse;                   // MainWindow.xaml(1663) <Ellipse>
-    SubsTip: TWinUIBorder;                     // MainWindow.xaml(1665) <Border>
-    TipMonth: TWinUITextBlock;                 // MainWindow.xaml(1668) <TextBlock>
-    TipSubs: TWinUITextBlock;                  // MainWindow.xaml(1671) <TextBlock>
-    TipTrial: TWinUITextBlock;                 // MainWindow.xaml(1675) <TextBlock>
-    PlansCard: TWinUIBorder;                   // MainWindow.xaml(1702) <Border>
-    Donut: TWinUIGrid;                         // MainWindow.xaml(1710) <Grid>
-    PlanArc0: TWinUIEllipse;                   // MainWindow.xaml(1712) <Ellipse>
-    PlanArc1: TWinUIEllipse;                   // MainWindow.xaml(1715) <Ellipse>
-    PlanArc2: TWinUIEllipse;                   // MainWindow.xaml(1718) <Ellipse>
-    CohortCard: TWinUIBorder;                  // MainWindow.xaml(1757) <Border>
-    ExportCsvButton: TWinUIButton;             // MainWindow.xaml(1764) <Button>
-    CohortList: TWinUIItemsControl;            // MainWindow.xaml(1785) <ItemsControl>
-    CancelCard: TWinUIBorder;                  // MainWindow.xaml(1809) <Border>
-    CancelList: TWinUIItemsControl;            // MainWindow.xaml(1817) <ItemsControl>
-    PageGrowth: TWinUIScrollViewer;            // MainWindow.xaml(1839) <ScrollViewer>
-    GrTitle: TWinUIStackPanel;                 // MainWindow.xaml(1846) <StackPanel>
-    GrKpis: TWinUIStackPanel;                  // MainWindow.xaml(1850) <StackPanel>
-    SourcesCard: TWinUIBorder;                 // MainWindow.xaml(1885) <Border>
-    SourceList: TWinUIItemsControl;            // MainWindow.xaml(1891) <ItemsControl>
-    FunnelCard: TWinUIBorder;                  // MainWindow.xaml(1917) <Border>
-    FunnelList: TWinUIItemsControl;            // MainWindow.xaml(1923) <ItemsControl>
-    RegionsCard: TWinUIBorder;                 // MainWindow.xaml(1951) <Border>
-    RegionList: TWinUIItemsControl;            // MainWindow.xaml(1954) <ItemsControl>
-    CampaignCard: TWinUIBorder;                // MainWindow.xaml(1978) <Border>
-    CampaignList: TWinUIItemsControl;          // MainWindow.xaml(1981) <ItemsControl>
-    PagePayouts: TWinUIScrollViewer;           // MainWindow.xaml(2009) <ScrollViewer>
-    PaTitle: TWinUIStackPanel;                 // MainWindow.xaml(2016) <StackPanel>
-    PaKpis: TWinUIStackPanel;                  // MainWindow.xaml(2020) <StackPanel>
-    NextPayoutCard: TWinUIGrid;                // MainWindow.xaml(2047) <Grid>
-    NextPayoutLabel: TWinUITextBlock;          // MainWindow.xaml(2069) <TextBlock>
-    SplitCard: TWinUIBorder;                   // MainWindow.xaml(2088) <Border>
-    SplitList: TWinUIItemsControl;             // MainWindow.xaml(2091) <ItemsControl>
-    HistoryCard: TWinUIBorder;                 // MainWindow.xaml(2119) <Border>
-    StatementButton: TWinUIButton;             // MainWindow.xaml(2123) <Button>
-    PayoutList: TWinUIItemsControl;            // MainWindow.xaml(2147) <ItemsControl>
-    AccountRow: TWinUIGrid;                    // MainWindow.xaml(2179) <Grid>
-    InstantSwitch: TWinUIToggleSwitch;         // MainWindow.xaml(2200) <ToggleSwitch>
-    PageTeam: TWinUIScrollViewer;              // MainWindow.xaml(2233) <ScrollViewer>
-    TeTitle: TWinUIStackPanel;                 // MainWindow.xaml(2240) <StackPanel>
-    TeKpis: TWinUIStackPanel;                  // MainWindow.xaml(2244) <StackPanel>
-    MembersLabel: TWinUITextBlock;             // MainWindow.xaml(2249) <TextBlock>
-    InviteButton: TWinUIButton;                // MainWindow.xaml(2272) <Button>
-    TeamGrid: TWinUIGridView;                  // MainWindow.xaml(2286) <GridView>
-    ActivityCard: TWinUIBorder;                // MainWindow.xaml(2333) <Border>
-    ActivityList: TWinUIItemsControl;          // MainWindow.xaml(2342) <ItemsControl>
-    Toast: TWinUIBorder;                       // MainWindow.xaml(2372) <Border>
-    ToastTitleLabel: TWinUITextBlock;          // MainWindow.xaml(2385) <TextBlock>
+    SolidBase: TWinUIBorder;                   // MainWindow.xaml(290) <Border>
+    Orb1: TWinUIEllipse;                       // MainWindow.xaml(294) <Ellipse>
+    Orb2: TWinUIEllipse;                       // MainWindow.xaml(295) <Ellipse>
+    Ribbon1: TWinUICanvas;                     // MainWindow.xaml(296) <Canvas>
+    Ribbon2: TWinUICanvas;                     // MainWindow.xaml(301) <Canvas>
+    Ribbon3: TWinUICanvas;                     // MainWindow.xaml(305) <Canvas>
+    Bubble1: TWinUIEllipse;                    // MainWindow.xaml(309) <Ellipse>
+    Bubble2: TWinUIEllipse;                    // MainWindow.xaml(310) <Ellipse>
+    Bubble3: TWinUIEllipse;                    // MainWindow.xaml(311) <Ellipse>
+    Bubble4: TWinUIEllipse;                    // MainWindow.xaml(312) <Ellipse>
+    Bubble5: TWinUIEllipse;                    // MainWindow.xaml(313) <Ellipse>
+    Bubble6: TWinUIEllipse;                    // MainWindow.xaml(314) <Ellipse>
+    Bubble7: TWinUIEllipse;                    // MainWindow.xaml(315) <Ellipse>
+    Bubble8: TWinUIEllipse;                    // MainWindow.xaml(316) <Ellipse>
+    Bubble9: TWinUIEllipse;                    // MainWindow.xaml(317) <Ellipse>
+    Bubble10: TWinUIEllipse;                   // MainWindow.xaml(318) <Ellipse>
+    Bubble11: TWinUIEllipse;                   // MainWindow.xaml(319) <Ellipse>
+    Bubble12: TWinUIEllipse;                   // MainWindow.xaml(320) <Ellipse>
+    DragRegion: TWinUIGrid;                    // MainWindow.xaml(325) <Grid>
+    NavIndicator: TWinUIBorder;                // MainWindow.xaml(345) <Border>
+    NavBar: TWinUIStackPanel;                  // MainWindow.xaml(347) <StackPanel>
+    NavOverview: TWinUIButton;                 // MainWindow.xaml(348) <Button>
+    NavApps: TWinUIButton;                     // MainWindow.xaml(349) <Button>
+    NavReleases: TWinUIButton;                 // MainWindow.xaml(350) <Button>
+    NavReviews: TWinUIButton;                  // MainWindow.xaml(351) <Button>
+    NavAudience: TWinUIButton;                 // MainWindow.xaml(352) <Button>
+    NavGrowth: TWinUIButton;                   // MainWindow.xaml(353) <Button>
+    NavPayouts: TWinUIButton;                  // MainWindow.xaml(354) <Button>
+    NavTeam: TWinUIButton;                     // MainWindow.xaml(355) <Button>
+    InboxButton: TWinUIButton;                 // MainWindow.xaml(361) <Button>
+    InboxList: TWinUIItemsControl;             // MainWindow.xaml(368) <ItemsControl>
+    BellButton: TWinUIButton;                  // MainWindow.xaml(392) <Button>
+    NoticeList: TWinUIItemsControl;            // MainWindow.xaml(398) <ItemsControl>
+    BellDot: TWinUIEllipse;                    // MainWindow.xaml(422) <Ellipse>
+    AvatarButton: TWinUIButton;                // MainWindow.xaml(425) <Button>
+    MenuTheme: TWinUIMenuFlyoutItem;           // MainWindow.xaml(432) <MenuFlyoutItem>
+    MenuTeam: TWinUIMenuFlyoutItem;            // MainWindow.xaml(437) <MenuFlyoutItem>
+    RailSearch: TWinUIButton;                  // MainWindow.xaml(453) <Button>
+    RailNew: TWinUIButton;                     // MainWindow.xaml(456) <Button>
+    RailCalendar: TWinUIButton;                // MainWindow.xaml(460) <Button>
+    ReleaseCalendar: TWinUICalendarView;       // MainWindow.xaml(466) <CalendarView>
+    RailUndo: TWinUIButton;                    // MainWindow.xaml(472) <Button>
+    RailShare: TWinUIButton;                   // MainWindow.xaml(475) <Button>
+    RailUpload: TWinUIButton;                  // MainWindow.xaml(478) <Button>
+    RailSettings: TWinUIButton;                // MainWindow.xaml(482) <Button>
+    LiveSwitch: TWinUIToggleSwitch;            // MainWindow.xaml(488) <ToggleSwitch>
+    MotionSwitch: TWinUIToggleSwitch;          // MainWindow.xaml(489) <ToggleSwitch>
+    TransparencySwitch: TWinUIToggleSwitch;    // MainWindow.xaml(490) <ToggleSwitch>
+    RailTheme: TWinUIButton;                   // MainWindow.xaml(495) <Button>
+    ThemeGlyph: TWinUIFontIcon;                // MainWindow.xaml(496) <FontIcon>
+    LiveButton: TWinUIButton;                  // MainWindow.xaml(500) <Button>
+    LivePulse: TWinUIEllipse;                  // MainWindow.xaml(504) <Ellipse>
+    PageHost: TWinUIGrid;                      // MainWindow.xaml(510) <Grid>
+    PageOverview: TWinUIScrollViewer;          // MainWindow.xaml(513) <ScrollViewer>
+    OvTitle: TWinUIStackPanel;                 // MainWindow.xaml(520) <StackPanel>
+    OvKpis: TWinUIStackPanel;                  // MainWindow.xaml(524) <StackPanel>
+    OvProceedsLabel: TWinUITextBlock;          // MainWindow.xaml(530) <TextBlock>
+    ProceedsColumn: TWinUIColumnDefinition;    // MainWindow.xaml(567) <ColumnDefinition>
+    RatingsColumn: TWinUIColumnDefinition;     // MainWindow.xaml(568) <ColumnDefinition>
+    ProceedsCard: TWinUIBorder;                // MainWindow.xaml(570) <Border>
+    ChartTitle: TWinUITextBlock;               // MainWindow.xaml(585) <TextBlock>
+    SeriesProceeds: TWinUIToggleButton;        // MainWindow.xaml(590) <ToggleButton>
+    SeriesDownloads: TWinUIToggleButton;       // MainWindow.xaml(591) <ToggleButton>
+    MenuExportChart: TWinUIMenuFlyoutItem;     // MainWindow.xaml(598) <MenuFlyoutItem>
+    MenuLastYear: TWinUIToggleMenuFlyoutItem;  // MainWindow.xaml(599) <ToggleMenuFlyoutItem>
+    ExpandButton: TWinUIButton;                // MainWindow.xaml(603) <Button>
+    ExpandGlyph: TWinUIFontIcon;               // MainWindow.xaml(605) <FontIcon>
+    ProceedsCanvas: TWinUICanvas;              // MainWindow.xaml(622) <Canvas>
+    ProceedsArea: TWinUIPolygon;               // MainWindow.xaml(623) <Polygon>
+    ProceedsLastYear: TWinUIPolyline;          // MainWindow.xaml(631) <Polyline>
+    ProceedsLine: TWinUIPolyline;              // MainWindow.xaml(632) <Polyline>
+    ProceedsGlow: TWinUIEllipse;               // MainWindow.xaml(633) <Ellipse>
+    ProceedsDot: TWinUIEllipse;                // MainWindow.xaml(634) <Ellipse>
+    RatingsCard: TWinUIBorder;                 // MainWindow.xaml(658) <Border>
+    StarBarList: TWinUIItemsControl;           // MainWindow.xaml(674) <ItemsControl>
+    YourAppsCard: TWinUIBorder;                // MainWindow.xaml(707) <Border>
+    AllAppsButton: TWinUIButton;               // MainWindow.xaml(726) <Button>
+    OverviewApps: TWinUIGridView;              // MainWindow.xaml(730) <GridView>
+    PageApps: TWinUIScrollViewer;              // MainWindow.xaml(780) <ScrollViewer>
+    ApTitle: TWinUIStackPanel;                 // MainWindow.xaml(787) <StackPanel>
+    ApKpis: TWinUIStackPanel;                  // MainWindow.xaml(791) <StackPanel>
+    ApToolbar: TWinUIGrid;                     // MainWindow.xaml(821) <Grid>
+    AppSearch: TWinUITextBox;                  // MainWindow.xaml(827) <TextBox>
+    SortProceeds: TWinUIToggleButton;          // MainWindow.xaml(831) <ToggleButton>
+    SortDownloads: TWinUIToggleButton;         // MainWindow.xaml(832) <ToggleButton>
+    SortRating: TWinUIToggleButton;            // MainWindow.xaml(833) <ToggleButton>
+    AppGrid: TWinUIGridView;                   // MainWindow.xaml(836) <GridView>
+    NoAppsText: TWinUITextBlock;               // MainWindow.xaml(924) <TextBlock>
+    PageDetail: TWinUIScrollViewer;            // MainWindow.xaml(929) <ScrollViewer>
+    BackButton: TWinUIButton;                  // MainWindow.xaml(937) <Button>
+    DeTitle: TWinUIStackPanel;                 // MainWindow.xaml(941) <StackPanel>
+    DetailNameLabel: TWinUITextBlock;          // MainWindow.xaml(942) <TextBlock>
+    DeKpis: TWinUIStackPanel;                  // MainWindow.xaml(945) <StackPanel>
+    DetailHero: TWinUIGrid;                    // MainWindow.xaml(975) <Grid>
+    DetailSparkCanvas: TWinUICanvas;           // MainWindow.xaml(1009) <Canvas>
+    DetailSpark: TWinUIPolyline;               // MainWindow.xaml(1010) <Polyline>
+    DetailTabs: TWinUIStackPanel;              // MainWindow.xaml(1015) <StackPanel>
+    DetailTabOverview: TWinUIToggleButton;     // MainWindow.xaml(1016) <ToggleButton>
+    DetailTabVersions: TWinUIToggleButton;     // MainWindow.xaml(1017) <ToggleButton>
+    DetailTabIap: TWinUIToggleButton;          // MainWindow.xaml(1018) <ToggleButton>
+    DetailTabReviews: TWinUIToggleButton;      // MainWindow.xaml(1019) <ToggleButton>
+    DetailBody: TWinUIGrid;                    // MainWindow.xaml(1021) <Grid>
+    DetailOverview: TWinUIGrid;                // MainWindow.xaml(1022) <Grid>
+    DetailCanvas: TWinUICanvas;                // MainWindow.xaml(1041) <Canvas>
+    DetailArea: TWinUIPolygon;                 // MainWindow.xaml(1042) <Polygon>
+    DetailLine: TWinUIPolyline;                // MainWindow.xaml(1050) <Polyline>
+    DetailBars: TWinUIItemsControl;            // MainWindow.xaml(1062) <ItemsControl>
+    DetailVersions: TWinUIBorder;              // MainWindow.xaml(1083) <Border>
+    VersionList: TWinUIItemsControl;           // MainWindow.xaml(1084) <ItemsControl>
+    DetailIap: TWinUIBorder;                   // MainWindow.xaml(1105) <Border>
+    IapList: TWinUIItemsControl;               // MainWindow.xaml(1106) <ItemsControl>
+    DetailReviews: TWinUIBorder;               // MainWindow.xaml(1127) <Border>
+    DetailReviewList: TWinUIItemsControl;      // MainWindow.xaml(1128) <ItemsControl>
+    PageReleases: TWinUIScrollViewer;          // MainWindow.xaml(1148) <ScrollViewer>
+    ReTitle: TWinUIStackPanel;                 // MainWindow.xaml(1155) <StackPanel>
+    ReKpis: TWinUIStackPanel;                  // MainWindow.xaml(1159) <StackPanel>
+    InFlightLabel: TWinUITextBlock;            // MainWindow.xaml(1164) <TextBlock>
+    ReToolbar: TWinUIGrid;                     // MainWindow.xaml(1189) <Grid>
+    NewReleaseButton: TWinUIButton;            // MainWindow.xaml(1204) <Button>
+    FilterAll: TWinUIToggleButton;             // MainWindow.xaml(1212) <ToggleButton>
+    Filter0: TWinUIToggleButton;               // MainWindow.xaml(1213) <ToggleButton>
+    Filter1: TWinUIToggleButton;               // MainWindow.xaml(1214) <ToggleButton>
+    Filter2: TWinUIToggleButton;               // MainWindow.xaml(1215) <ToggleButton>
+    Filter3: TWinUIToggleButton;               // MainWindow.xaml(1216) <ToggleButton>
+    Filter4: TWinUIToggleButton;               // MainWindow.xaml(1217) <ToggleButton>
+    Filter5: TWinUIToggleButton;               // MainWindow.xaml(1218) <ToggleButton>
+    ViewBoard: TWinUIToggleButton;             // MainWindow.xaml(1222) <ToggleButton>
+    ViewTimeline: TWinUIToggleButton;          // MainWindow.xaml(1228) <ToggleButton>
+    BoardCard: TWinUIBorder;                   // MainWindow.xaml(1237) <Border>
+    Column0: TWinUIListView;                   // MainWindow.xaml(1264) <ListView>
+    Column1: TWinUIListView;                   // MainWindow.xaml(1285) <ListView>
+    Column2: TWinUIListView;                   // MainWindow.xaml(1306) <ListView>
+    Column3: TWinUIListView;                   // MainWindow.xaml(1327) <ListView>
+    Column4: TWinUIListView;                   // MainWindow.xaml(1348) <ListView>
+    TimelineCard: TWinUIBorder;                // MainWindow.xaml(1359) <Border>
+    TimelineList: TWinUIItemsControl;          // MainWindow.xaml(1373) <ItemsControl>
+    PageReviews: TWinUIScrollViewer;           // MainWindow.xaml(1410) <ScrollViewer>
+    RvTitle: TWinUIStackPanel;                 // MainWindow.xaml(1417) <StackPanel>
+    RvKpis: TWinUIStackPanel;                  // MainWindow.xaml(1421) <StackPanel>
+    WrittenLabel: TWinUITextBlock;             // MainWindow.xaml(1435) <TextBlock>
+    RvSummary: TWinUIBorder;                   // MainWindow.xaml(1456) <Border>
+    ReviewBars: TWinUIItemsControl;            // MainWindow.xaml(1463) <ItemsControl>
+    RvList: TWinUIStackPanel;                  // MainWindow.xaml(1489) <StackPanel>
+    StarsAll: TWinUIToggleButton;              // MainWindow.xaml(1496) <ToggleButton>
+    Stars5: TWinUIToggleButton;                // MainWindow.xaml(1497) <ToggleButton>
+    Stars4: TWinUIToggleButton;                // MainWindow.xaml(1498) <ToggleButton>
+    Stars3: TWinUIToggleButton;                // MainWindow.xaml(1499) <ToggleButton>
+    Stars2: TWinUIToggleButton;                // MainWindow.xaml(1500) <ToggleButton>
+    Stars1: TWinUIToggleButton;                // MainWindow.xaml(1501) <ToggleButton>
+    ReviewAppBox: TWinUIComboBox;              // MainWindow.xaml(1503) <ComboBox>
+    ReviewList: TWinUIListView;                // MainWindow.xaml(1506) <ListView>
+    PageAudience: TWinUIScrollViewer;          // MainWindow.xaml(1559) <ScrollViewer>
+    AuTitle: TWinUIStackPanel;                 // MainWindow.xaml(1566) <StackPanel>
+    AuKpis: TWinUIStackPanel;                  // MainWindow.xaml(1570) <StackPanel>
+    AuFilters: TWinUIStackPanel;               // MainWindow.xaml(1600) <StackPanel>
+    AudAll: TWinUIToggleButton;                // MainWindow.xaml(1601) <ToggleButton>
+    Aud0: TWinUIToggleButton;                  // MainWindow.xaml(1602) <ToggleButton>
+    Aud1: TWinUIToggleButton;                  // MainWindow.xaml(1603) <ToggleButton>
+    Aud2: TWinUIToggleButton;                  // MainWindow.xaml(1604) <ToggleButton>
+    Aud3: TWinUIToggleButton;                  // MainWindow.xaml(1605) <ToggleButton>
+    Aud4: TWinUIToggleButton;                  // MainWindow.xaml(1606) <ToggleButton>
+    Aud5: TWinUIToggleButton;                  // MainWindow.xaml(1607) <ToggleButton>
+    SubsCard: TWinUIBorder;                    // MainWindow.xaml(1614) <Border>
+    SubsCanvas: TWinUICanvas;                  // MainWindow.xaml(1654) <Canvas>
+    SubsArea: TWinUIPolygon;                   // MainWindow.xaml(1655) <Polygon>
+    TrialLine: TWinUIPolyline;                 // MainWindow.xaml(1663) <Polyline>
+    SubsLine: TWinUIPolyline;                  // MainWindow.xaml(1664) <Polyline>
+    SubsHover: TWinUIGrid;                     // MainWindow.xaml(1666) <Grid>
+    SubsGuide: TWinUIRectangle;                // MainWindow.xaml(1667) <Rectangle>
+    SubsDot: TWinUIEllipse;                    // MainWindow.xaml(1668) <Ellipse>
+    TrialDot: TWinUIEllipse;                   // MainWindow.xaml(1670) <Ellipse>
+    SubsTip: TWinUIBorder;                     // MainWindow.xaml(1672) <Border>
+    TipMonth: TWinUITextBlock;                 // MainWindow.xaml(1675) <TextBlock>
+    TipSubs: TWinUITextBlock;                  // MainWindow.xaml(1678) <TextBlock>
+    TipTrial: TWinUITextBlock;                 // MainWindow.xaml(1682) <TextBlock>
+    PlansCard: TWinUIBorder;                   // MainWindow.xaml(1709) <Border>
+    Donut: TWinUIGrid;                         // MainWindow.xaml(1717) <Grid>
+    PlanArc0: TWinUIEllipse;                   // MainWindow.xaml(1719) <Ellipse>
+    PlanArc1: TWinUIEllipse;                   // MainWindow.xaml(1722) <Ellipse>
+    PlanArc2: TWinUIEllipse;                   // MainWindow.xaml(1725) <Ellipse>
+    CohortCard: TWinUIBorder;                  // MainWindow.xaml(1764) <Border>
+    ExportCsvButton: TWinUIButton;             // MainWindow.xaml(1771) <Button>
+    CohortList: TWinUIItemsControl;            // MainWindow.xaml(1792) <ItemsControl>
+    CancelCard: TWinUIBorder;                  // MainWindow.xaml(1816) <Border>
+    CancelList: TWinUIItemsControl;            // MainWindow.xaml(1824) <ItemsControl>
+    PageGrowth: TWinUIScrollViewer;            // MainWindow.xaml(1846) <ScrollViewer>
+    GrTitle: TWinUIStackPanel;                 // MainWindow.xaml(1853) <StackPanel>
+    GrKpis: TWinUIStackPanel;                  // MainWindow.xaml(1857) <StackPanel>
+    SourcesCard: TWinUIBorder;                 // MainWindow.xaml(1892) <Border>
+    SourceList: TWinUIItemsControl;            // MainWindow.xaml(1898) <ItemsControl>
+    FunnelCard: TWinUIBorder;                  // MainWindow.xaml(1924) <Border>
+    FunnelList: TWinUIItemsControl;            // MainWindow.xaml(1930) <ItemsControl>
+    RegionsCard: TWinUIBorder;                 // MainWindow.xaml(1958) <Border>
+    RegionList: TWinUIItemsControl;            // MainWindow.xaml(1961) <ItemsControl>
+    CampaignCard: TWinUIBorder;                // MainWindow.xaml(1985) <Border>
+    CampaignList: TWinUIItemsControl;          // MainWindow.xaml(1988) <ItemsControl>
+    PagePayouts: TWinUIScrollViewer;           // MainWindow.xaml(2016) <ScrollViewer>
+    PaTitle: TWinUIStackPanel;                 // MainWindow.xaml(2023) <StackPanel>
+    PaKpis: TWinUIStackPanel;                  // MainWindow.xaml(2027) <StackPanel>
+    NextPayoutCard: TWinUIGrid;                // MainWindow.xaml(2054) <Grid>
+    NextPayoutLabel: TWinUITextBlock;          // MainWindow.xaml(2076) <TextBlock>
+    SplitCard: TWinUIBorder;                   // MainWindow.xaml(2095) <Border>
+    SplitList: TWinUIItemsControl;             // MainWindow.xaml(2098) <ItemsControl>
+    HistoryCard: TWinUIBorder;                 // MainWindow.xaml(2126) <Border>
+    StatementButton: TWinUIButton;             // MainWindow.xaml(2130) <Button>
+    PayoutList: TWinUIItemsControl;            // MainWindow.xaml(2154) <ItemsControl>
+    AccountRow: TWinUIGrid;                    // MainWindow.xaml(2186) <Grid>
+    InstantSwitch: TWinUIToggleSwitch;         // MainWindow.xaml(2207) <ToggleSwitch>
+    PageTeam: TWinUIScrollViewer;              // MainWindow.xaml(2240) <ScrollViewer>
+    TeTitle: TWinUIStackPanel;                 // MainWindow.xaml(2247) <StackPanel>
+    TeKpis: TWinUIStackPanel;                  // MainWindow.xaml(2251) <StackPanel>
+    MembersLabel: TWinUITextBlock;             // MainWindow.xaml(2256) <TextBlock>
+    InviteButton: TWinUIButton;                // MainWindow.xaml(2279) <Button>
+    TeamGrid: TWinUIGridView;                  // MainWindow.xaml(2293) <GridView>
+    ActivityCard: TWinUIBorder;                // MainWindow.xaml(2340) <Border>
+    ActivityList: TWinUIItemsControl;          // MainWindow.xaml(2349) <ItemsControl>
+    Toast: TWinUIBorder;                       // MainWindow.xaml(2379) <Border>
+    ToastTitleLabel: TWinUITextBlock;          // MainWindow.xaml(2392) <TextBlock>
   public
     constructor Create; override;
     /// <summary>
@@ -266,11 +268,13 @@ const
     '      <ResourceDictionary>' + sLineBreak +
     '        <ResourceDictionary.ThemeDictionaries>' + sLineBreak +
     '          <ResourceDictionary x:Key="Dark">' + sLineBreak +
+    '            ' + sLineBreak +
     '            <LinearGradientBrush x:Key="BackdropBrush" StartPoint="0,0" EndPoint="1,1">' + sLineBreak +
-    '              <GradientStop Color="#0B0B0D" Offset="0" />' + sLineBreak +
-    '              <GradientStop Color="#15161A" Offset="0.55" />' + sLineBreak +
-    '              <GradientStop Color="#0D0E11" Offset="1" />' + sLineBreak +
+    '              <GradientStop Color="#B80B0B0D" Offset="0" />' + sLineBreak +
+    '              <GradientStop Color="#9E15161A" Offset="0.55" />' + sLineBreak +
+    '              <GradientStop Color="#B80D0E11" Offset="1" />' + sLineBreak +
     '            </LinearGradientBrush>' + sLineBreak +
+    '            <SolidColorBrush x:Key="SolidBaseBrush" Color="#0E0F12" />' + sLineBreak +
     '            <LinearGradientBrush x:Key="RibbonBrush" StartPoint="0,0" EndPoint="1,1">' + sLineBreak +
     '              <GradientStop Color="#00FFFFFF" Offset="0" />' + sLineBreak +
     '              <GradientStop Color="#26FFFFFF" Offset="0.3" />' + sLineBreak +
@@ -313,10 +317,11 @@ const
     '          </ResourceDictionary>' + sLineBreak +
     '          <ResourceDictionary x:Key="Light">' + sLineBreak +
     '            <LinearGradientBrush x:Key="BackdropBrush" StartPoint="0,0" EndPoint="1,1">' + sLineBreak +
-    '              <GradientStop Color="#EDEFF3" Offset="0" />' + sLineBreak +
-    '              <GradientStop Color="#E2E5EA" Offset="0.55" />' + sLineBreak +
-    '              <GradientStop Color="#F2F3F6" Offset="1" />' + sLineBreak +
+    '              <GradientStop Color="#B8EDEFF3" Offset="0" />' + sLineBreak +
+    '              <GradientStop Color="#9EE2E5EA" Offset="0.55" />' + sLineBreak +
+    '              <GradientStop Color="#B8F2F3F6" Offset="1" />' + sLineBreak +
     '            </LinearGradientBrush>' + sLineBreak +
+    '            <SolidColorBrush x:Key="SolidBaseBrush" Color="#E9EBEF" />' + sLineBreak +
     '            <LinearGradientBrush x:Key="RibbonBrush" StartPoint="0,0" EndPoint="1,1">' + sLineBreak +
     '              <GradientStop Color="#00FFFFFF" Offset="0" />' + sLineBreak +
     '              <GradientStop Color="#B3FFFFFF" Offset="0.3" />' + sLineBreak +
@@ -532,7 +537,10 @@ const
     '    </Grid.ColumnDefinitions>' + sLineBreak +
     '' + sLineBreak +
     '    ' + sLineBreak +
-    '    <Grid Grid.RowSpan="2" Grid.ColumnSpan="2" Background="{ThemeResource BackdropBrush}" IsHitTestVisible="False">' + sLineBreak +
+    '    <Grid Grid.RowSpan="2" Grid.ColumnSpan="2" IsHitTestVisible="False">' + sLineBreak +
+    '      ' + sLineBreak +
+    '      <Border x:Name="SolidBase" Background="{ThemeResource SolidBaseBrush}" Visibility="Collapsed" />' + sLineBreak +
+    '      <Border Background="{ThemeResource BackdropBrush}" />' + sLineBreak +
     '      <Viewbox Stretch="UniformToFill">' + sLineBreak +
     '        <Canvas Width="1600" Height="1000">' + sLineBreak +
     '          <Ellipse x:Name="Orb1" Canvas.Left="-260" Canvas.Top="-300" Width="640" Height="640" Fill="{ThemeResource BubbleBrush}" Stroke="{ThemeResource BubbleRimBrush}" StrokeThickness="1" Opacity="0' +
@@ -730,6 +738,7 @@ const
     '                <TextBlock Text="Studio settings" Style="{StaticResource CardTitle}" />' + sLineBreak +
     '                <ToggleSwitch x:Name="LiveSwitch" Header="Live data" IsOn="{Binding Live, Mode=TwoWay}" />' + sLineBreak +
     '                <ToggleSwitch x:Name="MotionSwitch" Header="Animations" IsOn="{Binding Motion, Mode=TwoWay}" />' + sLineBreak +
+    '                <ToggleSwitch x:Name="TransparencySwitch" Header="Transparency" IsOn="True" />' + sLineBreak +
     '              </StackPanel>' + sLineBreak +
     '            </Flyout>' + sLineBreak +
     '          </Button.Flyout>' + sLineBreak +
@@ -2653,11 +2662,13 @@ begin
   Height := 1020;
   MinWidth := 1180;
   MinHeight := 720;
+  Backdrop := TWinUIBackdrop.Acrylic;
   ExtendsContentIntoTitleBar := True;
   Center;
   LoadContent(ContentXaml);
   // x:Name elements
   Surface := FindElement<TWinUIGrid>('Surface');
+  SolidBase := FindElement<TWinUIBorder>('SolidBase');
   Orb1 := FindElement<TWinUIEllipse>('Orb1');
   Orb2 := FindElement<TWinUIEllipse>('Orb2');
   Ribbon1 := FindElement<TWinUICanvas>('Ribbon1');
@@ -2704,6 +2715,7 @@ begin
   RailSettings := FindElement<TWinUIButton>('RailSettings');
   LiveSwitch := FindElement<TWinUIToggleSwitch>('LiveSwitch');
   MotionSwitch := FindElement<TWinUIToggleSwitch>('MotionSwitch');
+  TransparencySwitch := FindElement<TWinUIToggleSwitch>('TransparencySwitch');
   RailTheme := FindElement<TWinUIButton>('RailTheme');
   ThemeGlyph := FindElement<TWinUIFontIcon>('ThemeGlyph');
   LiveButton := FindElement<TWinUIButton>('LiveButton');
@@ -2879,195 +2891,197 @@ begin
   Surface.OnSizeChanged := TWinUISizeChangedEventHandler(PublishedMethod('SurfaceSizeChanged'));
   // MainWindow.xaml(13): SurfaceLoaded by name
   Surface.OnLoaded := TWinUIRoutedEventHandler(PublishedMethod('SurfaceLoaded'));
-  // MainWindow.xaml(342): Click="NavClick"
-  NavOverview.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
-  // MainWindow.xaml(343): Click="NavClick"
-  NavApps.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
-  // MainWindow.xaml(344): Click="NavClick"
-  NavReleases.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
-  // MainWindow.xaml(345): Click="NavClick"
-  NavReviews.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
-  // MainWindow.xaml(346): Click="NavClick"
-  NavAudience.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
-  // MainWindow.xaml(347): Click="NavClick"
-  NavGrowth.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
   // MainWindow.xaml(348): Click="NavClick"
-  NavPayouts.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
+  NavOverview.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
   // MainWindow.xaml(349): Click="NavClick"
+  NavApps.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
+  // MainWindow.xaml(350): Click="NavClick"
+  NavReleases.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
+  // MainWindow.xaml(351): Click="NavClick"
+  NavReviews.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
+  // MainWindow.xaml(352): Click="NavClick"
+  NavAudience.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
+  // MainWindow.xaml(353): Click="NavClick"
+  NavGrowth.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
+  // MainWindow.xaml(354): Click="NavClick"
+  NavPayouts.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
+  // MainWindow.xaml(355): Click="NavClick"
   NavTeam.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NavClick'));
-  // MainWindow.xaml(386): Click="BellClick"
+  // MainWindow.xaml(392): Click="BellClick"
   BellButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('BellClick'));
-  // MainWindow.xaml(426): Click="ThemeClick"
+  // MainWindow.xaml(432): Click="ThemeClick"
   MenuTheme.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ThemeClick'));
-  // MainWindow.xaml(431): Click="MenuTeamClick"
+  // MainWindow.xaml(437): Click="MenuTeamClick"
   MenuTeam.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('MenuTeamClick'));
-  // MainWindow.xaml(447): Click="RailSearchClick"
+  // MainWindow.xaml(453): Click="RailSearchClick"
   RailSearch.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RailSearchClick'));
-  // MainWindow.xaml(450): Click="RailNewClick"
+  // MainWindow.xaml(456): Click="RailNewClick"
   RailNew.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RailNewClick'));
-  // MainWindow.xaml(466): Click="RailUndoClick"
+  // MainWindow.xaml(472): Click="RailUndoClick"
   RailUndo.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RailUndoClick'));
-  // MainWindow.xaml(469): Click="RailShareClick"
+  // MainWindow.xaml(475): Click="RailShareClick"
   RailShare.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RailShareClick'));
-  // MainWindow.xaml(472): Click="RailUploadClick"
+  // MainWindow.xaml(478): Click="RailUploadClick"
   RailUpload.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RailUploadClick'));
-  // MainWindow.xaml(483): MotionSwitchToggled by name
+  // MainWindow.xaml(489): MotionSwitchToggled by name
   MotionSwitch.Toggled.Add(NotifyProc<TWinUIRoutedEventArgs>('MotionSwitchToggled'));
-  // MainWindow.xaml(488): Click="ThemeClick"
+  // MainWindow.xaml(490): TransparencySwitchToggled by name
+  TransparencySwitch.Toggled.Add(NotifyProc<TWinUIRoutedEventArgs>('TransparencySwitchToggled'));
+  // MainWindow.xaml(495): Click="ThemeClick"
   RailTheme.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ThemeClick'));
-  // MainWindow.xaml(493): Click="LiveClick"
+  // MainWindow.xaml(500): Click="LiveClick"
   LiveButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('LiveClick'));
-  // MainWindow.xaml(583): Click="SeriesClick"
+  // MainWindow.xaml(590): Click="SeriesClick"
   SeriesProceeds.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('SeriesClick'));
-  // MainWindow.xaml(584): Click="SeriesClick"
+  // MainWindow.xaml(591): Click="SeriesClick"
   SeriesDownloads.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('SeriesClick'));
-  // MainWindow.xaml(591): Click="ExportChartClick"
+  // MainWindow.xaml(598): Click="ExportChartClick"
   MenuExportChart.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ExportChartClick'));
-  // MainWindow.xaml(592): Click="LastYearClick"
+  // MainWindow.xaml(599): Click="LastYearClick"
   MenuLastYear.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('LastYearClick'));
-  // MainWindow.xaml(596): Click="ExpandClick"
+  // MainWindow.xaml(603): Click="ExpandClick"
   ExpandButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ExpandClick'));
-  // MainWindow.xaml(615): SizeChanged="ChartSizeChanged"
+  // MainWindow.xaml(622): SizeChanged="ChartSizeChanged"
   ProceedsCanvas.OnSizeChanged := TWinUISizeChangedEventHandler(PublishedMethod('ChartSizeChanged'));
-  // MainWindow.xaml(716): Click="RailNewClick"
+  // MainWindow.xaml(723): Click="RailNewClick"
   FindElement<TWinUIButton>('_rw1').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RailNewClick'));
-  // MainWindow.xaml(719): Click="AllAppsClick"
+  // MainWindow.xaml(726): Click="AllAppsClick"
   AllAppsButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('AllAppsClick'));
-  // MainWindow.xaml(723): ItemClick="AppClick"
+  // MainWindow.xaml(730): ItemClick="AppClick"
   OverviewApps.OnItemClick := TWinUIItemClickEventHandler(PublishedMethod('AppClick'));
-  // MainWindow.xaml(820): TextChanged="AppSearchChanged"
+  // MainWindow.xaml(827): TextChanged="AppSearchChanged"
   AppSearch.OnTextChanged := TWinUITextChangedEventHandler(PublishedMethod('AppSearchChanged'));
-  // MainWindow.xaml(824): Click="SortClick"
+  // MainWindow.xaml(831): Click="SortClick"
   SortProceeds.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('SortClick'));
-  // MainWindow.xaml(825): Click="SortClick"
+  // MainWindow.xaml(832): Click="SortClick"
   SortDownloads.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('SortClick'));
-  // MainWindow.xaml(826): Click="SortClick"
+  // MainWindow.xaml(833): Click="SortClick"
   SortRating.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('SortClick'));
-  // MainWindow.xaml(829): ItemClick="AppClick"
+  // MainWindow.xaml(836): ItemClick="AppClick"
   AppGrid.OnItemClick := TWinUIItemClickEventHandler(PublishedMethod('AppClick'));
-  // MainWindow.xaml(930): Click="BackClick"
+  // MainWindow.xaml(937): Click="BackClick"
   BackButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('BackClick'));
-  // MainWindow.xaml(1009): Click="DetailTabClick"
+  // MainWindow.xaml(1016): Click="DetailTabClick"
   DetailTabOverview.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('DetailTabClick'));
-  // MainWindow.xaml(1010): Click="DetailTabClick"
+  // MainWindow.xaml(1017): Click="DetailTabClick"
   DetailTabVersions.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('DetailTabClick'));
-  // MainWindow.xaml(1011): Click="DetailTabClick"
+  // MainWindow.xaml(1018): Click="DetailTabClick"
   DetailTabIap.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('DetailTabClick'));
-  // MainWindow.xaml(1012): Click="DetailTabClick"
+  // MainWindow.xaml(1019): Click="DetailTabClick"
   DetailTabReviews.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('DetailTabClick'));
-  // MainWindow.xaml(1034): SizeChanged="ChartSizeChanged"
+  // MainWindow.xaml(1041): SizeChanged="ChartSizeChanged"
   DetailCanvas.OnSizeChanged := TWinUISizeChangedEventHandler(PublishedMethod('ChartSizeChanged'));
-  // MainWindow.xaml(1197): Click="RailNewClick"
+  // MainWindow.xaml(1204): Click="RailNewClick"
   NewReleaseButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RailNewClick'));
-  // MainWindow.xaml(1205): Click="FilterClick"
+  // MainWindow.xaml(1212): Click="FilterClick"
   FilterAll.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('FilterClick'));
-  // MainWindow.xaml(1206): Click="FilterClick"
+  // MainWindow.xaml(1213): Click="FilterClick"
   Filter0.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('FilterClick'));
-  // MainWindow.xaml(1207): Click="FilterClick"
+  // MainWindow.xaml(1214): Click="FilterClick"
   Filter1.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('FilterClick'));
-  // MainWindow.xaml(1208): Click="FilterClick"
+  // MainWindow.xaml(1215): Click="FilterClick"
   Filter2.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('FilterClick'));
-  // MainWindow.xaml(1209): Click="FilterClick"
+  // MainWindow.xaml(1216): Click="FilterClick"
   Filter3.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('FilterClick'));
-  // MainWindow.xaml(1210): Click="FilterClick"
+  // MainWindow.xaml(1217): Click="FilterClick"
   Filter4.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('FilterClick'));
-  // MainWindow.xaml(1211): Click="FilterClick"
+  // MainWindow.xaml(1218): Click="FilterClick"
   Filter5.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('FilterClick'));
-  // MainWindow.xaml(1215): Click="ViewClick"
+  // MainWindow.xaml(1222): Click="ViewClick"
   ViewBoard.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ViewClick'));
-  // MainWindow.xaml(1221): Click="ViewClick"
+  // MainWindow.xaml(1228): Click="ViewClick"
   ViewTimeline.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ViewClick'));
-  // MainWindow.xaml(1253): Click="ColumnAddClick"
+  // MainWindow.xaml(1260): Click="ColumnAddClick"
   FindElement<TWinUIButton>('_rw2').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ColumnAddClick'));
-  // MainWindow.xaml(1257): DragItemsCompleted="BoardDragCompleted"
+  // MainWindow.xaml(1264): DragItemsCompleted="BoardDragCompleted"
   Column0.OnDragItemsCompleted := TWinUIDragItemsCompletedEventHandler(PublishedMethod('BoardDragCompleted'));
-  // MainWindow.xaml(1257): DragItemsStarting="BoardDragStarting"
+  // MainWindow.xaml(1264): DragItemsStarting="BoardDragStarting"
   Column0.OnDragItemsStarting := TWinUIDragItemsStartingEventHandler(PublishedMethod('BoardDragStarting'));
-  // MainWindow.xaml(1257): DragOver="BoardDragOver"
+  // MainWindow.xaml(1264): DragOver="BoardDragOver"
   Column0.OnDragOver := TWinUIDragEventHandler(PublishedMethod('BoardDragOver'));
-  // MainWindow.xaml(1257): Drop="BoardDrop"
+  // MainWindow.xaml(1264): Drop="BoardDrop"
   Column0.OnDrop := TWinUIDragEventHandler(PublishedMethod('BoardDrop'));
-  // MainWindow.xaml(1274): Click="ColumnAddClick"
+  // MainWindow.xaml(1281): Click="ColumnAddClick"
   FindElement<TWinUIButton>('_rw3').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ColumnAddClick'));
-  // MainWindow.xaml(1278): DragItemsCompleted="BoardDragCompleted"
+  // MainWindow.xaml(1285): DragItemsCompleted="BoardDragCompleted"
   Column1.OnDragItemsCompleted := TWinUIDragItemsCompletedEventHandler(PublishedMethod('BoardDragCompleted'));
-  // MainWindow.xaml(1278): DragItemsStarting="BoardDragStarting"
+  // MainWindow.xaml(1285): DragItemsStarting="BoardDragStarting"
   Column1.OnDragItemsStarting := TWinUIDragItemsStartingEventHandler(PublishedMethod('BoardDragStarting'));
-  // MainWindow.xaml(1278): DragOver="BoardDragOver"
+  // MainWindow.xaml(1285): DragOver="BoardDragOver"
   Column1.OnDragOver := TWinUIDragEventHandler(PublishedMethod('BoardDragOver'));
-  // MainWindow.xaml(1278): Drop="BoardDrop"
+  // MainWindow.xaml(1285): Drop="BoardDrop"
   Column1.OnDrop := TWinUIDragEventHandler(PublishedMethod('BoardDrop'));
-  // MainWindow.xaml(1295): Click="ColumnAddClick"
+  // MainWindow.xaml(1302): Click="ColumnAddClick"
   FindElement<TWinUIButton>('_rw4').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ColumnAddClick'));
-  // MainWindow.xaml(1299): DragItemsCompleted="BoardDragCompleted"
+  // MainWindow.xaml(1306): DragItemsCompleted="BoardDragCompleted"
   Column2.OnDragItemsCompleted := TWinUIDragItemsCompletedEventHandler(PublishedMethod('BoardDragCompleted'));
-  // MainWindow.xaml(1299): DragItemsStarting="BoardDragStarting"
+  // MainWindow.xaml(1306): DragItemsStarting="BoardDragStarting"
   Column2.OnDragItemsStarting := TWinUIDragItemsStartingEventHandler(PublishedMethod('BoardDragStarting'));
-  // MainWindow.xaml(1299): DragOver="BoardDragOver"
+  // MainWindow.xaml(1306): DragOver="BoardDragOver"
   Column2.OnDragOver := TWinUIDragEventHandler(PublishedMethod('BoardDragOver'));
-  // MainWindow.xaml(1299): Drop="BoardDrop"
+  // MainWindow.xaml(1306): Drop="BoardDrop"
   Column2.OnDrop := TWinUIDragEventHandler(PublishedMethod('BoardDrop'));
-  // MainWindow.xaml(1316): Click="ColumnAddClick"
+  // MainWindow.xaml(1323): Click="ColumnAddClick"
   FindElement<TWinUIButton>('_rw5').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ColumnAddClick'));
-  // MainWindow.xaml(1320): DragItemsCompleted="BoardDragCompleted"
+  // MainWindow.xaml(1327): DragItemsCompleted="BoardDragCompleted"
   Column3.OnDragItemsCompleted := TWinUIDragItemsCompletedEventHandler(PublishedMethod('BoardDragCompleted'));
-  // MainWindow.xaml(1320): DragItemsStarting="BoardDragStarting"
+  // MainWindow.xaml(1327): DragItemsStarting="BoardDragStarting"
   Column3.OnDragItemsStarting := TWinUIDragItemsStartingEventHandler(PublishedMethod('BoardDragStarting'));
-  // MainWindow.xaml(1320): DragOver="BoardDragOver"
+  // MainWindow.xaml(1327): DragOver="BoardDragOver"
   Column3.OnDragOver := TWinUIDragEventHandler(PublishedMethod('BoardDragOver'));
-  // MainWindow.xaml(1320): Drop="BoardDrop"
+  // MainWindow.xaml(1327): Drop="BoardDrop"
   Column3.OnDrop := TWinUIDragEventHandler(PublishedMethod('BoardDrop'));
-  // MainWindow.xaml(1337): Click="ColumnAddClick"
+  // MainWindow.xaml(1344): Click="ColumnAddClick"
   FindElement<TWinUIButton>('_rw6').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ColumnAddClick'));
-  // MainWindow.xaml(1341): DragItemsCompleted="BoardDragCompleted"
+  // MainWindow.xaml(1348): DragItemsCompleted="BoardDragCompleted"
   Column4.OnDragItemsCompleted := TWinUIDragItemsCompletedEventHandler(PublishedMethod('BoardDragCompleted'));
-  // MainWindow.xaml(1341): DragItemsStarting="BoardDragStarting"
+  // MainWindow.xaml(1348): DragItemsStarting="BoardDragStarting"
   Column4.OnDragItemsStarting := TWinUIDragItemsStartingEventHandler(PublishedMethod('BoardDragStarting'));
-  // MainWindow.xaml(1341): DragOver="BoardDragOver"
+  // MainWindow.xaml(1348): DragOver="BoardDragOver"
   Column4.OnDragOver := TWinUIDragEventHandler(PublishedMethod('BoardDragOver'));
-  // MainWindow.xaml(1341): Drop="BoardDrop"
+  // MainWindow.xaml(1348): Drop="BoardDrop"
   Column4.OnDrop := TWinUIDragEventHandler(PublishedMethod('BoardDrop'));
-  // MainWindow.xaml(1489): Click="StarsClick"
+  // MainWindow.xaml(1496): Click="StarsClick"
   StarsAll.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('StarsClick'));
-  // MainWindow.xaml(1490): Click="StarsClick"
+  // MainWindow.xaml(1497): Click="StarsClick"
   Stars5.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('StarsClick'));
-  // MainWindow.xaml(1491): Click="StarsClick"
+  // MainWindow.xaml(1498): Click="StarsClick"
   Stars4.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('StarsClick'));
-  // MainWindow.xaml(1492): Click="StarsClick"
+  // MainWindow.xaml(1499): Click="StarsClick"
   Stars3.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('StarsClick'));
-  // MainWindow.xaml(1493): Click="StarsClick"
+  // MainWindow.xaml(1500): Click="StarsClick"
   Stars2.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('StarsClick'));
-  // MainWindow.xaml(1494): Click="StarsClick"
+  // MainWindow.xaml(1501): Click="StarsClick"
   Stars1.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('StarsClick'));
-  // MainWindow.xaml(1496): SelectionChanged="ReviewAppChanged"
+  // MainWindow.xaml(1503): SelectionChanged="ReviewAppChanged"
   ReviewAppBox.OnSelectionChanged := TWinUISelectionChangedEventHandler(PublishedMethod('ReviewAppChanged'));
-  // MainWindow.xaml(1499): ItemClick="ReviewClick"
+  // MainWindow.xaml(1506): ItemClick="ReviewClick"
   ReviewList.OnItemClick := TWinUIItemClickEventHandler(PublishedMethod('ReviewClick'));
-  // MainWindow.xaml(1594): Click="AudienceFilterClick"
+  // MainWindow.xaml(1601): Click="AudienceFilterClick"
   AudAll.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('AudienceFilterClick'));
-  // MainWindow.xaml(1595): Click="AudienceFilterClick"
+  // MainWindow.xaml(1602): Click="AudienceFilterClick"
   Aud0.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('AudienceFilterClick'));
-  // MainWindow.xaml(1596): Click="AudienceFilterClick"
+  // MainWindow.xaml(1603): Click="AudienceFilterClick"
   Aud1.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('AudienceFilterClick'));
-  // MainWindow.xaml(1597): Click="AudienceFilterClick"
+  // MainWindow.xaml(1604): Click="AudienceFilterClick"
   Aud2.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('AudienceFilterClick'));
-  // MainWindow.xaml(1598): Click="AudienceFilterClick"
+  // MainWindow.xaml(1605): Click="AudienceFilterClick"
   Aud3.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('AudienceFilterClick'));
-  // MainWindow.xaml(1599): Click="AudienceFilterClick"
+  // MainWindow.xaml(1606): Click="AudienceFilterClick"
   Aud4.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('AudienceFilterClick'));
-  // MainWindow.xaml(1600): Click="AudienceFilterClick"
+  // MainWindow.xaml(1607): Click="AudienceFilterClick"
   Aud5.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('AudienceFilterClick'));
-  // MainWindow.xaml(1647): SizeChanged="ChartSizeChanged"
+  // MainWindow.xaml(1654): SizeChanged="ChartSizeChanged"
   SubsCanvas.OnSizeChanged := TWinUISizeChangedEventHandler(PublishedMethod('ChartSizeChanged'));
-  // MainWindow.xaml(1659): PointerExited="SubsPointerExited"
+  // MainWindow.xaml(1666): PointerExited="SubsPointerExited"
   SubsHover.OnPointerExited := TWinUIPointerRoutedEventHandler(PublishedMethod('SubsPointerExited'));
-  // MainWindow.xaml(1659): PointerMoved="SubsPointerMoved"
+  // MainWindow.xaml(1666): PointerMoved="SubsPointerMoved"
   SubsHover.OnPointerMoved := TWinUIPointerRoutedEventHandler(PublishedMethod('SubsPointerMoved'));
-  // MainWindow.xaml(1764): Click="ExportCsvClick"
+  // MainWindow.xaml(1771): Click="ExportCsvClick"
   ExportCsvButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ExportCsvClick'));
-  // MainWindow.xaml(2123): Click="StatementClick"
+  // MainWindow.xaml(2130): Click="StatementClick"
   StatementButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('StatementClick'));
-  // MainWindow.xaml(2272): Click="InviteClick"
+  // MainWindow.xaml(2279): Click="InviteClick"
   InviteButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('InviteClick'));
 end;
 
