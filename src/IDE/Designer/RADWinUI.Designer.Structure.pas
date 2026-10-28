@@ -124,10 +124,47 @@ type
 
 implementation
 
-uses System.Win.ComObj, System.Generics.Collections, Vcl.Graphics, RADWinUI.Designer.PaletteIcons;
+uses System.Win.ComObj, System.Generics.Collections, System.IOUtils, Vcl.Graphics, RADWinUI.Designer.PaletteIcons;
 
 var
   StructureImages: TDictionary<string, Integer>;
+  TraceState: Integer; // 0 unknown, 1 on, 2 off
+
+/// With RADWINUI_STRUCTURE_LOG=1, every call between the IDE's Structure view and
+/// these nodes goes to %TEMP%\RADWinUI\ide.log, to find which node the IDE reads stale.
+function Tracing: Boolean;
+begin
+  if TraceState = 0 then
+    if GetEnvironmentVariable('RADWINUI_STRUCTURE_LOG') = '1' then TraceState := 1 else TraceState := 2;
+  Result := TraceState = 1;
+end;
+
+procedure Trace(const AText: string; const AArgs: array of const);
+begin
+  try
+    TFile.AppendAllText(TPath.Combine(TPath.Combine(TPath.GetTempPath, 'RADWinUI'), 'ide.log'),
+      FormatDateTime('yyyy-mm-dd hh:nn:ss.zzz', Now) + '  Structure: ' + Format(AText, AArgs) + sLineBreak,
+      TEncoding.UTF8);
+  except
+    // never let tracing disturb the IDE
+  end;
+end;
+
+function NodeText(const ANode: IInterface): string;
+var
+  Node: TObject;
+begin
+  if ANode = nil then Exit('nil');
+  try
+    Node := ANode as TObject;
+  except
+    Exit(Format('%p (not ours)', [Pointer(ANode)]));
+  end;
+  if Node is TXamlStructureNode then
+    Result := Format('%p %s', [Pointer(Node), TXamlStructureNode(Node).Get_Caption])
+  else
+    Result := Format('%p ?', [Pointer(Node)]);
+end;
 
 /// The Structure view image of ATag: the Tool Palette icon, added once per
 /// control type at 16, 24 and 32 px so the view picks the size for its DPI.
@@ -226,7 +263,10 @@ end;
 function TXamlStructureNode.Get_ChildCount: Integer;
 begin Result := FChildren.Count; end;
 function TXamlStructureNode.Get_Child(Index: Integer): IOTAStructureNode;
-begin Result := FChildren[Index] as IOTAStructureNode; end;
+begin
+  Result := FChildren[Index] as IOTAStructureNode;
+  if Tracing then Trace('%s .Child[%d] -> %s', [NodeText(Self), Index, NodeText(Result)]);
+end;
 function TXamlStructureNode.Get_Expanded: WordBool;
 begin Result := FExpanded; end;
 procedure TXamlStructureNode.Set_Expanded(Value: WordBool);
@@ -256,9 +296,15 @@ begin FSelected := Value; end;
 function TXamlStructureNode.Get_StateIndex: Integer;
 begin Result := -1; end;
 function TXamlStructureNode.Get_Data: IntPtr;
-begin Result := FData.Value; end;
+begin
+  Result := FData.Value;
+  if Tracing then Trace('%s .Data -> %x (in tree %s)', [NodeText(Self), Result, BoolToStr(FData.InTree, True)]);
+end;
 procedure TXamlStructureNode.Set_Data(Value: IntPtr);
-begin FData.SetValue(Value); end;
+begin
+  if Tracing then Trace('%s .Data := %x', [NodeText(Self), Value]);
+  FData.SetValue(Value);
+end;
 procedure TXamlStructureNode.RemoveChildNode(Index: Integer);
 begin FChildren.Delete(Index); end;
 function TXamlStructureNode.Get_SortByIndex: WordBool;
@@ -331,6 +377,7 @@ end;
 
 procedure TDesignerStructure.Provide(const AText: string; AIndex: TDesignerTypeIndex);
 begin
+  if Tracing then Trace('GetStructureContext %s, shown %s', [FPath, BoolToStr(Shown, True)]);
   if not Shown then
     Update(AText, AIndex, False);
 end;
@@ -351,6 +398,7 @@ begin
     end;
   if Added and Shown and Supports(BorlandIDEServices, IOTAStructureView, View) then
   begin
+    if Tracing then Trace('RegisterImages: StructureChanged', []);
     TIdePayload.NewTree;
     View.StructureChanged(True);
   end;
@@ -411,6 +459,7 @@ begin
       end;
       SetLength(FObjects, NodeCount);
       FRootsFetched := False;
+      if Tracing then Trace('Update: %d nodes, shown %s, %d generations kept', [NodeCount, BoolToStr(View <> nil, True), FNodes.Generations]);
       if View <> nil then
       begin
         TIdePayload.NewTree;
@@ -439,7 +488,18 @@ begin
       begin
         // The IDE finds its tree node through Data: only a node it has
         // initialized in its current tree may be selected or focused
-        if not Node.FData.InTree then Break;
+        if not Node.FData.InTree then
+        begin
+          if Tracing then Trace('Select %d:%d skipped, %s not in the IDE tree', [ALine, AColumn, NodeText(Node as IOTAStructureNode)]);
+          Break;
+        end;
+        {$IFDEF CPUX86}
+        // The classic 32-bit IDE crashed (TStructureViewForm.InitNode, a dead parent node)
+        // on the next click after a plugin focused a node; the 64-bit IDE does not
+        if Tracing then Trace('Select %d:%d not pushed to the 32-bit IDE', [ALine, AColumn]);
+        Break;
+        {$ENDIF}
+        if Tracing then Trace('Select %d:%d -> %s', [ALine, AColumn, NodeText(Node as IOTAStructureNode)]);
         View.ClearSelection;
         View.SelectNode(Node as IOTAStructureNode);
         View.FocusNode(Node as IOTAStructureNode);
@@ -503,20 +563,31 @@ begin
   // the Data it stored in our nodes for its previous tree is stale from now on
   TIdePayload.NewTree;
   Result := FRoots.Count;
+  if Tracing then Trace('RootNodeCount -> %d (new IDE tree)', [Result]);
 end;
 function TDesignerStructure.GetRootStructureNode(Index: Integer): IOTAStructureNode;
 begin
   FRootsFetched := True; // the IDE rebuilds its tree from these roots
   Result := FRoots[Index] as IOTAStructureNode;
+  if Tracing then Trace('Root[%d] -> %s', [Index, NodeText(Result)]);
 end;
 procedure TDesignerStructure.NodeEdited(const Node: IOTAStructureNode);
 begin end;
 procedure TDesignerStructure.NodeFocused(const Node: IOTAStructureNode);
-begin ActivateNode(Node, False); end;
+begin
+  if Tracing then Trace('NodeFocused %s', [NodeText(Node)]);
+  ActivateNode(Node, False);
+end;
 procedure TDesignerStructure.NodeSelected(const Node: IOTAStructureNode);
-begin ActivateNode(Node, False); end;
+begin
+  if Tracing then Trace('NodeSelected %s', [NodeText(Node)]);
+  ActivateNode(Node, False);
+end;
 procedure TDesignerStructure.DefaultNodeAction(const Node: IOTAStructureNode);
-begin ActivateNode(Node, True); end;
+begin
+  if Tracing then Trace('DefaultNodeAction %s', [NodeText(Node)]);
+  ActivateNode(Node, True);
+end;
 function TDesignerStructure.SameContext(const AContext: IOTAStructureContext): WordBool;
 begin
   Result := (AContext <> nil) and (AContext.StructureType = RADWinUIStructureType) and
