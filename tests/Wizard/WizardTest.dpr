@@ -59,7 +59,8 @@ begin
   Check(FileExists(DProj), 'writes ' + ExtractFileName(DProj));
   Check(FileExists(TPath.Combine(P.Directory, P.Name + '.dpr')), 'writes the .dpr');
   Check(Pos('<Platform value="Win64">True</Platform>', TFile.ReadAllText(DProj)) > 0, '.dproj targets Win64');
-  Check(Pos('bin\XamlCodeGen.exe', TFile.ReadAllText(DProj)) > 0, '.dproj runs XamlCodeGen.exe before building');
+  Check(Pos('scripts\RADWinUI-PreBuild.cmd', TFile.ReadAllText(DProj)) > 0, '.dproj runs XamlCodeGen before building');
+  Check(Pos('scripts\RADWinUI-PostBuild.cmd', TFile.ReadAllText(DProj)) > 0, '.dproj copies the bootstrap DLL after building');
   Check(Pos('py -3', TFile.ReadAllText(DProj)) = 0, '.dproj needs no Python');
   Check(ValidateProject(P) <> '', 'refuses to overwrite the written project');
 

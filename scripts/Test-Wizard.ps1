@@ -15,13 +15,16 @@
 [CmdletBinding()]
 param(
   [ValidateSet('Debug', 'Release')]
-  [string]$Config = 'Debug'
+  [string]$Config = 'Debug',
+  # secondary: another monitor without the focus, offscreen: outside every monitor
+  [ValidateSet('secondary', 'offscreen')]
+  [string]$Monitor = 'secondary'
 )
 
 $ErrorActionPreference = 'Stop'
 Add-Type -AssemblyName UIAutomationClient, UIAutomationTypes
-# The app window opens on a secondary monitor without taking the focus (TWinUIWindow.Show)
-$env:RADWINUI_TEST_MONITOR = 'secondary'
+# The app window opens without taking the focus (TWinUIWindow.Show)
+$env:RADWINUI_TEST_MONITOR = $Monitor
 $RepoRoot = Split-Path -Parent $PSScriptRoot
 # A path with spaces, as projects often have
 $Out = Join-Path $RepoRoot 'build\wizard-test\Folder With Spaces'

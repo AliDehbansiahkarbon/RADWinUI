@@ -8,7 +8,8 @@ unit RADWinUI.Wizard.Templates;
 
     <Name>.dpr            program: TWinUIApp.Run(TMainWindow)
     <Name>.dproj          Win64 only, RADWinUI unit search path, pre-build
-                          runs XamlCodeGen, post-build copies the bootstrap DLL
+                          runs XamlCodeGen, post-build copies the bootstrap DLL,
+                          both through scripts\RADWinUI-*.cmd of the RADWinUI folder
     MainWindow.xaml       the window, edited by the user, DataContextType="TMainViewModel"
     MainWindow.pas        the window class with its handlers, edited by the user
     MainViewModel.pas     the view model the window binds to (typed ViewModel property)
@@ -22,9 +23,9 @@ uses
   System.SysUtils;
 
 const
-  /// <summary>An MSBuild error line for build events that need the downloaded Windows App SDK files.</summary>
-  MissingSdkError = 'RADWinUI : error RW1001 : Windows App SDK files are missing. Run scripts\Get-WindowsAppSDK.ps1 once ' +
-    '- see docs\GETTING-STARTED.md, step 0.';
+  /// <summary>An MSBuild error line for build events that cannot find the RADWinUI folder.</summary>
+  MissingRootError = 'RADWinUI : error RW1002 : RADWinUI was not found. Set the RADWINUI_ROOT environment variable ' +
+    'to the RADWinUI folder, then build again.';
   /// <summary>The project group that builds RADWinUI for this IDE.</summary>
   RADWinUIGroup = {$IFDEF CPUX64}'RADWinUI.groupproj'{$ELSE}'RADWinUI32.groupproj'{$ENDIF};
 
@@ -296,16 +297,15 @@ var
   Name, PreBuild, PostBuild: string;
 begin
   Name := AProject.Name;
-  // Paths from $(MSBuildProjectDirectory), which never ends with a backslash, in the IDE
-  // and in MSBuild alike, $(PROJECTDIR) does in one and not in the other. The DLL goes to
-  // the project's own exe folder, $(DCC_ExeOutput), created when missing.
-  PreBuild := XamlCodeGenCommand(AProject).Replace(AProject.Directory, '$(MSBuildProjectDirectory)');
-  // One line: the IDE joins event lines with "&&", which would make the copy part of the if.
-  // Without the DLL (the SDK files were never downloaded) the build stops with one clear error.
-  PostBuild := '(if not exist "$(MSBuildProjectDirectory)\$(DCC_ExeOutput)" ' +
-    'mkdir "$(MSBuildProjectDirectory)\$(DCC_ExeOutput)") & ' +
-    '(if exist "' + BootstrapDll(AProject) + '" (copy /Y "' + BootstrapDll(AProject) +
-    '" "$(MSBuildProjectDirectory)\$(DCC_ExeOutput)" >nul) else (echo ' + MissingSdkError + ' & exit 1))';
+  // The build events call the shared scripts of the RADWinUI folder: $(RADWinUIRoot) is the
+  // folder the project was made with, unless RADWINUI_ROOT names another one. Paths start
+  // from $(MSBuildProjectDirectory), which never ends with a backslash, in the IDE and in
+  // MSBuild alike, $(PROJECTDIR) does in one and not in the other. Each event is one line,
+  // because the IDE joins event lines with "&&".
+  PreBuild := 'if not exist "$(RADWinUIRoot)\scripts\RADWinUI-PreBuild.cmd" (echo ' + MissingRootError +
+    ' & exit 1) else call "$(RADWinUIRoot)\scripts\RADWinUI-PreBuild.cmd" "$(MSBuildProjectDirectory)"';
+  // The DLL goes to the project's own exe folder, $(DCC_ExeOutput), created when missing
+  PostBuild := 'call "$(RADWinUIRoot)\scripts\RADWinUI-PostBuild.cmd" "$(MSBuildProjectDirectory)\$(DCC_ExeOutput)"';
   Result := Lines([
     '<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">',
     '    <PropertyGroup>',
@@ -319,6 +319,10 @@ begin
     '        <TargetedPlatforms>2</TargetedPlatforms>',
     '        <AppType>Application</AppType>',
     '        <MainSource>' + Name + '.dpr</MainSource>',
+    '    </PropertyGroup>',
+    '    <PropertyGroup>',
+    '        <RADWinUIRoot Condition="''$(RADWinUIRoot)''=='''' and ''$(RADWINUI_ROOT)''!=''''">$(RADWINUI_ROOT)</RADWinUIRoot>',
+    '        <RADWinUIRoot Condition="''$(RADWinUIRoot)''==''''">' + XmlEscape(AProject.Root) + '</RADWinUIRoot>',
     '    </PropertyGroup>',
     '    <PropertyGroup Condition="''$(Config)''==''Base'' or ''$(Base)''!=''''">',
     '        <Base>true</Base>',
@@ -343,7 +347,7 @@ begin
     '        <DCC_DcuOutput>.\$(Platform)\$(Config)\dcu</DCC_DcuOutput>',
     '        <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>',
     '        <DCC_Namespace>System;Winapi;System.Win;$(DCC_Namespace)</DCC_Namespace>',
-    '        <DCC_UnitSearchPath>' + XmlEscape(SearchPath(AProject.Root)) + ';$(DCC_UnitSearchPath)</DCC_UnitSearchPath>',
+    '        <DCC_UnitSearchPath>' + XmlEscape(SearchPath('$(RADWinUIRoot)')) + ';$(DCC_UnitSearchPath)</DCC_UnitSearchPath>',
     '        <DCC_UsePackage></DCC_UsePackage>',
     '        <PreBuildEvent><![CDATA[' + PreBuild + ']]></PreBuildEvent>',
     '        <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>',
