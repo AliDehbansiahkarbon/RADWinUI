@@ -7,7 +7,7 @@ Design-time package `RADWinUIWizard` (`RADWinUIWizard32` for the 32-bit IDE) wit
 
 RADWinUI Application
 
-The wizard asks for a project name and a parent folder, then writes:
+The wizard asks for a project name and a parent folder in a dialog that follows the IDE theme, with the Windows folder picker, checks shown while you type, and the last location remembered. Then it writes:
 
 | File | Content |
 | --- | --- |
@@ -37,6 +37,7 @@ The package finds the RADWinUI checkout from its own location (`<root>\build\pac
 | File | Role |
 | --- | --- |
 | `RADWinUI.Wizard.Templates.pas` | project files as text, no ToolsAPI, used by the wizard and `tests/Wizard` |
+| `RADWinUI.Wizard.Dialog.pas` | the New Application and New Window dialogs, drawn with the IDE theme |
 | `RADWinUI.Wizard.Registration.pas` | the two ToolsAPI repository wizards and `Register` |
 | `packages\RADWinUIWizard.dpk`/`.dproj`, `RADWinUIWizard32.dpk`/`.dproj` | the design-time package for the 64-bit IDE (Win64) and for the 32-bit IDE (Win32), same units, a package name must differ from every unit it contains |
 

@@ -4,7 +4,8 @@ unit RADWinUI.Wizard.Registration;
   File > New > Other > Delphi Projects > RADWinUI Application, and
   File > New > Other > Delphi Files > RADWinUI Window.
 
-  Asks for a project name and a parent folder, writes the project with
+  Asks for a project name and a parent folder in a dialog drawn with the IDE
+  theme (RADWinUI.Wizard.Dialog), writes the project with
   RADWinUI.Wizard.Templates, runs XamlCodeGen once so MainWindow.Xaml.pas
   exists before the first build, and opens the project. Nothing of WinUI
   runs in the IDE: the wizard only writes files and starts XamlCodeGen.exe.
@@ -26,10 +27,9 @@ uses
   System.SysUtils,
   System.IOUtils,
   Vcl.Graphics,
-  Vcl.Dialogs,
-  Vcl.FileCtrl,
   ToolsAPI,
   RADWinUI.Wizard.Templates,
+  RADWinUI.Wizard.Dialog,
   RADWinUI.Preview.Command;
 
 type
@@ -193,27 +193,44 @@ end;
 procedure TRADWinUIWizard.Execute;
 var
   Project: TWizardProject;
-  Parent, Error, DProj: string;
+  Name, Parent, Error, DProj: string;
 begin
-  Project.Name := 'WinUIApp1';
-  if not InputQuery('New RADWinUI Application', 'Project name:', Project.Name) then
-    Exit;
-  Parent := TPath.GetDocumentsPath;
-  if not SelectDirectory('Folder that will contain the project folder', '', Parent) then
-    Exit;
-  Project.Directory := TPath.Combine(Parent, Project.Name);
   Project.Root := RootFolder;
+  Name := 'WinUIApp1';
+  Parent := LastProjectFolder;
+  if not AskNewProject(Name, Parent,
+    function(const AName, ALocation: string): string
+    var
+      Candidate: TWizardProject;
+    begin
+      Candidate := Project;
+      Candidate.Name := AName;
+      try
+        Candidate.Directory := TPath.Combine(ALocation, AName);
+      except
+        on EArgumentException do
+          Exit('The project name must be a Pascal identifier (letters, digits, underscore).');
+      end;
+      Result := ValidateProject(Candidate);
+      if (Result = '') and (ALocation = '') then
+        Result := 'Choose a location for the project.'
+      else if (Result = '') and not TDirectory.Exists(ALocation) then
+        Result := 'The location ' + ALocation + ' does not exist.';
+    end) then
+    Exit;
+  Project.Name := Name;
+  Project.Directory := TPath.Combine(Parent, Name);
   Error := ValidateProject(Project);
   if Error <> '' then
   begin
-    MessageDlg(Error, mtError, [mbOK], 0);
+    ShowWizardMessage(GetName, 'The project cannot be created', Error, True);
     Exit;
   end;
   Project.SdkRelease := ReadSdkRelease(Project.Root);
   DProj := WriteProject(Project);
   if not RunHidden(XamlCodeGenCommand(Project)) then
-    MessageDlg('XamlCodeGen did not run (bin\XamlCodeGen.exe: Build All of ' + RADWinUIGroup + ' makes it). The first build will try again ' +
-      'to generate MainWindow.Xaml.pas.', mtWarning, [mbOK], 0);
+    ShowWizardMessage(GetName, 'XamlCodeGen did not run', 'bin\XamlCodeGen.exe is missing or failed (Build All of ' +
+      RADWinUIGroup + ' makes it). The first build will try again to generate MainWindow.Xaml.pas.', True);
   if (BorlandIDEServices as IOTAActionServices).OpenProject(DProj, True) then
     OpenWindowDesigner(Project.Directory, 'MainWindow');
 end;
@@ -274,12 +291,12 @@ procedure TRADWinUIWindowWizard.Execute;
 var
   Project: IOTAProject;
   Target: TWizardProject;
-  UnitName, Error: string;
+  UnitName: string;
 begin
   Project := GetActiveProject;
   if Project = nil then
   begin
-    MessageDlg('Open a RADWinUI application first.', mtInformation, [mbOK], 0);
+    ShowWizardMessage(GetName, 'No project is open', 'Open a RADWinUI application first.', False);
     Exit;
   end;
   Target.Directory := ExtractFileDir(Project.FileName);
@@ -287,22 +304,21 @@ begin
   if not FileExists(TPath.Combine(Target.Directory, 'MainWindow.xaml')) and
     (Pos('xamlcodegen', LowerCase(TFile.ReadAllText(Project.FileName))) = 0) then
   begin
-    MessageDlg('The active project is not a RADWinUI application.', mtInformation, [mbOK], 0);
+    ShowWizardMessage(GetName, 'Not a RADWinUI application', 'The active project is not a RADWinUI application.',
+      False);
     Exit;
   end;
   UnitName := 'SecondWindow';
-  if not InputQuery('New RADWinUI Window', 'Unit name (the class is T + name):', UnitName) then
+  if not AskNewWindow(UnitName,
+    function(const AName, ALocation: string): string
+    begin
+      Result := ValidateWindow(Target.Directory, AName);
+    end) then
     Exit;
-  Error := ValidateWindow(Target.Directory, UnitName);
-  if Error <> '' then
-  begin
-    MessageDlg(Error, mtError, [mbOK], 0);
-    Exit;
-  end;
   WriteWindow(Target.Directory, UnitName);
   if not RunHidden(XamlCodeGenCommand(Target)) then
-    MessageDlg('XamlCodeGen did not run (bin\XamlCodeGen.exe: Build All of ' + RADWinUIGroup + ' makes it). The next build will try again ' +
-      'to generate ' + UnitName + '.Xaml.pas.', mtWarning, [mbOK], 0);
+    ShowWizardMessage(GetName, 'XamlCodeGen did not run', 'bin\XamlCodeGen.exe is missing or failed (Build All of ' +
+      RADWinUIGroup + ' makes it). The next build will try again to generate ' + UnitName + '.Xaml.pas.', True);
   // The pre-build event already covers every .xaml file of the project folder
   Project.AddFile(TPath.Combine(Target.Directory, UnitName + '.Xaml.pas'), True);
   Project.AddFile(TPath.Combine(Target.Directory, UnitName + '.pas'), True);

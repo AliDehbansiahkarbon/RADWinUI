@@ -41,6 +41,7 @@ requires
 
 contains
   RADWinUI.Wizard.Templates in '..\src\IDE\Wizard\RADWinUI.Wizard.Templates.pas',
+  RADWinUI.Wizard.Dialog in '..\src\IDE\Wizard\RADWinUI.Wizard.Dialog.pas',
   RADWinUI.Wizard.Registration in '..\src\IDE\Wizard\RADWinUI.Wizard.Registration.pas',
   RADWinUI.Preview.Client in '..\src\IDE\Preview\RADWinUI.Preview.Client.pas',
   RADWinUI.Preview.Menu in '..\src\IDE\Preview\RADWinUI.Preview.Menu.pas',

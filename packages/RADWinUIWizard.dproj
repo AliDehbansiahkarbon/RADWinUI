@@ -67,6 +67,7 @@
         <DCCReference Include="vcl.dcp"/>
         <DCCReference Include="designide.dcp"/>
         <DCCReference Include="..\src\IDE\Wizard\RADWinUI.Wizard.Templates.pas"/>
+        <DCCReference Include="..\src\IDE\Wizard\RADWinUI.Wizard.Dialog.pas"/>
         <DCCReference Include="..\src\IDE\Wizard\RADWinUI.Wizard.Registration.pas"/>
         <DCCReference Include="..\src\IDE\Preview\RADWinUI.Preview.Client.pas"/>
         <DCCReference Include="..\src\IDE\Preview\RADWinUI.Preview.Menu.pas"/>
