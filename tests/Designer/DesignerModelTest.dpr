@@ -117,6 +117,7 @@ var
   Entry: TPaletteEntry;
   Changed, Handled: string;
   Retained: TRetainedNodes;
+  Payload: TIdePayload;
 begin
   if ParamCount <> 1 then
   begin
@@ -388,6 +389,18 @@ begin
     Retained.Free;
   end;
   Check(TProbeNode.Live = 0, 'freeing the context frees every node');
+
+  // The IDE keeps a pointer to its tree node in each node's Data. Reusing a node in a
+  // rebuilt tree, or selecting it, with Data from the old tree made the IDE focus a freed
+  // tree node and crash on the next click (TStructureViewForm.InitNode).
+  Payload := Default(TIdePayload);
+  Check((Payload.Value = 0) and not Payload.InTree, 'a new node carries no IDE payload');
+  Payload.SetValue($1234);
+  Check((Payload.Value = $1234) and Payload.InTree, 'the IDE reads back what it stored in its current tree');
+  TIdePayload.NewTree;
+  Check((Payload.Value = 0) and not Payload.InTree, 'after the IDE starts a new tree the old payload reads as 0');
+  Payload.SetValue($5678);
+  Check((Payload.Value = $5678) and Payload.InTree, 'the payload the IDE stores in the new tree is kept');
 
   if Failures > 0 then
   begin

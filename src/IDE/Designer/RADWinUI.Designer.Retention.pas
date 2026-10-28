@@ -14,6 +14,28 @@ uses
   System.Classes;
 
 type
+  /// <summary>
+  ///   The IDE's payload in a Structure view node (IOTAStructureNode.Data, "opaque
+  ///   data" in StructureViewAPI.pas). It points into the IDE's virtual tree, so it is
+  ///   valid only in the tree it was set in. Handing the IDE a node whose Data came
+  ///   from an earlier tree (SelectNode, FocusNode, or a rebuilt tree reusing the node)
+  ///   made it focus a freed tree node, and the next click raised an access violation
+  ///   in TStructureViewForm.InitNode. Data set in an earlier tree reads as 0.
+  /// </summary>
+  TIdePayload = record
+  strict private
+    class var FTree: Integer;
+    FValue: IntPtr;
+    FSetIn: Integer;
+  public
+    /// <summary>The IDE starts a new tree: every payload set before is stale.</summary>
+    class procedure NewTree; static;
+    function Value: IntPtr;
+    procedure SetValue(AValue: IntPtr);
+    /// <summary>True when the IDE set the payload in its current tree, so it knows the node.</summary>
+    function InTree: Boolean;
+  end;
+
   TRetainedNodes = class
   strict private
     FGenerations: TList;
@@ -35,6 +57,34 @@ type
   end;
 
 implementation
+
+{ TIdePayload }
+
+class procedure TIdePayload.NewTree;
+begin
+  Inc(FTree);
+end;
+
+function TIdePayload.Value: IntPtr;
+begin
+  if InTree then
+    Result := FValue
+  else
+    Result := 0;
+end;
+
+procedure TIdePayload.SetValue(AValue: IntPtr);
+begin
+  FValue := AValue;
+  FSetIn := FTree + 1; // FTree + 1, so a zeroed record never counts as set
+end;
+
+function TIdePayload.InTree: Boolean;
+begin
+  Result := (FSetIn = FTree + 1) and (FValue <> 0);
+end;
+
+{ TRetainedNodes }
 
 constructor TRetainedNodes.Create;
 begin

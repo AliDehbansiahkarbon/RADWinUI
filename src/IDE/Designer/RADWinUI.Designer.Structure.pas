@@ -32,7 +32,7 @@ type
     FParent: TXamlStructureNode; // weak, the context detaches nodes before releasing them
     FChildren: TInterfaceList;
     FExpanded, FFocused, FSelected: WordBool;
-    FData: IntPtr;
+    FData: TIdePayload;
     FImage: Integer;
   public
     constructor Create(const AElement: TXamlElement; AParent: TXamlStructureNode);
@@ -256,9 +256,9 @@ begin FSelected := Value; end;
 function TXamlStructureNode.Get_StateIndex: Integer;
 begin Result := -1; end;
 function TXamlStructureNode.Get_Data: IntPtr;
-begin Result := FData; end;
+begin Result := FData.Value; end;
 procedure TXamlStructureNode.Set_Data(Value: IntPtr);
-begin FData := Value; end;
+begin FData.SetValue(Value); end;
 procedure TXamlStructureNode.RemoveChildNode(Index: Integer);
 begin FChildren.Delete(Index); end;
 function TXamlStructureNode.Get_SortByIndex: WordBool;
@@ -350,7 +350,10 @@ begin
       Added := Added or (Node.FImage >= 0);
     end;
   if Added and Shown and Supports(BorlandIDEServices, IOTAStructureView, View) then
+  begin
+    TIdePayload.NewTree;
     View.StructureChanged(True);
+  end;
 end;
 
 function TDesignerStructure.Update(const AText: string; AIndex: TDesignerTypeIndex; ARegisterImages: Boolean): Boolean;
@@ -408,7 +411,11 @@ begin
       end;
       SetLength(FObjects, NodeCount);
       FRootsFetched := False;
-      if View <> nil then View.StructureChanged(True);
+      if View <> nil then
+      begin
+        TIdePayload.NewTree;
+        View.StructureChanged(True);
+      end;
     finally
       if View <> nil then View.EndUpdate;
     end;
@@ -427,10 +434,13 @@ begin
   if FUpdating or not Shown or not Supports(BorlandIDEServices, IOTAStructureView, View) then Exit;
   FUpdating := True;
   try
-    View.ClearSelection;
     for Node in FObjects do
       if (Node.FElement.Line = ALine) and (Node.FElement.Column = AColumn) then
       begin
+        // The IDE finds its tree node through Data: only a node it has
+        // initialized in its current tree may be selected or focused
+        if not Node.FData.InTree then Break;
+        View.ClearSelection;
         View.SelectNode(Node as IOTAStructureNode);
         View.FocusNode(Node as IOTAStructureNode);
         Break;
@@ -488,7 +498,12 @@ begin Result := RADWinUIStructureType; end;
 function TDesignerStructure.Get_ViewOptions: Integer;
 begin Result := 0; end;
 function TDesignerStructure.Get_RootNodeCount: Integer;
-begin Result := FRoots.Count; end;
+begin
+  // The IDE asks for the root count when it starts a new tree for this context:
+  // the Data it stored in our nodes for its previous tree is stale from now on
+  TIdePayload.NewTree;
+  Result := FRoots.Count;
+end;
 function TDesignerStructure.GetRootStructureNode(Index: Integer): IOTAStructureNode;
 begin
   FRootsFetched := True; // the IDE rebuilds its tree from these roots
