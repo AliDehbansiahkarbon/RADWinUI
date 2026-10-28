@@ -153,7 +153,7 @@ Open `samples\RADWinUISamples.groupproj`, Build All, and run:
 - **[Lucent](docs/samples-Lucent.md):** an app publishing studio in frosted glass over drifting ribbons: eight animated pages, live simulated data, a drag-and-drop release board, charts with a hover tooltip and a hero move to each app's page.
 - **[Haven](docs/samples-Haven.md):** a bento-style savings dashboard that follows the Windows theme and accent colour, with a weekly chart, a countdown dial, a calendar and a goals checklist, all bound to a Delphi view model.
 
-Smaller samples (Counter, Greeter, ListDemo, Contacts, Profile) show one topic each, build them with `scripts\Build.ps1 -Project samples\Counter\Counter.dpr`.
+Smaller samples (Counter, Greeter, ListDemo, Contacts, Profile) show one topic each. They are in the same group, or build one with `scripts\Build.ps1 -Project samples\Counter\Counter.dpr`.
 
 ## Deployment
 
@@ -179,6 +179,7 @@ A small app needs Microsoft's free Windows App Runtime 2.5 installed once per PC
 | Symptom | Fix |
 | --- | --- |
 | `RADWinUI : error RW1001 : Windows App SDK files are missing`, or a post-build `copy` error in RADWinUIPreview | Run `powershell -ExecutionPolicy Bypass -File scripts\Get-WindowsAppSDK.ps1` once in the RADWinUI folder (step 0), then Build All again. |
+| `RADWinUI : error RW1002 : RADWinUI was not found` | The project is outside the RADWinUI folder. Set `RADWINUI_ROOT` to the RADWinUI folder, then build again. |
 | No Install on the package | Open the group of your IDE: `RADWinUI.groupproj` in the 64-bit IDE, `RADWinUI32.groupproj` in the classic 32-bit IDE. |
 | `XamlCodeGen did not run`, or a build stops at its pre-build event | Open the group of your IDE and use Build All: it makes `bin\XamlCodeGen.exe`. |
 | The app exits at start with a runtime error | Install the Windows App Runtime 2.5 (x64), or deploy self-contained. |

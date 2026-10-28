@@ -62,6 +62,11 @@ samples/Luma/Luma.res
 samples/Haven/Haven.res
 samples/Lucent/Lucent.res
 samples/Gallery/Gallery.res
+samples/Counter/Counter.res
+samples/Greeter/Greeter.res
+samples/ListDemo/ListDemo.res
+samples/Contacts/Contacts.res
+samples/Profile/Profile.res
 src/IDE/Preview/RADWinUIPreview.res
 tests/Designer/XamlEditTest.res
 tools/XamlCodeGen/XamlCodeGen.res

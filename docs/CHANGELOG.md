@@ -4,6 +4,7 @@ All notable changes to RADWinUI.
 
 ## Unreleased (0.9.3)
 
+- Every sample has a `.dproj` and is in `samples\RADWinUISamples.groupproj`. Build events call `scripts\RADWinUI-PreBuild.cmd` and `scripts\RADWinUI-PostBuild.cmd`, and a sample moved out of the repository finds RADWinUI through `RADWINUI_ROOT`.
 - Windows have a `Transparency` property, `SystemTransparency` and `BindTransparencySwitch`: Gallery, Luma, Greeter and Lucent have a Transparency switch.
 - `Test-Gallery.ps1`, `Test-Luma.ps1` and `Test-Samples.ps1` take `-Monitor offscreen` too.
 - New sample: Lucent, an app publishing studio with frosted glass, eight animated pages, live simulated data and a drag-and-drop release board.

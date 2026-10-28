@@ -17,6 +17,21 @@
         <Projects Include="Lucent\Lucent.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Counter\Counter.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Greeter\Greeter.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="ListDemo\ListDemo.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Contacts\Contacts.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="Profile\Profile.dproj">
+            <Dependencies/>
+        </Projects>
     </ItemGroup>
     <ProjectExtensions>
         <Borland.Personality>Default.Personality.12</Borland.Personality>
@@ -61,14 +76,59 @@
     <Target Name="Lucent:Make">
         <MSBuild Projects="Lucent\Lucent.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Counter">
+        <MSBuild Projects="Counter\Counter.dproj"/>
+    </Target>
+    <Target Name="Counter:Clean">
+        <MSBuild Projects="Counter\Counter.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Counter:Make">
+        <MSBuild Projects="Counter\Counter.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Greeter">
+        <MSBuild Projects="Greeter\Greeter.dproj"/>
+    </Target>
+    <Target Name="Greeter:Clean">
+        <MSBuild Projects="Greeter\Greeter.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Greeter:Make">
+        <MSBuild Projects="Greeter\Greeter.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="ListDemo">
+        <MSBuild Projects="ListDemo\ListDemo.dproj"/>
+    </Target>
+    <Target Name="ListDemo:Clean">
+        <MSBuild Projects="ListDemo\ListDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="ListDemo:Make">
+        <MSBuild Projects="ListDemo\ListDemo.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Contacts">
+        <MSBuild Projects="Contacts\Contacts.dproj"/>
+    </Target>
+    <Target Name="Contacts:Clean">
+        <MSBuild Projects="Contacts\Contacts.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Contacts:Make">
+        <MSBuild Projects="Contacts\Contacts.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Profile">
+        <MSBuild Projects="Profile\Profile.dproj"/>
+    </Target>
+    <Target Name="Profile:Clean">
+        <MSBuild Projects="Profile\Profile.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Profile:Make">
+        <MSBuild Projects="Profile\Profile.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Build">
-        <CallTarget Targets="Gallery;Luma;Haven;Lucent"/>
+        <CallTarget Targets="Gallery;Luma;Haven;Lucent;Counter;Greeter;ListDemo;Contacts;Profile"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Gallery:Clean;Luma:Clean;Haven:Clean;Lucent:Clean"/>
+        <CallTarget Targets="Gallery:Clean;Luma:Clean;Haven:Clean;Lucent:Clean;Counter:Clean;Greeter:Clean;ListDemo:Clean;Contacts:Clean;Profile:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Gallery:Make;Luma:Make;Haven:Make;Lucent:Make"/>
+        <CallTarget Targets="Gallery:Make;Luma:Make;Haven:Make;Lucent:Make;Counter:Make;Greeter:Make;ListDemo:Make;Contacts:Make;Profile:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

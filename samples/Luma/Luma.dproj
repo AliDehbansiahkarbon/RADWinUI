@@ -11,6 +11,10 @@
         <AppType>Application</AppType>
         <MainSource>Luma.dpr</MainSource>
     </PropertyGroup>
+    <PropertyGroup>
+        <RADWinUIRoot Condition="'$(RADWinUIRoot)'=='' and Exists('$(MSBuildProjectDirectory)\..\..\scripts\RADWinUI-PreBuild.cmd')">$(MSBuildProjectDirectory)\..\..</RADWinUIRoot>
+        <RADWinUIRoot Condition="'$(RADWinUIRoot)'==''">$(RADWINUI_ROOT)</RADWinUIRoot>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
     </PropertyGroup>
@@ -34,11 +38,11 @@
         <DCC_DcuOutput>.\$(Platform)\$(Config)\dcu</DCC_DcuOutput>
         <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>
         <DCC_Namespace>System;Winapi;System.Win;$(DCC_Namespace)</DCC_Namespace>
-        <DCC_UnitSearchPath>$(MSBuildProjectDirectory)\..\..\src\Interop;$(MSBuildProjectDirectory)\..\..\src\Generated;$(MSBuildProjectDirectory)\..\..\src\Runtime;$(MSBuildProjectDirectory)\..\..\src\Framework;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
+        <DCC_UnitSearchPath>$(RADWinUIRoot)\src\Interop;$(RADWinUIRoot)\src\Generated;$(RADWinUIRoot)\src\Runtime;$(RADWinUIRoot)\src\Framework;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <DCC_UsePackage></DCC_UsePackage>
-        <PreBuildEvent><![CDATA["$(MSBuildProjectDirectory)\..\..\bin\XamlCodeGen.exe" "$(MSBuildProjectDirectory)"]]></PreBuildEvent>
+        <PreBuildEvent><![CDATA[if not exist "$(RADWinUIRoot)\scripts\RADWinUI-PreBuild.cmd" (echo RADWinUI : error RW1002 : RADWinUI was not found. Set the RADWINUI_ROOT environment variable to the RADWinUI folder, then build again. & exit 1) else call "$(RADWinUIRoot)\scripts\RADWinUI-PreBuild.cmd" "$(MSBuildProjectDirectory)"]]></PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
-        <PostBuildEvent><![CDATA[(if not exist "$(MSBuildProjectDirectory)\$(DCC_ExeOutput)" mkdir "$(MSBuildProjectDirectory)\$(DCC_ExeOutput)") & (if exist "$(MSBuildProjectDirectory)\..\..\third_party\WindowsAppSDK\2.5.1\Microsoft.WindowsAppSDK.Foundation\runtimes\win-x64\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" (copy /Y "$(MSBuildProjectDirectory)\..\..\third_party\WindowsAppSDK\2.5.1\Microsoft.WindowsAppSDK.Foundation\runtimes\win-x64\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" "$(MSBuildProjectDirectory)\$(DCC_ExeOutput)" >nul) else (echo RADWinUI : error RW1001 : Windows App SDK files are missing. Run scripts\Get-WindowsAppSDK.ps1 once - see docs\GETTING-STARTED.md, step 0. & exit 1))]]></PostBuildEvent>
+        <PostBuildEvent><![CDATA[call "$(RADWinUIRoot)\scripts\RADWinUI-PostBuild.cmd" "$(MSBuildProjectDirectory)\$(DCC_ExeOutput)"]]></PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">

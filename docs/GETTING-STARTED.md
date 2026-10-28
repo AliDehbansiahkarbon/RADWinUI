@@ -37,7 +37,7 @@ In RAD Studio, started **without** administrator rights (WinUI 3 does not run el
 3. Right-click the project group > **Build All**.
 4. Right-click the package > **Install**.
 
-The demos are another group: `samples\RADWinUISamples.groupproj` (Gallery, Luma, Haven and Lucent).
+The demos are another group: `samples\RADWinUISamples.groupproj` (Gallery, Luma, Haven, Lucent and the smaller Counter, Greeter, ListDemo, Contacts and Profile). Their build events call `scripts\RADWinUI-PreBuild.cmd` (XamlCodeGen) and `scripts\RADWinUI-PostBuild.cmd` (copies the bootstrap DLL). A sample copied out of the repository finds RADWinUI through the `RADWINUI_ROOT` environment variable, set it in Windows or in Tools > Options > IDE > Environment Variables.
 
 ## Scripts do the same from a command line: `scripts\Build-Wizard.ps1`.
 
@@ -183,6 +183,8 @@ builds Release and writes `build\deploy\MyApp` with the exe, the bootstrap DLL a
 | Symptom | Fix |
 | --- | --- |
 | `RADWinUI : error RW1001 : Windows App SDK files are missing`, or a post-build `copy` error in RADWinUIPreview | Run `powershell -ExecutionPolicy Bypass -File scripts\Get-WindowsAppSDK.ps1` once in the RADWinUI folder (step 0), then Build All again. |
+| `RADWinUI : error RW1002 : RADWinUI was not found` | The project is outside the RADWinUI folder. Set `RADWINUI_ROOT` to the RADWinUI folder (in Windows or in Tools > Options > IDE > Environment Variables), then build again. |
+| `RADWinUI : error RW1003 : ...XamlCodeGen.exe is missing` | Open the group of your IDE and use Build All once: it makes `bin\XamlCodeGen.exe`. |
 | `Microsoft.WindowsAppRuntime.Bootstrap.dll was not found in: ...` | build once (the post-build copies it), or set `RADWINUI_ROOT` |
 | The app exits at start with a runtime error | install the Windows App Runtime 2.5 x64 |
 | Nothing happens when started from an elevated IDE | start RAD Studio without administrator rights |
