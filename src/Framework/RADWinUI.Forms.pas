@@ -181,9 +181,47 @@ implementation
 
 uses
   Winapi.Windows,
+  Winapi.Messages,
   Winapi.MultiMon,
   System.TypInfo,
   RADWinUI.Binding;
+
+{$R RADWinUI.Icon.res}
+
+var
+  SmallIcon, BigIcon: HICON;
+
+// The title bar and the taskbar show the program's MAINICON, like a VCL application.
+// A WinUI window would otherwise show a generic icon, so without one ({$R *.res}
+// missing) it shows the RADWinUI logo linked above.
+procedure SetProgramIcon(AWindow: HWND);
+var
+  Dpi: Cardinal;
+  Module: HMODULE;
+  Name: PChar;
+begin
+  if SmallIcon = 0 then
+  begin
+    Module := MainInstance;
+    Name := 'MAINICON';
+    if FindResource(Module, Name, RT_GROUP_ICON) = 0 then
+    begin
+      Module := HInstance;
+      Name := 'RADWINUI_ICON';
+    end;
+    // shortcut: sized for the DPI of the first window, Windows scales it on other monitors
+    Dpi := GetDpiForWindow(AWindow);
+    if Dpi = 0 then
+      Dpi := 96;
+    // Loaded once for every window, Windows frees them when the process ends
+    SmallIcon := LoadImage(Module, Name, IMAGE_ICON, GetSystemMetricsForDpi(SM_CXSMICON, Dpi),
+      GetSystemMetricsForDpi(SM_CYSMICON, Dpi), LR_DEFAULTCOLOR);
+    BigIcon := LoadImage(Module, Name, IMAGE_ICON, GetSystemMetricsForDpi(SM_CXICON, Dpi),
+      GetSystemMetricsForDpi(SM_CYICON, Dpi), LR_DEFAULTCOLOR);
+  end;
+  SendMessage(AWindow, WM_SETICON, ICON_SMALL, LPARAM(SmallIcon));
+  SendMessage(AWindow, WM_SETICON, ICON_BIG, LPARAM(BigIcon));
+end;
 
 { TWinUIWindow }
 
@@ -191,6 +229,8 @@ constructor TWinUIWindow.Create;
 begin
   inherited CreateFrom(nil, RADWinUI.Abi.Window.New);
   FWindows := FWindows + [Self];
+  // WindowId.Value is the HWND of a top-level window (see Scale)
+  SetProgramIcon(HWND(AppWindow.Id.Value));
   FTransparency := True;
   // Free the wrapper after Closed has reached every handler (user OnClosed included).
   FClosedToken := Intf.add_Closed(TTypedEventHandler_Object_WindowEventArgs.Create(

@@ -112,6 +112,24 @@ if ($XamlFiles) {
   & $CodeGen ($XamlFiles | ForEach-Object FullName)
   if ($LASTEXITCODE -ne 0) { Write-Host 'XamlCodeGen FAILED' -ForegroundColor Red; exit $LASTEXITCODE }
 }
+# {$R *.res} needs <Name>.res, which the IDE and MSBuild write from the .dproj and dcc64 does not:
+# write one with the program icon (Icon_MainIcon, else the RAD Studio default) when it is missing
+$Res = Join-Path $ProjectDir "$ProjectName.res"
+if (-not (Test-Path $Res) -and (Select-String -Path $ProjectPath -Pattern '^\s*\{\$R \*\.res\}' -Quiet)) {
+  $Icon = Join-Path $BdsRoot 'bin\delphi_PROJECTICON.ico'
+  $DProj = Join-Path $ProjectDir "$ProjectName.dproj"
+  if ((Test-Path $DProj) -and ((Get-Content $DProj -Raw) -match '<Icon_MainIcon>([^<]+)</Icon_MainIcon>')) {
+    $Icon = [IO.Path]::GetFullPath([IO.Path]::Combine($ProjectDir, $Matches[1].Replace('$(BDS)', $BdsRoot.TrimEnd('\'))))
+  }
+  $Kits = (Get-ItemProperty 'HKLM:\SOFTWARE\Microsoft\Windows Kits\Installed Roots' -ErrorAction SilentlyContinue).KitsRoot10
+  $Rc = if ($Kits) { Get-ChildItem (Join-Path $Kits 'bin\*\x64\rc.exe') -ErrorAction SilentlyContinue | Where-Object { $_.Directory.Parent.Name -match '^\d+(\.\d+)+$' } | Sort-Object { [version]$_.Directory.Parent.Name } | Select-Object -Last 1 }
+  if (-not $Rc) { Write-Host "$ProjectName.res is missing and the Windows SDK rc.exe was not found" -ForegroundColor Red; exit 1 }
+  $Rcs = Join-Path $RepoRoot "build\temp\$ProjectName.rc"
+  New-Item -ItemType Directory -Force (Split-Path $Rcs) | Out-Null
+  Set-Content $Rcs "MAINICON ICON `"$($Icon.Replace('\', '\\'))`"" -Encoding ascii
+  & $Rc.FullName /nologo /fo $Res $Rcs
+  if ($LASTEXITCODE -ne 0) { Write-Host "Writing $ProjectName.res FAILED" -ForegroundColor Red; exit 1 }
+}
 Write-Host "Building $ProjectName ($Config, Win64)"
 $Started = Get-Date
 # From the project folder, like the IDE: 'in' paths in the .dpr are relative to it

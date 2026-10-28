@@ -157,6 +157,7 @@ end;
 
 function ProjectSource(const AProject: TWizardProject): string;
 begin
+  // {$R *.res} like a VCL project: the IDE and MSBuild write <Name>.res from Icon_MainIcon
   Result := Lines([
     'program ' + AProject.Name + ';',
     '',
@@ -168,6 +169,8 @@ begin
     '  MainViewModel in ''MainViewModel.pas'',',
     '  MainWindow.Xaml in ''MainWindow.Xaml.pas'',',
     '  MainWindow in ''MainWindow.pas'';',
+    '',
+    '{$R *.res}',
     '',
     'begin',
     '  {$IFDEF DEBUG}',
@@ -344,6 +347,8 @@ begin
     '    </PropertyGroup>',
     '    <PropertyGroup Condition="''$(Base)''!=''''">',
     '        <SanitizedProjectName>' + Name + '</SanitizedProjectName>',
+    // The RAD Studio icon of a new VCL project, Project > Options > Application > Icon changes it
+    '        <Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>',
     '        <DCC_DcuOutput>.\$(Platform)\$(Config)\dcu</DCC_DcuOutput>',
     '        <DCC_ExeOutput>.\$(Platform)\$(Config)</DCC_ExeOutput>',
     '        <DCC_Namespace>System;Winapi;System.Win;$(DCC_Namespace)</DCC_Namespace>',

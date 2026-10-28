@@ -87,6 +87,18 @@ if (-not (Test-Path (Join-Path $ProjectDir "Win64\$Config\Microsoft.WindowsAppRu
 Write-Host "  [ok] MSBuild built $Name.exe, post-build copied the bootstrap DLL"
 if (-not (Test-Path $XamlUnit) -or -not (Select-String -Path $XamlUnit -Pattern 'DO NOT EDIT' -Quiet)) { Fail 'pre-build did not generate MainWindow.Xaml.pas' }
 Write-Host '  [ok] pre-build generated MainWindow.Xaml.pas with XamlCodeGen'
+# Like a VCL project: MSBuild writes <Name>.res from Icon_MainIcon, {$R *.res} links it
+if (-not (Test-Path (Join-Path $ProjectDir "$Name.res"))) { Fail "MSBuild did not write $Name.res" }
+Add-Type -Namespace RADWinUITest -Name Kernel32 -MemberDefinition @'
+[DllImport("kernel32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr LoadLibraryEx(string name, IntPtr file, uint flags);
+[DllImport("kernel32.dll", CharSet = CharSet.Unicode)] public static extern IntPtr FindResource(IntPtr module, string name, IntPtr type);
+[DllImport("kernel32.dll")] public static extern bool FreeLibrary(IntPtr module);
+'@
+$Module = [RADWinUITest.Kernel32]::LoadLibraryEx($Exe, [IntPtr]::Zero, 0x22 <# LOAD_LIBRARY_AS_DATAFILE | AS_IMAGE_RESOURCE #>)
+$HasIcon = [RADWinUITest.Kernel32]::FindResource($Module, 'MAINICON', [IntPtr]14 <# RT_GROUP_ICON #>) -ne [IntPtr]::Zero
+[void][RADWinUITest.Kernel32]::FreeLibrary($Module)
+if (-not $HasIcon) { Fail "$Name.exe has no MAINICON" }
+Write-Host "  [ok] MSBuild wrote $Name.res, $Name.exe has a MAINICON"
 
 # 4. Run it
 $Proc = Start-Process $Exe -PassThru
@@ -99,6 +111,13 @@ try {
   $Deadline = (Get-Date).AddSeconds(15)
   do { $Win = $AE::RootElement.FindFirst([Windows.Automation.TreeScope]::Children, $Cond); Start-Sleep -Milliseconds 200 } until ($Win -or (Get-Date) -gt $Deadline)
   if (-not $Win) { Fail 'the window did not appear' }
+  # The title bar shows the program's MAINICON, not the Windows default
+  Add-Type -Namespace RADWinUITest -Name User32 -MemberDefinition @'
+[DllImport("user32.dll")] public static extern IntPtr SendMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
+'@
+  $Icon = [RADWinUITest.User32]::SendMessage([IntPtr]$Win.Current.NativeWindowHandle, 0x7F <# WM_GETICON #>, [IntPtr]0 <# ICON_SMALL #>, [IntPtr]0)
+  if ($Icon -eq [IntPtr]::Zero) { Fail 'the window has no icon of its own (WM_GETICON ICON_SMALL is 0)' }
+  Write-Host '  [ok] the title bar shows the program icon (MAINICON)'
   $Btn = $null; $Text = $null
   $Deadline = (Get-Date).AddSeconds(15)
   do {

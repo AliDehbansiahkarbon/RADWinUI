@@ -62,6 +62,9 @@ begin
   Check(Pos('scripts\RADWinUI-PreBuild.cmd', TFile.ReadAllText(DProj)) > 0, '.dproj runs XamlCodeGen before building');
   Check(Pos('scripts\RADWinUI-PostBuild.cmd', TFile.ReadAllText(DProj)) > 0, '.dproj copies the bootstrap DLL after building');
   Check(Pos('py -3', TFile.ReadAllText(DProj)) = 0, '.dproj needs no Python');
+  Check(Pos('<Icon_MainIcon>$(BDS)\bin\delphi_PROJECTICON.ico</Icon_MainIcon>', TFile.ReadAllText(DProj)) > 0,
+    '.dproj has the RAD Studio project icon, like a VCL project');
+  Check(Pos('{$R *.res}', TFile.ReadAllText(ChangeFileExt(DProj, '.dpr'))) > 0, '.dpr links ' + P.Name + '.res');
   Check(ValidateProject(P) <> '', 'refuses to overwrite the written project');
 
   // RADWinUI Window: a second window added to the project
