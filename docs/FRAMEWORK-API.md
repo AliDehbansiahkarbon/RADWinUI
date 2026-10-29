@@ -188,7 +188,7 @@ public
   property Width, Height: Integer;         // client size in effective pixels
   property MinWidth, MinHeight: Integer;
   property Backdrop: TWinUIBackdrop;       // None, Mica, MicaAlt, Acrylic, Transparent
-  property Transparency: Boolean;          // False: the root panel gets a solid theme colour instead of the backdrop
+  property Transparency: Boolean;          // False: the root panel gets a solid theme colour instead of the backdrop (a Transparent backdrop ignores it)
   class function SystemTransparency: Boolean; // False while Energy saver is on or Transparency effects is off
   procedure BindTransparencySwitch(ASwitch: TWinUIToggleSwitch); // a ready-made on/off switch with an honest tooltip
   property OnClosed: TWinUIWindowEventHandler;

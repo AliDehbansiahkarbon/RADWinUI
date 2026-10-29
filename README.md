@@ -33,7 +33,7 @@ RADWinUI works the way a Delphi developer expects. File > New creates the projec
 - **Data binding.** `{Binding}` to published properties of your Pascal classes, one-way and two-way, with built-in and custom converters.
 - **File > New wizards.** RADWinUI Application and RADWinUI Window create ready-to-run projects.
 - **Visual designer in the IDE.** A Design view next to Code (F12 switches), drag and drop from the Tool Palette, selection, move, copy, paste, delete, undo and redo. The XAML text stays the single source of truth.
-- **Tool Palette.** 69 controls in nine categories (Standard, Layout, Input, Date and Time, Collections, Navigation, Text and Media, Status, Shapes), named like VCL (`TWinUIButton`) with their own icons.
+- **Tool Palette.** 73 controls in ten categories (Standard, Layout, Input, Date and Time, Collections, Navigation, Text and Media, Status, Shapes, Overlay), named like VCL (`TWinUIButton`) with their own icons. Overlay holds controls written in Delphi: NotchPanel, GlowTile, HotKey and MediaSession.
 - **Object Inspector and Structure view.** Edit WinUI properties and events in the native Object Inspector, see the control tree with icons in the Structure view.
 - **Design-time sample data.** `d:` values and sample rows show in the designer, never in the running app.
 - **XAML editor.** `.xaml` files open in Design first and get XML colouring in Code.

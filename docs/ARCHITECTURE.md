@@ -33,7 +33,7 @@ Windows App SDK 2.5.1   Microsoft.UI.Xaml (real WinUI 3 controls), DispatcherQue
 **IDE** (`src/IDE`). Design-time packages:
 - `Wizard`: OTA project and window wizards, generated projects run XamlCodeGen before each build. The same units form two design-time packages, `RADWinUIWizard` (64-bit IDE) and `RADWinUIWizard32` (32-bit IDE)
 - `Preview`: `RADWinUIPreview.exe`, a separate process that renders XAML with the real runtime. It renders the Design view inside the IDE and the Tools > RADWinUI Preview windows. The IDE sends editor text over a named pipe and receives designer events over a second pipe
-- `Designer`: a ToolsAPI Code/Design view for `.xaml`, the RADWinUI Tool Palette categories, and adapters for the native Object Inspector and Structure view. The child host renders and reports design operations, the IDE applies them to the XAML editor buffer as single undoable edits (`RADWinUI.Designer.XamlEdit`). The palette lists 69 curated controls (`RADWinUI.Designer.Palette`). The ToolsAPI calls stay thin, all other design logic is IDE-free
+- `Designer`: a ToolsAPI Code/Design view for `.xaml`, the RADWinUI Tool Palette categories, and adapters for the native Object Inspector and Structure view. The child host renders and reports design operations, the IDE applies them to the XAML editor buffer as single undoable edits (`RADWinUI.Designer.XamlEdit`). The palette lists 69 curated WinUI controls and RADWinUI's own 4 Overlay controls (`RADWinUI.Designer.Palette`). The ToolsAPI calls stay thin, all other design logic is IDE-free
 
 ## Shipping
 
