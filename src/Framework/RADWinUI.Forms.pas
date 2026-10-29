@@ -77,6 +77,7 @@ type
     FHitTestListener: Integer;
     FHitTestBox: array[0..3] of Integer; // pixels: left, top, right, bottom
     FRegionSet: Boolean;
+    FFrameExtended: Boolean;
     FSubclassed: Boolean;
     FDockListener: Integer;
     class var FWindows: TArray<TWinUIWindow>;
@@ -164,6 +165,7 @@ type
     /// <summary>
     ///   True (the default) shows the Backdrop, False paints the content's root
     ///   panel with the solid page colour of its theme instead. Backdrop keeps its value.
+    ///   A Transparent backdrop ignores it, the content decides what shows there.
     /// </summary>
     property Transparency: Boolean read FTransparency write SetTransparency;
     /// <summary>
@@ -314,6 +316,14 @@ function DefSubclassProc(AWnd: HWND; AMsg: UINT; AWParam: WPARAM; ALParam: LPARA
   external 'comctl32.dll' name 'DefSubclassProc';
 function DwmSetWindowAttribute(AWnd: HWND; AAttribute: DWORD; AValue: Pointer; ASize: DWORD): HRESULT; stdcall;
   external 'dwmapi.dll' name 'DwmSetWindowAttribute';
+
+type
+  TDwmMargins = record
+    Left, Right, Top, Bottom: Integer;
+  end;
+
+function DwmExtendFrameIntoClientArea(AWnd: HWND; const AMargins: TDwmMargins): HRESULT; stdcall;
+  external 'dwmapi.dll' name 'DwmExtendFrameIntoClientArea';
 
 function WindowSubclassProc(AWnd: HWND; AMsg: UINT; AWParam: WPARAM; ALParam: LPARAM; AId: UINT_PTR;
   ARefData: DWORD_PTR): LRESULT; stdcall;
@@ -634,7 +644,8 @@ end;
 
 procedure TWinUIWindow.ApplyBackdrop;
 begin
-  if FTransparency then
+  // A Transparent window has no backdrop to give up: its content paints what shows
+  if FTransparency or (FBackdrop = TWinUIBackdrop.Transparent) then
     SystemBackdrop := FSystemBackdrop
   else
     SystemBackdrop := nil;
@@ -653,7 +664,7 @@ begin
   if not (Content is TWinUIPanel) then
     Exit;
   Root := TWinUIPanel(Content);
-  if FTransparency or (FBackdrop = TWinUIBackdrop.None) then
+  if FTransparency or (FBackdrop in [TWinUIBackdrop.None, TWinUIBackdrop.Transparent]) then
   begin
     if FOpaqueBrush <> nil then
       Root.Background := FPlainBackground;
@@ -738,25 +749,45 @@ end;
 // accent border and no shadow around a window whose shape is its content.
 procedure TWinUIWindow.UpdateFrame;
 var
-  Frameless: Boolean;
+  Frameless, SeeThrough: Boolean;
   Corner, Border, Policy: DWORD;
+  Margins: TDwmMargins;
 begin
   Frameless := (FWindowStyle = TWinUIWindowStyle.Overlay) or (FBackdrop = TWinUIBackdrop.Transparent);
+  SeeThrough := FBackdrop = TWinUIBackdrop.Transparent;
   if Frameless then
   begin
     Corner := DWMWCP_DONOTROUND;
     Border := DWMWA_COLOR_NONE;
-    Policy := DWMNCRP_DISABLED;
   end
   else
   begin
     Corner := DWMWCP_DEFAULT;
     Border := DWMWA_COLOR_DEFAULT;
-    Policy := DWMNCRP_USEWINDOWSTYLE;
   end;
+  // DWM paints a window's client area black behind the XAML content unless
+  // its frame extends over all of it. That needs DWM's non-client rendering.
+  if Frameless and not SeeThrough then
+    Policy := DWMNCRP_DISABLED
+  else
+    Policy := DWMNCRP_USEWINDOWSTYLE;
   DwmSetWindowAttribute(Handle, DWMWA_WINDOW_CORNER_PREFERENCE, @Corner, SizeOf(Corner));
   DwmSetWindowAttribute(Handle, DWMWA_BORDER_COLOR, @Border, SizeOf(Border));
   DwmSetWindowAttribute(Handle, DWMWA_NCRENDERING_POLICY, @Policy, SizeOf(Policy));
+  // Only undone when this window did it: WinUI manages the frame of the others
+  if SeeThrough or FFrameExtended then
+  begin
+    Margins := Default(TDwmMargins);
+    if SeeThrough then
+    begin
+      Margins.Left := -1;
+      Margins.Right := -1;
+      Margins.Top := -1;
+      Margins.Bottom := -1;
+    end;
+    DwmExtendFrameIntoClientArea(Handle, Margins);
+    FFrameExtended := SeeThrough;
+  end;
 end;
 
 procedure TWinUIWindow.SetShowActivated(AValue: Boolean);
