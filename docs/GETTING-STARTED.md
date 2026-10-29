@@ -37,7 +37,7 @@ In RAD Studio, started **without** administrator rights (WinUI 3 does not run el
 3. Right-click the project group > **Build All**.
 4. Right-click the package > **Install**.
 
-The demos are another group: `samples\RADWinUISamples.groupproj` (Gallery, Luma, Haven, Lucent and the smaller Counter, Greeter, ListDemo, Contacts and Profile). Their build events call `scripts\RADWinUI-PreBuild.cmd` (XamlCodeGen) and `scripts\RADWinUI-PostBuild.cmd` (copies the bootstrap DLL). A sample copied out of the repository finds RADWinUI through the `RADWINUI_ROOT` environment variable, set it in Windows or in Tools > Options > IDE > Environment Variables.
+The demos are another group: `samples\RADWinUISamples.groupproj` (Gallery, Luma, Haven, Lucent, Notch and the smaller Counter, Greeter, ListDemo, Contacts and Profile). Their build events call `scripts\RADWinUI-PreBuild.cmd` (XamlCodeGen) and `scripts\RADWinUI-PostBuild.cmd` (copies the bootstrap DLL). A sample copied out of the repository finds RADWinUI through the `RADWINUI_ROOT` environment variable, set it in Windows or in Tools > Options > IDE > Environment Variables.
 
 ## Scripts do the same from a command line: `scripts\Build-Wizard.ps1`.
 

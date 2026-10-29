@@ -151,6 +151,7 @@ Open `samples\RADWinUISamples.groupproj`, Build All, and run:
 - **[Gallery](docs/samples-Gallery.md):** 30 controls in seven guided demos, search, themes, Mica and Acrylic, XAML and Pascal source, and live Pascal binding.
 - **[Luma](docs/samples-Luma.md):** an Acrylic desktop companion with a live clock, battery and memory readings, a focus timer and a calendar.
 - **[Lucent](docs/samples-Lucent.md):** an app publishing studio in frosted glass over drifting ribbons: eight animated pages, live simulated data, a drag-and-drop release board, charts with a hover tooltip and a hero move to each app's page.
+- **[Notch](docs/samples-Notch.md):** a desk companion that hangs from the top of the screen: a black pill with the time that opens into a build monitor, the music playing on the PC and a focus timer, with glowing tiles and Ctrl+Alt+N.
 - **[Haven](docs/samples-Haven.md):** a bento-style savings dashboard that follows the Windows theme and accent colour, with a weekly chart, a countdown dial, a calendar and a goals checklist, all bound to a Delphi view model.
 
 Smaller samples (Counter, Greeter, ListDemo, Contacts, Profile) show one topic each. They are in the same group, or build one with `scripts\Build.ps1 -Project samples\Counter\Counter.dpr`.
