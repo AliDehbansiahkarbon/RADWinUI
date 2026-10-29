@@ -170,6 +170,8 @@ type
 
 implementation
 
+{$WARN SYMBOL_PLATFORM OFF} // RegisterExpectedMemoryLeak, RADWinUI is Windows only
+
 uses
   Winapi.Windows,
   RADWinUI.Runtime.Application;
