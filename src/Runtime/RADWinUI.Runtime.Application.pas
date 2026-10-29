@@ -30,6 +30,22 @@ uses
   RADWinUI.Abi;
 
 type
+  TXamlTypeResolver = function(const AFullName: string): IXamlType;
+
+var
+  /// <summary>
+  ///   XAML types written in Delphi (RADWinUI.CustomControls sets it): asked
+  ///   first for every type name, nil means WinUI's own types answer.
+  /// </summary>
+  CustomXamlTypeResolver: TXamlTypeResolver;
+  /// <summary>Releases the WinRT references of the Delphi XAML types before WinRT shuts down.</summary>
+  CustomXamlTypesRelease: procedure;
+  /// <summary>The window whose XAML is loading (TWinUIWindow.LoadContent), nil otherwise.</summary>
+  CustomXamlLoadOwner: TObject;
+  /// <summary>Frees the Delphi XAML elements a window loaded, when the window is destroyed.</summary>
+  CustomXamlOwnerGone: procedure(AOwner: TObject);
+
+type
   TWinUIApplication = class;
   TWinUIApplicationClass = class of TWinUIApplication;
 
@@ -190,12 +206,20 @@ end;
 
 function TWinUIApplication.GetXamlType(AType: TypeName): IXamlType;
 begin
-  Result := GetProvider.GetXamlType(AType);
+  Result := nil;
+  if (AType.Kind = TypeKind.Custom) and Assigned(CustomXamlTypeResolver) then
+    Result := CustomXamlTypeResolver(HStringToString(AType.&Name));
+  if Result = nil then
+    Result := GetProvider.GetXamlType(AType);
 end;
 
 function TWinUIApplication.GetXamlTypeByFullName(AFullName: HSTRING): IXamlType;
 begin
-  Result := GetProvider.GetXamlTypeByFullName(AFullName);
+  Result := nil;
+  if Assigned(CustomXamlTypeResolver) then
+    Result := CustomXamlTypeResolver(HStringToString(AFullName));
+  if Result = nil then
+    Result := GetProvider.GetXamlTypeByFullName(AFullName);
 end;
 
 procedure TWinUIApplication.GetXmlnsDefinitions(out AResultSize: Cardinal; out AResult: Pointer);
@@ -236,6 +260,8 @@ begin
           end));
       finally
         App := nil;
+        if Assigned(CustomXamlTypesRelease) then
+          CustomXamlTypesRelease;
         ClearFactoryCache;
       end;
     finally

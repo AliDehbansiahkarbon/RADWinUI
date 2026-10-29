@@ -15,7 +15,9 @@ unit RADWinUI.CodeGen;
 
   A handler may take (Sender: TObject; E: <args class>) or the short
   (Sender: TObject) form. Element types and events come from
-  src\Generated\RADWinUI.Xaml.json, written by WinMDGen.
+  src\Generated\RADWinUI.Xaml.json, written by WinMDGen, and RADWinUI's own
+  controls (xmlns:rw="using:RADWinUI.Controls") from
+  src\Framework\RADWinUI.Controls.json.
 *)
 
 interface
@@ -34,11 +36,13 @@ type
     Name, Handler, Args: string;
   end;
 
-  /// <summary>Element types and events from RADWinUI.Xaml.json.</summary>
+  /// <summary>Element types and events from RADWinUI.Xaml.json and RADWinUI.Controls.json.</summary>
   TTypeIndex = class
   private
-    FJson: TJSONObject;
-    FTypes, FClasses: TJSONObject;
+    FJson, FCustomJson: TJSONObject;
+    FTypes, FClasses, FCustomTypes: TJSONObject;
+    FCustomClasses: TStringList;
+    procedure LoadCustom(const APath: string);
     function ClassInfo(const AClass: string): TJSONObject;
     function BaseOf(AInfo: TJSONObject): string;
   public
@@ -46,6 +50,12 @@ type
     destructor Destroy; override;
     /// <summary>Runtime class of a XAML element in the default namespace, '' when unknown.</summary>
     function Element(const ATag: string): string;
+    /// <summary>Full name of a RADWinUI control (rw:GlowTile), '' when unknown.</summary>
+    function CustomElement(const ATag: string): string;
+    /// <summary>True for a RADWinUI control written in Delphi.</summary>
+    function IsCustom(const AClass: string): Boolean;
+    /// <summary>The Pascal unit that declares a RADWinUI control's class.</summary>
+    function UnitOf(const AClass: string): string;
     function Wrapper(const AClass: string): string;
     /// <summary>The event AName of AClass or a base class.</summary>
     function Event(const AClass, AName: string; out AInfo: TEventInfo): Boolean;
@@ -63,6 +73,7 @@ type
     TBindingInfo = record
       Element, Event, Method, Handler, Args, How: string;
       Count, Line: Integer;
+      Custom: Boolean;
     end;
     TNamed = record
       Name, ClassName: string;
@@ -82,12 +93,14 @@ type
     FMethods: TDictionary<string, TArray<string>>;
     FWindowProps: TDictionary<string, string>;
     FResourceKeys: TStringList;
+    FUnits: TStringList;
     FChecker: TBindingChecker;
     function Where(AElement: TXmlElement): string;
     function WindowValue(const AName, AValue: string): string;
     procedure CheckBindings(AElement: TXmlElement; const AScope: string);
     procedure Walk(AElement: TXmlElement; const AScope: string; AInTemplate: Boolean);
-    procedure Bind(const AElement, AEvent, AMethod, AHandler, AArgs: string; AExplicit: Boolean; ALine: Integer);
+    procedure Bind(const AElement, AEvent, AMethod, AHandler, AArgs: string; AExplicit: Boolean; ALine: Integer;
+      ACustom: Boolean = False);
     function Emit(const AXaml: string): string;
   public
     /// <summary>
@@ -121,6 +134,7 @@ uses
 
 const
   Presentation = 'http://schemas.microsoft.com/winfx/2006/xaml/presentation';
+  CustomNamespace = 'using:RADWinUI.Controls';
   XamlNs = 'http://schemas.microsoft.com/winfx/2006/xaml';
   XClass = '{' + XamlNs + '}Class';
   XName = '{' + XamlNs + '}Name';
@@ -131,13 +145,13 @@ const
     '{http://schemas.openxmlformats.org/markup-compatibility/2006}');
   // <Window> attributes: Title is WinUI's, the rest are RADWinUI properties of TWinUIWindow
   // (WinUI's Window cannot set them in XAML). Applied in this order.
-  WindowAttributes: array[0..7] of string = ('Title', 'Width', 'Height', 'MinWidth', 'MinHeight', 'Backdrop',
-    'ExtendsContentIntoTitleBar', 'WindowStartupLocation');
+  WindowAttributes: array[0..11] of string = ('Title', 'WindowStyle', 'Width', 'Height', 'MinWidth', 'MinHeight',
+    'Backdrop', 'ExtendsContentIntoTitleBar', 'WindowStartupLocation', 'Dock', 'ClickThrough', 'ShowActivated');
   // Members of TWinUIWindow and its ancestors that an x:Name field would hide
   ReservedNames =
     ',title,content,width,height,minwidth,minheight,backdrop,show,close,center,activate,findelement,' +
     'loadcontent,owner,winrtobject,intf,create,destroy,free,appwindow,dispatcherqueue,systembackdrop,visible,' +
-    'bounds,datacontext,';
+    'bounds,datacontext,windowstyle,dock,clickthrough,hittestelement,showactivated,alwaysontop,';
   PascalReserved =
     ',and,array,as,asm,begin,case,class,const,constructor,destructor,div,do,downto,else,end,except,exports,' +
     'file,finalization,finally,for,function,goto,if,implementation,in,inherited,initialization,inline,' +
@@ -338,12 +352,66 @@ begin
     raise ECodeGenError.Create(APath + ': not a JSON object');
   FTypes := FJson.GetValue('types') as TJSONObject;
   FClasses := FJson.GetValue('classes') as TJSONObject;
+  FCustomClasses := TStringList.Create;
+  FCustomClasses.CaseSensitive := True;
+  // src\Generated\RADWinUI.Xaml.json -> src\Framework\RADWinUI.Controls.json
+  LoadCustom(TPath.Combine(ExtractFileDir(ExtractFileDir(TPath.GetFullPath(APath))),
+    'Framework\RADWinUI.Controls.json'));
 end;
 
 destructor TTypeIndex.Destroy;
 begin
+  FCustomClasses.Free;
+  FCustomJson.Free;
   FJson.Free;
   inherited;
+end;
+
+procedure TTypeIndex.LoadCustom(const APath: string);
+var
+  Classes: TJSONObject;
+  Pair: TJSONPair;
+begin
+  if not FileExists(APath) then
+    Exit;
+  FCustomJson := TJSONObject.ParseJSONValue(TFile.ReadAllText(APath, TEncoding.UTF8)) as TJSONObject;
+  if FCustomJson = nil then
+    raise ECodeGenError.Create(APath + ': not a JSON object');
+  FCustomTypes := FCustomJson.GetValue('types') as TJSONObject;
+  Classes := FCustomJson.GetValue('classes') as TJSONObject;
+  for Pair in Classes do
+  begin
+    FClasses.AddPair(Pair.JsonString.Value, Pair.JsonValue.Clone as TJSONValue);
+    FCustomClasses.Add(Pair.JsonString.Value);
+  end;
+end;
+
+function TTypeIndex.CustomElement(const ATag: string): string;
+var
+  Value: TJSONValue;
+begin
+  Result := '';
+  if FCustomTypes = nil then
+    Exit;
+  Value := FCustomTypes.GetValue(ATag);
+  if Value <> nil then
+    Result := Value.Value;
+end;
+
+function TTypeIndex.IsCustom(const AClass: string): Boolean;
+begin
+  Result := FCustomClasses.IndexOf(AClass) >= 0;
+end;
+
+function TTypeIndex.UnitOf(const AClass: string): string;
+var
+  Value: TJSONValue;
+begin
+  Value := ClassInfo(AClass).GetValue('unit');
+  if Value = nil then
+    Result := ''
+  else
+    Result := Value.Value;
 end;
 
 function TTypeIndex.ClassInfo(const AClass: string): TJSONObject;
@@ -471,11 +539,15 @@ begin
   FWindowProps := TDictionary<string, string>.Create;
   FResourceKeys := TStringList.Create;
   FResourceKeys.CaseSensitive := True;
+  FUnits := TStringList.Create;
+  FUnits.Sorted := True;
+  FUnits.Duplicates := dupIgnore;
 end;
 
 destructor TCodeGenerator.Destroy;
 begin
   FChecker.Free;
+  FUnits.Free;
   FResourceKeys.Free;
   FWindowProps.Free;
   FMethods.Free;
@@ -634,7 +706,8 @@ begin
             if (B.Element = Named.Name) and (B.Event = Info.Name) then
               Exists := True;
           if not Exists then
-            Bind(Named.Name, Info.Name, Named.Name + Info.Name, Info.Handler, Info.Args, False, Named.Line);
+            Bind(Named.Name, Info.Name, Named.Name + Info.Name, Info.Handler, Info.Args, False, Named.Line,
+              FIndex.IsCustom(Named.ClassName));
         end;
     Result := Emit(ToXml(Content, Registered));
   finally
@@ -656,14 +729,20 @@ begin
       raise ECodeGenError.CreateFmt('%s: <Window %s="%s"> is not valid', [FXamlPath, AName, AValue]);
     Exit(Format('%s := %d;', [AName, StrToInt(Value)]));
   end;
-  if AName = 'ExtendsContentIntoTitleBar' then
+  if (AName = 'ExtendsContentIntoTitleBar') or (AName = 'ShowActivated') then
   begin
     if (Value.ToLower <> 'true') and (Value.ToLower <> 'false') then
       raise ECodeGenError.CreateFmt('%s: <Window %s="%s"> is not valid', [FXamlPath, AName, AValue]);
     Exit(Format('%s := %s;', [AName, Value.Substring(0, 1).ToUpper + Value.Substring(1).ToLower]));
   end;
   if AName = 'Backdrop' then
-    Choices := TArray<string>.Create('None', 'Mica', 'MicaAlt', 'Acrylic')
+    Choices := TArray<string>.Create('None', 'Mica', 'MicaAlt', 'Acrylic', 'Transparent')
+  else if AName = 'WindowStyle' then
+    Choices := TArray<string>.Create('Normal', 'Overlay')
+  else if AName = 'Dock' then
+    Choices := TArray<string>.Create('None', 'TopCenter', 'TopLeft', 'TopRight', 'BottomCenter')
+  else if AName = 'ClickThrough' then
+    Choices := TArray<string>.Create('None', 'Background')
   else
     Choices := TArray<string>.Create('Manual', 'CenterScreen');
   Match := '';
@@ -677,6 +756,12 @@ begin
     raise ECodeGenError.CreateFmt('%s: <Window %s> must be one of %s', [FXamlPath, AName, string.Join(', ', Choices)]);
   if AName = 'Backdrop' then
     Exit('Backdrop := TWinUIBackdrop.' + Match + ';');
+  if AName = 'WindowStyle' then
+    Exit('WindowStyle := TWinUIWindowStyle.' + Match + ';');
+  if AName = 'Dock' then
+    Exit('Dock := TWinUIDock.' + Match + ';');
+  if AName = 'ClickThrough' then
+    Exit('ClickThrough := TWinUIClickThrough.' + Match + ';');
   if Match = 'CenterScreen' then
     Result := 'Center;'
   else
@@ -706,7 +791,7 @@ end;
 procedure TCodeGenerator.Walk(AElement: TXmlElement; const AScope: string; AInTemplate: Boolean);
 var
   Tag, Local, Cls, Name, UserName, DataType, Attr, Method, Scope: string;
-  IsPresentation: Boolean;
+  IsPresentation, IsCustom: Boolean;
   Attrs: TArray<string>;
   Info: TEventInfo;
   Field: TField;
@@ -716,6 +801,7 @@ begin
   Tag := AElement.Tag;
   Local := LocalName(Tag);
   IsPresentation := Tag.StartsWith('{' + Presentation + '}');
+  IsCustom := Tag.StartsWith('{' + CustomNamespace + '}');
   if IsPresentation and Local.EndsWith('Template') then
   begin
     // Template content is instantiated per item: no window fields or events,
@@ -737,9 +823,18 @@ begin
       Walk(AElement[I], Scope, True);
     Exit;
   end;
-  if IsPresentation and not Local.Contains('.') then // Button.Flyout is a property element
+  if (IsPresentation or IsCustom) and not Local.Contains('.') then // Button.Flyout is a property element
   begin
-    Cls := FIndex.Element(Local);
+    if IsCustom then
+    begin
+      Cls := FIndex.CustomElement(Local);
+      if Cls = '' then
+        raise ECodeGenError.CreateFmt('%s: <rw:%s> is not a RADWinUI control (see src\Framework\RADWinUI.Controls.json)',
+          [Where(AElement), Local]);
+      FUnits.Add(FIndex.UnitOf(Cls));
+    end
+    else
+      Cls := FIndex.Element(Local);
     Name := AElement.Get(XName);
     if Name = '' then
       Name := AElement.Get('Name');
@@ -762,7 +857,7 @@ begin
           AElement.SetAttr(XName, Name);
           FAutoWrappers.AddOrSetValue(Name, FIndex.Wrapper(Cls));
         end;
-        Bind(Name, Attr, Method, Info.Handler, Info.Args, True, AElement.Line);
+        Bind(Name, Attr, Method, Info.Handler, Info.Args, True, AElement.Line, FIndex.IsCustom(Cls));
       end;
       UserName := AElement.Get(XName);
       if UserName = '' then
@@ -792,7 +887,7 @@ begin
 end;
 
 procedure TCodeGenerator.Bind(const AElement, AEvent, AMethod, AHandler, AArgs: string; AExplicit: Boolean;
-  ALine: Integer);
+  ALine: Integer; ACustom: Boolean);
 var
   Params: TArray<string>;
   HasParams: Boolean;
@@ -830,6 +925,7 @@ begin
   B.Args := AArgs;
   B.Count := Count;
   B.Line := ALine;
+  B.Custom := ACustom;
   if AExplicit then
     B.How := 'attribute'
   else
@@ -886,6 +982,9 @@ begin
     W('uses');
     W('  RADWinUI.Framework,');
     W('  RADWinUI.Xaml,');
+    for Statement in FUnits do
+      if Statement <> '' then
+        W('  ' + Statement + ',');
     if FViewModelUnit <> '' then
     begin
       W('  RADWinUI.Forms,');
@@ -983,6 +1082,9 @@ begin
       W('  // ' + Src + '(' + IntToStr(B.Line) + '): ' + Source);
       if B.Count = 2 then
         W('  ' + Target + '.On' + B.Event + ' := ' + B.Handler + '(PublishedMethod(''' + B.Method + '''));')
+      else if B.Custom then
+        // a custom control has no typed property per event
+        W('  ' + Target + '.EventByName(''' + B.Event + ''').Add(NotifyProc<' + B.Args + '>(''' + B.Method + '''));')
       else
         W('  ' + Target + '.' + B.Event + '.Add(NotifyProc<' + B.Args + '>(''' + B.Method + '''));');
     end;

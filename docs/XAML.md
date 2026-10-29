@@ -25,7 +25,7 @@ What a RADWinUI window `.xaml` may contain, what the build checks, and what the 
 | --- | --- |
 | The root is `<Window>` with `x:Class="TName"` | XamlCodeGen writes `TNameBase` into `<File>.Xaml.pas`, your `TName` in `<File>.pas` inherits it |
 | One content element | a WinUI window has one `Content` |
-| `<Window>` attributes: `Title`, `Width`, `Height`, `MinWidth`, `MinHeight`, `Backdrop` (None, Mica, MicaAlt, Acrylic), `ExtendsContentIntoTitleBar`, `WindowStartupLocation` (Manual, CenterScreen), `DataContextType` | WinUI's `Window` takes no other XAML attributes, these become `TWinUIWindow` properties |
+| `<Window>` attributes: `Title`, `Width`, `Height`, `MinWidth`, `MinHeight`, `Backdrop` (None, Mica, MicaAlt, Acrylic, Transparent), `ExtendsContentIntoTitleBar`, `WindowStartupLocation` (Manual, CenterScreen), `WindowStyle` (Normal, Overlay), `Dock` (None, TopCenter, TopLeft, TopRight, BottomCenter), `ClickThrough` (None, Background), `ShowActivated`, `DataContextType` | WinUI's `Window` takes no other XAML attributes, these become `TWinUIWindow` properties (overlay windows: [FRAMEWORK-API.md](FRAMEWORK-API.md#overlay-windows)) |
 | `x:Name` must not hide a window member (`Title`, `Content`, `Width`, `Show`, ...) or be a Pascal keyword | each name becomes a field of the base class |
 | `x:Name` is unique | same |
 
@@ -55,6 +55,10 @@ Luma samples.
 | `<Button Click="SaveClick"/>` | the published `SaveClick` must exist when `<File>.pas` is there |
 
 A handler is `(Sender: TObject; E: <args class>)` or `(Sender: TObject)`, the args class is the event's (`TWinUIRoutedEventArgs` for `Click`). Event attributes are removed from the XAML the app loads, because `XamlReader.Load` rejects them.
+
+## RADWinUI's own controls
+
+`xmlns:rw="using:RADWinUI.Controls"` on `<Window>` makes RADWinUI's own controls available as `<rw:NotchPanel>`, `<rw:GlowTile>`, `<rw:HotKey>` and `<rw:MediaSession>`. They get typed fields and event wiring like WinUI's controls, their events take `(Sender: TObject; const E: TWinValue)` or `(Sender: TObject)`, and an unknown `rw:` element stops the build. See [CUSTOM-CONTROLS.md](CUSTOM-CONTROLS.md).
 
 ## Accessing designer controls from Pascal
 

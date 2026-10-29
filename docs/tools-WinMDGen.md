@@ -20,6 +20,10 @@ WinMDGen --winmd <file or folder> [--winmd ...] --out ..\..\src\Generated
 
 Inputs: the WinUI, InteractiveExperiences, Foundation and WebView2 package metadata, plus the Windows platform metadata (`C:\Windows\System32\WinMetadata`, or the Windows SDK contract `.winmd` files). A folder is searched recursively.
 
+Without `--namespace`, the projection covers `Microsoft.UI`, `Microsoft.Foundation`, `Microsoft.Graphics`, `Windows.Foundation` and `Windows.Media.Control`, plus every type they use.
+
+`Generate-Projection.ps1` also writes `src\Framework\RADWinUI.Controls.json`, the type index of RADWinUI's own controls, with `tools\ControlsIndex`.
+
 ## Code
 
 | File | Role |

@@ -65,7 +65,7 @@ begin
     // Every curated control as the palette inserts it, in one StackPanel: the
     // preview must load it (Test-Preview.ps1)
     Value := '<StackPanel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" ' +
-      'xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">' + NL;
+      'xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:rw="using:RADWinUI.Controls">' + NL;
     for Entry in PaletteEntries do
       Value := Value + '    ' + ToolboxXaml(Entry.Name, 0, 0) + NL;
     TFile.WriteAllText(ParamStr(2), Value + '</StackPanel>', TEncoding.UTF8);
@@ -179,6 +179,17 @@ begin
   Same(ApplyDesignerEvent('<Grid>' + NL + '</Grid>', 'INSERTAT TextBlock 1 1 Grid 0 0 12 8'),
     '<Grid>' + NL + '    <TextBlock Text="TextBlock" x:Name="TextBlock1" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="12,8,0,0"/>' + NL + '</Grid>',
     'INSERTAT puts a toolbox item where it was dropped');
+
+  Writeln('RADWinUI controls');
+  Check(ToolboxXaml('HotKey', 0, 0) = '<rw:HotKey Keys="Ctrl+Alt+T"/>', 'a RADWinUI control comes with its rw: prefix');
+  Same(ApplyDesignerEvent('<Window xmlns="p" x:Class="TMainWindow">' + NL + '<Grid>' + NL + '</Grid>' + NL + '</Window>',
+    'INSERT NotchPanel 2 1 0 -1 -1'),
+    '<Window xmlns:rw="using:RADWinUI.Controls" xmlns="p" x:Class="TMainWindow">' + NL + '<Grid>' + NL +
+    '    <rw:NotchPanel x:Name="NotchPanel1"/>' + NL + '</Grid>' + NL + '</Window>',
+    'INSERT of a RADWinUI control declares xmlns:rw on the root, named NotchPanel1');
+  Same(EnsureNamespace('<Window xmlns:rw="using:RADWinUI.Controls">', 'rw', 'using:RADWinUI.Controls'),
+    '<Window xmlns:rw="using:RADWinUI.Controls">', 'xmlns:rw is declared once');
+  Check(PaletteCategoryOf('GlowTile') = 'Overlay', 'GlowTile is in Overlay');
   if Failures > 0 then
   begin
     Writeln('XAML edit test FAILED (', Failures, ')');

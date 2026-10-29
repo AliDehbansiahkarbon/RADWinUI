@@ -1,0 +1,45 @@
+{
+"classes": {
+"RADWinUI.Controls.NotchPanel": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Expanded": ["TWinUIWinValueEventHandler", "TWinValue"], "Collapsed": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"IsExpanded": "bool", "CollapsedWidth": "number", "CollapsedHeight": "number", "ExpandedWidth": "number", "ExpandedHeight": "number", "ExpandedCornerRadius": "number", "SquareTop": "bool", "ExpandOnHover": "bool", "HoverDelay": "int", "CollapseDelay": "int", "AnimationDuration": "int", "Pill": "object"},
+"unit": "RADWinUI.Controls",
+"wrapper": "TWinUINotchPanel"
+},
+"RADWinUI.Controls.GlowTile": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Click": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"GlowBrush": "brush", "IsGlowing": "bool", "GlowRadius": "number", "GlowOpacity": "number", "Pulse": "bool", "FadeAfter": "number"},
+"unit": "RADWinUI.Controls",
+"wrapper": "TWinUIGlowTile"
+},
+"RADWinUI.Controls.HotKey": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Pressed": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Keys": "string", "IsActive": "bool"},
+"unit": "RADWinUI.Controls",
+"wrapper": "TWinUIHotKey"
+},
+"RADWinUI.Controls.MediaSession": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Changed": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Title": "string", "Artist": "string", "AlbumTitle": "string", "SourceApp": "string", "IsPlaying": "bool", "HasSession": "bool"},
+"unit": "RADWinUI.Controls",
+"wrapper": "TWinUIMediaSession"
+}
+},
+"namespace": "using:RADWinUI.Controls",
+"palette": [
+{"category": "Overlay", "name": "NotchPanel", "runtime": "RADWinUI.Controls.NotchPanel"},
+{"category": "Overlay", "name": "GlowTile", "runtime": "RADWinUI.Controls.GlowTile"},
+{"category": "Overlay", "name": "HotKey", "runtime": "RADWinUI.Controls.HotKey"},
+{"category": "Overlay", "name": "MediaSession", "runtime": "RADWinUI.Controls.MediaSession"}
+],
+"types": {
+"NotchPanel": "RADWinUI.Controls.NotchPanel",
+"GlowTile": "RADWinUI.Controls.GlowTile",
+"HotKey": "RADWinUI.Controls.HotKey",
+"MediaSession": "RADWinUI.Controls.MediaSession"
+}
+}

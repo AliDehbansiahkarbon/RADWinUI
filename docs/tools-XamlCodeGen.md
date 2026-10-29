@@ -14,6 +14,7 @@ Every project's pre-build event runs it on the project folder, `scripts\Build.ps
 | `MainWindow.xaml`: `<Window x:Class="TMainWindow" Title="...">` with one content element | `MainWindow.Xaml.pas`: `TMainWindowBase = class(TWinUIWindow)` |
 | `MainWindow.pas`: `TMainWindow = class(TMainWindowBase)` with published handlers | wiring code in the base constructor |
 | `src\Generated\RADWinUI.Xaml.json` (written by WinMDGen) | element types and events |
+| `src\Framework\RADWinUI.Controls.json` (written by `tools\ControlsIndex`) | RADWinUI's own `rw:` controls |
 
 - Each `x:Name` element becomes a protected field of its wrapper type (`CounterText: TWinUITextBlock`).
 - `Click="ResetClick"` attributes and published methods named `<x:Name><Event>` (`IncrementButtonClick`) are wired to the event. A handler is `(Sender: TObject; E: <args>)` or `(Sender: TObject)`.

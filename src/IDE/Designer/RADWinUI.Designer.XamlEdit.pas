@@ -69,8 +69,13 @@ function InsertChild(AXaml: string; APanelLine, APanelCol, AIndex: Integer; cons
 ///   AColumn set Grid.Row and Grid.Column, -1 removes them (not a Grid).
 /// </summary>
 function MoveElement(AXaml: string; ALine, ACol, APanelLine, APanelCol, AIndex, ARow, AColumn: Integer): string;
-/// <summary>The XAML a toolbox item inserts. Common controls get a starter value, other valid XAML names are empty.</summary>
+/// <summary>
+///   The XAML a toolbox item inserts. Common controls get a starter value, other valid XAML names are empty.
+///   RADWinUI's own controls (GlowTile) come with their rw: prefix.
+/// </summary>
 function ToolboxXaml(const ATag: string; ARow, AColumn: Integer): string;
+/// <summary>AXaml with xmlns:APrefix="AUri" on its root element, unchanged when it declares APrefix already.</summary>
+function EnsureNamespace(const AXaml, APrefix, AUri: string): string;
 /// <summary>A unique Pascal-compatible component name, such as Button1.</summary>
 function NewElementName(const AXaml, ATag: string): string;
 /// <summary>
@@ -98,7 +103,8 @@ uses
   System.Classes,
   System.StrUtils,
   System.Math,
-  System.RegularExpressions;
+  System.RegularExpressions,
+  RADWinUI.Designer.Palette;
 
 const
   AttributePattern = '(\s+)([\w.:]+)(\s*=\s*)("[^"]*"|''[^'']*'')';
@@ -702,7 +708,31 @@ end;
 
 function NamedToolboxXaml(const AXaml, ATag: string; ARow, AColumn: Integer): string;
 begin
-  Result := SetAttribute(ToolboxXaml(ATag, ARow, AColumn), 1, 1, 'x:Name', NewElementName(AXaml, ATag));
+  // GlowTile1, not rw:GlowTile1
+  Result := SetAttribute(ToolboxXaml(ATag, ARow, AColumn), 1, 1, 'x:Name',
+    NewElementName(AXaml, ATag.Substring(ATag.IndexOf(':') + 1)));
+end;
+
+function EnsureNamespace(const AXaml, APrefix, AUri: string): string;
+var
+  Root: TMatch;
+begin
+  Result := AXaml;
+  if TRegEx.IsMatch(AXaml, '\sxmlns:' + APrefix + '\s*=') then
+    Exit;
+  // After the root's tag name, on its line: no line or element position moves
+  Root := TRegEx.Match(AXaml, '<(?![?!])[A-Za-z_][\w:.]*');
+  if Root.Success then
+    Insert(' xmlns:' + APrefix + '="' + AUri + '"', Result, Root.Index + Root.Length);
+end;
+
+/// AXaml with xmlns:rw when ATag, a toolbox item, is one of RADWinUI's own controls.
+function WithNamespaceFor(const AXaml, ATag: string): string;
+begin
+  if PaletteXamlTag(ATag).StartsWith(ControlsPrefix + ':') then
+    Result := EnsureNamespace(AXaml, ControlsPrefix, ControlsNamespace)
+  else
+    Result := AXaml;
 end;
 
 function WithFreshNames(const AXaml, ASnippet: string): string;
@@ -809,8 +839,19 @@ begin
 end;
 
 function ToolboxXaml(const ATag: string; ARow, AColumn: Integer): string;
+var
+  Tag: string;
 begin
-  if ATag = 'Button' then
+  Tag := ATag;
+  if not Tag.Contains(':') then
+    Tag := PaletteXamlTag(Tag);
+  if Tag = 'rw:GlowTile' then
+    Result := '<rw:GlowTile Width="160" Height="96" Background="#1C1C1E" CornerRadius="16" GlowBrush="Orange"'
+  else if Tag = 'rw:NotchPanel' then
+    Result := '<rw:NotchPanel'
+  else if Tag = 'rw:HotKey' then
+    Result := '<rw:HotKey Keys="Ctrl+Alt+T"'
+  else if ATag = 'Button' then
     Result := '<Button Content="Button"'
   else if ATag = 'TextBlock' then
     Result := '<TextBlock Text="TextBlock"'
@@ -828,8 +869,8 @@ begin
     Result := '<StackPanel Spacing="8" MinHeight="40"'
   else if ATag = 'Grid' then
     Result := '<Grid MinHeight="80"'
-  else if TRegEx.IsMatch(ATag, '^[A-Za-z_][A-Za-z0-9_.-]*$') then
-    Result := '<' + ATag
+  else if TRegEx.IsMatch(Tag, '^(?:[A-Za-z_]\w*:)?[A-Za-z_][A-Za-z0-9_.-]*$') then
+    Result := '<' + Tag
   else
     raise EXamlEdit.CreateFmt('%s is not a valid XAML element name', [ATag]);
   if ARow > 0 then
@@ -901,11 +942,12 @@ begin
     Exit(PlaceElement(AXaml, P[1].ToInteger, P[2].ToInteger, P[3].ToInteger, P[4].ToInteger, P[5],
       P[6].ToInteger, P[7].ToInteger, P[8].ToInteger, P[9].ToInteger));
   if (Length(P) = 9) and (P[0] = 'INSERTAT') then
-    Exit(InsertChild(AXaml, P[2].ToInteger, P[3].ToInteger, MaxInt,
-      Positioned(NamedToolboxXaml(AXaml, P[1], 0, 0), P[4], P[5].ToInteger, P[6].ToInteger, P[7].ToInteger, P[8].ToInteger)));
+    Exit(WithNamespaceFor(InsertChild(AXaml, P[2].ToInteger, P[3].ToInteger, MaxInt,
+      Positioned(NamedToolboxXaml(AXaml, P[1], 0, 0), P[4], P[5].ToInteger, P[6].ToInteger, P[7].ToInteger, P[8].ToInteger)),
+      P[1]));
   if (Length(P) = 7) and (P[0] = 'INSERT') then
-    Result := InsertChild(AXaml, P[2].ToInteger, P[3].ToInteger, P[4].ToInteger,
-      NamedToolboxXaml(AXaml, P[1], P[5].ToInteger, P[6].ToInteger))
+    Result := WithNamespaceFor(InsertChild(AXaml, P[2].ToInteger, P[3].ToInteger, P[4].ToInteger,
+      NamedToolboxXaml(AXaml, P[1], P[5].ToInteger, P[6].ToInteger)), P[1])
   else if (Length(P) = 8) and (P[0] = 'MOVE') then
     Result := MoveElement(AXaml, P[1].ToInteger, P[2].ToInteger, P[3].ToInteger, P[4].ToInteger, P[5].ToInteger,
       P[6].ToInteger, P[7].ToInteger)

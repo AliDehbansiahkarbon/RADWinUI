@@ -73,6 +73,15 @@ type
   end;
   {$M-}
 
+  /// <summary>
+  ///   Answered by the WinRT objects of controls written in Delphi
+  ///   (RADWinUI.CustomControls): Wrap returns their Pascal object itself.
+  /// </summary>
+  IWinUIPascalObject = interface
+    ['{6F0C2A55-1E57-4B7C-9D49-6C1A4E8D2F31}']
+    function PascalObject: TWinUIObject;
+  end;
+
   TWinUIEventProc<T> = reference to procedure(Sender: TObject; E: T);
 
   /// <summary>
@@ -342,9 +351,17 @@ var
   Insp: IInspectable;
   Cls, Found: TWinUIObjectClass;
   Name: string;
+  Pascal: IWinUIPascalObject;
 begin
   if AObj = nil then
     Exit(nil);
+  // A control written in Delphi has one Pascal object, whoever asks
+  if Supports(AObj, IWinUIPascalObject, Pascal) then
+  begin
+    Result := Pascal.PascalObject;
+    if Result is ADefault then
+      Exit;
+  end;
   if AOwner <> nil then
   begin
     Result := AOwner.FindOwned(Identity(AObj));

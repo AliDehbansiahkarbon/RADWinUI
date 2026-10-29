@@ -30,7 +30,23 @@ uses
   RADWinUI.Runtime.Application;
 
 type
-  TWinUIBackdrop = (None, Mica, MicaAlt, Acrylic);
+  /// <summary>Transparent draws nothing behind the content, the desktop shows through.</summary>
+  TWinUIBackdrop = (None, Mica, MicaAlt, Acrylic, Transparent);
+
+  /// <summary>
+  ///   Overlay: no border or title bar, not resizable, always on top, not in the
+  ///   taskbar or Alt+Tab. For notch bars, toasts and other floating panels.
+  /// </summary>
+  TWinUIWindowStyle = (Normal, Overlay);
+
+  /// <summary>The edge of its display the window stays on, through size, DPI and display changes.</summary>
+  TWinUIDock = (None, TopCenter, TopLeft, TopRight, BottomCenter);
+
+  /// <summary>
+  ///   Background: only the bounds of HitTestElement take mouse input, clicks
+  ///   anywhere else go to the windows below.
+  /// </summary>
+  TWinUIClickThrough = (None, Background);
 
   // Same as System.Classes.TNotifyEvent (assignment-compatible), declared here so a
   // WinUI app does not link System.Classes and System.Rtti (about 1 MB).
@@ -53,8 +69,19 @@ type
     FMinWidth: Integer;
     FMinHeight: Integer;
     FClosedToken: EventRegistrationToken;
+    FWindowStyle: TWinUIWindowStyle;
+    FDock: TWinUIDock;
+    FClickThrough: TWinUIClickThrough;
+    FShowActivated: Boolean;
+    FHitTestElement: TWinUIFrameworkElement;
+    FHitTestListener: Integer;
+    FHitTestBox: array[0..3] of Integer; // pixels: left, top, right, bottom
+    FRegionSet: Boolean;
+    FSubclassed: Boolean;
+    FDockListener: Integer;
     class var FWindows: TArray<TWinUIWindow>;
     class function IsAlive(AWindow: TWinUIWindow): Boolean; static;
+    function Handle: THandle;
     function Scale: Double;
     function Presenter: TWinUIOverlappedPresenter;
     function GetClientWidth: Integer;
@@ -71,8 +98,27 @@ type
     procedure ResizeClientArea(AWidth, AHeight: Integer);
     function GetDataContext: TWinValue;
     procedure SetDataContext(const AValue: TWinValue);
+    procedure SetWindowStyle(AValue: TWinUIWindowStyle);
+    procedure SetDock(AValue: TWinUIDock);
+    procedure SetClickThrough(AValue: TWinUIClickThrough);
+    procedure SetShowActivated(AValue: Boolean);
+    procedure SetHitTestElement(AValue: TWinUIFrameworkElement);
+    function GetAlwaysOnTop: Boolean;
+    procedure SetAlwaysOnTop(AValue: Boolean);
+    procedure UpdateFrame;
+    procedure UpdateExStyle;
+    procedure KeepOnTop;
+    procedure ApplyDock;
+    procedure UpdateHitTestRegion;
+    procedure Subclass;
   protected
     procedure DetachEvents; override;
+    /// <summary>
+    ///   Called for every Windows message of the window before WinUI sees it.
+    ///   Return True with AResult set to handle it, False passes it on.
+    /// </summary>
+    function HandleMessage(AMsg: Cardinal; AWParam: NativeUInt; ALParam: NativeInt;
+      var AResult: NativeInt): Boolean; virtual;
   public
     /// <summary>Creates the Microsoft.UI.Xaml.Window. Override to build the content.</summary>
     constructor Create; virtual;
@@ -93,6 +139,9 @@ type
     ///   a solid colour whatever the app asks for.
     /// </summary>
     class function SystemTransparency: Boolean; static;
+    /// <summary>Where Dock puts a window of ASize, AOuter and AWork are its display's bounds and work area.</summary>
+    class function DockPosition(ADock: TWinUIDock; const AOuter, AWork: RectInt32;
+      const ASize: SizeInt32): PointInt32; static;
     /// <summary>
     ///   Makes ASwitch turn Transparency on and off, and explains in its tooltip
     ///   when Windows itself has transparency off.
@@ -122,6 +171,23 @@ type
     ///   DataContext := FViewModel (a TWinUIBindableObject).
     /// </summary>
     property DataContext: TWinValue read GetDataContext write SetDataContext;
+    /// <summary>Normal, or Overlay for a borderless always-on-top panel outside the taskbar.</summary>
+    property WindowStyle: TWinUIWindowStyle read FWindowStyle write SetWindowStyle;
+    /// <summary>Keeps the window on an edge of its display, applied on Show and on every change.</summary>
+    property Dock: TWinUIDock read FDock write SetDock;
+    /// <summary>Background lets clicks outside HitTestElement through to the windows below.</summary>
+    property ClickThrough: TWinUIClickThrough read FClickThrough write SetClickThrough;
+    /// <summary>
+    ///   The element whose bounds take mouse input when ClickThrough is Background,
+    ///   followed through layout changes and animations. nil: the whole window.
+    /// </summary>
+    property HitTestElement: TWinUIFrameworkElement read FHitTestElement write SetHitTestElement;
+    /// <summary>
+    ///   True (the default): Show and clicks give the window the keyboard focus.
+    ///   False: it never takes the focus from the app in use, Activate still does.
+    /// </summary>
+    property ShowActivated: Boolean read FShowActivated write SetShowActivated;
+    property AlwaysOnTop: Boolean read GetAlwaysOnTop write SetAlwaysOnTop;
   end;
 
   /// <summary>Repeating timer on the UI thread, like the VCL TTimer. Interval in milliseconds.</summary>
@@ -183,6 +249,7 @@ uses
   Winapi.Windows,
   Winapi.Messages,
   Winapi.MultiMon,
+  System.Math,
   System.TypInfo,
   RADWinUI.Binding;
 
@@ -223,6 +290,191 @@ begin
   SendMessage(AWindow, WM_SETICON, ICON_BIG, LPARAM(BigIcon));
 end;
 
+const
+  DWMWA_NCRENDERING_POLICY = 2;
+  DWMWA_WINDOW_CORNER_PREFERENCE = 33;
+  DWMWA_BORDER_COLOR = 34;
+  DWMNCRP_USEWINDOWSTYLE = 0;
+  DWMNCRP_DISABLED = 1;
+  DWMWCP_DEFAULT = 0;
+  DWMWCP_DONOTROUND = 1;
+  DWMWA_COLOR_DEFAULT = $FFFFFFFF;
+  DWMWA_COLOR_NONE = $FFFFFFFE;
+  OverlayRemovedStyles = WS_CAPTION or WS_THICKFRAME or WS_SYSMENU or WS_MINIMIZEBOX or WS_MAXIMIZEBOX;
+
+type
+  TSubclassProc = function(AWnd: HWND; AMsg: UINT; AWParam: WPARAM; ALParam: LPARAM; AId: UINT_PTR;
+    ARefData: DWORD_PTR): LRESULT; stdcall;
+
+function SetWindowSubclass(AWnd: HWND; AProc: TSubclassProc; AId: UINT_PTR; ARefData: DWORD_PTR): BOOL; stdcall;
+  external 'comctl32.dll' name 'SetWindowSubclass';
+function RemoveWindowSubclass(AWnd: HWND; AProc: TSubclassProc; AId: UINT_PTR): BOOL; stdcall;
+  external 'comctl32.dll' name 'RemoveWindowSubclass';
+function DefSubclassProc(AWnd: HWND; AMsg: UINT; AWParam: WPARAM; ALParam: LPARAM): LRESULT; stdcall;
+  external 'comctl32.dll' name 'DefSubclassProc';
+function DwmSetWindowAttribute(AWnd: HWND; AAttribute: DWORD; AValue: Pointer; ASize: DWORD): HRESULT; stdcall;
+  external 'dwmapi.dll' name 'DwmSetWindowAttribute';
+
+function WindowSubclassProc(AWnd: HWND; AMsg: UINT; AWParam: WPARAM; ALParam: LPARAM; AId: UINT_PTR;
+  ARefData: DWORD_PTR): LRESULT; stdcall;
+begin
+  Result := 0;
+  try
+    if TWinUIWindow(Pointer(ARefData)).HandleMessage(AMsg, AWParam, ALParam, Result) then
+      Exit;
+  except
+    on E: Exception do
+      TWinUIApp.HandleException(E);
+  end;
+  Result := DefSubclassProc(AWnd, AMsg, AWParam, ALParam);
+end;
+
+{ Transparent backdrop }
+
+type
+  // Windows.UI.Composition, not in the generated projection: only what the
+  // transparent backdrop needs. The vtable order is that of the metadata.
+  IWindowsCompositionBrush = IInspectable;
+
+  IWindowsCompositor = interface(IInspectable)
+    ['{B403CA50-7F8C-4E83-985F-CC45060036D8}']
+    function CreateColorKeyFrameAnimation: IInspectable; safecall;
+    function CreateColorBrush: IWindowsCompositionBrush; safecall;
+    function CreateColorBrushWithColor(AColor: RADWinUI.Abi.Color): IWindowsCompositionBrush; safecall;
+  end;
+
+  TDispatcherQueueOptions = record
+    Size: DWORD;
+    ThreadType: Integer;    // DQTYPE_THREAD_CURRENT = 2
+    ApartmentType: Integer; // DQTAT_COM_NONE = 0
+  end;
+
+  // A SystemBackdrop subclass (COM aggregation, as TWinUIApplication does with
+  // Application) that gives its target a fully transparent brush: only the XAML
+  // content is drawn, the desktop shows through everywhere else.
+  TTransparentBackdrop = class(TInterfacedObject, IInterface, IInspectable, ISystemBackdropOverrides)
+  strict private
+    FInner: IInspectable;
+  protected
+    function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
+    procedure GetIids(out AIidCount: Cardinal; out AIids: PGUID); safecall;
+    function GetRuntimeClassName: HSTRING; safecall;
+    function GetTrustLevel: TrustLevel; safecall;
+    procedure OnTargetConnected(AConnectedTarget: ICompositionSupportsSystemBackdrop; AXamlRoot: IXamlRoot); safecall;
+    procedure OnTargetDisconnected(ADisconnectedTarget: ICompositionSupportsSystemBackdrop); safecall;
+    procedure OnDefaultSystemBackdropConfigurationChanged(ATarget: ICompositionSupportsSystemBackdrop;
+      AXamlRoot: IXamlRoot); safecall;
+  public
+    constructor Create;
+    destructor Destroy; override;
+    function SafeCallException(ExceptObject: TObject; ExceptAddr: Pointer): HRESULT; override;
+  end;
+
+function CreateDispatcherQueueController(AOptions: TDispatcherQueueOptions; out AController: IInspectable): HRESULT;
+  stdcall; external 'CoreMessaging.dll' name 'CreateDispatcherQueueController';
+
+var
+  SystemBackdropFactoryCache: IInspectable;
+  // Windows.UI.Composition needs a Windows.System.DispatcherQueue on the UI
+  // thread, WinUI only creates its own Microsoft.UI.Dispatching one.
+  SystemQueueController: IInspectable;
+  WindowsCompositor: IWindowsCompositor;
+
+function SharedWindowsCompositor: IWindowsCompositor;
+var
+  Options: TDispatcherQueueOptions;
+  Instance: Pointer;
+  Obj: IInspectable;
+begin
+  if WindowsCompositor = nil then
+  begin
+    if SystemQueueController = nil then
+    begin
+      Options.Size := SizeOf(Options);
+      Options.ThreadType := 2;
+      Options.ApartmentType := 0;
+      // Fails when the thread already has one, which is just as good
+      CreateDispatcherQueueController(Options, SystemQueueController);
+    end;
+    CheckWinRT(RoActivateInstance(WinStr('Windows.UI.Composition.Compositor'), Instance),
+      'Windows.UI.Composition.Compositor');
+    Pointer(Obj) := Instance; // takes over the reference RoActivateInstance returned
+    WindowsCompositor := Obj as IWindowsCompositor;
+  end;
+  Result := WindowsCompositor;
+end;
+
+constructor TTransparentBackdrop.Create;
+var
+  Outer: IInspectable;
+  Delegating: ISystemBackdrop;
+begin
+  inherited Create;
+  Outer := Self as IInspectable;
+  Delegating := ISystemBackdropFactory(GetFactory(SystemBackdrop.RuntimeClassName, ISystemBackdropFactory,
+    SystemBackdropFactoryCache)).CreateInstance(Outer, FInner);
+  // Delegating forwards AddRef to us, keeping it would be a reference cycle.
+  Delegating := nil;
+end;
+
+destructor TTransparentBackdrop.Destroy;
+begin
+  FInner := nil;
+  inherited;
+end;
+
+function TTransparentBackdrop.QueryInterface(const IID: TGUID; out Obj): HRESULT;
+begin
+  if GetInterface(IID, Obj) then
+    Exit(S_OK);
+  if FInner <> nil then
+    Exit(FInner.QueryInterface(IID, Obj));
+  Pointer(Obj) := nil;
+  Result := E_NOINTERFACE;
+end;
+
+procedure TTransparentBackdrop.GetIids(out AIidCount: Cardinal; out AIids: PGUID);
+begin
+  FInner.GetIids(AIidCount, AIids);
+end;
+
+function TTransparentBackdrop.GetRuntimeClassName: HSTRING;
+begin
+  Result := FInner.GetRuntimeClassName;
+end;
+
+function TTransparentBackdrop.GetTrustLevel: TrustLevel;
+begin
+  Result := FInner.GetTrustLevel;
+end;
+
+procedure TTransparentBackdrop.OnTargetConnected(AConnectedTarget: ICompositionSupportsSystemBackdrop;
+  AXamlRoot: IXamlRoot);
+var
+  Clear: RADWinUI.Abi.Color;
+begin
+  Clear := Default(RADWinUI.Abi.Color);
+  AConnectedTarget.SystemBackdrop := SharedWindowsCompositor.CreateColorBrushWithColor(Clear);
+end;
+
+procedure TTransparentBackdrop.OnTargetDisconnected(ADisconnectedTarget: ICompositionSupportsSystemBackdrop);
+begin
+  ADisconnectedTarget.SystemBackdrop := nil;
+end;
+
+procedure TTransparentBackdrop.OnDefaultSystemBackdropConfigurationChanged(
+  ATarget: ICompositionSupportsSystemBackdrop; AXamlRoot: IXamlRoot);
+begin
+end;
+
+function TTransparentBackdrop.SafeCallException(ExceptObject: TObject; ExceptAddr: Pointer): HRESULT;
+begin
+  // Reported, never a failure HRESULT inside the XAML framework
+  if ExceptObject is Exception then
+    TWinUIApp.HandleException(Exception(ExceptObject));
+  Result := S_OK;
+end;
+
 { TWinUIWindow }
 
 constructor TWinUIWindow.Create;
@@ -232,6 +484,7 @@ begin
   // WindowId.Value is the HWND of a top-level window (see Scale)
   SetProgramIcon(HWND(AppWindow.Id.Value));
   FTransparency := True;
+  FShowActivated := True;
   // Free the wrapper after Closed has reached every handler (user OnClosed included).
   FClosedToken := Intf.add_Closed(TTypedEventHandler_Object_WindowEventArgs.Create(
     procedure(ASender: IInspectable; AArgs: IWindowEventArgs)
@@ -255,6 +508,8 @@ begin
   for I := High(FWindows) downto 0 do
     if FWindows[I] = Self then
       Delete(FWindows, I, 1);
+  if Assigned(CustomXamlOwnerGone) then
+    CustomXamlOwnerGone(Self);
   inherited;
 end;
 
@@ -272,7 +527,18 @@ procedure TWinUIWindow.DetachEvents;
 begin
   if FClosedToken.Value <> 0 then
     Intf.remove_Closed(FClosedToken);
+  if FSubclassed then
+  begin
+    RemoveWindowSubclass(Handle, WindowSubclassProc, 1);
+    FSubclassed := False;
+  end;
   inherited;
+end;
+
+function TWinUIWindow.Handle: THandle;
+begin
+  // WindowId.Value is the HWND of a top-level window (see Scale)
+  Result := HWND(AppWindow.Id.Value);
 end;
 
 function TWinUIWindow.Scale: Double;
@@ -350,9 +616,12 @@ begin
       end;
     TWinUIBackdrop.Acrylic:
       FSystemBackdrop := TWinUIDesktopAcrylicBackdrop.Create(Self);
+    TWinUIBackdrop.Transparent:
+      FSystemBackdrop := TWinUISystemBackdrop.CreateFrom(Self, TTransparentBackdrop.Create as IInspectable);
   end;
   FBackdrop := AValue;
   ApplyBackdrop;
+  UpdateFrame;
 end;
 
 procedure TWinUIWindow.SetTransparency(AValue: Boolean);
@@ -420,6 +689,236 @@ type
     ['{52BB3002-919B-4D6B-9B78-8DD66FF4B93B}']
     function get_AdvancedEffectsEnabled: Boolean; safecall;
   end;
+
+procedure TWinUIWindow.SetWindowStyle(AValue: TWinUIWindowStyle);
+var
+  Overlay: Boolean;
+  P: TWinUIOverlappedPresenter;
+  Style, NewStyle: NativeInt;
+begin
+  FWindowStyle := AValue;
+  Overlay := AValue = TWinUIWindowStyle.Overlay;
+  P := Presenter;
+  P.SetBorderAndTitleBar(not Overlay, not Overlay);
+  P.IsResizable := not Overlay;
+  P.IsMaximizable := not Overlay;
+  P.IsMinimizable := not Overlay;
+  P.IsAlwaysOnTop := Overlay;
+  AppWindow.IsShownInSwitchers := not Overlay;
+  // SetBorderAndTitleBar(False, False) hides the frame but keeps WS_CAPTION,
+  // so Windows would still treat the top of the window as a title bar.
+  Style := GetWindowLongPtr(Handle, GWL_STYLE);
+  if Overlay then
+  begin
+    Subclass;
+    NewStyle := (Style and not OverlayRemovedStyles) or WS_POPUP;
+  end
+  else
+    NewStyle := (Style and not WS_POPUP) or WS_OVERLAPPEDWINDOW;
+  if NewStyle <> Style then
+  begin
+    SetWindowLongPtr(Handle, GWL_STYLE, NewStyle);
+    SetWindowPos(Handle, 0, 0, 0, 0, 0, SWP_FRAMECHANGED or SWP_NOMOVE or SWP_NOSIZE or SWP_NOZORDER or
+      SWP_NOACTIVATE or SWP_NOOWNERZORDER);
+  end;
+  UpdateFrame;
+end;
+
+function TWinUIWindow.GetAlwaysOnTop: Boolean;
+begin
+  Result := Presenter.IsAlwaysOnTop;
+end;
+
+procedure TWinUIWindow.SetAlwaysOnTop(AValue: Boolean);
+begin
+  Presenter.IsAlwaysOnTop := AValue;
+end;
+
+// Overlay and Transparent windows get no DWM frame: no rounded corners, no
+// accent border and no shadow around a window whose shape is its content.
+procedure TWinUIWindow.UpdateFrame;
+var
+  Frameless: Boolean;
+  Corner, Border, Policy: DWORD;
+begin
+  Frameless := (FWindowStyle = TWinUIWindowStyle.Overlay) or (FBackdrop = TWinUIBackdrop.Transparent);
+  if Frameless then
+  begin
+    Corner := DWMWCP_DONOTROUND;
+    Border := DWMWA_COLOR_NONE;
+    Policy := DWMNCRP_DISABLED;
+  end
+  else
+  begin
+    Corner := DWMWCP_DEFAULT;
+    Border := DWMWA_COLOR_DEFAULT;
+    Policy := DWMNCRP_USEWINDOWSTYLE;
+  end;
+  DwmSetWindowAttribute(Handle, DWMWA_WINDOW_CORNER_PREFERENCE, @Corner, SizeOf(Corner));
+  DwmSetWindowAttribute(Handle, DWMWA_BORDER_COLOR, @Border, SizeOf(Border));
+  DwmSetWindowAttribute(Handle, DWMWA_NCRENDERING_POLICY, @Policy, SizeOf(Policy));
+end;
+
+procedure TWinUIWindow.SetShowActivated(AValue: Boolean);
+begin
+  FShowActivated := AValue;
+  UpdateExStyle;
+end;
+
+procedure TWinUIWindow.UpdateExStyle;
+var
+  Style, NewStyle: NativeInt;
+begin
+  Style := GetWindowLongPtr(Handle, GWL_EXSTYLE);
+  if FShowActivated then
+    NewStyle := Style and not WS_EX_NOACTIVATE
+  else
+    NewStyle := Style or WS_EX_NOACTIVATE;
+  if NewStyle <> Style then
+    SetWindowLongPtr(Handle, GWL_EXSTYLE, NewStyle);
+end;
+
+procedure TWinUIWindow.Subclass;
+begin
+  if not FSubclassed then
+    FSubclassed := SetWindowSubclass(Handle, WindowSubclassProc, 1, DWORD_PTR(Self));
+end;
+
+function TWinUIWindow.HandleMessage(AMsg: Cardinal; AWParam: NativeUInt; ALParam: NativeInt;
+  var AResult: NativeInt): Boolean;
+begin
+  Result := False;
+  case AMsg of
+    // WinUI's presenter puts WS_CAPTION back when it updates the frame
+    WM_STYLECHANGING:
+      if (FWindowStyle = TWinUIWindowStyle.Overlay) and (Integer(AWParam) = GWL_STYLE) then
+        PStyleStruct(ALParam).styleNew := (PStyleStruct(ALParam).styleNew and not OverlayRemovedStyles) or WS_POPUP;
+    // A resolution, layout or taskbar change moves the edge the window docks to
+    WM_DISPLAYCHANGE, WM_SETTINGCHANGE:
+      if FDock <> TWinUIDock.None then
+        DispatcherQueue.TryEnqueue(TDispatcherQueueHandler.Create(
+          procedure
+          begin
+            ApplyDock;
+          end));
+  end;
+end;
+
+procedure TWinUIWindow.SetDock(AValue: TWinUIDock);
+begin
+  FDock := AValue;
+  if (AValue <> TWinUIDock.None) and (FDockListener = 0) then
+  begin
+    Subclass;
+    // Size and DPI changes: the window keeps its edge
+    FDockListener := 1 + AppWindow.Changed.Add(
+      procedure(Sender: TObject; E: TWinUIAppWindowChangedEventArgs)
+      begin
+        if E.DidSizeChange then
+          ApplyDock;
+      end);
+  end;
+  ApplyDock;
+end;
+
+class function TWinUIWindow.DockPosition(ADock: TWinUIDock; const AOuter, AWork: RectInt32;
+  const ASize: SizeInt32): PointInt32;
+var
+  Area: RectInt32;
+begin
+  // The top edge of the screen itself, the bottom one above the taskbar
+  if ADock = TWinUIDock.BottomCenter then
+    Area := AWork
+  else
+    Area := AOuter;
+  case ADock of
+    TWinUIDock.TopLeft:
+      Result.X := Area.X;
+    TWinUIDock.TopRight:
+      Result.X := Area.X + Area.Width - ASize.Width;
+  else
+    Result.X := Area.X + (Area.Width - ASize.Width) div 2;
+  end;
+  if ADock = TWinUIDock.BottomCenter then
+    Result.Y := Area.Y + Area.Height - ASize.Height
+  else
+    Result.Y := Area.Y;
+end;
+
+procedure TWinUIWindow.ApplyDock;
+var
+  Display: IDisplayArea;
+  Pos: PointInt32;
+begin
+  if FDock = TWinUIDock.None then
+    Exit;
+  Display := DisplayArea.GetFromWindowId(AppWindow.Id, DisplayAreaFallback.Nearest);
+  Pos := DockPosition(FDock, Display.OuterBounds, Display.WorkArea, AppWindow.Size);
+  if (Pos.X <> AppWindow.Position.X) or (Pos.Y <> AppWindow.Position.Y) then
+    AppWindow.Move(Pos);
+end;
+
+procedure TWinUIWindow.SetClickThrough(AValue: TWinUIClickThrough);
+begin
+  FClickThrough := AValue;
+  UpdateHitTestRegion;
+end;
+
+procedure TWinUIWindow.SetHitTestElement(AValue: TWinUIFrameworkElement);
+begin
+  if FHitTestElement = AValue then
+    Exit;
+  if (FHitTestElement <> nil) and (FHitTestListener <> 0) then
+    FHitTestElement.LayoutUpdated.Remove(FHitTestListener - 1);
+  FHitTestListener := 0;
+  FHitTestElement := AValue;
+  if AValue <> nil then
+    // Every layout pass, so the region follows size animations frame by frame
+    FHitTestListener := 1 + AValue.LayoutUpdated.Add(
+      procedure(Sender: TObject; E: TWinValue)
+      begin
+        UpdateHitTestRegion;
+      end);
+  UpdateHitTestRegion;
+end;
+
+procedure TWinUIWindow.UpdateHitTestRegion;
+var
+  Element: IFrameworkElement;
+  Bounds: RADWinUI.Abi.Rect;
+  S: Double;
+  Box: array[0..3] of Integer;
+begin
+  if (FClickThrough = TWinUIClickThrough.None) or (FHitTestElement = nil) then
+  begin
+    if FRegionSet then
+      SetWindowRgn(Handle, 0, True);
+    FRegionSet := False;
+    Exit;
+  end;
+  Element := TWinUIObject.IntfOf(FHitTestElement, IFrameworkElement) as IFrameworkElement;
+  Bounds.X := 0;
+  Bounds.Y := 0;
+  Bounds.Width := Element.ActualWidth;
+  Bounds.Height := Element.ActualHeight;
+  // Raw interfaces: a wrapper per transform would pile up in the window until it closes
+  Bounds := (Element as IUIElement).TransformToVisual(nil).TransformBounds(Bounds);
+  S := Scale;
+  Box[0] := Floor(Bounds.X * S);
+  Box[1] := Floor(Bounds.Y * S);
+  Box[2] := Ceil((Bounds.X + Bounds.Width) * S);
+  Box[3] := Ceil((Bounds.Y + Bounds.Height) * S);
+  if FRegionSet and (Box[0] = FHitTestBox[0]) and (Box[1] = FHitTestBox[1]) and (Box[2] = FHitTestBox[2]) and
+    (Box[3] = FHitTestBox[3]) then
+    Exit;
+  FHitTestBox[0] := Box[0];
+  FHitTestBox[1] := Box[1];
+  FHitTestBox[2] := Box[2];
+  FHitTestBox[3] := Box[3];
+  FRegionSet := True;
+  // The window owns the region from here on
+  SetWindowRgn(Handle, CreateRectRgn(Box[0], Box[1], Box[2], Box[3]), True);
+end;
 
 class function TWinUIWindow.SystemTransparency: Boolean;
 var
@@ -589,7 +1088,12 @@ var
 begin
   if not TestMonitorWorkArea(Area) then
   begin
-    Activate;
+    ApplyDock;
+    if FShowActivated then
+      Activate
+    else
+      AppWindow.Show(False);
+    KeepOnTop;
     Exit;
   end;
   Size := AppWindow.Size;
@@ -603,6 +1107,15 @@ begin
     CloseHandle(BeginThread(nil, 0, TestModeHookThread, nil, 0, ThreadId));
   end;
   AppWindow.Show(False); // visible, but the user's foreground window keeps the focus
+  KeepOnTop;
+end;
+
+// The presenter's IsAlwaysOnTop does not always reach a window that was hidden
+// when it was set (an overlay sets it before Show), so showing confirms it.
+procedure TWinUIWindow.KeepOnTop;
+begin
+  if (FWindowStyle = TWinUIWindowStyle.Overlay) or Presenter.IsAlwaysOnTop then
+    SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_NOOWNERZORDER);
 end;
 
 procedure TWinUIWindow.Center;
@@ -651,8 +1164,19 @@ begin
 end;
 
 function TWinUIWindow.LoadContent(const AXaml: string): TWinUIFrameworkElement;
+var
+  Loaded: IInspectable;
+  Previous: TObject;
 begin
-  Result := TWinUIFrameworkElement(TWinUIObject.Wrap(Self, XamlReader.Load(WinStr(AXaml)), TWinUIFrameworkElement));
+  // Controls written in Delphi that this XAML creates belong to this window
+  Previous := CustomXamlLoadOwner;
+  CustomXamlLoadOwner := Self;
+  try
+    Loaded := XamlReader.Load(WinStr(AXaml));
+  finally
+    CustomXamlLoadOwner := Previous;
+  end;
+  Result := TWinUIFrameworkElement(TWinUIObject.Wrap(Self, Loaded, TWinUIFrameworkElement));
   Content := Result;
 end;
 
@@ -811,6 +1335,9 @@ destructor TWinUIApp.Destroy;
 begin
   // Windows whose deferred free did not run before the message loop ended.
   TWinUIWindow.FreeAll;
+  // Before WinRT shuts down, like every other WinRT reference
+  WindowsCompositor := nil;
+  SystemQueueController := nil;
   if FInstance = Self then
     FInstance := nil;
   inherited;

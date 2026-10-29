@@ -189,7 +189,32 @@ var
   Converters: TDictionary<string, Boolean>;
   Preview: TPreviewWindow; // nil once the window is gone (pipe thread checks it)
 
-/// Event names of every XAML class, from RADWinUI.Xaml.json (WinMDGen).
+/// Events and tags of RADWinUI's own controls (RADWinUI.Controls.json): all of them are UIElements.
+procedure LoadOwnControls(const APath: string);
+var
+  Json: TJSONValue;
+  Cls, Ev: TJSONPair;
+  Names: TJSONObject;
+begin
+  if not FileExists(APath) then
+    Exit;
+  Json := TJSONObject.ParseJSONValue(TFile.ReadAllText(APath, TEncoding.UTF8));
+  try
+    for Cls in (Json as TJSONObject).GetValue<TJSONObject>('classes') do
+      if (Cls.JsonValue as TJSONObject).TryGetValue<TJSONObject>('events', Names) then
+        for Ev in Names do
+          Events.AddOrSetValue(Ev.JsonString.Value, True);
+    for Ev in (Json as TJSONObject).GetValue<TJSONObject>('types') do
+    begin
+      UIElementTags.AddOrSetValue(Ev.JsonString.Value, True);
+      UIElementTags.AddOrSetValue('rw:' + Ev.JsonString.Value, True);
+    end;
+  finally
+    Json.Free;
+  end;
+end;
+
+/// Event names of every XAML class, from RADWinUI.Xaml.json (WinMDGen) and RADWinUI.Controls.json.
 procedure LoadEvents;
 var
   Path: string;
@@ -226,6 +251,10 @@ begin
   finally
     Json.Free;
   end;
+  Path := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\..\..\Framework\RADWinUI.Controls.json');
+  if not FileExists(Path) and (GetEnvironmentVariable('RADWINUI_ROOT') <> '') then
+    Path := IncludeTrailingPathDelimiter(GetEnvironmentVariable('RADWINUI_ROOT')) + 'src\Framework\RADWinUI.Controls.json';
+  LoadOwnControls(Path);
 end;
 
 /// S with every character but line breaks turned into a space.

@@ -2,6 +2,8 @@
 .SYNOPSIS
   Regenerates src\Generated\RADWinUI.Abi.pas, RADWinUI.Xaml.pas and RADWinUI.Xaml.json
   from the Windows App SDK metadata.
+  Then writes src\Framework\RADWinUI.Controls.json, the type index of RADWinUI's
+  own controls (RADWinUI.Controls), with tools\ControlsIndex.
 
 .DESCRIPTION
   Builds tools\WinMDGen (a Delphi console program) into
@@ -75,3 +77,10 @@ if ($LASTEXITCODE -ne 0) { $Log | Write-Host; throw 'Building WinMDGen.exe faile
 & (Join-Path $ToolDir 'WinMDGen.exe') @WinmdArgs --out (Join-Path $RepoRoot 'src\Generated') `
   --sdk "Windows App SDK $($Config.release)"
 if ($LASTEXITCODE -ne 0) { throw "WinMDGen failed with exit code $LASTEXITCODE" }
+
+# RADWinUI's own controls describe themselves: build a program that links them and asks
+& (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tools\ControlsIndex\ControlsIndex.dpr'
+if ($LASTEXITCODE -ne 0) { throw 'Building ControlsIndex.exe failed' }
+& (Join-Path $RepoRoot 'tools\ControlsIndex\Win64\Debug\ControlsIndex.exe') `
+  (Join-Path $RepoRoot 'src\Framework\RADWinUI.Controls.json')
+if ($LASTEXITCODE -ne 0) { throw "ControlsIndex failed with exit code $LASTEXITCODE" }

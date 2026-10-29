@@ -157,6 +157,26 @@ begin
     // The Structure view root: a window with a title bar and caption buttons
     Box(2, 3, 22, 21); Line(2, 8, 22, 8); Line(15, 5, 16, 5); Line(18, 5, 19, 5);
   end
+  else if Name = 'notchpanel' then
+  begin
+    // The screen's top edge with a pill hanging from it
+    Line(2, 4, 22, 4); ACanvas.RoundRect(28, 16, 68, 40, 24, 24); Box(4, 12, 20, 21);
+  end
+  else if Name = 'glowtile' then
+  begin
+    // A tile and its glow
+    ACanvas.RoundRect(24, 24, 72, 72, 16, 16); ACanvas.Pen.Width := 2; ACanvas.RoundRect(10, 10, 86, 86, 28, 28);
+  end
+  else if Name = 'hotkey' then
+  begin
+    // Two key caps: Ctrl + a letter
+    ACanvas.RoundRect(8, 28, 44, 68, 10, 10); ACanvas.RoundRect(52, 28, 88, 68, 10, 10);
+  end
+  else if Name = 'mediasession' then
+  begin
+    // Play and pause
+    Line(4, 7, 4, 17); Line(4, 7, 11, 12); Line(4, 17, 11, 12); Line(15, 7, 15, 17); Line(19, 7, 19, 17);
+  end
   else if Name = 'pipspager' then
   begin
     Circle(3, 10, 7, 14); Circle(10, 10, 14, 14); Circle(17, 10, 21, 14);

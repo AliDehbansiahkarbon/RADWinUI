@@ -2,7 +2,15 @@
 
 All notable changes to RADWinUI.
 
-## Unreleased (0.9.3)
+## Unreleased
+
+- Overlay windows: `WindowStyle` Overlay (no frame, always on top, out of Alt+Tab), a `Transparent` backdrop, `Dock`, `ClickThrough` with `HitTestElement`, and `ShowActivated`, also as `<Window>` attributes.
+- Controls written in Delphi: `TWinUICustomControl` (unit `RADWinUI.CustomControls`) makes a Delphi class a XAML element with dependency properties, a template and events.
+- New Tool Palette category Overlay with RADWinUI's own controls (unit `RADWinUI.Controls`, XAML prefix `rw:`): `TWinUINotchPanel`, `TWinUIGlowTile`, `TWinUIHotKey` and `TWinUIMediaSession`.
+- XamlCodeGen, the designer and the preview know the `rw:` controls. Dropping one declares `xmlns:rw` on the window.
+- The projection includes `Windows.Media.Control`, the media sessions of the PC.
+
+## 0.9.3
 
 - Every sample has a `.dproj` and is in `samples\RADWinUISamples.groupproj`. Build events call `scripts\RADWinUI-PreBuild.cmd` and `scripts\RADWinUI-PostBuild.cmd`, and a sample moved out of the repository finds RADWinUI through `RADWINUI_ROOT`.
 - Windows have a `Transparency` property, `SystemTransparency` and `BindTransparencySwitch`: Gallery, Luma, Greeter and Lucent have a Transparency switch.

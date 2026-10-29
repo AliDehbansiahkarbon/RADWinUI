@@ -2437,11 +2437,25 @@ type
   IWwwFormUrlDecoderRuntimeClass = interface;
   IWwwFormUrlDecoderRuntimeClassFactory = interface;
   IApiInformationStatics = interface;
+  ICurrentSessionChangedEventArgs = interface;
+  IGlobalSystemMediaTransportControlsSession = interface;
+  IGlobalSystemMediaTransportControlsSessionManager = interface;
+  IGlobalSystemMediaTransportControlsSessionManagerStatics = interface;
+  IGlobalSystemMediaTransportControlsSessionMediaProperties = interface;
+  IGlobalSystemMediaTransportControlsSessionPlaybackControls = interface;
+  IGlobalSystemMediaTransportControlsSessionPlaybackInfo = interface;
+  IGlobalSystemMediaTransportControlsSessionTimelineProperties = interface;
+  IMediaPropertiesChangedEventArgs = interface;
+  IPlaybackInfoChangedEventArgs = interface;
+  ISessionsChangedEventArgs = interface;
+  ITimelinePropertiesChangedEventArgs = interface;
   AsyncOperationCompletedHandler_Boolean = interface;
   AsyncOperationCompletedHandler_ContentDialogResult = interface;
   AsyncOperationCompletedHandler_DataPackageOperation = interface;
   AsyncOperationCompletedHandler_ErrorDetails = interface;
   AsyncOperationCompletedHandler_FocusMovementResult = interface;
+  AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManager = interface;
+  AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaProperties = interface;
   AsyncOperationCompletedHandler_IBuffer = interface;
   AsyncOperationCompletedHandler_ICompositionSurface = interface;
   AsyncOperationCompletedHandler_IRandomAccessStream = interface;
@@ -2471,6 +2485,8 @@ type
   IAsyncOperation_DataPackageOperation = interface;
   IAsyncOperation_ErrorDetails = interface;
   IAsyncOperation_FocusMovementResult = interface;
+  IAsyncOperation_GlobalSystemMediaTransportControlsSessionManager = interface;
+  IAsyncOperation_GlobalSystemMediaTransportControlsSessionMediaProperties = interface;
   IAsyncOperation_IBuffer = interface;
   IAsyncOperation_ICompositionSurface = interface;
   IAsyncOperation_IRandomAccessStream = interface;
@@ -2506,6 +2522,7 @@ type
   IIterable_Double = interface;
   IIterable_DoubleKeyFrame = interface;
   IIterable_Geometry = interface;
+  IIterable_GlobalSystemMediaTransportControlsSession = interface;
   IIterable_GradientStop = interface;
   IIterable_GroupStyle = interface;
   IIterable_HubSection = interface;
@@ -2591,6 +2608,7 @@ type
   IIterator_Double = interface;
   IIterator_DoubleKeyFrame = interface;
   IIterator_Geometry = interface;
+  IIterator_GlobalSystemMediaTransportControlsSession = interface;
   IIterator_GradientStop = interface;
   IIterator_GroupStyle = interface;
   IIterator_HubSection = interface;
@@ -2684,6 +2702,8 @@ type
   IReference_DateTime = interface;
   IReference_Double = interface;
   IReference_Int32 = interface;
+  IReference_MediaPlaybackAutoRepeatMode = interface;
+  IReference_MediaPlaybackType = interface;
   IReference_Point = interface;
   IReference_Rect = interface;
   IReference_Single = interface;
@@ -2706,6 +2726,7 @@ type
   IVectorView_Double = interface;
   IVectorView_DoubleKeyFrame = interface;
   IVectorView_Geometry = interface;
+  IVectorView_GlobalSystemMediaTransportControlsSession = interface;
   IVectorView_GradientStop = interface;
   IVectorView_GroupStyle = interface;
   IVectorView_HubSection = interface;
@@ -2878,6 +2899,11 @@ type
   TypedEventHandler_GestureRecognizer_ManipulationUpdatedEventArgs = interface;
   TypedEventHandler_GestureRecognizer_RightTappedEventArgs = interface;
   TypedEventHandler_GestureRecognizer_TappedEventArgs = interface;
+  TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_CurrentSessionChangedEventArgs = interface;
+  TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_SessionsChangedEventArgs = interface;
+  TypedEventHandler_GlobalSystemMediaTransportControlsSession_MediaPropertiesChangedEventArgs = interface;
+  TypedEventHandler_GlobalSystemMediaTransportControlsSession_PlaybackInfoChangedEventArgs = interface;
+  TypedEventHandler_GlobalSystemMediaTransportControlsSession_TimelinePropertiesChangedEventArgs = interface;
   TypedEventHandler_Hyperlink_HyperlinkClickEventArgs = interface;
   TypedEventHandler_IContentSiteAutomation_ContentSiteAutomationProviderRequestedEventArgs = interface;
   TypedEventHandler_IDynamicAnimatedVisualSource_Object = interface;
@@ -6745,6 +6771,17 @@ type
   );
   PPropertyType = ^PropertyType;
 
+  // Windows.Media.Control.GlobalSystemMediaTransportControlsSessionPlaybackStatus
+  GlobalSystemMediaTransportControlsSessionPlaybackStatus = (
+    Closed = 0,
+    Opened = 1,
+    Changing = 2,
+    Stopped = 3,
+    Playing = 4,
+    Paused = 5
+  );
+  PGlobalSystemMediaTransportControlsSessionPlaybackStatus = ^GlobalSystemMediaTransportControlsSessionPlaybackStatus;
+
   // Windows.ApplicationModel.DataTransfer.DataPackageOperation
   DataPackageOperation = type Cardinal;
 
@@ -6762,6 +6799,23 @@ type
     Saturday = 6
   );
   PDayOfWeek = ^DayOfWeek;
+
+  // Windows.Media.MediaPlaybackAutoRepeatMode
+  MediaPlaybackAutoRepeatMode = (
+    None = 0,
+    Track = 1,
+    List = 2
+  );
+  PMediaPlaybackAutoRepeatMode = ^MediaPlaybackAutoRepeatMode;
+
+  // Windows.Media.MediaPlaybackType
+  MediaPlaybackType = (
+    Unknown = 0,
+    Music = 1,
+    Video = 2,
+    Image = 3
+  );
+  PMediaPlaybackType = ^MediaPlaybackType;
 
   // Windows.System.VirtualKey
   VirtualKey = (
@@ -36698,6 +36752,173 @@ type
     function IsApiContractPresentByMajorAndMinor(AContractName: HSTRING; AMajorVersion: Word; AMinorVersion: Word): Boolean; safecall;
   end;
 
+  // Windows.Media.Control.ICurrentSessionChangedEventArgs
+  ICurrentSessionChangedEventArgs = interface(IInspectable)
+  ['{6969CB39-0BFA-5FE0-8D73-09CC5E5408E1}']
+  end;
+
+  // Windows.Media.Control.IGlobalSystemMediaTransportControlsSession
+  IGlobalSystemMediaTransportControlsSession = interface(IInspectable)
+  ['{7148C835-9B14-5AE2-AB85-DC9B1C14E1A8}']
+    function get_SourceAppUserModelId: HSTRING; safecall;
+    function TryGetMediaPropertiesAsync: IAsyncOperation_GlobalSystemMediaTransportControlsSessionMediaProperties; safecall;
+    function GetTimelineProperties: IGlobalSystemMediaTransportControlsSessionTimelineProperties; safecall;
+    function GetPlaybackInfo: IGlobalSystemMediaTransportControlsSessionPlaybackInfo; safecall;
+    function TryPlayAsync: IAsyncOperation_Boolean; safecall;
+    function TryPauseAsync: IAsyncOperation_Boolean; safecall;
+    function TryStopAsync: IAsyncOperation_Boolean; safecall;
+    function TryRecordAsync: IAsyncOperation_Boolean; safecall;
+    function TryFastForwardAsync: IAsyncOperation_Boolean; safecall;
+    function TryRewindAsync: IAsyncOperation_Boolean; safecall;
+    function TrySkipNextAsync: IAsyncOperation_Boolean; safecall;
+    function TrySkipPreviousAsync: IAsyncOperation_Boolean; safecall;
+    function TryChangeChannelUpAsync: IAsyncOperation_Boolean; safecall;
+    function TryChangeChannelDownAsync: IAsyncOperation_Boolean; safecall;
+    function TryTogglePlayPauseAsync: IAsyncOperation_Boolean; safecall;
+    function TryChangeAutoRepeatModeAsync(ARequestedAutoRepeatMode: MediaPlaybackAutoRepeatMode): IAsyncOperation_Boolean; safecall;
+    function TryChangePlaybackRateAsync(ARequestedPlaybackRate: Double): IAsyncOperation_Boolean; safecall;
+    function TryChangeShuffleActiveAsync(ARequestedShuffleState: Boolean): IAsyncOperation_Boolean; safecall;
+    function TryChangePlaybackPositionAsync(ARequestedPlaybackPosition: Int64): IAsyncOperation_Boolean; safecall;
+    function add_TimelinePropertiesChanged(AHandler: TypedEventHandler_GlobalSystemMediaTransportControlsSession_TimelinePropertiesChangedEventArgs): EventRegistrationToken; safecall;
+    procedure remove_TimelinePropertiesChanged(AToken: EventRegistrationToken); safecall;
+    function add_PlaybackInfoChanged(AHandler: TypedEventHandler_GlobalSystemMediaTransportControlsSession_PlaybackInfoChangedEventArgs): EventRegistrationToken; safecall;
+    procedure remove_PlaybackInfoChanged(AToken: EventRegistrationToken); safecall;
+    function add_MediaPropertiesChanged(AHandler: TypedEventHandler_GlobalSystemMediaTransportControlsSession_MediaPropertiesChangedEventArgs): EventRegistrationToken; safecall;
+    procedure remove_MediaPropertiesChanged(AToken: EventRegistrationToken); safecall;
+    property SourceAppUserModelId: HSTRING read get_SourceAppUserModelId;
+  end;
+
+  // Windows.Media.Control.IGlobalSystemMediaTransportControlsSessionManager
+  IGlobalSystemMediaTransportControlsSessionManager = interface(IInspectable)
+  ['{CACE8EAC-E86E-504A-AB31-5FF8FF1BCE49}']
+    function GetCurrentSession: IGlobalSystemMediaTransportControlsSession; safecall;
+    function GetSessions: IVectorView_GlobalSystemMediaTransportControlsSession; safecall;
+    function add_CurrentSessionChanged(AHandler: TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_CurrentSessionChangedEventArgs): EventRegistrationToken; safecall;
+    procedure remove_CurrentSessionChanged(AToken: EventRegistrationToken); safecall;
+    function add_SessionsChanged(AHandler: TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_SessionsChangedEventArgs): EventRegistrationToken; safecall;
+    procedure remove_SessionsChanged(AToken: EventRegistrationToken); safecall;
+  end;
+
+  // Windows.Media.Control.IGlobalSystemMediaTransportControlsSessionManagerStatics
+  IGlobalSystemMediaTransportControlsSessionManagerStatics = interface(IInspectable)
+  ['{2050C4EE-11A0-57DE-AED7-C97C70338245}']
+    function RequestAsync: IAsyncOperation_GlobalSystemMediaTransportControlsSessionManager; safecall;
+  end;
+
+  // Windows.Media.Control.IGlobalSystemMediaTransportControlsSessionMediaProperties
+  IGlobalSystemMediaTransportControlsSessionMediaProperties = interface(IInspectable)
+  ['{68856CF6-ADB4-54B2-AC16-05837907ACB6}']
+    function get_Title: HSTRING; safecall;
+    function get_Subtitle: HSTRING; safecall;
+    function get_AlbumArtist: HSTRING; safecall;
+    function get_Artist: HSTRING; safecall;
+    function get_AlbumTitle: HSTRING; safecall;
+    function get_TrackNumber: Integer; safecall;
+    function get_Genres: IVectorView_String; safecall;
+    function get_AlbumTrackCount: Integer; safecall;
+    function get_PlaybackType: IReference_MediaPlaybackType; safecall;
+    function get_Thumbnail: IInspectable; safecall;
+    property AlbumArtist: HSTRING read get_AlbumArtist;
+    property AlbumTitle: HSTRING read get_AlbumTitle;
+    property AlbumTrackCount: Integer read get_AlbumTrackCount;
+    property Artist: HSTRING read get_Artist;
+    property Genres: IVectorView_String read get_Genres;
+    property PlaybackType: IReference_MediaPlaybackType read get_PlaybackType;
+    property Subtitle: HSTRING read get_Subtitle;
+    property Thumbnail: IInspectable read get_Thumbnail;
+    property Title: HSTRING read get_Title;
+    property TrackNumber: Integer read get_TrackNumber;
+  end;
+
+  // Windows.Media.Control.IGlobalSystemMediaTransportControlsSessionPlaybackControls
+  IGlobalSystemMediaTransportControlsSessionPlaybackControls = interface(IInspectable)
+  ['{6501A3E6-BC7A-503A-BB1B-68F158F3FB03}']
+    function get_IsPlayEnabled: Boolean; safecall;
+    function get_IsPauseEnabled: Boolean; safecall;
+    function get_IsStopEnabled: Boolean; safecall;
+    function get_IsRecordEnabled: Boolean; safecall;
+    function get_IsFastForwardEnabled: Boolean; safecall;
+    function get_IsRewindEnabled: Boolean; safecall;
+    function get_IsNextEnabled: Boolean; safecall;
+    function get_IsPreviousEnabled: Boolean; safecall;
+    function get_IsChannelUpEnabled: Boolean; safecall;
+    function get_IsChannelDownEnabled: Boolean; safecall;
+    function get_IsPlayPauseToggleEnabled: Boolean; safecall;
+    function get_IsShuffleEnabled: Boolean; safecall;
+    function get_IsRepeatEnabled: Boolean; safecall;
+    function get_IsPlaybackRateEnabled: Boolean; safecall;
+    function get_IsPlaybackPositionEnabled: Boolean; safecall;
+    property IsChannelDownEnabled: Boolean read get_IsChannelDownEnabled;
+    property IsChannelUpEnabled: Boolean read get_IsChannelUpEnabled;
+    property IsFastForwardEnabled: Boolean read get_IsFastForwardEnabled;
+    property IsNextEnabled: Boolean read get_IsNextEnabled;
+    property IsPauseEnabled: Boolean read get_IsPauseEnabled;
+    property IsPlayEnabled: Boolean read get_IsPlayEnabled;
+    property IsPlayPauseToggleEnabled: Boolean read get_IsPlayPauseToggleEnabled;
+    property IsPlaybackPositionEnabled: Boolean read get_IsPlaybackPositionEnabled;
+    property IsPlaybackRateEnabled: Boolean read get_IsPlaybackRateEnabled;
+    property IsPreviousEnabled: Boolean read get_IsPreviousEnabled;
+    property IsRecordEnabled: Boolean read get_IsRecordEnabled;
+    property IsRepeatEnabled: Boolean read get_IsRepeatEnabled;
+    property IsRewindEnabled: Boolean read get_IsRewindEnabled;
+    property IsShuffleEnabled: Boolean read get_IsShuffleEnabled;
+    property IsStopEnabled: Boolean read get_IsStopEnabled;
+  end;
+
+  // Windows.Media.Control.IGlobalSystemMediaTransportControlsSessionPlaybackInfo
+  IGlobalSystemMediaTransportControlsSessionPlaybackInfo = interface(IInspectable)
+  ['{94B4B6CF-E8BA-51AD-87A7-C10ADE106127}']
+    function get_Controls: IGlobalSystemMediaTransportControlsSessionPlaybackControls; safecall;
+    function get_PlaybackStatus: GlobalSystemMediaTransportControlsSessionPlaybackStatus; safecall;
+    function get_PlaybackType: IReference_MediaPlaybackType; safecall;
+    function get_AutoRepeatMode: IReference_MediaPlaybackAutoRepeatMode; safecall;
+    function get_PlaybackRate: IReference_Double; safecall;
+    function get_IsShuffleActive: IReference_Boolean; safecall;
+    property AutoRepeatMode: IReference_MediaPlaybackAutoRepeatMode read get_AutoRepeatMode;
+    property Controls: IGlobalSystemMediaTransportControlsSessionPlaybackControls read get_Controls;
+    property IsShuffleActive: IReference_Boolean read get_IsShuffleActive;
+    property PlaybackRate: IReference_Double read get_PlaybackRate;
+    property PlaybackStatus: GlobalSystemMediaTransportControlsSessionPlaybackStatus read get_PlaybackStatus;
+    property PlaybackType: IReference_MediaPlaybackType read get_PlaybackType;
+  end;
+
+  // Windows.Media.Control.IGlobalSystemMediaTransportControlsSessionTimelineProperties
+  IGlobalSystemMediaTransportControlsSessionTimelineProperties = interface(IInspectable)
+  ['{EDE34136-6F25-588D-8ECF-EA5B6735AAA5}']
+    function get_StartTime: TimeSpan; safecall;
+    function get_EndTime: TimeSpan; safecall;
+    function get_MinSeekTime: TimeSpan; safecall;
+    function get_MaxSeekTime: TimeSpan; safecall;
+    function get_Position: TimeSpan; safecall;
+    function get_LastUpdatedTime: DateTime; safecall;
+    property EndTime: TimeSpan read get_EndTime;
+    property LastUpdatedTime: DateTime read get_LastUpdatedTime;
+    property MaxSeekTime: TimeSpan read get_MaxSeekTime;
+    property MinSeekTime: TimeSpan read get_MinSeekTime;
+    property Position: TimeSpan read get_Position;
+    property StartTime: TimeSpan read get_StartTime;
+  end;
+
+  // Windows.Media.Control.IMediaPropertiesChangedEventArgs
+  IMediaPropertiesChangedEventArgs = interface(IInspectable)
+  ['{7D3741CB-ADF0-5CEF-91BA-CFABCDD77678}']
+  end;
+
+  // Windows.Media.Control.IPlaybackInfoChangedEventArgs
+  IPlaybackInfoChangedEventArgs = interface(IInspectable)
+  ['{786756C2-BC0D-50A5-8807-054291FEF139}']
+  end;
+
+  // Windows.Media.Control.ISessionsChangedEventArgs
+  ISessionsChangedEventArgs = interface(IInspectable)
+  ['{BBF0CD32-42C4-5A58-B317-F34BBFBD26E0}']
+  end;
+
+  // Windows.Media.Control.ITimelinePropertiesChangedEventArgs
+  ITimelinePropertiesChangedEventArgs = interface(IInspectable)
+  ['{29033A2F-C923-5A77-BCAF-055FF415AD32}']
+  end;
+
   // Generic interface instances
   // Windows.Foundation.AsyncOperationCompletedHandler<Boolean>
   AsyncOperationCompletedHandler_Boolean = interface(IUnknown)
@@ -36727,6 +36948,18 @@ type
   AsyncOperationCompletedHandler_FocusMovementResult = interface(IUnknown)
   ['{276FB687-4B2C-535C-9177-EF701FDC052C}']
     procedure Invoke(AAsyncInfo: IAsyncOperation_FocusMovementResult; AAsyncStatus: AsyncStatus); safecall;
+  end;
+
+  // Windows.Foundation.AsyncOperationCompletedHandler<Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager>
+  AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManager = interface(IUnknown)
+  ['{10F0074E-923D-5510-8F4A-DDE37754CA0E}']
+    procedure Invoke(AAsyncInfo: IAsyncOperation_GlobalSystemMediaTransportControlsSessionManager; AAsyncStatus: AsyncStatus); safecall;
+  end;
+
+  // Windows.Foundation.AsyncOperationCompletedHandler<Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties>
+  AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaProperties = interface(IUnknown)
+  ['{84593A3D-951A-55B6-8353-5205E577797B}']
+    procedure Invoke(AAsyncInfo: IAsyncOperation_GlobalSystemMediaTransportControlsSessionMediaProperties; AAsyncStatus: AsyncStatus); safecall;
   end;
 
   // Windows.Foundation.AsyncOperationCompletedHandler<Windows.Storage.Streams.IBuffer>
@@ -36916,6 +37149,24 @@ type
     function get_Completed: AsyncOperationCompletedHandler_FocusMovementResult; safecall;
     function GetResults: IFocusMovementResult; safecall;
     property Completed: AsyncOperationCompletedHandler_FocusMovementResult read get_Completed write put_Completed;
+  end;
+
+  // Windows.Foundation.IAsyncOperation<Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager>
+  IAsyncOperation_GlobalSystemMediaTransportControlsSessionManager = interface(IInspectable)
+  ['{3EEC115E-7346-5C27-8C5F-DA78514A277B}']
+    procedure put_Completed(AHandler: AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManager); safecall;
+    function get_Completed: AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManager; safecall;
+    function GetResults: IGlobalSystemMediaTransportControlsSessionManager; safecall;
+    property Completed: AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManager read get_Completed write put_Completed;
+  end;
+
+  // Windows.Foundation.IAsyncOperation<Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties>
+  IAsyncOperation_GlobalSystemMediaTransportControlsSessionMediaProperties = interface(IInspectable)
+  ['{B185E6F3-E0D8-51CB-913F-C98D48C93C46}']
+    procedure put_Completed(AHandler: AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaProperties); safecall;
+    function get_Completed: AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaProperties; safecall;
+    function GetResults: IGlobalSystemMediaTransportControlsSessionMediaProperties; safecall;
+    property Completed: AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaProperties read get_Completed write put_Completed;
   end;
 
   // Windows.Foundation.IAsyncOperation<Windows.Storage.Streams.IBuffer>
@@ -37162,6 +37413,12 @@ type
   IIterable_Geometry = interface(IInspectable)
   ['{9B9B662C-FF40-5FB3-A558-84C2FFAB9037}']
     function First: IIterator_Geometry; safecall;
+  end;
+
+  // Windows.Foundation.Collections.IIterable<Windows.Media.Control.GlobalSystemMediaTransportControlsSession>
+  IIterable_GlobalSystemMediaTransportControlsSession = interface(IInspectable)
+  ['{6C594BFE-B3DD-5F1D-A78F-3A2D9E937CA3}']
+    function First: IIterator_GlobalSystemMediaTransportControlsSession; safecall;
   end;
 
   // Windows.Foundation.Collections.IIterable<Microsoft.UI.Xaml.Media.GradientStop>
@@ -37786,6 +38043,17 @@ type
     function MoveNext: Boolean; safecall;
     function GetMany(AItemsSize: Cardinal; AItems: Pointer): Cardinal; safecall;
     property Current: IGeometry read get_Current;
+    property HasCurrent: Boolean read get_HasCurrent;
+  end;
+
+  // Windows.Foundation.Collections.IIterator<Windows.Media.Control.GlobalSystemMediaTransportControlsSession>
+  IIterator_GlobalSystemMediaTransportControlsSession = interface(IInspectable)
+  ['{EC2E1C43-67DB-5985-B2FA-91FD6A9C1EBF}']
+    function get_Current: IGlobalSystemMediaTransportControlsSession; safecall;
+    function get_HasCurrent: Boolean; safecall;
+    function MoveNext: Boolean; safecall;
+    function GetMany(AItemsSize: Cardinal; AItems: Pointer): Cardinal; safecall;
+    property Current: IGlobalSystemMediaTransportControlsSession read get_Current;
     property HasCurrent: Boolean read get_HasCurrent;
   end;
 
@@ -38750,6 +39018,20 @@ type
     property Value: Integer read get_Value;
   end;
 
+  // Windows.Foundation.IReference<Windows.Media.MediaPlaybackAutoRepeatMode>
+  IReference_MediaPlaybackAutoRepeatMode = interface(IInspectable)
+  ['{50A7F41F-58D5-5C4D-9475-8DD1ACD65836}']
+    function get_Value: MediaPlaybackAutoRepeatMode; safecall;
+    property Value: MediaPlaybackAutoRepeatMode read get_Value;
+  end;
+
+  // Windows.Foundation.IReference<Windows.Media.MediaPlaybackType>
+  IReference_MediaPlaybackType = interface(IInspectable)
+  ['{E289F7D8-6BA7-50AB-9F13-6E4E51D15CA4}']
+    function get_Value: MediaPlaybackType; safecall;
+    property Value: MediaPlaybackType read get_Value;
+  end;
+
   // Windows.Foundation.IReference<Windows.Foundation.Point>
   IReference_Point = interface(IInspectable)
   ['{84F14C22-A00A-5272-8D3D-82112E66DF00}']
@@ -38948,6 +39230,16 @@ type
     function GetAt(AIndex: Cardinal): IGeometry; safecall;
     function get_Size: Cardinal; safecall;
     function IndexOf(AValue: IGeometry; out AIndex: Cardinal): Boolean; safecall;
+    function GetMany(AStartIndex: Cardinal; AItemsSize: Cardinal; AItems: Pointer): Cardinal; safecall;
+    property Size: Cardinal read get_Size;
+  end;
+
+  // Windows.Foundation.Collections.IVectorView<Windows.Media.Control.GlobalSystemMediaTransportControlsSession>
+  IVectorView_GlobalSystemMediaTransportControlsSession = interface(IInspectable)
+  ['{9B2672DA-5088-5A1D-ACD9-A3FC5EF1CFA4}']
+    function GetAt(AIndex: Cardinal): IGlobalSystemMediaTransportControlsSession; safecall;
+    function get_Size: Cardinal; safecall;
+    function IndexOf(AValue: IGlobalSystemMediaTransportControlsSession; out AIndex: Cardinal): Boolean; safecall;
     function GetMany(AStartIndex: Cardinal; AItemsSize: Cardinal; AItems: Pointer): Cardinal; safecall;
     property Size: Cardinal read get_Size;
   end;
@@ -40920,6 +41212,36 @@ type
     procedure Invoke(ASender: IGestureRecognizer; AArgs: ITappedEventArgs); safecall;
   end;
 
+  // Windows.Foundation.TypedEventHandler<Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control.CurrentSessionChangedEventArgs>
+  TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_CurrentSessionChangedEventArgs = interface(IUnknown)
+  ['{228BD0ED-1FA2-5E9B-A6EC-42566173103B}']
+    procedure Invoke(ASender: IGlobalSystemMediaTransportControlsSessionManager; AArgs: ICurrentSessionChangedEventArgs); safecall;
+  end;
+
+  // Windows.Foundation.TypedEventHandler<Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager, Windows.Media.Control.SessionsChangedEventArgs>
+  TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_SessionsChangedEventArgs = interface(IUnknown)
+  ['{2E2A8630-DC8C-530A-9746-BC984D4B029E}']
+    procedure Invoke(ASender: IGlobalSystemMediaTransportControlsSessionManager; AArgs: ISessionsChangedEventArgs); safecall;
+  end;
+
+  // Windows.Foundation.TypedEventHandler<Windows.Media.Control.GlobalSystemMediaTransportControlsSession, Windows.Media.Control.MediaPropertiesChangedEventArgs>
+  TypedEventHandler_GlobalSystemMediaTransportControlsSession_MediaPropertiesChangedEventArgs = interface(IUnknown)
+  ['{0F2CE2B7-AFA7-5ED0-8CB6-8C40CF9B3A5F}']
+    procedure Invoke(ASender: IGlobalSystemMediaTransportControlsSession; AArgs: IMediaPropertiesChangedEventArgs); safecall;
+  end;
+
+  // Windows.Foundation.TypedEventHandler<Windows.Media.Control.GlobalSystemMediaTransportControlsSession, Windows.Media.Control.PlaybackInfoChangedEventArgs>
+  TypedEventHandler_GlobalSystemMediaTransportControlsSession_PlaybackInfoChangedEventArgs = interface(IUnknown)
+  ['{2BDF1426-D41F-5896-897F-EFC0B0FA7392}']
+    procedure Invoke(ASender: IGlobalSystemMediaTransportControlsSession; AArgs: IPlaybackInfoChangedEventArgs); safecall;
+  end;
+
+  // Windows.Foundation.TypedEventHandler<Windows.Media.Control.GlobalSystemMediaTransportControlsSession, Windows.Media.Control.TimelinePropertiesChangedEventArgs>
+  TypedEventHandler_GlobalSystemMediaTransportControlsSession_TimelinePropertiesChangedEventArgs = interface(IUnknown)
+  ['{E8BF62AF-FAC1-5FFF-9053-0BF191AE777E}']
+    procedure Invoke(ASender: IGlobalSystemMediaTransportControlsSession; AArgs: ITimelinePropertiesChangedEventArgs); safecall;
+  end;
+
   // Windows.Foundation.TypedEventHandler<Microsoft.UI.Xaml.Documents.Hyperlink, Microsoft.UI.Xaml.Documents.HyperlinkClickEventArgs>
   TypedEventHandler_Hyperlink_HyperlinkClickEventArgs = interface(IUnknown)
   ['{40BC5DE0-8921-5B61-94F6-AA56A0B540CE}']
@@ -42571,6 +42893,24 @@ type
     procedure Invoke(AAsyncInfo: IAsyncOperation_FocusMovementResult; AAsyncStatus: AsyncStatus); safecall;
   end;
 
+  AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManagerProc = reference to procedure(AAsyncInfo: IAsyncOperation_GlobalSystemMediaTransportControlsSessionManager; AAsyncStatus: AsyncStatus);
+  TAsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManager = class(TWinRTDelegate, AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManager)
+  strict private
+    FProc: AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManagerProc;
+  public
+    constructor Create(const AProc: AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManagerProc);
+    procedure Invoke(AAsyncInfo: IAsyncOperation_GlobalSystemMediaTransportControlsSessionManager; AAsyncStatus: AsyncStatus); safecall;
+  end;
+
+  AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaPropertiesProc = reference to procedure(AAsyncInfo: IAsyncOperation_GlobalSystemMediaTransportControlsSessionMediaProperties; AAsyncStatus: AsyncStatus);
+  TAsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaProperties = class(TWinRTDelegate, AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaProperties)
+  strict private
+    FProc: AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaPropertiesProc;
+  public
+    constructor Create(const AProc: AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaPropertiesProc);
+    procedure Invoke(AAsyncInfo: IAsyncOperation_GlobalSystemMediaTransportControlsSessionMediaProperties; AAsyncStatus: AsyncStatus); safecall;
+  end;
+
   AsyncOperationCompletedHandler_IBufferProc = reference to procedure(AAsyncInfo: IAsyncOperation_IBuffer; AAsyncStatus: AsyncStatus);
   TAsyncOperationCompletedHandler_IBuffer = class(TWinRTDelegate, AsyncOperationCompletedHandler_IBuffer)
   strict private
@@ -43325,6 +43665,51 @@ type
   public
     constructor Create(const AProc: TypedEventHandler_GestureRecognizer_TappedEventArgsProc);
     procedure Invoke(ASender: IGestureRecognizer; AArgs: ITappedEventArgs); safecall;
+  end;
+
+  TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_CurrentSessionChangedEventArgsProc = reference to procedure(ASender: IGlobalSystemMediaTransportControlsSessionManager; AArgs: ICurrentSessionChangedEventArgs);
+  TTypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_CurrentSessionChangedEventArgs = class(TWinRTDelegate, TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_CurrentSessionChangedEventArgs)
+  strict private
+    FProc: TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_CurrentSessionChangedEventArgsProc;
+  public
+    constructor Create(const AProc: TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_CurrentSessionChangedEventArgsProc);
+    procedure Invoke(ASender: IGlobalSystemMediaTransportControlsSessionManager; AArgs: ICurrentSessionChangedEventArgs); safecall;
+  end;
+
+  TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_SessionsChangedEventArgsProc = reference to procedure(ASender: IGlobalSystemMediaTransportControlsSessionManager; AArgs: ISessionsChangedEventArgs);
+  TTypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_SessionsChangedEventArgs = class(TWinRTDelegate, TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_SessionsChangedEventArgs)
+  strict private
+    FProc: TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_SessionsChangedEventArgsProc;
+  public
+    constructor Create(const AProc: TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_SessionsChangedEventArgsProc);
+    procedure Invoke(ASender: IGlobalSystemMediaTransportControlsSessionManager; AArgs: ISessionsChangedEventArgs); safecall;
+  end;
+
+  TypedEventHandler_GlobalSystemMediaTransportControlsSession_MediaPropertiesChangedEventArgsProc = reference to procedure(ASender: IGlobalSystemMediaTransportControlsSession; AArgs: IMediaPropertiesChangedEventArgs);
+  TTypedEventHandler_GlobalSystemMediaTransportControlsSession_MediaPropertiesChangedEventArgs = class(TWinRTDelegate, TypedEventHandler_GlobalSystemMediaTransportControlsSession_MediaPropertiesChangedEventArgs)
+  strict private
+    FProc: TypedEventHandler_GlobalSystemMediaTransportControlsSession_MediaPropertiesChangedEventArgsProc;
+  public
+    constructor Create(const AProc: TypedEventHandler_GlobalSystemMediaTransportControlsSession_MediaPropertiesChangedEventArgsProc);
+    procedure Invoke(ASender: IGlobalSystemMediaTransportControlsSession; AArgs: IMediaPropertiesChangedEventArgs); safecall;
+  end;
+
+  TypedEventHandler_GlobalSystemMediaTransportControlsSession_PlaybackInfoChangedEventArgsProc = reference to procedure(ASender: IGlobalSystemMediaTransportControlsSession; AArgs: IPlaybackInfoChangedEventArgs);
+  TTypedEventHandler_GlobalSystemMediaTransportControlsSession_PlaybackInfoChangedEventArgs = class(TWinRTDelegate, TypedEventHandler_GlobalSystemMediaTransportControlsSession_PlaybackInfoChangedEventArgs)
+  strict private
+    FProc: TypedEventHandler_GlobalSystemMediaTransportControlsSession_PlaybackInfoChangedEventArgsProc;
+  public
+    constructor Create(const AProc: TypedEventHandler_GlobalSystemMediaTransportControlsSession_PlaybackInfoChangedEventArgsProc);
+    procedure Invoke(ASender: IGlobalSystemMediaTransportControlsSession; AArgs: IPlaybackInfoChangedEventArgs); safecall;
+  end;
+
+  TypedEventHandler_GlobalSystemMediaTransportControlsSession_TimelinePropertiesChangedEventArgsProc = reference to procedure(ASender: IGlobalSystemMediaTransportControlsSession; AArgs: ITimelinePropertiesChangedEventArgs);
+  TTypedEventHandler_GlobalSystemMediaTransportControlsSession_TimelinePropertiesChangedEventArgs = class(TWinRTDelegate, TypedEventHandler_GlobalSystemMediaTransportControlsSession_TimelinePropertiesChangedEventArgs)
+  strict private
+    FProc: TypedEventHandler_GlobalSystemMediaTransportControlsSession_TimelinePropertiesChangedEventArgsProc;
+  public
+    constructor Create(const AProc: TypedEventHandler_GlobalSystemMediaTransportControlsSession_TimelinePropertiesChangedEventArgsProc);
+    procedure Invoke(ASender: IGlobalSystemMediaTransportControlsSession; AArgs: ITimelinePropertiesChangedEventArgs); safecall;
   end;
 
   TypedEventHandler_Hyperlink_HyperlinkClickEventArgsProc = reference to procedure(ASender: IHyperlink; AArgs: IHyperlinkClickEventArgs);
@@ -58244,6 +58629,74 @@ type
     RuntimeClassName = 'Windows.Foundation.WwwFormUrlDecoderEntry';
   end;
 
+  // Windows.Media.Control.CurrentSessionChangedEventArgs
+  CurrentSessionChangedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.Media.Control.CurrentSessionChangedEventArgs';
+  end;
+
+  // Windows.Media.Control.GlobalSystemMediaTransportControlsSession
+  GlobalSystemMediaTransportControlsSession = record
+  public const
+    RuntimeClassName = 'Windows.Media.Control.GlobalSystemMediaTransportControlsSession';
+  end;
+
+  // Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager
+  GlobalSystemMediaTransportControlsSessionManager = record
+  public const
+    RuntimeClassName = 'Windows.Media.Control.GlobalSystemMediaTransportControlsSessionManager';
+  public
+    class function RequestAsync: IAsyncOperation_GlobalSystemMediaTransportControlsSessionManager; static;
+  end;
+
+  // Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties
+  GlobalSystemMediaTransportControlsSessionMediaProperties = record
+  public const
+    RuntimeClassName = 'Windows.Media.Control.GlobalSystemMediaTransportControlsSessionMediaProperties';
+  end;
+
+  // Windows.Media.Control.GlobalSystemMediaTransportControlsSessionPlaybackControls
+  GlobalSystemMediaTransportControlsSessionPlaybackControls = record
+  public const
+    RuntimeClassName = 'Windows.Media.Control.GlobalSystemMediaTransportControlsSessionPlaybackControls';
+  end;
+
+  // Windows.Media.Control.GlobalSystemMediaTransportControlsSessionPlaybackInfo
+  GlobalSystemMediaTransportControlsSessionPlaybackInfo = record
+  public const
+    RuntimeClassName = 'Windows.Media.Control.GlobalSystemMediaTransportControlsSessionPlaybackInfo';
+  end;
+
+  // Windows.Media.Control.GlobalSystemMediaTransportControlsSessionTimelineProperties
+  GlobalSystemMediaTransportControlsSessionTimelineProperties = record
+  public const
+    RuntimeClassName = 'Windows.Media.Control.GlobalSystemMediaTransportControlsSessionTimelineProperties';
+  end;
+
+  // Windows.Media.Control.MediaPropertiesChangedEventArgs
+  MediaPropertiesChangedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.Media.Control.MediaPropertiesChangedEventArgs';
+  end;
+
+  // Windows.Media.Control.PlaybackInfoChangedEventArgs
+  PlaybackInfoChangedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.Media.Control.PlaybackInfoChangedEventArgs';
+  end;
+
+  // Windows.Media.Control.SessionsChangedEventArgs
+  SessionsChangedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.Media.Control.SessionsChangedEventArgs';
+  end;
+
+  // Windows.Media.Control.TimelinePropertiesChangedEventArgs
+  TimelinePropertiesChangedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.Media.Control.TimelinePropertiesChangedEventArgs';
+  end;
+
 const
   // Flag values
   CompositionBatchTypes_None = CompositionBatchTypes($00000000);
@@ -58418,7 +58871,7 @@ const
 implementation
 
 var
-  FactoryCache: array[0..912] of IInspectable;
+  FactoryCache: array[0..913] of IInspectable;
 
 { TClosableNotifierHandler }
 
@@ -59274,6 +59727,32 @@ begin
 end;
 
 procedure TAsyncOperationCompletedHandler_FocusMovementResult.Invoke(AAsyncInfo: IAsyncOperation_FocusMovementResult; AAsyncStatus: AsyncStatus);
+begin
+  FProc(AAsyncInfo, AAsyncStatus);
+end;
+
+{ TAsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManager }
+
+constructor TAsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManager.Create(const AProc: AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManagerProc);
+begin
+  inherited Create;
+  FProc := AProc;
+end;
+
+procedure TAsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionManager.Invoke(AAsyncInfo: IAsyncOperation_GlobalSystemMediaTransportControlsSessionManager; AAsyncStatus: AsyncStatus);
+begin
+  FProc(AAsyncInfo, AAsyncStatus);
+end;
+
+{ TAsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaProperties }
+
+constructor TAsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaProperties.Create(const AProc: AsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaPropertiesProc);
+begin
+  inherited Create;
+  FProc := AProc;
+end;
+
+procedure TAsyncOperationCompletedHandler_GlobalSystemMediaTransportControlsSessionMediaProperties.Invoke(AAsyncInfo: IAsyncOperation_GlobalSystemMediaTransportControlsSessionMediaProperties; AAsyncStatus: AsyncStatus);
 begin
   FProc(AAsyncInfo, AAsyncStatus);
 end;
@@ -60366,6 +60845,71 @@ begin
 end;
 
 procedure TTypedEventHandler_GestureRecognizer_TappedEventArgs.Invoke(ASender: IGestureRecognizer; AArgs: ITappedEventArgs);
+begin
+  FProc(ASender, AArgs);
+end;
+
+{ TTypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_CurrentSessionChangedEventArgs }
+
+constructor TTypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_CurrentSessionChangedEventArgs.Create(const AProc: TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_CurrentSessionChangedEventArgsProc);
+begin
+  inherited Create;
+  FProc := AProc;
+end;
+
+procedure TTypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_CurrentSessionChangedEventArgs.Invoke(ASender: IGlobalSystemMediaTransportControlsSessionManager; AArgs: ICurrentSessionChangedEventArgs);
+begin
+  FProc(ASender, AArgs);
+end;
+
+{ TTypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_SessionsChangedEventArgs }
+
+constructor TTypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_SessionsChangedEventArgs.Create(const AProc: TypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_SessionsChangedEventArgsProc);
+begin
+  inherited Create;
+  FProc := AProc;
+end;
+
+procedure TTypedEventHandler_GlobalSystemMediaTransportControlsSessionManager_SessionsChangedEventArgs.Invoke(ASender: IGlobalSystemMediaTransportControlsSessionManager; AArgs: ISessionsChangedEventArgs);
+begin
+  FProc(ASender, AArgs);
+end;
+
+{ TTypedEventHandler_GlobalSystemMediaTransportControlsSession_MediaPropertiesChangedEventArgs }
+
+constructor TTypedEventHandler_GlobalSystemMediaTransportControlsSession_MediaPropertiesChangedEventArgs.Create(const AProc: TypedEventHandler_GlobalSystemMediaTransportControlsSession_MediaPropertiesChangedEventArgsProc);
+begin
+  inherited Create;
+  FProc := AProc;
+end;
+
+procedure TTypedEventHandler_GlobalSystemMediaTransportControlsSession_MediaPropertiesChangedEventArgs.Invoke(ASender: IGlobalSystemMediaTransportControlsSession; AArgs: IMediaPropertiesChangedEventArgs);
+begin
+  FProc(ASender, AArgs);
+end;
+
+{ TTypedEventHandler_GlobalSystemMediaTransportControlsSession_PlaybackInfoChangedEventArgs }
+
+constructor TTypedEventHandler_GlobalSystemMediaTransportControlsSession_PlaybackInfoChangedEventArgs.Create(const AProc: TypedEventHandler_GlobalSystemMediaTransportControlsSession_PlaybackInfoChangedEventArgsProc);
+begin
+  inherited Create;
+  FProc := AProc;
+end;
+
+procedure TTypedEventHandler_GlobalSystemMediaTransportControlsSession_PlaybackInfoChangedEventArgs.Invoke(ASender: IGlobalSystemMediaTransportControlsSession; AArgs: IPlaybackInfoChangedEventArgs);
+begin
+  FProc(ASender, AArgs);
+end;
+
+{ TTypedEventHandler_GlobalSystemMediaTransportControlsSession_TimelinePropertiesChangedEventArgs }
+
+constructor TTypedEventHandler_GlobalSystemMediaTransportControlsSession_TimelinePropertiesChangedEventArgs.Create(const AProc: TypedEventHandler_GlobalSystemMediaTransportControlsSession_TimelinePropertiesChangedEventArgsProc);
+begin
+  inherited Create;
+  FProc := AProc;
+end;
+
+procedure TTypedEventHandler_GlobalSystemMediaTransportControlsSession_TimelinePropertiesChangedEventArgs.Invoke(ASender: IGlobalSystemMediaTransportControlsSession; AArgs: ITimelinePropertiesChangedEventArgs);
 begin
   FProc(ASender, AArgs);
 end;
@@ -81954,6 +82498,13 @@ end;
 class function WwwFormUrlDecoder.New(AQuery: HSTRING): IWwwFormUrlDecoderRuntimeClass;
 begin
   Result := IWwwFormUrlDecoderRuntimeClassFactory(GetFactory(RuntimeClassName, IWwwFormUrlDecoderRuntimeClassFactory, FactoryCache[912])).CreateWwwFormUrlDecoder(AQuery);
+end;
+
+{ GlobalSystemMediaTransportControlsSessionManager }
+
+class function GlobalSystemMediaTransportControlsSessionManager.RequestAsync: IAsyncOperation_GlobalSystemMediaTransportControlsSessionManager;
+begin
+  Result := IGlobalSystemMediaTransportControlsSessionManagerStatics(GetFactory(RuntimeClassName, IGlobalSystemMediaTransportControlsSessionManagerStatics, FactoryCache[913])).RequestAsync;
 end;
 
 end.

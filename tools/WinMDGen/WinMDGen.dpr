@@ -92,7 +92,8 @@ begin
     Exit(2);
   end;
   if Length(Namespaces) = 0 then
-    Namespaces := ['Microsoft.UI', 'Microsoft.Foundation', 'Microsoft.Graphics', 'Windows.Foundation'];
+    Namespaces := ['Microsoft.UI', 'Microsoft.Foundation', 'Microsoft.Graphics', 'Windows.Foundation',
+      'Windows.Media.Control'];
   Files := Collect(WinMDs);
   if Length(Files) = 0 then
   begin

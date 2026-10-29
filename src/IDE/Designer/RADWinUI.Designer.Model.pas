@@ -4,7 +4,8 @@ unit RADWinUI.Designer.Model;
   What the property grid shows and does, without ToolsAPI or WinUI,
   so tests\Designer\DesignerModelTest checks it outside the IDE:
 
-  - properties and events of a XAML element, from RADWinUI.Xaml.json;
+  - properties and events of a XAML element, from RADWinUI.Xaml.json and, for
+    RADWinUI's own controls (rw:GlowTile), RADWinUI.Controls.json;
   - the selection the preview reports (RADWinUI.Preview.Client.TakeEvent);
   - the smallest replacement turning one text into another, so the IDE edits
     its buffer with one undoable change instead of rewriting it;
@@ -50,7 +51,13 @@ type
     FProps: TObjectDictionary<string, TList<TDesignerProperty>>;
     FEvents: TObjectDictionary<string, TList<TDesignerEvent>>;
     function Chain(const ATag: string): TArray<string>;
+    procedure Load(const AJsonFile, APrefix: string);
   public
+    /// <summary>
+    ///   Reads AJsonFile (src\Generated\RADWinUI.Xaml.json) and, when it exists,
+    ///   src\Framework\RADWinUI.Controls.json next to it. Those tags are known with
+    ///   and without their rw: prefix.
+    /// </summary>
     constructor Create(const AJsonFile: string);
     destructor Destroy; override;
     /// <summary>Settable properties of ATag and its bases: common ones first, then by name.</summary>
@@ -137,22 +144,37 @@ end;
 
 constructor TDesignerTypeIndex.Create(const AJsonFile: string);
 var
-  Json: TJSONObject;
-  Pair, Item: TJSONPair;
-  Info: TJSONObject;
-  Prop: TDesignerProperty;
-  Event: TDesignerEvent;
+  Own: string;
 begin
   inherited Create;
   FTypes := TDictionary<string, string>.Create;
   FBases := TDictionary<string, string>.Create;
   FProps := TObjectDictionary<string, TList<TDesignerProperty>>.Create([doOwnsValues]);
   FEvents := TObjectDictionary<string, TList<TDesignerEvent>>.Create([doOwnsValues]);
+  Load(AJsonFile, '');
+  // src\Generated\RADWinUI.Xaml.json -> src\Framework\RADWinUI.Controls.json
+  Own := TPath.Combine(ExtractFileDir(ExtractFileDir(TPath.GetFullPath(AJsonFile))), 'Framework\RADWinUI.Controls.json');
+  if FileExists(Own) then
+    Load(Own, 'rw');
+end;
+
+procedure TDesignerTypeIndex.Load(const AJsonFile, APrefix: string);
+var
+  Json: TJSONObject;
+  Pair, Item: TJSONPair;
+  Info: TJSONObject;
+  Prop: TDesignerProperty;
+  Event: TDesignerEvent;
+begin
   Json := TJSONObject.ParseJSONValue(TFile.ReadAllText(AJsonFile, TEncoding.UTF8)) as TJSONObject;
   try
     // Pairs are read by name: GetValue<T>('a.b') would read the dots as a path
     for Pair in Json.GetValue('types') as TJSONObject do
-      FTypes.Add(Pair.JsonString.Value, Pair.JsonValue.Value);
+    begin
+      FTypes.AddOrSetValue(Pair.JsonString.Value, Pair.JsonValue.Value);
+      if APrefix <> '' then
+        FTypes.AddOrSetValue(APrefix + ':' + Pair.JsonString.Value, Pair.JsonValue.Value);
+    end;
     for Pair in Json.GetValue('classes') as TJSONObject do
     begin
       Info := Pair.JsonValue as TJSONObject;

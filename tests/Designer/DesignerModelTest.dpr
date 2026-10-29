@@ -140,6 +140,15 @@ begin
         Handled := Event.ArgsType;
     Check(Handled = 'TWinUIRoutedEventArgs', 'Button: Click with TWinUIRoutedEventArgs, inherited events too (' +
       IntToStr(Length(Events)) + ')');
+    Props := Index.PropertiesOf('rw:GlowTile');
+    Check((FindProp(Props, 'GlowBrush').Kind = 'brush') and (FindProp(Props, 'Pulse').Kind = 'bool') and
+      (FindProp(Props, 'Width').Kind <> ''), 'rw:GlowTile: its own properties and the inherited ones');
+    Check(Length(Index.PropertiesOf('GlowTile')) = Length(Props), 'a RADWinUI control is known without its prefix too');
+    Handled := '';
+    for Event in Index.EventsOf('rw:NotchPanel') do
+      if Event.Name = 'Expanded' then
+        Handled := Event.ArgsType;
+    Check(Handled = 'TWinValue', 'rw:NotchPanel: Expanded with TWinValue');
   finally
     Index.Free;
   end;
@@ -200,6 +209,15 @@ begin
         Wrappers := Wrappers + Runtime + ' ';
     end;
     Check(Wrappers = '', 'every palette name TWinUI<Name> is its wrapper class (' + Wrappers.Trim + ')');
+  finally
+    Json.Free;
+  end;
+  // RADWinUI's own controls are listed in src\Framework\RADWinUI.Controls.json
+  Json := TJSONObject.ParseJSONValue(TFile.ReadAllText(TPath.Combine(ParamStr(1), 'src\Framework\RADWinUI.Controls.json'),
+    TEncoding.UTF8)) as TJSONObject;
+  try
+    for I := 0 to (Json.GetValue('palette') as TJSONArray).Count - 1 do
+      Known := Known + ((Json.GetValue('palette') as TJSONArray).Items[I] as TJSONObject).GetValue('name').Value + '|';
   finally
     Json.Free;
   end;

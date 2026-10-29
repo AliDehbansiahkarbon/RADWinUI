@@ -298,6 +298,55 @@ begin
   Check(Error.Contains('class TMissing is not declared'), 'an unknown DataContextType is refused');
 end;
 
+/// RADWinUI's own controls (rw:) from src\Framework\RADWinUI.Controls.json.
+procedure TestCustomControls;
+const
+  CustomXaml =
+    '<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"' + #10 +
+    '    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:rw="using:RADWinUI.Controls"' + #10 +
+    '    x:Class="TMainWindow" WindowStyle="Overlay" Backdrop="Transparent" Dock="TopCenter">' + #10 +
+    '  <Grid>' + #10 +
+    '    <rw:NotchPanel x:Name="Notch" Expanded="NotchOpened">' + #10 +
+    '      <rw:GlowTile x:Name="BuildTile" Click="BuildClick"/>' + #10 +
+    '    </rw:NotchPanel>' + #10 +
+    '    <rw:HotKey Keys="Ctrl+Alt+T" Pressed="HotKeyPressed"/>' + #10 +
+    '  </Grid>' + #10 +
+    '</Window>';
+  CustomUnit =
+    'unit MainWindow;' + #10 + 'interface' + #10 + 'type' + #10 +
+    '  TMainWindow = class(TMainWindowBase)' + #10 + '  published' + #10 +
+    '    procedure NotchOpened(Sender: TObject; const E: TWinValue);' + #10 +
+    '    procedure BuildClick(Sender: TObject);' + #10 +
+    '    procedure HotKeyPressed(Sender: TObject; const E: TWinValue);' + #10 +
+    '  end;' + #10 + 'implementation' + #10 + 'end.';
+var
+  Folder, Text, Error: string;
+begin
+  Writeln('RADWinUI controls');
+  Folder := NewFolder;
+  Save(Folder, 'MainWindow.xaml', CustomXaml);
+  Save(Folder, 'MainWindow.pas', CustomUnit);
+  Text := Generate(Folder, Error);
+  if Error <> '' then
+    Writeln('    unexpected error: ', Error);
+  Check(Text.Contains('Notch: TWinUINotchPanel;') and Text.Contains('BuildTile: TWinUIGlowTile;'),
+    'rw: elements get typed fields');
+  Check(Text.Contains('  RADWinUI.Controls,'), 'the controls'' unit is added to the uses clause');
+  Check(Text.Contains('Notch.OnExpanded := TWinUIWinValueEventHandler(PublishedMethod(''NotchOpened''));'),
+    'a custom event with the full handler');
+  Check(Text.Contains('BuildTile.EventByName(''Click'').Add(NotifyProc<TWinValue>(''BuildClick''));'),
+    'a custom event with the short handler');
+  Check(Text.Contains('FindElement<TWinUIHotKey>(''_rw1'').OnPressed := TWinUIWinValueEventHandler(PublishedMethod(''HotKeyPressed''));'),
+    'a custom event on an element without x:Name');
+  Check(Text.Contains('WindowStyle := TWinUIWindowStyle.Overlay;') and Text.Contains('Backdrop := TWinUIBackdrop.Transparent;') and
+    Text.Contains('Dock := TWinUIDock.TopCenter;'), 'overlay window attributes');
+  Check(ContentXaml(Text).Contains('using:RADWinUI.Controls') and ContentXaml(Text).Contains('NotchPanel') and
+    not ContentXaml(Text).Contains('Pressed='), 'the loaded XAML keeps rw: and loses the event attributes');
+  Save(Folder, 'MainWindow.xaml', CustomXaml.Replace('rw:HotKey', 'rw:Nope'));
+  Generate(Folder, Error);
+  Check(Error.Contains('MainWindow.xaml(8): <rw:Nope> is not a RADWinUI control'), 'an unknown rw: element is refused');
+end;
+
 /// Every sample's committed MainWindow.Xaml.pas is exactly what the generator writes now.
 procedure TestSamples(const ARoot: string);
 var
@@ -329,6 +378,7 @@ begin
   try
     TestUnits;
     TestBindings;
+    TestCustomControls;
     TestSamples(ParamStr(1));
   finally
     Index.Free;

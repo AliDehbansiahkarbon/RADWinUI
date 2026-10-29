@@ -187,7 +187,7 @@ public
   property Content: TWinUIUIElement;       // from TWinUICustomWindow
   property Width, Height: Integer;         // client size in effective pixels
   property MinWidth, MinHeight: Integer;
-  property Backdrop: TWinUIBackdrop;       // None, Mica, MicaAlt, Acrylic
+  property Backdrop: TWinUIBackdrop;       // None, Mica, MicaAlt, Acrylic, Transparent
   property Transparency: Boolean;          // False: the root panel gets a solid theme colour instead of the backdrop
   class function SystemTransparency: Boolean; // False while Energy saver is on or Transparency effects is off
   procedure BindTransparencySwitch(ASwitch: TWinUIToggleSwitch); // a ready-made on/off switch with an honest tooltip
@@ -202,6 +202,27 @@ end.
 Mica and Acrylic show a solid colour whenever Windows turns transparency off (Energy saver, or Transparency effects off in Settings > Personalization > Colors) and while the window is inactive. An app cannot override that, `SystemTransparency` tells whether Windows allows it right now.
 
 `TWinUITimer` is a repeating UI-thread timer like the VCL `TTimer` (`Interval` in milliseconds, `Enabled`, `OnTimer`).
+
+### Overlay windows
+
+A window can float over the desktop like a notch or a widget: no frame, no title bar, always on top and out of Alt+Tab and the taskbar.
+
+```pascal
+WindowStyle := TWinUIWindowStyle.Overlay;     // Normal or Overlay
+Backdrop := TWinUIBackdrop.Transparent;       // only the content is drawn, the desktop shows through
+Dock := TWinUIDock.TopCenter;                 // None, TopCenter, TopLeft, TopRight, BottomCenter of the work area
+ClickThrough := TWinUIClickThrough.Background; // clicks outside HitTestElement reach the windows below
+HitTestElement := Notch;                      // the part of the content that takes the pointer
+ShowActivated := False;                       // Show does not take the focus from the active program
+AlwaysOnTop := True;                          // Overlay sets it, a normal window can use it too
+```
+
+- All of them can be written as `<Window>` attributes too, except `HitTestElement` and `AlwaysOnTop`.
+- `Dock` places the window again when the display settings change.
+- With `ClickThrough`, the window's input region follows `HitTestElement`'s bounds as it grows and shrinks, so the transparent rest of the window never blocks a click.
+- `Handle` is the window's HWND, and descendants can override `HandleMessage` to see its window messages.
+
+The Overlay category of the Tool Palette has the controls such a window usually needs: a notch panel, glowing tiles, a global hotkey and the media playing on the PC. They are described in [CUSTOM-CONTROLS.md](CUSTOM-CONTROLS.md).
 
 ## Animations (RADWinUI.Motion)
 

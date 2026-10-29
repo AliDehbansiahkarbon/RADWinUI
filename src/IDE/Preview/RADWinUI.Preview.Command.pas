@@ -1354,12 +1354,13 @@ end;
 
 /// The Tool Palette: the curated categories and controls of RADWinUI.Designer.Palette,
 /// shown as TWinUI<Name> with their own icons. Names, runtime classes and wrapper
-/// names come from RADWinUI.Xaml.json, so a control the metadata lacks is left out.
+/// names come from RADWinUI.Xaml.json, and for RADWinUI's own controls from
+/// RADWinUI.Controls.json, so a control the metadata lacks is left out.
 procedure TPreviewCommand.RegisterPalette;
 var
-  Json: TJSONValue;
+  Json, Own: TJSONValue;
   Entries: TJSONArray;
-  Classes: TJSONObject;
+  Classes, OwnClasses: TJSONObject;
   Runtime: TStringList;
   Group: IOTAPaletteGroup;
   Item: IOTABasePaletteItem;
@@ -1375,6 +1376,11 @@ begin
   Json := TJSONObject.ParseJSONValue(TFile.ReadAllText(Path, TEncoding.UTF8));
   if Json = nil then
     Exit;
+  Own := nil;
+  OwnClasses := nil;
+  Path := TPath.Combine(RootFolder, 'src\Framework\RADWinUI.Controls.json');
+  if FileExists(Path) then
+    Own := TJSONObject.ParseJSONValue(TFile.ReadAllText(Path, TEncoding.UTF8));
   Runtime := TStringList.Create;
   try
     try
@@ -1385,6 +1391,15 @@ begin
       for I := 0 to Entries.Count - 1 do
         Runtime.Values[(Entries.Items[I] as TJSONObject).GetValue<string>('name', '')] :=
           (Entries.Items[I] as TJSONObject).GetValue<string>('runtime', '');
+      if Own is TJSONObject then
+      begin
+        OwnClasses := (Own as TJSONObject).GetValue('classes') as TJSONObject;
+        Entries := (Own as TJSONObject).GetValue('palette') as TJSONArray;
+        if Entries <> nil then
+          for I := 0 to Entries.Count - 1 do
+            Runtime.Values[(Entries.Items[I] as TJSONObject).GetValue<string>('name', '')] :=
+              (Entries.Items[I] as TJSONObject).GetValue<string>('runtime', '');
+      end;
       Stage := 'categories';
       FPaletteServices.BeginUpdate;
       try
@@ -1411,7 +1426,9 @@ begin
             // The wrapper class Pascal code uses for it (TWinUIButton), like VCL's TButton
             Wrapper := 'TWinUI' + Entry.Name;
             if Classes.GetValue(RuntimeName) is TJSONObject then
-              Wrapper := (Classes.GetValue(RuntimeName) as TJSONObject).GetValue<string>('wrapper', Wrapper);
+              Wrapper := (Classes.GetValue(RuntimeName) as TJSONObject).GetValue<string>('wrapper', Wrapper)
+            else if (OwnClasses <> nil) and (OwnClasses.GetValue(RuntimeName) is TJSONObject) then
+              Wrapper := (OwnClasses.GetValue(RuntimeName) as TJSONObject).GetValue<string>('wrapper', Wrapper);
             Item := TRADWinUIPaletteItem.Create(Self, Entry.Name, RuntimeName, Wrapper);
             Item.ImageIndex := PaletteIcon(FPaletteServices.ImageCollection, Entry.Name);
             Group.AddItem(Item);
@@ -1435,6 +1452,7 @@ begin
     end;
   finally
     Runtime.Free;
+    Own.Free;
     Json.Free;
   end;
 end;
