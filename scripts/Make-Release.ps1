@@ -12,6 +12,8 @@
     RADWinUI32.groupproj        the same for the classic 32-bit IDE
     samples\RADWinUISamples.groupproj
                                 all nine samples
+    community\Community.groupproj
+                                the apps made with RADWinUI that people shared
     third_party\WindowsAppSDK\<release>\Microsoft.WindowsAppSDK.Foundation
                                 the bootstrap DLL (signed by Microsoft) and its
                                 license.txt only
@@ -146,6 +148,10 @@ try {
     Check (($LASTEXITCODE -eq 0) -and (Test-Path "$TryRoot\samples\$Demo\$Unit.Xaml.pas") -and
       (Test-Path "$TryRoot\samples\$Demo\Win64\Release\$Demo.exe")) "$Demo builds; its pre-build event regenerated $Unit.Xaml.pas (log: $Log)"
   }
+  # Community apps ship as source too, so they have to build from it
+  $Log = Join-Path $LogDir 'Release-community.log'
+  cmd /c "`"$RsVars`" && msbuild `"$TryRoot\community\Community.groupproj`" /t:Build /p:Config=Release /p:Platform=Win64 /nologo /v:minimal" > $Log 2>&1
+  Check ($LASTEXITCODE -eq 0) "community\Community.groupproj builds (log: $Log)"
 } finally {
   $env:PATH = $SavedPath
   Remove-Item -LiteralPath $Try -Recurse -Force -ErrorAction SilentlyContinue
@@ -163,7 +169,7 @@ Install in RAD Studio 13 (nothing above was installed or registered; no Python n
   3. File > Open Project: $Release\RADWinUI.groupproj in the 64-bit IDE, RADWinUI32.groupproj in the 32-bit IDE
   4. Right-click the project group > Build All.
   5. Right-click the package (RADWinUIWizard.bpl or RADWinUIWizard32.bpl) > Install.
-  6. File > New > Other > Delphi Projects > RADWinUI Application, F9. The demos: samples\RADWinUISamples.groupproj.
+  6. File > New > Other > Delphi Projects > RADWinUI Application, F9. The demos: samples\RADWinUISamples.groupproj. Apps made with RADWinUI: community\Community.groupproj.
   Guide: $Release\docs\GETTING-STARTED.md
 "@
 if ($Failures -gt 0) { Write-Host "Release FAILED ($Failures)" -ForegroundColor Red; exit 1 }

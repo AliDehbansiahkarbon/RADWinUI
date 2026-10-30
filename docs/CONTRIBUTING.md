@@ -39,6 +39,10 @@ UI tests open their windows on a secondary monitor when there is one and never t
 - Never edit `src\Generated` by hand: change the generator and regenerate.
 - Every bug fix gets a regression test where it can.
 
+## Sharing an app you made
+
+Apps built with RADWinUI go into `community\<AppName>\`, as source with screenshots. Read the rules in [community/README.md](../community/README.md) and open the pull request with the **Community app** template. The maintainer approves every app before it is merged.
+
 ## Pull requests
 
 Keep a pull request to one topic, describe what it changes and how you tested it, and include the tests you ran.

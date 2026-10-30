@@ -70,3 +70,13 @@ samples/Profile/Profile.res
 src/IDE/Preview/RADWinUIPreview.res
 tests/Designer/XamlEditTest.res
 tools/XamlCodeGen/XamlCodeGen.res
+
+# Community apps: source only, never binaries or archives (see community\README.md)
+community/**/*.res
+community/**/*.zip
+community/**/*.7z
+community/**/*.rar
+community/**/*.msi
+community/**/*.msix
+community/**/*.cab
+community/**/*.pdb

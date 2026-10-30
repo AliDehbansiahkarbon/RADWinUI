@@ -151,10 +151,17 @@ Open `samples\RADWinUISamples.groupproj`, Build All, and run:
 - **[Gallery](docs/samples-Gallery.md):** 30 controls in seven guided demos, search, themes, Mica and Acrylic, XAML and Pascal source, and live Pascal binding.
 - **[Luma](docs/samples-Luma.md):** an Acrylic desktop companion with a live clock, battery and memory readings, a focus timer and a calendar.
 - **[Lucent](docs/samples-Lucent.md):** an app publishing studio in frosted glass over drifting ribbons: eight animated pages, live simulated data, a drag-and-drop release board, charts with a hover tooltip and a hero move to each app's page.
-- **[Notch](docs/samples-Notch.md):** a desk companion that hangs from the top of the screen: a black pill with the time that opens into a build monitor, the music playing on the PC and a focus timer, with glowing tiles and Ctrl+Alt+N.
 - **[Haven](docs/samples-Haven.md):** a bento-style savings dashboard that follows the Windows theme and accent colour, with a weekly chart, a countdown dial, a calendar and a goals checklist, all bound to a Delphi view model.
 
 Smaller samples (Counter, Greeter, ListDemo, Contacts, Profile) show one topic each. They are in the same group, or build one with `scripts\Build.ps1 -Project samples\Counter\Counter.dpr`.
+
+## Made with RADWinUI
+
+Apps that people build with RADWinUI and share as source, with screenshots, are in [community](community/README.md). Build them with `community\Community.groupproj`.
+
+- **[Notch](community/Notch/README.md)** by Ali Dehbansiahkarbon: a desk companion that hangs from an edge of the screen as a black pill with the time and opens into a panel of widgets you pick: your apps, live Claude Code and Codex activity, remote desktops, the calendar, links, notes, the music playing on the PC and a focus timer. Ctrl+Alt+N opens it.
+
+Made something with RADWinUI? The [rules for sharing an app](community/README.md#share-your-app) explain how to send it in.
 
 ## Deployment
 
@@ -206,7 +213,7 @@ More in [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md#troubleshooting).
 
 ## Contributing
 
-Issues and pull requests are welcome. Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md). When you report a problem, include:
+Issues and pull requests are welcome. Please read [CONTRIBUTING.md](docs/CONTRIBUTING.md). Apps made with RADWinUI go into [community](community/README.md), under the rules there. When you report a problem, include:
 
 - your RAD Studio version and IDE (32-bit or 64-bit) and your Windows version;
 - the steps to reproduce it, and the `.xaml` file if it is about a window;

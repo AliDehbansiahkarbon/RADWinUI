@@ -1,0 +1,38 @@
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <!-- Apps the community made with RADWinUI, built from source like the samples. Build
+         RADWinUI.groupproj (or RADWinUI32.groupproj) first: their pre-build event runs bin\XamlCodeGen.exe. -->
+    <PropertyGroup>
+        <ProjectGuid>{4B28B657-02D9-456A-A00A-CD5968BA5627}</ProjectGuid>
+    </PropertyGroup>
+    <ItemGroup>
+        <Projects Include="Notch\Notch.dproj">
+            <Dependencies/>
+        </Projects>
+    </ItemGroup>
+    <ProjectExtensions>
+        <Borland.Personality>Default.Personality.12</Borland.Personality>
+        <Borland.ProjectType/>
+        <BorlandProject>
+            <Default.Personality/>
+        </BorlandProject>
+    </ProjectExtensions>
+    <Target Name="Notch">
+        <MSBuild Projects="Notch\Notch.dproj"/>
+    </Target>
+    <Target Name="Notch:Clean">
+        <MSBuild Projects="Notch\Notch.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Notch:Make">
+        <MSBuild Projects="Notch\Notch.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="Build">
+        <CallTarget Targets="Notch"/>
+    </Target>
+    <Target Name="Clean">
+        <CallTarget Targets="Notch:Clean"/>
+    </Target>
+    <Target Name="Make">
+        <CallTarget Targets="Notch:Make"/>
+    </Target>
+    <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
+</Project>

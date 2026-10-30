@@ -139,6 +139,14 @@ $(PostBuildEvent)]]></PostBuildEvent>
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="Notch.Settings.pas"/>
+        <DCCReference Include="Notch.Shell.pas"/>
+        <DCCReference Include="Notch.Agents.pas"/>
+        <DCCReference Include="Notch.Placement.pas"/>
+        <DCCReference Include="Notch.Usage.pas"/>
+        <DCCReference Include="Notch.Widgets.pas"/>
+        <DCCReference Include="Notch.Details.pas"/>
+        <DCCReference Include="Notch.Tests.pas"/>
         <DCCReference Include="MainWindow.Xaml.pas"/>
         <DCCReference Include="MainWindow.pas"/>
         <None Include="MainWindow.xaml"/>

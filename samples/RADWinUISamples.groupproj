@@ -17,9 +17,6 @@
         <Projects Include="Lucent\Lucent.dproj">
             <Dependencies/>
         </Projects>
-        <Projects Include="Notch\Notch.dproj">
-            <Dependencies/>
-        </Projects>
         <Projects Include="Counter\Counter.dproj">
             <Dependencies/>
         </Projects>
@@ -79,15 +76,6 @@
     <Target Name="Lucent:Make">
         <MSBuild Projects="Lucent\Lucent.dproj" Targets="Make"/>
     </Target>
-    <Target Name="Notch">
-        <MSBuild Projects="Notch\Notch.dproj"/>
-    </Target>
-    <Target Name="Notch:Clean">
-        <MSBuild Projects="Notch\Notch.dproj" Targets="Clean"/>
-    </Target>
-    <Target Name="Notch:Make">
-        <MSBuild Projects="Notch\Notch.dproj" Targets="Make"/>
-    </Target>
     <Target Name="Counter">
         <MSBuild Projects="Counter\Counter.dproj"/>
     </Target>
@@ -134,13 +122,13 @@
         <MSBuild Projects="Profile\Profile.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Gallery;Luma;Haven;Lucent;Notch;Counter;Greeter;ListDemo;Contacts;Profile"/>
+        <CallTarget Targets="Gallery;Luma;Haven;Lucent;Counter;Greeter;ListDemo;Contacts;Profile"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Gallery:Clean;Luma:Clean;Haven:Clean;Lucent:Clean;Notch:Clean;Counter:Clean;Greeter:Clean;ListDemo:Clean;Contacts:Clean;Profile:Clean"/>
+        <CallTarget Targets="Gallery:Clean;Luma:Clean;Haven:Clean;Lucent:Clean;Counter:Clean;Greeter:Clean;ListDemo:Clean;Contacts:Clean;Profile:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Gallery:Make;Luma:Make;Haven:Make;Lucent:Make;Notch:Make;Counter:Make;Greeter:Make;ListDemo:Make;Contacts:Make;Profile:Make"/>
+        <CallTarget Targets="Gallery:Make;Luma:Make;Haven:Make;Lucent:Make;Counter:Make;Greeter:Make;ListDemo:Make;Contacts:Make;Profile:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>
