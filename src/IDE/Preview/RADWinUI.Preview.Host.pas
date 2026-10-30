@@ -214,6 +214,35 @@ begin
   end;
 end;
 
+/// ARelative (a file under src\ of RADWinUI) for this exe: next to a preview host built in
+/// src\IDE\Preview\Win64\<Config>, in RADWINUI_ROOT, or in the first folder above the exe that has
+/// it, for a test or tool built elsewhere in the repository. '' when none has it.
+function SourceFile(const ARelative: string): string;
+var
+  Dir, Parent: string;
+begin
+  Result := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\..\..\' + ARelative);
+  if FileExists(Result) then
+    Exit;
+  if GetEnvironmentVariable('RADWINUI_ROOT') <> '' then
+  begin
+    Result := IncludeTrailingPathDelimiter(GetEnvironmentVariable('RADWINUI_ROOT')) + 'src\' + ARelative;
+    if FileExists(Result) then
+      Exit;
+  end;
+  Dir := ExcludeTrailingPathDelimiter(ExtractFilePath(ParamStr(0)));
+  repeat
+    Result := Dir + '\src\' + ARelative;
+    if FileExists(Result) then
+      Exit;
+    Parent := ExtractFileDir(Dir);
+    if Parent = Dir then
+      Break;
+    Dir := Parent;
+  until Dir = '';
+  Result := '';
+end;
+
 /// Event names of every XAML class, from RADWinUI.Xaml.json (WinMDGen) and RADWinUI.Controls.json.
 procedure LoadEvents;
 var
@@ -224,10 +253,8 @@ var
 begin
   Events := TDictionary<string, Boolean>.Create;
   UIElementTags := TDictionary<string, Boolean>.Create;
-  Path := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\..\..\Generated\RADWinUI.Xaml.json');
-  if not FileExists(Path) and (GetEnvironmentVariable('RADWINUI_ROOT') <> '') then
-    Path := IncludeTrailingPathDelimiter(GetEnvironmentVariable('RADWINUI_ROOT')) + 'src\Generated\RADWinUI.Xaml.json';
-  if not FileExists(Path) then
+  Path := SourceFile('Generated\RADWinUI.Xaml.json');
+  if Path = '' then
     Exit; // event attributes then fail to load, with WinUI's message
   Json := TJSONObject.ParseJSONValue(TFile.ReadAllText(Path, TEncoding.UTF8));
   try
@@ -251,10 +278,7 @@ begin
   finally
     Json.Free;
   end;
-  Path := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\..\..\Framework\RADWinUI.Controls.json');
-  if not FileExists(Path) and (GetEnvironmentVariable('RADWINUI_ROOT') <> '') then
-    Path := IncludeTrailingPathDelimiter(GetEnvironmentVariable('RADWINUI_ROOT')) + 'src\Framework\RADWinUI.Controls.json';
-  LoadOwnControls(Path);
+  LoadOwnControls(SourceFile('Framework\RADWinUI.Controls.json'));
 end;
 
 /// S with every character but line breaks turned into a space.
