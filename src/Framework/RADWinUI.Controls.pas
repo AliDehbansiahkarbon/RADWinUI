@@ -28,12 +28,16 @@ uses
   RADWinUI.CustomControls;
 
 type
+  /// <summary>The screen edge a notch hangs from.</summary>
+  TWinUINotchEdge = (Top, Bottom, Left, Right);
+
   /// <summary>
   ///   A pill (Pill content, CollapsedWidth x CollapsedHeight) that grows into a
   ///   panel (Content, ExpandedWidth x ExpandedHeight) when the pointer rests on
   ///   it, and shrinks back when it leaves. Background paints both. Made for
-  ///   an Overlay window docked to the top of the screen: SquareTop keeps the
-  ///   edge that touches the screen straight.
+  ///   an Overlay window docked to an edge of the screen: AttachedEdge says
+  ///   which one, SquareTop keeps the side that touches it straight. On the
+  ///   left and right edges the pill stands upright.
   /// </summary>
   TWinUINotchPanel = class(TWinUICustomControl)
   strict private
@@ -55,6 +59,9 @@ type
     procedure StopRendering;
     procedure HoverElapsed(Sender: TObject);
     procedure CollapseElapsed(Sender: TObject);
+    procedure ApplyEdge;
+    function GetAttachedEdge: TWinUINotchEdge;
+    procedure SetAttachedEdge(AValue: TWinUINotchEdge);
   protected
     class procedure DefineType(AType: TWinUICustomType); override;
     procedure Initialize; override;
@@ -75,7 +82,7 @@ type
     property ExpandedHeight: Double index 4 read GetDouble write SetDouble;
     /// <summary>Corner radius of the expanded panel. The pill is fully round.</summary>
     property ExpandedCornerRadius: Double index 5 read GetDouble write SetDouble;
-    /// <summary>Straight top edge, for a panel that hangs from the top of the screen.</summary>
+    /// <summary>A straight side along AttachedEdge, for a panel that hangs from the screen edge.</summary>
     property SquareTop: Boolean index 6 read GetBoolean write SetBoolean;
     property ExpandOnHover: Boolean index 7 read GetBoolean write SetBoolean;
     /// <summary>Milliseconds the pointer rests on the pill before it expands.</summary>
@@ -84,6 +91,8 @@ type
     property CollapseDelay: Integer index 9 read GetInt32 write SetInt32;
     /// <summary>Milliseconds the grow and shrink animation takes.</summary>
     property AnimationDuration: Integer index 10 read GetInt32 write SetInt32;
+    /// <summary>The screen edge the notch hangs from: it grows away from it.</summary>
+    property AttachedEdge: TWinUINotchEdge read GetAttachedEdge write SetAttachedEdge;
     property OnExpanded: TWinUIWinValueEventHandler index 0 read GetHandler write SetHandler;
     property OnCollapsed: TWinUIWinValueEventHandler index 1 read GetHandler write SetHandler;
   end;
@@ -92,7 +101,8 @@ type
   ///   A rounded tile (Background, CornerRadius, Padding, Content) with a soft
   ///   coloured glow around it. Changing GlowBrush fades the glow to the new
   ///   colour, Pulse makes it breathe, FadeAfter lets it fade out by itself.
-  ///   The glow is cast by the tile's shape, so it suits opaque backgrounds.
+  ///   A see-through Background (a SolidColorBrush with alpha below 255) shows
+  ///   what is behind the tile: the glow then stays around its edge.
   /// </summary>
   TWinUIGlowTile = class(TWinUICustomControl)
   strict private
@@ -104,7 +114,11 @@ type
     FSizeToken: EventRegistrationToken;
     FShownColor: TWinUIColor;
     FHasColor: Boolean;
+    FBackgroundToken: Int64;
+    FSeeThrough: Boolean;
+    FFrameMask: ICompositionNineGridBrush;
     procedure TemplateReady;
+    procedure UpdateShape;
     procedure UpdateSize;
     procedure UpdateGlow(AAnimateColor: Boolean);
     procedure FadeElapsed(Sender: TObject);
@@ -265,6 +279,7 @@ const
   NCollapseDelay = 9;
   NAnimationDuration = 10;
   NPill = 11;
+  NAttachedEdge = 12;
   // NotchPanel events
   NExpanded = 0;
   NCollapsed = 1;
@@ -328,6 +343,7 @@ begin
   AType.AddProperty('CollapseDelay', TWinUIPropertyKind.Int32, '450');
   AType.AddProperty('AnimationDuration', TWinUIPropertyKind.Int32, '420');
   AType.AddProperty('Pill', TWinUIPropertyKind.Value);
+  AType.AddProperty('AttachedEdge', TWinUIPropertyKind.Enum, 'Top', TypeInfo(TWinUINotchEdge));
   AType.AddEvent('Expanded');
   AType.AddEvent('Collapsed');
 end;
@@ -400,6 +416,7 @@ begin
   FChrome := TemplatePart('PART_Chrome') as IFrameworkElement;
   FPill := TemplatePart('PART_Pill') as IUIElement;
   FPanel := TemplatePart('PART_Panel') as IFrameworkElement;
+  ApplyEdge;
   if IsExpanded then
     FProgress := 1
   else
@@ -455,6 +472,38 @@ begin
       end;
     NCollapsedWidth, NCollapsedHeight, NExpandedWidth, NExpandedHeight, NExpandedCornerRadius, NSquareTop:
       ApplyProgress(FProgress);
+    NAttachedEdge:
+      begin
+        ApplyEdge;
+        ApplyProgress(FProgress);
+      end;
+  end;
+end;
+
+function TWinUINotchPanel.GetAttachedEdge: TWinUINotchEdge;
+begin
+  Result := TWinUINotchEdge(GetInt32(NAttachedEdge));
+end;
+
+procedure TWinUINotchPanel.SetAttachedEdge(AValue: TWinUINotchEdge);
+begin
+  SetInt32(NAttachedEdge, Ord(AValue));
+end;
+
+procedure TWinUINotchPanel.ApplyEdge;
+const
+  Horizontal: array[TWinUINotchEdge] of TWinUIHorizontalAlignment = (TWinUIHorizontalAlignment.Center,
+    TWinUIHorizontalAlignment.Center, TWinUIHorizontalAlignment.Left, TWinUIHorizontalAlignment.Right);
+  Vertical: array[TWinUINotchEdge] of TWinUIVerticalAlignment = (TWinUIVerticalAlignment.Top,
+    TWinUIVerticalAlignment.Bottom, TWinUIVerticalAlignment.Center, TWinUIVerticalAlignment.Center);
+begin
+  // The notch and its chrome sit against the edge, so they grow away from it
+  HorizontalAlignment := Horizontal[AttachedEdge];
+  VerticalAlignment := Vertical[AttachedEdge];
+  if FChrome <> nil then
+  begin
+    FChrome.HorizontalAlignment := Horizontal[AttachedEdge];
+    FChrome.VerticalAlignment := Vertical[AttachedEdge];
   end;
 end;
 
@@ -519,29 +568,57 @@ end;
 
 procedure TWinUINotchPanel.ApplyProgress(AProgress: Double);
 var
-  Size, Shape, PillAlpha, PanelAlpha, Radius: Double;
+  Size, Shape, PillAlpha, PanelAlpha, Radius, PillWidth, PillHeight: Double;
   Corners: TWinUICornerRadius;
+  Edge: TWinUINotchEdge;
 begin
   if FChrome = nil then
     Exit;
   // Size may overshoot a little past 1, the corner and the fades stay in range
   Size := AProgress;
   Shape := Clamp01(AProgress);
-  FChrome.Width := Max(0, Lerp(CollapsedWidth, ExpandedWidth, Size));
-  FChrome.Height := Max(0, Lerp(CollapsedHeight, ExpandedHeight, Size));
-  Radius := Lerp(CollapsedHeight / 2, ExpandedCornerRadius, Shape);
-  Corners.BottomLeft := Radius;
-  Corners.BottomRight := Radius;
-  if SquareTop then
+  Edge := AttachedEdge;
+  // On a side edge the pill stands upright
+  if Edge in [TWinUINotchEdge.Left, TWinUINotchEdge.Right] then
   begin
-    Corners.TopLeft := 0;
-    Corners.TopRight := 0;
+    PillWidth := CollapsedHeight;
+    PillHeight := CollapsedWidth;
   end
   else
   begin
-    Corners.TopLeft := Radius;
-    Corners.TopRight := Radius;
+    PillWidth := CollapsedWidth;
+    PillHeight := CollapsedHeight;
   end;
+  FChrome.Width := Max(0, Lerp(PillWidth, ExpandedWidth, Size));
+  FChrome.Height := Max(0, Lerp(PillHeight, ExpandedHeight, Size));
+  Radius := Lerp(Min(PillWidth, PillHeight) / 2, ExpandedCornerRadius, Shape);
+  Corners.TopLeft := Radius;
+  Corners.TopRight := Radius;
+  Corners.BottomLeft := Radius;
+  Corners.BottomRight := Radius;
+  if SquareTop then
+    case Edge of
+      TWinUINotchEdge.Top:
+        begin
+          Corners.TopLeft := 0;
+          Corners.TopRight := 0;
+        end;
+      TWinUINotchEdge.Bottom:
+        begin
+          Corners.BottomLeft := 0;
+          Corners.BottomRight := 0;
+        end;
+      TWinUINotchEdge.Left:
+        begin
+          Corners.TopLeft := 0;
+          Corners.BottomLeft := 0;
+        end;
+      TWinUINotchEdge.Right:
+        begin
+          Corners.TopRight := 0;
+          Corners.BottomRight := 0;
+        end;
+    end;
   (FChrome as IBorder).CornerRadius := Corners;
   // The pill fades out first, the panel fades in once there is room for it
   PillAlpha := 1 - Clamp01(Shape / 0.35);
@@ -602,6 +679,10 @@ begin
   if (FShape <> nil) and (FSizeToken.Value <> 0) then
     FShape.remove_SizeChanged(FSizeToken);
   FSizeToken.Value := 0;
+  if FBackgroundToken <> 0 then
+    (IntfOf(Self, IDependencyObject) as IDependencyObject).UnregisterPropertyChangedCallback(
+      RADWinUI.Abi.Control.BackgroundProperty, FBackgroundToken);
+  FBackgroundToken := 0;
   inherited;
 end;
 
@@ -622,6 +703,14 @@ begin
   (FSprite as ISpriteVisual2).Shadow := FShadow as ICompositionShadow;
   ElementCompositionPreview.SetElementChildVisual(FHost, FSprite as IVisual);
   Self_ := Self;
+  // A new Background may be see-through or not: the shape that casts the glow follows it
+  FBackgroundToken := (IntfOf(Self, IDependencyObject) as IDependencyObject).RegisterPropertyChangedCallback(
+    RADWinUI.Abi.Control.BackgroundProperty, TDependencyPropertyChangedCallback.Create(
+    procedure(ASender: IDependencyObject; ADp: IDependencyProperty)
+    begin
+      Self_.UpdateShape;
+    end));
+  UpdateShape;
   FSizeToken := FShape.add_SizeChanged(TSizeChangedEventHandler.Create(
     procedure(ASender: IInspectable; AE: ISizeChangedEventArgs)
     begin
@@ -629,6 +718,49 @@ begin
     end));
   UpdateSize;
   UpdateGlow(False);
+end;
+
+const
+  // How far into a see-through tile the glow starts, a share of its reach
+  SeeThroughRim = 3;
+
+procedure TWinUIGlowTile.UpdateShape;
+var
+  Background: IInspectable;
+  Solid: ISolidColorBrush;
+  SeeThrough: Boolean;
+  Compositor: ICompositor;
+  Black: TWinUIColor;
+begin
+  if FShape = nil then
+    Exit;
+  Background := (IntfOf(Self, IDependencyObject) as IDependencyObject).GetValue(
+    RADWinUI.Abi.Control.BackgroundProperty);
+  SeeThrough := Supports(Background, ISolidColorBrush, Solid) and (Solid.Color.A < 255);
+  if SeeThrough then
+  begin
+    // The glow comes from a frame along the edge, a mask that is never drawn itself,
+    // and the shape that casts it for an opaque tile would show through: hidden
+    if FFrameMask = nil then
+    begin
+      Compositor := (FShadow as ICompositionObject).Compositor;
+      Black := Default(TWinUIColor);
+      Black.A := $FF;
+      FFrameMask := (Compositor as ICompositor2).CreateNineGridBrush;
+      FFrameMask.Source := Compositor.CreateColorBrushWithColor(Black) as ICompositionBrush;
+      FFrameMask.IsCenterHollow := True;
+    end;
+    FFrameMask.SetInsets(Max(2, GlowRadius / SeeThroughRim));
+    FShadow.Mask := FFrameMask as ICompositionBrush;
+    (FShape as IUIElement).Opacity := 0;
+  end
+  else
+  begin
+    // Opaque: the filled shape behind the tile casts the glow all around, as always
+    FShadow.Mask := (FShape as IShape).GetAlphaMask;
+    (FShape as IUIElement).Opacity := 1;
+  end;
+  FSeeThrough := SeeThrough;
 end;
 
 procedure TWinUIGlowTile.UpdateSize;
@@ -720,7 +852,11 @@ begin
         UpdateGlow(False);
       end;
     GGlowRadius, GGlowOpacity, GPulse:
-      UpdateGlow(False);
+      begin
+        if FSeeThrough then
+          UpdateShape;
+        UpdateGlow(False);
+      end;
   end;
 end;
 

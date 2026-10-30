@@ -3,7 +3,8 @@ program OverlayControlsTest;
 {
   Checks the Overlay controls (RADWinUI.Controls): NotchPanel expands and
   collapses with its events and animation, GlowTile builds its glow, changes
-  colour and fades out by itself, HotKey parses and registers shortcuts,
+  colour and fades out by itself, and a see-through GlowTile shows what is
+  behind it with its glow still around it, HotKey parses and registers shortcuts,
   MediaSession connects to the media Windows knows about. The window opens where
   RADWINUI_TEST_MONITOR puts test windows.
 }
@@ -33,7 +34,15 @@ type
     FMedia: TWinUIMediaSession;
     FSecond: TWinUIWindow;
     FLiveBefore: Integer;
+    // The see-through tile: a red square with the tile on it, and the pixels of its picture
+    FProbe: TWinUIGrid;
+    FPixels: TBytes;
+    FPixelWidth: Integer;
+    FRendered: Boolean;
     procedure Check(AOk: Boolean; const AWhat: string);
+    procedure BuildProbe;
+    procedure RenderProbe;
+    function Pixel(AX, AY: Integer): TWinUIColor;
     procedure Step(Sender: TObject);
     procedure NotchExpanded(Sender: TObject; const E: TWinValue);
     procedure NotchCollapsed(Sender: TObject; const E: TWinValue);
@@ -139,6 +148,100 @@ begin
   Inc(FClicks);
 end;
 
+type
+  // Windows.Storage.Streams.IBufferByteAccess: the bytes of a WinRT buffer
+  IBufferByteAccess = interface(IUnknown)
+    ['{905A0FEF-BC53-11DF-8C49-001E4FC686DA}']
+    function Buffer(out AValue: PByte): HRESULT; stdcall;
+  end;
+
+const
+  ProbeWidth = 200;
+  ProbeHeight = 140;
+  ProbeTileWidth = 120;
+  ProbeTileHeight = 80;
+
+function SolidBrush(AOwner: TWinUIObject; AColor: Cardinal): TWinUISolidColorBrush;
+var
+  C: TWinUIColor;
+begin
+  C.A := AColor shr 24;
+  C.R := (AColor shr 16) and $FF;
+  C.G := (AColor shr 8) and $FF;
+  C.B := AColor and $FF;
+  Result := TWinUISolidColorBrush.Create(AOwner);
+  Result.Color := C;
+end;
+
+procedure TTestWindow.BuildProbe;
+var
+  Tile: TWinUIGlowTile;
+begin
+  FProbe := TWinUIGrid.Create(Self);
+  FProbe.Width := ProbeWidth;
+  FProbe.Height := ProbeHeight;
+  FProbe.HorizontalAlignment := TWinUIHorizontalAlignment.Left;
+  FProbe.VerticalAlignment := TWinUIVerticalAlignment.Top;
+  FProbe.Background := SolidBrush(Self, $FFFF0000);
+  Tile := TWinUIGlowTile.Create(Self);
+  Tile.Width := ProbeTileWidth;
+  Tile.Height := ProbeTileHeight;
+  // A quarter black: the red behind must show through it
+  Tile.Background := SolidBrush(Self, $40000000);
+  Tile.GlowBrush := SolidBrush(Self, $FF00FF00);
+  Tile.GlowRadius := 16;
+  Tile.GlowOpacity := 1;
+  Tile.IsGlowing := True;
+  FProbe.Children.Add(Tile);
+  (Content as TWinUIPanel).Children.Add(FProbe);
+end;
+
+procedure TTestWindow.RenderProbe;
+var
+  Target: TWinUIRenderTargetBitmap;
+begin
+  Target := TWinUIRenderTargetBitmap.Create(Self);
+  Target.RenderAsync(FProbe).Completed := TAsyncActionCompletedHandler.Create(
+    procedure(AAction: IAsyncAction; AStatus: AsyncStatus)
+    var
+      Width, Height: Integer;
+    begin
+      if AStatus <> AsyncStatus.Completed then
+        Exit;
+      Width := Target.PixelWidth;
+      Height := Target.PixelHeight;
+      Target.GetPixelsAsync.Completed := TAsyncOperationCompletedHandler_IBuffer.Create(
+        procedure(AOperation: IAsyncOperation_IBuffer; AStatus: AsyncStatus)
+        var
+          Bytes: PByte;
+        begin
+          if (AStatus = AsyncStatus.Completed) and
+            Succeeded((AOperation.GetResults as IBufferByteAccess).Buffer(Bytes)) then
+          begin
+            SetLength(FPixels, Width * Height * 4);
+            Move(Bytes^, FPixels[0], Length(FPixels));
+            FPixelWidth := Width;
+            FRendered := True;
+          end;
+        end);
+    end);
+end;
+
+// A pixel of the picture, AX and AY in effective pixels of the probe
+function TTestWindow.Pixel(AX, AY: Integer): TWinUIColor;
+var
+  Scale: Double;
+  Offset: Integer;
+begin
+  Scale := FPixelWidth / ProbeWidth;
+  Offset := (Round(AY * Scale) * FPixelWidth + Round(AX * Scale)) * 4;
+  // Blue, green, red, alpha
+  Result.B := FPixels[Offset];
+  Result.G := FPixels[Offset + 1];
+  Result.R := FPixels[Offset + 2];
+  Result.A := FPixels[Offset + 3];
+end;
+
 procedure TTestWindow.Step(Sender: TObject);
 var
   Notch: TWinUINotchPanel;
@@ -146,6 +249,7 @@ var
   Json: string;
   HotKey: TWinUIHotKey;
   Modifiers, Key: Cardinal;
+  Center, Rim: TWinUIColor;
 begin
   Inc(FStep);
   try
@@ -216,6 +320,22 @@ begin
           Check(HotKey.Registered, 'HotKey registers a free shortcut');
           HotKey.IsActive := False;
           Check(not HotKey.Registered, 'IsActive False releases it');
+          BuildProbe;
+        end;
+      5:
+        // The glow fades in first
+        RenderProbe;
+      7:
+        begin
+          Check(FRendered, 'the see-through tile renders');
+          if FRendered then
+          begin
+            Center := Pixel(ProbeWidth div 2, ProbeHeight div 2);
+            Rim := Pixel((ProbeWidth - ProbeTileWidth) div 2 - 4, ProbeHeight div 2);
+            Check((Center.R > 150) and (Center.G < 60), Format('a see-through GlowTile shows what is behind it, ' +
+              'not black (centre %d,%d,%d)', [Center.R, Center.G, Center.B]));
+            Check(Rim.G > 40, Format('its glow stays around it (edge %d,%d,%d)', [Rim.R, Rim.G, Rim.B]));
+          end;
           Flush(Output);
           Close;
         end;

@@ -3,7 +3,7 @@
 "RADWinUI.Controls.NotchPanel": {
 "base": "Microsoft.UI.Xaml.Controls.ContentControl",
 "events": {"Expanded": ["TWinUIWinValueEventHandler", "TWinValue"], "Collapsed": ["TWinUIWinValueEventHandler", "TWinValue"]},
-"props": {"IsExpanded": "bool", "CollapsedWidth": "number", "CollapsedHeight": "number", "ExpandedWidth": "number", "ExpandedHeight": "number", "ExpandedCornerRadius": "number", "SquareTop": "bool", "ExpandOnHover": "bool", "HoverDelay": "int", "CollapseDelay": "int", "AnimationDuration": "int", "Pill": "object"},
+"props": {"IsExpanded": "bool", "CollapsedWidth": "number", "CollapsedHeight": "number", "ExpandedWidth": "number", "ExpandedHeight": "number", "ExpandedCornerRadius": "number", "SquareTop": "bool", "ExpandOnHover": "bool", "HoverDelay": "int", "CollapseDelay": "int", "AnimationDuration": "int", "Pill": "object", "AttachedEdge": "enum:Top|Bottom|Left|Right"},
 "unit": "RADWinUI.Controls",
 "wrapper": "TWinUINotchPanel"
 },
