@@ -39,7 +39,7 @@
   discovery, the default remains the registered RAD Studio 13 installation.
 
 .EXAMPLE
-  .\scripts\Make-Release.ps1 -Version 0.9.0
+  .\scripts\Make-Release.ps1 -Version 1.0.0
 #>
 [CmdletBinding()]
 param(

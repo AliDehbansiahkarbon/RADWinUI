@@ -2,14 +2,22 @@
 
 All notable changes to RADWinUI.
 
-## Unreleased
+## 1.0.0 (30 Oct 2026)
 
-- Overlay windows: `WindowStyle` Overlay (no frame, always on top, out of Alt+Tab), a `Transparent` backdrop, `Dock`, `ClickThrough` with `HitTestElement`, and `ShowActivated`, also as `<Window>` attributes.
+- Overlay windows: `WindowStyle` Overlay (no frame, always on top, out of Alt+Tab and the taskbar), a `Transparent` backdrop whose window is see-through, `Dock`, `ClickThrough` with `HitTestElement`, and `ShowActivated`, also as `<Window>` attributes.
 - Controls written in Delphi: `TWinUICustomControl` (unit `RADWinUI.CustomControls`) makes a Delphi class a XAML element with dependency properties, a template and events.
 - New Tool Palette category Overlay with RADWinUI's own controls (unit `RADWinUI.Controls`, XAML prefix `rw:`): `TWinUINotchPanel`, `TWinUIGlowTile`, `TWinUIHotKey` and `TWinUIMediaSession`.
+- `TWinUINotchPanel.AttachedEdge` (Top, Bottom, Left, Right): a notch can hang from any screen edge, its pill stands upright on the side edges and the panel opens away from the edge.
+- `TWinUIGlowTile` with a see-through `Background` shows what is behind it, the glow stays around its edge. Opaque tiles look as before.
 - XamlCodeGen, the designer and the preview know the `rw:` controls. Dropping one declares `xmlns:rw` on the window.
 - The projection includes `Windows.Media.Control`, the media sessions of the PC.
-- New sample: Notch, a desk companion at the top of the screen built from the Overlay controls.
+- New folder `community`, "Made with RADWinUI": apps that people build with RADWinUI and share as source, with screenshots, under clear rules for safety, usefulness and review. `community\Community.groupproj` builds them, and the release checks that it does.
+- Notch, a desk companion that hangs from an edge of the screen, is the first community app. Its panel shows widgets you pick, edit inside the notch and reorder by dragging: installed apps, live Claude Code and Codex activity with usage limits, remote desktops, the calendar, links, notes, the music playing on the PC and a focus timer.
+- Windows show the program icon, and new projects get the RAD Studio icon.
+- The File > New wizards use themed dialogs, and new projects call the shared build scripts like the samples.
+- Structure view fixes: no access violation when a node is clicked, nodes stay until the IDE has rebuilt its tree, and the 32-bit IDE keeps its focus.
+- No platform warning for `RegisterExpectedMemoryLeak` when custom controls are compiled.
+- Documentation: Overlay windows in the framework API, the Overlay controls and controls written in Delphi in CUSTOM-CONTROLS, and a pull request template for community apps.
 
 ## 0.9.3
 

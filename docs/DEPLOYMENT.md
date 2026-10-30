@@ -100,7 +100,7 @@ Get-AppxPackage Microsoft.WindowsAppRuntime.2* | Select-Object Name, Version, Ar
 This part is for RADWinUI maintainers, not for app deployment.
 
 ```powershell
-.\scripts\Make-Release.ps1 -Version 0.9.3-rc.5 -BdsRoot 'C:\Program Files (x86)\Embarcadero\Studio\37.0'
+.\scripts\Make-Release.ps1 -Version 1.0.0 -BdsRoot 'C:\Program Files (x86)\Embarcadero\Studio\37.0'
 ```
 
 Commit all sources first. The script refuses a dirty tree or an existing version
