@@ -1,0 +1,533 @@
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:rw="using:RADWinUI.Controls"
+    x:Class="TMainWindow" Title="Tab Bars" Width="1240" Height="900" MinWidth="1080" MinHeight="720"
+    WindowStartupLocation="CenterScreen" ExtendsContentIntoTitleBar="True" Backdrop="Transparent">
+  <!-- The six tab bars of the Tool Palette's Tab Bars category, each in a small
+       app. Every bar switches its app's pages through Pages, without code.
+       It follows the Windows theme: every colour of the page is a theme
+       resource, and the bars take theirs through Background, BorderBrush and
+       Foreground. MainWindow.pas only adds the controls at the top: the accent
+       colours, the speed, the labels, a tour that taps through all of them,
+       and how much of the desktop shows through the window. -->
+  <Grid x:Name="Root" Background="Transparent">
+    <Grid.Resources>
+      <ResourceDictionary>
+        <ResourceDictionary.ThemeDictionaries>
+          <ResourceDictionary x:Key="Light">
+            <SolidColorBrush x:Key="PageBrush" Color="#F3F2F7"/>
+            <SolidColorBrush x:Key="CardBrush" Color="#E6FFFFFF"/>
+            <SolidColorBrush x:Key="CardEdgeBrush" Color="#14000000"/>
+            <SolidColorBrush x:Key="ScreenBrush" Color="#F3F2F8"/>
+            <SolidColorBrush x:Key="DiscBrush" Color="#E6E3F3"/>
+            <SolidColorBrush x:Key="InkBrush" Color="#1B1829"/>
+            <SolidColorBrush x:Key="MutedBrush" Color="#5E5A72"/>
+            <SolidColorBrush x:Key="FaintBrush" Color="#85819A"/>
+            <SolidColorBrush x:Key="PageIconBrush" Color="#4A3CC4"/>
+            <SolidColorBrush x:Key="ChipBrush" Color="#ECEAF4"/>
+            <SolidColorBrush x:Key="BarBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="BarEdgeBrush" Color="#E1DEEB"/>
+            <SolidColorBrush x:Key="BarIconBrush" Color="#8A86A0"/>
+            <SolidColorBrush x:Key="SwatchEdgeBrush" Color="#D9D6E4"/>
+            <Color x:Key="GlowColorA">#306C55FF</Color>
+            <Color x:Key="GlowColorB">#2A3CC8FF</Color>
+          </ResourceDictionary>
+          <ResourceDictionary x:Key="Dark">
+            <SolidColorBrush x:Key="PageBrush" Color="#0E0D15"/>
+            <SolidColorBrush x:Key="CardBrush" Color="#E615131F"/>
+            <SolidColorBrush x:Key="CardEdgeBrush" Color="#25222F"/>
+            <SolidColorBrush x:Key="ScreenBrush" Color="#100E17"/>
+            <SolidColorBrush x:Key="DiscBrush" Color="#221F31"/>
+            <SolidColorBrush x:Key="InkBrush" Color="#FFFFFF"/>
+            <SolidColorBrush x:Key="MutedBrush" Color="#9A96B0"/>
+            <SolidColorBrush x:Key="FaintBrush" Color="#77738C"/>
+            <SolidColorBrush x:Key="PageIconBrush" Color="#E8E5FA"/>
+            <SolidColorBrush x:Key="ChipBrush" Color="#1F1C2C"/>
+            <SolidColorBrush x:Key="BarBrush" Color="#1B1829"/>
+            <SolidColorBrush x:Key="BarEdgeBrush" Color="#2E2A40"/>
+            <SolidColorBrush x:Key="BarIconBrush" Color="#A7A3BC"/>
+            <SolidColorBrush x:Key="SwatchEdgeBrush" Color="#2E2A3D"/>
+            <Color x:Key="GlowColorA">#486C55FF</Color>
+            <Color x:Key="GlowColorB">#363CC8FF</Color>
+          </ResourceDictionary>
+        </ResourceDictionary.ThemeDictionaries>
+        <Style x:Key="Card" TargetType="Border">
+          <Setter Property="Background" Value="{ThemeResource CardBrush}"/>
+          <Setter Property="BorderBrush" Value="{ThemeResource CardEdgeBrush}"/>
+          <Setter Property="BorderThickness" Value="1"/>
+          <Setter Property="CornerRadius" Value="24"/>
+          <Setter Property="Padding" Value="18,16,18,16"/>
+        </Style>
+        <Style x:Key="Screen" TargetType="Grid">
+          <Setter Property="Background" Value="{ThemeResource ScreenBrush}"/>
+          <Setter Property="CornerRadius" Value="16"/>
+          <Setter Property="MinHeight" Value="150"/>
+        </Style>
+        <Style x:Key="Page" TargetType="StackPanel">
+          <Setter Property="Spacing" Value="6"/>
+          <Setter Property="HorizontalAlignment" Value="Center"/>
+          <Setter Property="VerticalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="Disc" TargetType="Border">
+          <Setter Property="Width" Value="54"/>
+          <Setter Property="Height" Value="54"/>
+          <Setter Property="CornerRadius" Value="27"/>
+          <Setter Property="Background" Value="{ThemeResource DiscBrush}"/>
+          <Setter Property="HorizontalAlignment" Value="Center"/>
+          <Setter Property="Margin" Value="0,0,0,4"/>
+        </Style>
+        <Style x:Key="PageIcon" TargetType="FontIcon">
+          <Setter Property="FontSize" Value="24"/>
+          <Setter Property="Foreground" Value="{ThemeResource PageIconBrush}"/>
+        </Style>
+        <Style x:Key="PageTitle" TargetType="TextBlock">
+          <Setter Property="FontSize" Value="16"/>
+          <Setter Property="FontWeight" Value="SemiBold"/>
+          <Setter Property="Foreground" Value="{ThemeResource InkBrush}"/>
+          <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="PageText" TargetType="TextBlock">
+          <Setter Property="FontSize" Value="12.5"/>
+          <Setter Property="Foreground" Value="{ThemeResource MutedBrush}"/>
+          <Setter Property="HorizontalAlignment" Value="Center"/>
+        </Style>
+        <Style x:Key="CardTitle" TargetType="TextBlock">
+          <Setter Property="FontSize" Value="16"/>
+          <Setter Property="FontWeight" Value="SemiBold"/>
+          <Setter Property="Foreground" Value="{ThemeResource InkBrush}"/>
+        </Style>
+        <Style x:Key="CardClass" TargetType="TextBlock">
+          <Setter Property="FontFamily" Value="Cascadia Mono, Consolas"/>
+          <Setter Property="FontSize" Value="11.5"/>
+          <Setter Property="Foreground" Value="{ThemeResource FaintBrush}"/>
+        </Style>
+        <Style x:Key="Chip" TargetType="Border">
+          <Setter Property="Background" Value="{ThemeResource ChipBrush}"/>
+          <Setter Property="CornerRadius" Value="11"/>
+          <Setter Property="Padding" Value="10,3,10,4"/>
+          <Setter Property="VerticalAlignment" Value="Top"/>
+        </Style>
+        <Style x:Key="ChipText" TargetType="TextBlock">
+          <Setter Property="FontSize" Value="11.5"/>
+          <Setter Property="Foreground" Value="{ThemeResource MutedBrush}"/>
+        </Style>
+        <Style x:Key="Caption" TargetType="TextBlock">
+          <Setter Property="FontSize" Value="11"/>
+          <Setter Property="FontWeight" Value="SemiBold"/>
+          <Setter Property="CharacterSpacing" Value="80"/>
+          <Setter Property="Foreground" Value="{ThemeResource FaintBrush}"/>
+        </Style>
+        <Style x:Key="Swatch" TargetType="Button">
+          <Setter Property="Width" Value="30"/>
+          <Setter Property="Height" Value="30"/>
+          <Setter Property="Padding" Value="0"/>
+          <Setter Property="CornerRadius" Value="15"/>
+          <Setter Property="BorderThickness" Value="2"/>
+          <Setter Property="BorderBrush" Value="{ThemeResource SwatchEdgeBrush}"/>
+        </Style>
+      </ResourceDictionary>
+    </Grid.Resources>
+
+    <!-- The page itself. Its Opacity is the transparency slider: below 1 the desktop shows through -->
+    <Border x:Name="Glass" Background="{ThemeResource PageBrush}" CornerRadius="8" Opacity="0.65"/>
+
+    <!-- Two soft lights behind everything -->
+    <Ellipse Width="820" Height="820" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="-240,-320,0,0" IsHitTestVisible="False">
+      <Ellipse.Fill>
+        <RadialGradientBrush>
+          <GradientStop Color="{ThemeResource GlowColorA}" Offset="0"/>
+          <GradientStop Color="#006C55FF" Offset="1"/>
+        </RadialGradientBrush>
+      </Ellipse.Fill>
+    </Ellipse>
+    <Ellipse Width="900" Height="900" HorizontalAlignment="Right" VerticalAlignment="Bottom" Margin="0,0,-280,-360" IsHitTestVisible="False">
+      <Ellipse.Fill>
+        <RadialGradientBrush>
+          <GradientStop Color="{ThemeResource GlowColorB}" Offset="0"/>
+          <GradientStop Color="#003CC8FF" Offset="1"/>
+        </RadialGradientBrush>
+      </Ellipse.Fill>
+    </Ellipse>
+
+    <ScrollViewer>
+      <Grid Padding="40,40,40,28" RowSpacing="24" MaxWidth="1300">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <!-- Title and the controls that change every bar at once -->
+        <Grid ColumnSpacing="24">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <StackPanel Spacing="6" VerticalAlignment="Center">
+            <Border Style="{StaticResource Chip}" HorizontalAlignment="Left">
+              <TextBlock Style="{StaticResource ChipText}" Text="RADWinUI  &#x00B7;  Tool Palette  &#x00B7;  Tab Bars"/>
+            </Border>
+            <TextBlock Text="Six tab bars, ready to drop in" FontSize="32" FontWeight="SemiBold" Foreground="{ThemeResource InkBrush}"/>
+            <TextBlock Text="Set Items in the Object Inspector, point Pages at your views, and the bar does the rest. Tap any tab." FontSize="14" Foreground="{ThemeResource MutedBrush}" TextWrapping="Wrap"/>
+          </StackPanel>
+          <Border Grid.Column="1" Style="{StaticResource Card}" Padding="20,14,20,14" VerticalAlignment="Center">
+            <StackPanel Orientation="Horizontal" Spacing="26">
+              <StackPanel Spacing="8">
+                <TextBlock Style="{StaticResource Caption}" Text="ACCENT"/>
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <Button x:Name="VioletSwatch" Style="{StaticResource Swatch}" Click="VioletClick" ToolTipService.ToolTip="Violet to cyan" AutomationProperties.Name="Violet">
+                    <Ellipse Width="22" Height="22"><Ellipse.Fill><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#6C55FF" Offset="0"/><GradientStop Color="#3CC8FF" Offset="1"/></LinearGradientBrush></Ellipse.Fill></Ellipse>
+                  </Button>
+                  <Button x:Name="SunsetSwatch" Style="{StaticResource Swatch}" Click="SunsetClick" ToolTipService.ToolTip="Sunset" AutomationProperties.Name="Sunset">
+                    <Ellipse Width="22" Height="22"><Ellipse.Fill><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#FF5F6D" Offset="0"/><GradientStop Color="#FFC371" Offset="1"/></LinearGradientBrush></Ellipse.Fill></Ellipse>
+                  </Button>
+                  <Button x:Name="MintSwatch" Style="{StaticResource Swatch}" Click="MintClick" ToolTipService.ToolTip="Mint" AutomationProperties.Name="Mint">
+                    <Ellipse Width="22" Height="22"><Ellipse.Fill><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#11B98E" Offset="0"/><GradientStop Color="#7CF29A" Offset="1"/></LinearGradientBrush></Ellipse.Fill></Ellipse>
+                  </Button>
+                  <Button x:Name="AuroraSwatch" Style="{StaticResource Swatch}" Click="AuroraClick" ToolTipService.ToolTip="Aurora" AutomationProperties.Name="Aurora">
+                    <Ellipse Width="22" Height="22"><Ellipse.Fill><LinearGradientBrush StartPoint="0,0" EndPoint="1,1"><GradientStop Color="#A23CF5" Offset="0"/><GradientStop Color="#FF6CAB" Offset="1"/></LinearGradientBrush></Ellipse.Fill></Ellipse>
+                  </Button>
+                </StackPanel>
+              </StackPanel>
+              <StackPanel Spacing="2">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Style="{StaticResource Caption}" Text="SPEED"/>
+                  <TextBlock x:Name="SpeedText" Style="{StaticResource Caption}" Foreground="{ThemeResource MutedBrush}" Text="500 ms"/>
+                </StackPanel>
+                <Slider x:Name="SpeedSlider" Width="150" Minimum="200" Maximum="1500" StepFrequency="50" Value="500"
+                        ValueChanged="SpeedChanged" AutomationProperties.Name="Speed"/>
+              </StackPanel>
+              <StackPanel Spacing="2">
+                <TextBlock Style="{StaticResource Caption}" Text="LABELS"/>
+                <ToggleSwitch x:Name="LabelsSwitch" OnContent="" OffContent="" MinWidth="0" Toggled="LabelsToggled" AutomationProperties.Name="Labels"/>
+              </StackPanel>
+              <StackPanel Spacing="2">
+                <TextBlock Style="{StaticResource Caption}" Text="TOUR"/>
+                <ToggleSwitch x:Name="TourSwitch" OnContent="" OffContent="" MinWidth="0" Toggled="TourToggled" AutomationProperties.Name="Tour"/>
+              </StackPanel>
+              <StackPanel Spacing="2">
+                <StackPanel Orientation="Horizontal" Spacing="8">
+                  <TextBlock Style="{StaticResource Caption}" Text="TRANSPARENCY"/>
+                  <TextBlock x:Name="GlassText" Style="{StaticResource Caption}" Foreground="{ThemeResource MutedBrush}" Text="35%"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Spacing="10">
+                  <ToggleSwitch x:Name="TransparencySwitch" OnContent="" OffContent="" MinWidth="0" IsOn="True"
+                                Toggled="TransparencyToggled" AutomationProperties.Name="Transparency"/>
+                  <Slider x:Name="GlassSlider" Width="110" Minimum="0" Maximum="90" StepFrequency="5" Value="35"
+                          ValueChanged="GlassChanged" AutomationProperties.Name="Transparency level" VerticalAlignment="Center"/>
+                </StackPanel>
+              </StackPanel>
+            </StackPanel>
+          </Border>
+        </Grid>
+
+        <!-- The six bars, each on a card of its own -->
+        <Grid Grid.Row="1" ColumnSpacing="20" RowSpacing="20">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+            <ColumnDefinition/>
+          </Grid.ColumnDefinitions>
+          <Grid.RowDefinitions>
+            <RowDefinition/>
+            <RowDefinition/>
+          </Grid.RowDefinitions>
+
+          <!-- 1. Sliding Pill -->
+          <Border Grid.Row="0" Grid.Column="0" Style="{StaticResource Card}">
+            <Grid RowSpacing="14">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+              </Grid.RowDefinitions>
+              <Grid>
+                <StackPanel Spacing="1">
+                  <TextBlock Style="{StaticResource CardTitle}" Text="Sliding Pill"/>
+                  <TextBlock Style="{StaticResource CardClass}" Text="TWinUISlidingPillTabBar"/>
+                </StackPanel>
+                <Border Style="{StaticResource Chip}" HorizontalAlignment="Right">
+                  <TextBlock Style="{StaticResource ChipText}" Text="Social"/>
+                </Border>
+              </Grid>
+              <Grid Grid.Row="1" Style="{StaticResource Screen}">
+                <StackPanel x:Name="PillHome" Style="{StaticResource Page}">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE80F;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Good morning"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Three new posts since yesterday"/>
+                </StackPanel>
+                <StackPanel x:Name="PillSearch" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE721;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Search"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Find people, places and posts"/>
+                </StackPanel>
+                <StackPanel x:Name="PillLikes" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xEB51;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Likes"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="128 people liked your photo"/>
+                </StackPanel>
+                <StackPanel x:Name="PillProfile" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE77B;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Profile"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Edit your name and photo"/>
+                </StackPanel>
+              </Grid>
+              <rw:SlidingPillTabBar x:Name="PillBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
+                  Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}"
+                  Items="Home:Home, Search:Search, Likes:Heart, Profile:Contact"
+                  Pages="PillHome, PillSearch, PillLikes, PillProfile" SelectionChanged="TabChanged"/>
+            </Grid>
+          </Border>
+
+          <!-- 2. Liquid Bulge -->
+          <Border Grid.Row="0" Grid.Column="1" Style="{StaticResource Card}">
+            <Grid RowSpacing="14">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+              </Grid.RowDefinitions>
+              <Grid>
+                <StackPanel Spacing="1">
+                  <TextBlock Style="{StaticResource CardTitle}" Text="Liquid Bulge"/>
+                  <TextBlock Style="{StaticResource CardClass}" Text="TWinUILiquidBulgeTabBar"/>
+                </StackPanel>
+                <Border Style="{StaticResource Chip}" HorizontalAlignment="Right">
+                  <TextBlock Style="{StaticResource ChipText}" Text="Music"/>
+                </Border>
+              </Grid>
+              <Grid Grid.Row="1" Style="{StaticResource Screen}">
+                <StackPanel x:Name="BulgeListen" Style="{StaticResource Page}">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE8D6;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Now playing"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Night Drive, 3:42 left"/>
+                </StackPanel>
+                <StackPanel x:Name="BulgeExplore" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE774;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Explore"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="New releases every Friday"/>
+                </StackPanel>
+                <StackPanel x:Name="BulgeLibrary" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE8F1;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Library"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="24 playlists, 312 songs"/>
+                </StackPanel>
+                <StackPanel x:Name="BulgeMe" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE77B;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Your music"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Listening stats and settings"/>
+                </StackPanel>
+              </Grid>
+              <rw:LiquidBulgeTabBar x:Name="BulgeBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
+                  Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}"
+                  Items="Listen:Music, Explore:Globe, Library:Library, Me:Contact"
+                  Pages="BulgeListen, BulgeExplore, BulgeLibrary, BulgeMe" SelectionChanged="TabChanged"/>
+            </Grid>
+          </Border>
+
+          <!-- 3. Floating Notch -->
+          <Border Grid.Row="0" Grid.Column="2" Style="{StaticResource Card}">
+            <Grid RowSpacing="14">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+              </Grid.RowDefinitions>
+              <Grid>
+                <StackPanel Spacing="1">
+                  <TextBlock Style="{StaticResource CardTitle}" Text="Floating Notch"/>
+                  <TextBlock Style="{StaticResource CardClass}" Text="TWinUIFloatingNotchTabBar"/>
+                </StackPanel>
+                <Border Style="{StaticResource Chip}" HorizontalAlignment="Right">
+                  <TextBlock Style="{StaticResource ChipText}" Text="Shop"/>
+                </Border>
+              </Grid>
+              <Grid Grid.Row="1" Style="{StaticResource Screen}">
+                <StackPanel x:Name="NotchShop" Style="{StaticResource Page}">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE719;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Today's deals"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Up to 40% off headphones"/>
+                </StackPanel>
+                <StackPanel x:Name="NotchCart" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE7BF;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Cart"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Two items, ready to check out"/>
+                </StackPanel>
+                <StackPanel x:Name="NotchSaved" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xEB51;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Saved"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Back in stock: the Aurora lamp"/>
+                </StackPanel>
+                <StackPanel x:Name="NotchAccount" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE77B;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Account"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Orders, addresses and payment"/>
+                </StackPanel>
+              </Grid>
+              <rw:FloatingNotchTabBar x:Name="NotchBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
+                  Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}"
+                  Items="Shop:Shop, Cart:Cart, Saved:Heart, Account:Contact"
+                  Pages="NotchShop, NotchCart, NotchSaved, NotchAccount" SelectionChanged="TabChanged"/>
+            </Grid>
+          </Border>
+
+          <!-- 4. Icon Fill -->
+          <Border Grid.Row="1" Grid.Column="0" Style="{StaticResource Card}">
+            <Grid RowSpacing="14">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+              </Grid.RowDefinitions>
+              <Grid>
+                <StackPanel Spacing="1">
+                  <TextBlock Style="{StaticResource CardTitle}" Text="Icon Fill"/>
+                  <TextBlock Style="{StaticResource CardClass}" Text="TWinUIIconFillTabBar"/>
+                </StackPanel>
+                <Border Style="{StaticResource Chip}" HorizontalAlignment="Right">
+                  <TextBlock Style="{StaticResource ChipText}" Text="Chat"/>
+                </Border>
+              </Grid>
+              <Grid Grid.Row="1" Style="{StaticResource Screen}">
+                <StackPanel x:Name="FillFeed" Style="{StaticResource Page}">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE80F;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Feed"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Catch up with your friends"/>
+                </StackPanel>
+                <StackPanel x:Name="FillChat" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE8F2;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Chat"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Mina: see you at eight?"/>
+                </StackPanel>
+                <StackPanel x:Name="FillLikes" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xEB51;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Likes"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Your post got 56 hearts"/>
+                </StackPanel>
+                <StackPanel x:Name="FillProfile" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE77B;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Profile"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="1.2k followers"/>
+                </StackPanel>
+              </Grid>
+              <rw:IconFillTabBar x:Name="FillBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
+                  Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}"
+                  Items="Feed:Home, Chat:Chat, Likes:Heart, Profile:Contact"
+                  Pages="FillFeed, FillChat, FillLikes, FillProfile" SelectionChanged="TabChanged"/>
+            </Grid>
+          </Border>
+
+          <!-- 5. Expanding Label -->
+          <Border Grid.Row="1" Grid.Column="1" Style="{StaticResource Card}">
+            <Grid RowSpacing="14">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+              </Grid.RowDefinitions>
+              <Grid>
+                <StackPanel Spacing="1">
+                  <TextBlock Style="{StaticResource CardTitle}" Text="Expanding Label"/>
+                  <TextBlock Style="{StaticResource CardClass}" Text="TWinUIExpandingLabelTabBar"/>
+                </StackPanel>
+                <Border Style="{StaticResource Chip}" HorizontalAlignment="Right">
+                  <TextBlock Style="{StaticResource ChipText}" Text="Travel"/>
+                </Border>
+              </Grid>
+              <Grid Grid.Row="1" Style="{StaticResource Screen}">
+                <StackPanel x:Name="LabelExplore" Style="{StaticResource Page}">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE774;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Explore"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Weekend ideas near you"/>
+                </StackPanel>
+                <StackPanel x:Name="LabelTrips" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE709;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Trips"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Lisbon in 12 days"/>
+                </StackPanel>
+                <StackPanel x:Name="LabelSaved" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE734;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Saved"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Nine places on your list"/>
+                </StackPanel>
+                <StackPanel x:Name="LabelProfile" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE77B;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Profile"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Passport and preferences"/>
+                </StackPanel>
+              </Grid>
+              <rw:ExpandingLabelTabBar x:Name="LabelBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
+                  Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}"
+                  Items="Explore:Globe, Trips:Airplane, Saved:Star, Profile:Contact"
+                  Pages="LabelExplore, LabelTrips, LabelSaved, LabelProfile" SelectionChanged="TabChanged"/>
+            </Grid>
+          </Border>
+
+          <!-- 6. Bubble Float -->
+          <Border Grid.Row="1" Grid.Column="2" Style="{StaticResource Card}">
+            <Grid RowSpacing="14">
+              <Grid.RowDefinitions>
+                <RowDefinition Height="Auto"/>
+                <RowDefinition Height="*"/>
+                <RowDefinition Height="Auto"/>
+              </Grid.RowDefinitions>
+              <Grid>
+                <StackPanel Spacing="1">
+                  <TextBlock Style="{StaticResource CardTitle}" Text="Bubble Float"/>
+                  <TextBlock Style="{StaticResource CardClass}" Text="TWinUIBubbleFloatTabBar"/>
+                </StackPanel>
+                <Border Style="{StaticResource Chip}" HorizontalAlignment="Right">
+                  <TextBlock Style="{StaticResource ChipText}" Text="Photos"/>
+                </Border>
+              </Grid>
+              <Grid Grid.Row="1" Style="{StaticResource Screen}">
+                <StackPanel x:Name="BubblePhotos" Style="{StaticResource Page}">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE91B;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Photos"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="1,284 photos and videos"/>
+                </StackPanel>
+                <StackPanel x:Name="BubbleAlbums" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE8B7;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Albums"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Summer, Family, Screenshots"/>
+                </StackPanel>
+                <StackPanel x:Name="BubbleCamera" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE722;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Camera"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Tap to take a photo"/>
+                </StackPanel>
+                <StackPanel x:Name="BubbleSettings" Style="{StaticResource Page}" Visibility="Collapsed">
+                  <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource PageIcon}" Glyph="&#xE713;"/></Border>
+                  <TextBlock Style="{StaticResource PageTitle}" Text="Settings"/>
+                  <TextBlock Style="{StaticResource PageText}" Text="Backup is on"/>
+                </StackPanel>
+              </Grid>
+              <rw:BubbleFloatTabBar x:Name="BubbleBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
+                  Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}" BubbleCount="9"
+                  Items="Photos:Photo, Albums:Folder, Camera:Camera, Settings:Settings"
+                  Pages="BubblePhotos, BubbleAlbums, BubbleCamera, BubbleSettings" SelectionChanged="TabChanged"/>
+            </Grid>
+          </Border>
+        </Grid>
+
+        <!-- What SelectionChanged reports, and the XAML behind a bar -->
+        <Grid Grid.Row="2" ColumnSpacing="20">
+          <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="*"/>
+            <ColumnDefinition Width="Auto"/>
+          </Grid.ColumnDefinitions>
+          <StackPanel Orientation="Horizontal" Spacing="10" VerticalAlignment="Center">
+            <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#3CC8FF" VerticalAlignment="Center"/>
+            <TextBlock x:Name="StatusText" FontSize="13" Foreground="{ThemeResource MutedBrush}" VerticalAlignment="Center"
+                       Text="Tap a tab, or turn on the tour. SelectionChanged reports every change here."/>
+          </StackPanel>
+          <Border Grid.Column="1" Style="{StaticResource Chip}" Padding="14,6,14,7">
+            <TextBlock Style="{StaticResource CardClass}" Foreground="{ThemeResource MutedBrush}"
+                       Text="&lt;rw:SlidingPillTabBar Items=&quot;Home:Home, Search:Search&quot; Pages=&quot;HomePage, SearchPage&quot;/&gt;"/>
+          </Border>
+        </Grid>
+      </Grid>
+    </ScrollViewer>
+  </Grid>
+</Window>

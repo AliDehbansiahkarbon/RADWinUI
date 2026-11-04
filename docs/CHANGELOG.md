@@ -7,6 +7,7 @@ All notable changes to RADWinUI.
 - New Tool Palette category Tab Bars with six ready-made animated tab bars (unit `RADWinUI.TabBars`, XAML prefix `rw:`): `TWinUISlidingPillTabBar`, `TWinUILiquidBulgeTabBar`, `TWinUIFloatingNotchTabBar`, `TWinUIIconFillTabBar`, `TWinUIExpandingLabelTabBar` and `TWinUIBubbleFloatTabBar`. Drop one and it shows four tabs right away.
 - The tabs are one `Items` text, `Label:Icon` separated by commas. In the Object Inspector its `...` button opens an editor to add, remove and reorder tabs and pick each icon from a grid.
 - `Pages` names one element per tab and shows the selected tab's element, so switching pages needs no code. `SelectionChanged` fires for anything else.
+- New sample: Tab Bars, one see-through window that shows all six tab bars, with accent colours, speed, labels, a tour and a transparency slider. It follows the Windows theme.
 - A `Transparent` backdrop on a window with a normal frame shows the desktop. Windows painted the title bar colour behind it before.
 - On a light `Background` the tab bars pick darker colours for the selected tab by themselves.
 - Controls written in Delphi can give a property its own Object Inspector editor (`TWinUICustomType.SetEditor`).

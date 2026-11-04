@@ -152,6 +152,7 @@ Open `samples\RADWinUISamples.groupproj`, Build All, and run:
 - **[Luma](docs/samples-Luma.md):** an Acrylic desktop companion with a live clock, battery and memory readings, a focus timer and a calendar.
 - **[Lucent](docs/samples-Lucent.md):** an app publishing studio in frosted glass over drifting ribbons: eight animated pages, live simulated data, a drag-and-drop release board, charts with a hover tooltip and a hero move to each app's page.
 - **[Haven](docs/samples-Haven.md):** a bento-style savings dashboard that follows the Windows theme and accent colour, with a weekly chart, a countdown dial, a calendar and a goals checklist, all bound to a Delphi view model.
+- **[Tab Bars](docs/samples-TabBars.md):** one window that shows all six animated tab bars of the Tool Palette, each on a card of its own, with live accent colours, speed and labels, and a tour that taps through them all.
 
 Smaller samples (Counter, Greeter, ListDemo, Contacts, Profile) show one topic each. They are in the same group, or build one with `scripts\Build.ps1 -Project samples\Counter\Counter.dpr`.
 
