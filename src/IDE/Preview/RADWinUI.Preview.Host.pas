@@ -656,12 +656,17 @@ begin
   FDropMark := FindElement<TWinUIRectangle>('DropMark');
   (TWinUIObject.IntfOf(FShell, IUIElement) as IUIElement).add_PreviewKeyDown(TKeyEventHandler.Create(
     procedure(ASender: IInspectable; AArgs: IKeyRoutedEventArgs)
+    var
+      Key: Integer;
     begin
-      if (Ord(AArgs.Key) = VK_F9) and (GetAsyncKeyState(VK_SHIFT) >= 0) and
-        (GetAsyncKeyState(VK_MENU) >= 0) then
+      if (Ord(AArgs.Key) = VK_F9) and (GetAsyncKeyState(VK_MENU) >= 0) then
       begin
         if not AArgs.KeyStatus.WasKeyDown then
-          if GetAsyncKeyState(VK_CONTROL) < 0 then Queue('COMPILE') else Queue('RUN');
+          if GetAsyncKeyState(VK_SHIFT) < 0 then
+          begin
+            if GetAsyncKeyState(VK_CONTROL) < 0 then Queue('RUNNODEBUG') else Queue('BUILD');
+          end
+          else if GetAsyncKeyState(VK_CONTROL) < 0 then Queue('COMPILE') else Queue('RUN');
         AArgs.Handled := True;
         Exit;
       end;
@@ -669,14 +674,17 @@ begin
       begin
         Queue('CODEVIEW');
         AArgs.Handled := True;
+        Exit;
       end;
       if (Ord(AArgs.Key) = VK_DELETE) and (GetAsyncKeyState(VK_CONTROL) >= 0) and (FSelected <> '') then
       begin
         Queue('DELETEKEY');
         AArgs.Handled := True;
+        Exit;
       end;
       if GetAsyncKeyState(VK_CONTROL) < 0 then
       begin
+        AArgs.Handled := True;
         if AArgs.Key = RADWinUI.Abi.VirtualKey.C then
           Queue('COPY')
         else if AArgs.Key = RADWinUI.Abi.VirtualKey.V then
@@ -688,7 +696,21 @@ begin
         else if AArgs.Key = RADWinUI.Abi.VirtualKey.Y then
           Queue('REDO')
         else
-          Exit;
+          AArgs.Handled := False;
+        if AArgs.Handled then Exit;
+      end;
+      // Any other Ctrl combination or F1..F11 runs the IDE action bound to it, Ctrl+S saves
+      Key := Ord(AArgs.Key);
+      if (GetAsyncKeyState(VK_MENU) >= 0) and
+        not (Key in [VK_SHIFT, VK_CONTROL, VK_MENU, VK_LWIN, VK_RWIN]) and
+        ((GetAsyncKeyState(VK_CONTROL) < 0) or ((Key >= VK_F1) and (Key <= VK_F11))) then
+      begin
+        if not AArgs.KeyStatus.WasKeyDown then
+        begin
+          if GetAsyncKeyState(VK_SHIFT) < 0 then Inc(Key, $2000);
+          if GetAsyncKeyState(VK_CONTROL) < 0 then Inc(Key, $4000);
+          Queue('SHORTCUT ' + IntToStr(Key));
+        end;
         AArgs.Handled := True;
       end;
     end));

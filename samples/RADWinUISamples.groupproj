@@ -1,6 +1,4 @@
-<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
-    <!-- The demos, built from source. Build RADWinUI.groupproj (or RADWinUI32.groupproj) first: their
-         pre-build event runs bin\XamlCodeGen.exe. -->
+﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{51C6AF69-A754-4F86-A11D-ADBF4C2F4A26}</ProjectGuid>
     </PropertyGroup>

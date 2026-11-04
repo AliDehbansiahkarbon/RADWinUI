@@ -269,7 +269,7 @@ type
     procedure DesignKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure DesignShowingChanged(Sender: TObject);
     procedure ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
-    function BuildShortcut(ACompile: Boolean): Boolean;
+    function IdeShortcut(AKey: TShortCut): Boolean;
     procedure SetPaletteDesignerActive(AActive: Boolean);
     procedure ShowInspector;
     procedure PropertyChange(AName, AValue: string);
@@ -1727,6 +1727,23 @@ begin
     Result := ShowDesignForFile(AFile);
 end;
 
+/// Ctrl and Shift as held with F9: F9 runs, Ctrl+F9 compiles, Shift+F9 builds and
+/// Ctrl+Shift+F9 runs without debugging (whatever the IDE has bound to them).
+function CtrlShift(ACtrl, AShift: Boolean): TShiftState;
+begin
+  Result := [];
+  if ACtrl then Include(Result, ssCtrl);
+  if AShift then Include(Result, ssShift);
+end;
+
+/// Keys of the design view that go to the IDE's actions: Ctrl combinations and F1..F11, never
+/// with Alt and never a modifier key alone.
+function IsIdeShortcutKey(AKey: Word; AShift: TShiftState): Boolean;
+begin
+  Result := not (ssAlt in AShift) and not (AKey in [VK_SHIFT, VK_CONTROL, VK_MENU, VK_LWIN, VK_RWIN]) and
+    ((ssCtrl in AShift) or ((AKey >= VK_F1) and (AKey <= VK_F11)));
+end;
+
 procedure TPreviewCommand.ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
 begin
   // OTA keyboard bindings cover source editors. A custom Design frame or an
@@ -1740,29 +1757,37 @@ begin
     ShowXamlCode;
   end;
   if not Handled and FDesignViewActive and (Application.ModalLevel = 0) and (Msg.message = WM_KEYDOWN) and
-    (Msg.wParam = VK_F9) and (GetKeyState(VK_SHIFT) >= 0) and (GetKeyState(VK_MENU) >= 0) then
+    (Msg.wParam = VK_F9) and (GetKeyState(VK_MENU) >= 0) then
   begin
     Handled := True;
-    if (Msg.lParam and $40000000) = 0 then BuildShortcut(GetKeyState(VK_CONTROL) < 0);
+    if (Msg.lParam and $40000000) = 0 then
+      IdeShortcut(ShortCut(VK_F9, CtrlShift(GetKeyState(VK_CONTROL) < 0, GetKeyState(VK_SHIFT) < 0)));
   end;
+  // The Design frame itself does not pass shortcuts like Ctrl+S on to the IDE's actions
+  if not Handled and FDesignViewActive and (Application.ModalLevel = 0) and (Msg.message = WM_KEYDOWN) and
+    ((Msg.lParam and $40000000) = 0) and (FDesignSurface <> nil) and FDesignSurface.HandleAllocated and
+    ((Msg.hwnd = FDesignSurface.Handle) or IsChild(FDesignSurface.Handle, Msg.hwnd)) and
+    IsIdeShortcutKey(Msg.wParam, KeyDataToShiftState(Msg.lParam)) then
+    Handled := IdeShortcut(ShortCut(Msg.wParam, KeyDataToShiftState(Msg.lParam) * [ssCtrl, ssShift]));
 end;
 
-function TPreviewCommand.BuildShortcut(ACompile: Boolean): Boolean;
+/// Runs the IDE action bound to AKey. Edit and Search actions are left out: they would act on
+/// the code editor hidden behind the design view.
+function TPreviewCommand.IdeShortcut(AKey: TShortCut): Boolean;
 var
   Actions: TCustomActionList;
   Action: TCustomAction;
-  Key: TShortCut;
   I: Integer;
 begin
   Result := False;
   if Application.ModalLevel <> 0 then Exit;
-  if ACompile then Key := ShortCut(VK_F9, [ssCtrl]) else Key := ShortCut(VK_F9, []);
   Actions := (BorlandIDEServices as INTAServices).ActionList;
   for I := 0 to Actions.ActionCount - 1 do
     if Actions.Actions[I] is TCustomAction then
     begin
       Action := TCustomAction(Actions.Actions[I]);
-      if (Action.ShortCut <> Key) and (Action.SecondaryShortCuts.IndexOfShortCut(Key) < 0) then Continue;
+      if (Action.ShortCut <> AKey) and (Action.SecondaryShortCuts.IndexOfShortCut(AKey) < 0) then Continue;
+      if SameText(Action.Category, 'Edit') or SameText(Action.Category, 'Search') then Continue;
       Action.Update;
       if not Action.Enabled then Continue;
       if FInspector <> nil then FInspector.Commit;
@@ -1986,10 +2011,16 @@ begin
       while (FClient <> nil) and (not WasDesign or FDesignViewActive) and FClient.TakeEvent(Xaml) do
         if Xaml = 'CODEVIEW' then
           ShowXamlCode
-        else if (Xaml = 'RUN') or (Xaml = 'COMPILE') then
+        else if (Xaml = 'RUN') or (Xaml = 'COMPILE') or (Xaml = 'BUILD') or (Xaml = 'RUNNODEBUG') then
         begin
-          BuildShortcut(Xaml = 'COMPILE');
+          IdeShortcut(ShortCut(VK_F9, CtrlShift((Xaml = 'COMPILE') or (Xaml = 'RUNNODEBUG'),
+            (Xaml = 'BUILD') or (Xaml = 'RUNNODEBUG'))));
           Break; // a build/debug action can change the active desktop and designer
+        end
+        else if Xaml.StartsWith('SHORTCUT ') then
+        begin
+          IdeShortcut(StrToIntDef(Copy(Xaml, 10, MaxInt), 0));
+          Break; // any IDE action can change the active desktop and designer
         end
         else if Xaml = 'COPY' then
           CopySelection
@@ -2241,8 +2272,6 @@ procedure TPreviewCommand.DesignKeyDown(Sender: TObject; var Key: Word; Shift: T
 begin
   if (Key = VK_F12) and (Shift = []) then
     ShowXamlCode
-  else if (Key = VK_F9) and ((Shift = []) or (Shift = [ssCtrl])) then
-    BuildShortcut(ssCtrl in Shift)
   else if (Key = Ord('C')) and (Shift = [ssCtrl]) then
     CopySelection
   else if (Key = Ord('V')) and (Shift = [ssCtrl]) then
@@ -2254,7 +2283,7 @@ begin
   else if ((Key = Ord('Y')) and (Shift = [ssCtrl])) or
     ((Key = Ord('Z')) and (Shift = [ssCtrl, ssShift])) then
     UndoDesigner(True)
-  else
+  else if not IsIdeShortcutKey(Key, Shift) or not IdeShortcut(ShortCut(Key, Shift * [ssCtrl, ssShift])) then
     Exit;
   Key := 0;
 end;
