@@ -20,7 +20,9 @@ uses
   RADWinUI.Xaml,
   RADWinUI.Forms,
   RADWinUI.CustomControls,
-  RADWinUI.Controls;
+  RADWinUI.Controls,
+  // The type index it compares lists every own control
+  RADWinUI.TabBars;
 
 type
   TTestWindow = class(TWinUIWindow)

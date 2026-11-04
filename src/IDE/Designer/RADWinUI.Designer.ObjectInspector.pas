@@ -10,7 +10,7 @@ interface
 uses
   System.SysUtils, System.Classes, System.TypInfo,
   ToolsAPI, DesignIntf, PropInspAPI,
-  RADWinUI.Designer.Model, RADWinUI.Designer.XamlEdit;
+  RADWinUI.Designer.Model, RADWinUI.Designer.XamlEdit, RADWinUI.Designer.TabItemsEditor;
 
 type
   TInspectorEditKind = (ieProperty, ieEvent, ieClearEvent, ieSelect);
@@ -70,9 +70,11 @@ type
     FName, FValue, FDescription: string;
     FValues: TArray<string>;
     FEvent: Boolean;
+    // A special editor behind the '...' button: 'tabitems' for a tab bar's Items
+    FEditor: string;
   public
     constructor Create(AContext: TInspectorContext; const AName, AValue, ADescription: string;
-      const AValues: TArray<string>; AEvent: Boolean);
+      const AValues: TArray<string>; AEvent: Boolean; const AEditor: string = '');
     procedure Activate;
     function AllEqual: Boolean;
     function AutoFill: Boolean;
@@ -175,7 +177,8 @@ begin
 end;
 
 constructor TXamlProperty.Create(AContext: TInspectorContext;
-  const AName, AValue, ADescription: string; const AValues: TArray<string>; AEvent: Boolean);
+  const AName, AValue, ADescription: string; const AValues: TArray<string>; AEvent: Boolean;
+  const AEditor: string);
 begin
   inherited Create;
   FContext := AContext;
@@ -186,6 +189,7 @@ begin
   FDescription := ADescription;
   FValues := AValues;
   FEvent := AEvent;
+  FEditor := AEditor;
 end;
 
 procedure TXamlProperty.Activate;
@@ -205,9 +209,16 @@ end;
 procedure TXamlProperty.Edit;
 var
   I: Integer;
+  Text: string;
 begin
   if not ValueAvailable then Exit;
-  if FEvent then
+  if FEditor = 'tabitems' then
+  begin
+    Text := FValue;
+    if EditTabItems(Text) then
+      SetValue(Text);
+  end
+  else if FEvent then
     FContext.Queue(ieEvent, FName, FValue)
   else if Length(FValues) > 0 then
   begin
@@ -234,7 +245,7 @@ end;
 function TXamlProperty.GetAttributes: TPropertyAttributes;
 begin
   Result := [paValueEditable];
-  if FEvent then Include(Result, paDialog);
+  if FEvent or (FEditor <> '') then Include(Result, paDialog);
   if Length(FValues) > 0 then Include(Result, paValueList);
   if not ValueAvailable then Include(Result, paReadOnly);
 end;
@@ -430,8 +441,13 @@ begin
     Prop := AProps[I];
     Values := Prop.EnumValues;
     if Prop.Kind = 'bool' then Values := ['True', 'False'];
-    FProperties[I] := TXamlProperty.Create(AContext, Prop.Name, AValue(Prop.Name),
-      Prop.Kind + ' XAML attribute. Clear the value to use its default.', Values, False);
+    if Prop.Kind = 'tabitems' then
+      FProperties[I] := TXamlProperty.Create(AContext, Prop.Name, AValue(Prop.Name),
+        'The tabs, Label:Icon separated by commas. Click ... to add, reorder and pick icons.', nil, False,
+        Prop.Kind)
+    else
+      FProperties[I] := TXamlProperty.Create(AContext, Prop.Name, AValue(Prop.Name),
+        Prop.Kind + ' XAML attribute. Clear the value to use its default.', Values, False);
   end;
   SetLength(FEvents, Length(AEvents));
   for I := 0 to High(AEvents) do

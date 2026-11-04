@@ -15,6 +15,7 @@
 | `RADWinUI.Designer.Model` | Type index, property and event lists, handler creation in the window unit |
 | `RADWinUI.Designer.Palette`, `.PaletteIcons` | Tool Palette entries, categories and self-painted icons |
 | `RADWinUI.Designer.ObjectInspector`, `.Structure` | ToolsAPI adapters for the native Object Inspector and Structure view |
+| `RADWinUI.Designer.TabItemsEditor` | The '...' editor of a tab bar's Items: tabs, labels and icons |
 | `RADWinUI.Designer.Inspector` | An older IDE-free property panel, kept for its tests |
 
 The IDE-free units are tested outside the IDE by `tests\Designer\XamlEditTest` and `tests\Designer\DesignerModelTest`, `scripts\Test-Preview.ps1` checks selection, insert, move and delete end to end against the real preview host.

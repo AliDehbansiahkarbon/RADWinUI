@@ -8,9 +8,9 @@ unit RADWinUI.Designer.Palette;
   types of the metadata (CalendarViewDayItem, ColorSpectrum, *Presenter,
   *Item, Thumb, ...) are left out, they still work when written in XAML.
   Names are the XAML element names the palette inserts (Button, not
-  TWinUIButton). The Overlay category holds RADWinUI's own controls
-  (RADWinUI.Controls), which XAML writes with the rw: prefix. No ToolsAPI,
-  VCL or WinUI here.
+  TWinUIButton). The Overlay and Tab Bars categories hold RADWinUI's own
+  controls (RADWinUI.Controls, RADWinUI.TabBars), which XAML writes with the
+  rw: prefix. No ToolsAPI, VCL or WinUI here.
 }
 
 interface
@@ -42,12 +42,10 @@ uses
   System.SysUtils;
 
 const
-  Categories: array[0..9] of string = ('Standard', 'Layout', 'Input', 'Date and Time', 'Collections',
-    'Navigation', 'Text and Media', 'Status', 'Shapes', 'Overlay');
-  // The categories of RADWinUI's own controls
-  OwnCategory = 'Overlay';
+  Categories: array[0..10] of string = ('Standard', 'Layout', 'Input', 'Date and Time', 'Collections',
+    'Navigation', 'Text and Media', 'Status', 'Shapes', 'Overlay', 'Tab Bars');
   // One string per category above, same order
-  Members: array[0..9] of string = (
+  Members: array[0..10] of string = (
     'Button TextBlock TextBox CheckBox RadioButton ComboBox ListBox ToggleSwitch Slider ProgressBar Image ' +
       'HyperlinkButton',
     'Grid StackPanel Canvas Border ScrollViewer RelativePanel Viewbox SplitView Expander',
@@ -60,7 +58,14 @@ const
     'RichTextBlock PersonPicture FontIcon SymbolIcon MediaPlayerElement WebView2 AnimatedVisualPlayer',
     'ProgressRing InfoBar InfoBadge',
     'Rectangle Ellipse Line Polygon Polyline Path',
-    'NotchPanel GlowTile HotKey MediaSession');
+    'NotchPanel GlowTile HotKey MediaSession',
+    'SlidingPillTabBar LiquidBulgeTabBar FloatingNotchTabBar IconFillTabBar ExpandingLabelTabBar BubbleFloatTabBar');
+
+/// The categories of RADWinUI's own controls
+function IsOwnCategory(const ACategory: string): Boolean;
+begin
+  Result := (ACategory = 'Overlay') or (ACategory = 'Tab Bars');
+end;
 
 function PaletteEntries: TArray<TPaletteEntry>;
 var
@@ -74,7 +79,7 @@ begin
     begin
       Entry.Category := Categories[I];
       Entry.Name := Name;
-      if Categories[I] = OwnCategory then
+      if IsOwnCategory(Categories[I]) then
         Entry.Prefix := ControlsPrefix
       else
         Entry.Prefix := '';

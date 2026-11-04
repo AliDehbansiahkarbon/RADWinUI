@@ -851,6 +851,9 @@ begin
     Result := '<rw:NotchPanel'
   else if Tag = 'rw:HotKey' then
     Result := '<rw:HotKey Keys="Ctrl+Alt+T"'
+  else if Tag.StartsWith('rw:') and Tag.EndsWith('TabBar') then
+    // The tabs written out, so the Object Inspector shows them and the editor starts from them
+    Result := '<' + Tag + ' Items="Home:Home, Search:Search, Likes:Heart, Profile:Contact"'
   else if ATag = 'Button' then
     Result := '<Button Content="Button"'
   else if ATag = 'TextBlock' then

@@ -24,6 +24,85 @@ uses
 type
   TBitmap = Vcl.Graphics.TBitmap; // not Winapi.Windows.TBitmap
 
+/// The tab bars: a rounded bar with three tabs, and what marks the selected one in each style
+procedure DrawTabBar(ACanvas: TCanvas; const AName: string);
+
+  procedure Solid(AShade: Integer);
+  begin
+    // Lighter shades become more transparent (see RenderIcon)
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.Brush.Color := RGB(AShade, 122 + (AShade - 32) * 133 div 223, 216 + (AShade - 32) * 39 div 223);
+  end;
+
+  procedure Tab(X: Integer);
+  begin
+    Solid(32);
+    ACanvas.Pen.Width := 1;
+    ACanvas.Ellipse(X - 5, 47, X + 5, 57);
+  end;
+
+begin
+  ACanvas.Pen.Width := 5;
+  ACanvas.Pen.Color := RGB(32, 122, 216);
+  if AName = 'liquidbulgetabbar' then
+  begin
+    // The whole bar is the accent, with a bump over the selected tab
+    Solid(120);
+    ACanvas.Pen.Style := psClear;
+    ACanvas.RoundRect(6, 36, 90, 72, 30, 30);
+    ACanvas.Ellipse(50, 22, 82, 54);
+    ACanvas.Pen.Style := psSolid;
+    Tab(22); Tab(44);
+    Solid(32);
+    ACanvas.Ellipse(61, 31, 71, 41);
+    Exit;
+  end;
+  Solid(215);
+  ACanvas.RoundRect(6, 36, 90, 70, 30, 30);
+  if AName = 'slidingpilltabbar' then
+  begin
+    Tab(22); Tab(44);
+    Solid(32);
+    ACanvas.RoundRect(56, 42, 84, 62, 20, 20);
+  end
+  else if AName = 'floatingnotchtabbar' then
+  begin
+    Tab(22); Tab(44);
+    Solid(32);
+    ACanvas.Pen.Width := 1;
+    ACanvas.Ellipse(56, 14, 80, 38);
+  end
+  else if AName = 'iconfilltabbar' then
+  begin
+    Tab(22); Tab(44);
+    Solid(32);
+    ACanvas.Pen.Width := 1;
+    ACanvas.Ellipse(62, 43, 76, 57);
+    ACanvas.RoundRect(61, 60, 77, 64, 4, 4);
+  end
+  else if AName = 'expandinglabeltabbar' then
+  begin
+    Solid(150);
+    ACanvas.RoundRect(14, 42, 58, 64, 22, 22);
+    Tab(25); Tab(70);
+    ACanvas.Pen.Width := 4;
+    ACanvas.MoveTo(34, 53); ACanvas.LineTo(50, 53);
+  end
+  else
+  begin
+    // Bubble Float: bubbles rise from the selected tab
+    Tab(22); Tab(44);
+    Solid(32);
+    ACanvas.Pen.Width := 1;
+    ACanvas.Ellipse(63, 45, 75, 57);
+    ACanvas.Brush.Style := bsClear;
+    ACanvas.Pen.Width := 3;
+    ACanvas.Ellipse(60, 18, 72, 30);
+    ACanvas.Ellipse(72, 8, 80, 16);
+    ACanvas.Ellipse(56, 4, 62, 10);
+  end;
+end;
+
 procedure DrawControl(ACanvas: TCanvas; const AName: string);
 var
   Name, Letters: string;
@@ -177,6 +256,8 @@ begin
     // Play and pause
     Line(4, 7, 4, 17); Line(4, 7, 11, 12); Line(4, 17, 11, 12); Line(15, 7, 15, 17); Line(19, 7, 19, 17);
   end
+  else if Name.EndsWith('tabbar') then
+    DrawTabBar(ACanvas, Name)
   else if Name = 'pipspager' then
   begin
     Circle(3, 10, 7, 14); Circle(10, 10, 14, 14); Circle(17, 10, 21, 14);

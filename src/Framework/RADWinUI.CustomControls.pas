@@ -46,6 +46,11 @@ type
     EnumType: PTypeInfo;
     /// <summary>The default as XAML text: 'True', '0.5', 'Working'. '' for no default.</summary>
     DefaultText: string;
+    /// <summary>
+    ///   How the Object Inspector edits it, '' for the usual way. The type index
+    ///   writes it in place of the kind: 'tabitems' opens the tab editor.
+    /// </summary>
+    Editor: string;
     Prop: IDependencyProperty;
   end;
 
@@ -72,6 +77,8 @@ type
       AEnumType: PTypeInfo = nil);
     /// <summary>Adds an event, raised as OnName / Name.Add like WinUI's own events.</summary>
     procedure AddEvent(const AName: string);
+    /// <summary>Gives the property AName a special editor in the Object Inspector, like 'tabitems'.</summary>
+    procedure SetEditor(const AName, AEditor: string);
     /// <summary>The index of the property AName, -1 when there is none.</summary>
     function IndexOf(const AName: string): Integer;
     /// <summary>The index of the property whose dependency property is AProp, -1 when there is none.</summary>
@@ -444,6 +451,16 @@ end;
 procedure TWinUICustomType.AddEvent(const AName: string);
 begin
   FEvents := FEvents + [AName];
+end;
+
+procedure TWinUICustomType.SetEditor(const AName, AEditor: string);
+var
+  Index: Integer;
+begin
+  Index := IndexOf(AName);
+  if Index < 0 then
+    raise EArgumentException.CreateFmt('%s has no property %s', [FXamlName, AName]);
+  FProperties[Index].Editor := AEditor;
 end;
 
 function TWinUICustomType.IndexOf(const AName: string): Integer;
@@ -1204,6 +1221,8 @@ end;
 
 function KindText(const AProp: TWinUICustomProperty): string;
 begin
+  if AProp.Editor <> '' then
+    Exit(AProp.Editor);
   case AProp.Kind of
     TWinUIPropertyKind.Boolean: Result := 'bool';
     TWinUIPropertyKind.Int32: Result := 'int';

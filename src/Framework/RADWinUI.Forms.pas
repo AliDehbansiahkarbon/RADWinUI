@@ -78,6 +78,12 @@ type
     FHitTestBox: array[0..3] of Integer; // pixels: left, top, right, bottom
     FRegionSet: Boolean;
     FFrameExtended: Boolean;
+    FBlurBehind: Boolean;
+    FDarkRoot: Boolean;
+    FRootTheme: TWinUIElementTheme;
+    FThemedChildren: TArray<TWinUIFrameworkElement>;
+    FClassBrush: NativeInt;
+    FClassBrushSet: Boolean;
     FSubclassed: Boolean;
     FDockListener: Integer;
     class var FWindows: TArray<TWinUIWindow>;
@@ -107,6 +113,7 @@ type
     function GetAlwaysOnTop: Boolean;
     procedure SetAlwaysOnTop(AValue: Boolean);
     procedure UpdateFrame;
+    procedure UpdateSeeThroughTheme;
     procedure UpdateExStyle;
     procedure KeepOnTop;
     procedure ApplyDock;
@@ -324,6 +331,22 @@ type
 
 function DwmExtendFrameIntoClientArea(AWnd: HWND; const AMargins: TDwmMargins): HRESULT; stdcall;
   external 'dwmapi.dll' name 'DwmExtendFrameIntoClientArea';
+
+const
+  GCLP_HBRBACKGROUND = -10;
+  DWM_BB_ENABLE = 1;
+  DWM_BB_BLURREGION = 2;
+
+type
+  TDwmBlurBehind = record
+    Flags: DWORD;
+    Enable: BOOL;
+    BlurRegion: HRGN;
+    TransitionOnMaximized: BOOL;
+  end;
+
+function DwmEnableBlurBehindWindow(AWnd: HWND; const ABlurBehind: TDwmBlurBehind): HRESULT; stdcall;
+  external 'dwmapi.dll' name 'DwmEnableBlurBehindWindow';
 
 function WindowSubclassProc(AWnd: HWND; AMsg: UINT; AWParam: WPARAM; ALParam: LPARAM; AId: UINT_PTR;
   ARefData: DWORD_PTR): LRESULT; stdcall;
@@ -749,9 +772,10 @@ end;
 // accent border and no shadow around a window whose shape is its content.
 procedure TWinUIWindow.UpdateFrame;
 var
-  Frameless, SeeThrough: Boolean;
+  Frameless, SeeThrough, Blur: Boolean;
   Corner, Border, Policy: DWORD;
   Margins: TDwmMargins;
+  BlurBehind: TDwmBlurBehind;
 begin
   Frameless := (FWindowStyle = TWinUIWindowStyle.Overlay) or (FBackdrop = TWinUIBackdrop.Transparent);
   SeeThrough := FBackdrop = TWinUIBackdrop.Transparent;
@@ -788,6 +812,102 @@ begin
     DwmExtendFrameIntoClientArea(Handle, Margins);
     FFrameExtended := SeeThrough;
   end;
+  // A see-through window that keeps its frame: DWM paints the caption colour
+  // (the accent colour, or white or black) behind the content. Blur behind an
+  // empty region makes DWM take the content's alpha instead, so the desktop
+  // shows through. An overlay has no caption and needs none of this.
+  Blur := SeeThrough and (FWindowStyle <> TWinUIWindowStyle.Overlay);
+  if Blur or FBlurBehind then
+  begin
+    BlurBehind := Default(TDwmBlurBehind);
+    BlurBehind.Flags := DWM_BB_ENABLE;
+    BlurBehind.Enable := Blur;
+    if Blur then
+    begin
+      BlurBehind.Flags := BlurBehind.Flags or DWM_BB_BLURREGION;
+      BlurBehind.BlurRegion := CreateRectRgn(-2, -2, -1, -1);
+    end;
+    DwmEnableBlurBehindWindow(Handle, BlurBehind);
+    if BlurBehind.BlurRegion <> 0 then
+      DeleteObject(BlurBehind.BlurRegion);
+    // Blur behind takes black as see-through, so the window background must be black
+    if Blur <> FClassBrushSet then
+    begin
+      if Blur then
+        FClassBrush := SetClassLongPtr(Handle, GCLP_HBRBACKGROUND, LONG_PTR(GetStockObject(BLACK_BRUSH)))
+      else
+        SetClassLongPtr(Handle, GCLP_HBRBACKGROUND, FClassBrush);
+      FClassBrushSet := Blur;
+    end;
+    InvalidateRect(Handle, nil, True);
+    FBlurBehind := Blur;
+    Subclass;
+  end;
+  UpdateSeeThroughTheme;
+end;
+
+function SystemUsesLightTheme: Boolean;
+var
+  Key: HKEY;
+  Value, Size: DWORD;
+begin
+  Result := True;
+  if RegOpenKeyEx(HKEY_CURRENT_USER, 'Software\Microsoft\Windows\CurrentVersion\Themes\Personalize', 0,
+    KEY_READ, Key) <> ERROR_SUCCESS then
+    Exit;
+  Size := SizeOf(Value);
+  if RegQueryValueEx(Key, 'AppsUseLightTheme', nil, nil, @Value, @Size) = ERROR_SUCCESS then
+    Result := Value <> 0;
+  RegCloseKey(Key);
+end;
+
+// Under blur behind, the window behind the XAML content is painted white when
+// the root element is light, and only a dark root lets the desktop through.
+// So the root is kept dark and its children get the theme it would have had.
+procedure TWinUIWindow.UpdateSeeThroughTheme;
+var
+  Root: TWinUIPanel;
+  Child: TWinUIUIElement;
+  Element: TWinUIFrameworkElement;
+  Theme: TWinUIElementTheme;
+  I: Integer;
+begin
+  if not (Content is TWinUIPanel) then
+    Exit;
+  Root := TWinUIPanel(Content);
+  if not FBlurBehind then
+  begin
+    if FDarkRoot then
+    begin
+      for Element in FThemedChildren do
+        Element.RequestedTheme := TWinUIElementTheme.Default;
+      FThemedChildren := nil;
+      Root.RequestedTheme := FRootTheme;
+      FDarkRoot := False;
+    end;
+    Exit;
+  end;
+  if not FDarkRoot then
+  begin
+    FRootTheme := Root.RequestedTheme;
+    Root.RequestedTheme := TWinUIElementTheme.Dark;
+    FDarkRoot := True;
+  end;
+  Theme := FRootTheme;
+  if Theme = TWinUIElementTheme.Default then
+    if SystemUsesLightTheme then
+      Theme := TWinUIElementTheme.Light
+    else
+      Theme := TWinUIElementTheme.Dark;
+  for I := 0 to Root.Children.Count - 1 do
+  begin
+    Child := Root.Children[I];
+    if (Child is TWinUIFrameworkElement) and
+      (TWinUIFrameworkElement(Child).RequestedTheme = TWinUIElementTheme.Default) then
+      FThemedChildren := FThemedChildren + [TWinUIFrameworkElement(Child)];
+  end;
+  for Element in FThemedChildren do
+    Element.RequestedTheme := Theme;
 end;
 
 procedure TWinUIWindow.SetShowActivated(AValue: Boolean);
@@ -826,12 +946,21 @@ begin
         PStyleStruct(ALParam).styleNew := (PStyleStruct(ALParam).styleNew and not OverlayRemovedStyles) or WS_POPUP;
     // A resolution, layout or taskbar change moves the edge the window docks to
     WM_DISPLAYCHANGE, WM_SETTINGCHANGE:
-      if FDock <> TWinUIDock.None then
-        DispatcherQueue.TryEnqueue(TDispatcherQueueHandler.Create(
-          procedure
-          begin
-            ApplyDock;
-          end));
+      begin
+        if FDock <> TWinUIDock.None then
+          DispatcherQueue.TryEnqueue(TDispatcherQueueHandler.Create(
+            procedure
+            begin
+              ApplyDock;
+            end));
+        // A light or dark theme switch in Windows Settings
+        if FDarkRoot and (AMsg = WM_SETTINGCHANGE) then
+          DispatcherQueue.TryEnqueue(TDispatcherQueueHandler.Create(
+            procedure
+            begin
+              UpdateSeeThroughTheme;
+            end));
+      end;
   end;
 end;
 
@@ -1117,6 +1246,7 @@ var
   Size: SizeInt32;
   Pos: PointInt32;
 begin
+  UpdateSeeThroughTheme;
   if not TestMonitorWorkArea(Area) then
   begin
     ApplyDock;

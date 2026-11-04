@@ -27,6 +27,48 @@
 "props": {"Title": "string", "Artist": "string", "AlbumTitle": "string", "SourceApp": "string", "IsPlaying": "bool", "HasSession": "bool"},
 "unit": "RADWinUI.Controls",
 "wrapper": "TWinUIMediaSession"
+},
+"RADWinUI.Controls.SlidingPillTabBar": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"SelectionChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Items": "tabitems", "SelectedIndex": "int", "AccentFrom": "brush", "AccentTo": "brush", "ActiveForeground": "brush", "ShowLabels": "bool", "IconSize": "number", "AnimationDuration": "int", "Pages": "string"},
+"unit": "RADWinUI.TabBars",
+"wrapper": "TWinUISlidingPillTabBar"
+},
+"RADWinUI.Controls.LiquidBulgeTabBar": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"SelectionChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Items": "tabitems", "SelectedIndex": "int", "AccentFrom": "brush", "AccentTo": "brush", "ActiveForeground": "brush", "ShowLabels": "bool", "IconSize": "number", "AnimationDuration": "int", "Pages": "string"},
+"unit": "RADWinUI.TabBars",
+"wrapper": "TWinUILiquidBulgeTabBar"
+},
+"RADWinUI.Controls.FloatingNotchTabBar": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"SelectionChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Items": "tabitems", "SelectedIndex": "int", "AccentFrom": "brush", "AccentTo": "brush", "ActiveForeground": "brush", "ShowLabels": "bool", "IconSize": "number", "AnimationDuration": "int", "Pages": "string"},
+"unit": "RADWinUI.TabBars",
+"wrapper": "TWinUIFloatingNotchTabBar"
+},
+"RADWinUI.Controls.IconFillTabBar": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"SelectionChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Items": "tabitems", "SelectedIndex": "int", "AccentFrom": "brush", "AccentTo": "brush", "ActiveForeground": "brush", "ShowLabels": "bool", "IconSize": "number", "AnimationDuration": "int", "Pages": "string"},
+"unit": "RADWinUI.TabBars",
+"wrapper": "TWinUIIconFillTabBar"
+},
+"RADWinUI.Controls.ExpandingLabelTabBar": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"SelectionChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Items": "tabitems", "SelectedIndex": "int", "AccentFrom": "brush", "AccentTo": "brush", "ActiveForeground": "brush", "ShowLabels": "bool", "IconSize": "number", "AnimationDuration": "int", "Pages": "string"},
+"unit": "RADWinUI.TabBars",
+"wrapper": "TWinUIExpandingLabelTabBar"
+},
+"RADWinUI.Controls.BubbleFloatTabBar": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"SelectionChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Items": "tabitems", "SelectedIndex": "int", "AccentFrom": "brush", "AccentTo": "brush", "ActiveForeground": "brush", "ShowLabels": "bool", "IconSize": "number", "AnimationDuration": "int", "Pages": "string", "BubbleCount": "int"},
+"unit": "RADWinUI.TabBars",
+"wrapper": "TWinUIBubbleFloatTabBar"
 }
 },
 "namespace": "using:RADWinUI.Controls",
@@ -34,12 +76,24 @@
 {"category": "Overlay", "name": "NotchPanel", "runtime": "RADWinUI.Controls.NotchPanel"},
 {"category": "Overlay", "name": "GlowTile", "runtime": "RADWinUI.Controls.GlowTile"},
 {"category": "Overlay", "name": "HotKey", "runtime": "RADWinUI.Controls.HotKey"},
-{"category": "Overlay", "name": "MediaSession", "runtime": "RADWinUI.Controls.MediaSession"}
+{"category": "Overlay", "name": "MediaSession", "runtime": "RADWinUI.Controls.MediaSession"},
+{"category": "Tab Bars", "name": "SlidingPillTabBar", "runtime": "RADWinUI.Controls.SlidingPillTabBar"},
+{"category": "Tab Bars", "name": "LiquidBulgeTabBar", "runtime": "RADWinUI.Controls.LiquidBulgeTabBar"},
+{"category": "Tab Bars", "name": "FloatingNotchTabBar", "runtime": "RADWinUI.Controls.FloatingNotchTabBar"},
+{"category": "Tab Bars", "name": "IconFillTabBar", "runtime": "RADWinUI.Controls.IconFillTabBar"},
+{"category": "Tab Bars", "name": "ExpandingLabelTabBar", "runtime": "RADWinUI.Controls.ExpandingLabelTabBar"},
+{"category": "Tab Bars", "name": "BubbleFloatTabBar", "runtime": "RADWinUI.Controls.BubbleFloatTabBar"}
 ],
 "types": {
 "NotchPanel": "RADWinUI.Controls.NotchPanel",
 "GlowTile": "RADWinUI.Controls.GlowTile",
 "HotKey": "RADWinUI.Controls.HotKey",
-"MediaSession": "RADWinUI.Controls.MediaSession"
+"MediaSession": "RADWinUI.Controls.MediaSession",
+"SlidingPillTabBar": "RADWinUI.Controls.SlidingPillTabBar",
+"LiquidBulgeTabBar": "RADWinUI.Controls.LiquidBulgeTabBar",
+"FloatingNotchTabBar": "RADWinUI.Controls.FloatingNotchTabBar",
+"IconFillTabBar": "RADWinUI.Controls.IconFillTabBar",
+"ExpandingLabelTabBar": "RADWinUI.Controls.ExpandingLabelTabBar",
+"BubbleFloatTabBar": "RADWinUI.Controls.BubbleFloatTabBar"
 }
 }
