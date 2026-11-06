@@ -62,6 +62,7 @@ samples/Luma/Luma.res
 samples/Haven/Haven.res
 samples/Lucent/Lucent.res
 samples/TabBars/TabBars.res
+samples/ActionButtons/ActionButtons.res
 samples/Gallery/Gallery.res
 samples/Counter/Counter.res
 samples/Greeter/Greeter.res

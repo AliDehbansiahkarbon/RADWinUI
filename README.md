@@ -155,6 +155,7 @@ Open `samples\RADWinUISamples.groupproj`, Build All, and run:
 - **[Lucent](docs/samples-Lucent.md):** an app publishing studio in frosted glass over drifting ribbons: eight animated pages, live simulated data, a drag-and-drop release board, charts with a hover tooltip and a hero move to each app's page.
 - **[Haven](docs/samples-Haven.md):** a bento-style savings dashboard that follows the Windows theme and accent colour, with a weekly chart, a countdown dial, a calendar and a goals checklist, all bound to a Delphi view model.
 - **[Tab Bars](docs/samples-TabBars.md):** one window that shows all six animated tab bars of the Tool Palette, each on a card of its own, with live accent colours, speed and labels, and a tour that taps through them all.
+- **[Action Buttons](docs/samples-ActionButtons.md):** the six animated buttons of the Tool Palette on one see-through page: hold to confirm, a paper plane, a confetti burst, copy feedback, a shine sweep and slide to confirm, with accent colours and a Play all wave.
 
 Smaller samples (Counter, Greeter, ListDemo, Contacts, Profile) show one topic each. They are in the same group, or build one with `scripts\Build.ps1 -Project samples\Counter\Counter.dpr`.
 
