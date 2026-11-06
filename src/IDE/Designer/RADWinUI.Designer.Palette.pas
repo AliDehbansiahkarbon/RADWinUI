@@ -8,9 +8,10 @@ unit RADWinUI.Designer.Palette;
   types of the metadata (CalendarViewDayItem, ColorSpectrum, *Presenter,
   *Item, Thumb, ...) are left out, they still work when written in XAML.
   Names are the XAML element names the palette inserts (Button, not
-  TWinUIButton). The Overlay and Tab Bars categories hold RADWinUI's own
-  controls (RADWinUI.Controls, RADWinUI.TabBars), which XAML writes with the
-  rw: prefix. No ToolsAPI, VCL or WinUI here.
+  TWinUIButton). The Overlay, Tab Bars and Action Buttons categories hold
+  RADWinUI's own controls (RADWinUI.Controls, RADWinUI.TabBars,
+  RADWinUI.ActionButtons), which XAML writes with the rw: prefix. No
+  ToolsAPI, VCL or WinUI here.
 }
 
 interface
@@ -42,10 +43,10 @@ uses
   System.SysUtils;
 
 const
-  Categories: array[0..10] of string = ('Standard', 'Layout', 'Input', 'Date and Time', 'Collections',
-    'Navigation', 'Text and Media', 'Status', 'Shapes', 'Overlay', 'Tab Bars');
+  Categories: array[0..11] of string = ('Standard', 'Layout', 'Input', 'Date and Time', 'Collections',
+    'Navigation', 'Text and Media', 'Status', 'Shapes', 'Overlay', 'Tab Bars', 'Action Buttons');
   // One string per category above, same order
-  Members: array[0..10] of string = (
+  Members: array[0..11] of string = (
     'Button TextBlock TextBox CheckBox RadioButton ComboBox ListBox ToggleSwitch Slider ProgressBar Image ' +
       'HyperlinkButton',
     'Grid StackPanel Canvas Border ScrollViewer RelativePanel Viewbox SplitView Expander',
@@ -59,12 +60,13 @@ const
     'ProgressRing InfoBar InfoBadge',
     'Rectangle Ellipse Line Polygon Polyline Path',
     'NotchPanel GlowTile HotKey MediaSession',
-    'SlidingPillTabBar LiquidBulgeTabBar FloatingNotchTabBar IconFillTabBar ExpandingLabelTabBar BubbleFloatTabBar');
+    'SlidingPillTabBar LiquidBulgeTabBar FloatingNotchTabBar IconFillTabBar ExpandingLabelTabBar BubbleFloatTabBar',
+    'HoldButton SendButton ConfettiButton CopyButton ShineButton SlideButton');
 
 /// The categories of RADWinUI's own controls
 function IsOwnCategory(const ACategory: string): Boolean;
 begin
-  Result := (ACategory = 'Overlay') or (ACategory = 'Tab Bars');
+  Result := (ACategory = 'Overlay') or (ACategory = 'Tab Bars') or (ACategory = 'Action Buttons');
 end;
 
 function PaletteEntries: TArray<TPaletteEntry>;

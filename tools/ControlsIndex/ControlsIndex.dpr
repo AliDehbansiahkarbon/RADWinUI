@@ -2,8 +2,8 @@ program ControlsIndex;
 
 {
   Writes src\Framework\RADWinUI.Controls.json: the type index of RADWinUI's
-  own controls (RADWinUI.Controls, RADWinUI.TabBars) for XamlCodeGen and the
-  designer.
+  own controls (RADWinUI.Controls, RADWinUI.TabBars, RADWinUI.ActionButtons)
+  for XamlCodeGen and the designer.
 
   Command line: ControlsIndex <output .json>
 }
@@ -15,7 +15,8 @@ uses
   System.IOUtils,
   RADWinUI.CustomControls,
   RADWinUI.Controls,
-  RADWinUI.TabBars;
+  RADWinUI.TabBars,
+  RADWinUI.ActionButtons;
 
 begin
   if ParamCount <> 1 then

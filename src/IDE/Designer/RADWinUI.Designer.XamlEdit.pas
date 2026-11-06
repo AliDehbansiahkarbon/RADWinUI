@@ -887,6 +887,19 @@ begin
   else if Tag.StartsWith('rw:') and Tag.EndsWith('TabBar') then
     // The tabs written out, so the Object Inspector shows them and the editor starts from them
     Result := '<' + Tag + ' Items="Home:Home, Search:Search, Likes:Heart, Profile:Contact"'
+  // The action buttons with their label written out, so the Object Inspector shows it
+  else if Tag = 'rw:HoldButton' then
+    Result := '<rw:HoldButton Text="Hold to delete"'
+  else if Tag = 'rw:SendButton' then
+    Result := '<rw:SendButton Text="Send"'
+  else if Tag = 'rw:ConfettiButton' then
+    Result := '<rw:ConfettiButton Text="Celebrate"'
+  else if Tag = 'rw:CopyButton' then
+    Result := '<rw:CopyButton Text="join.app/x7Kq2"'
+  else if Tag = 'rw:ShineButton' then
+    Result := '<rw:ShineButton Text="Upgrade to Pro"'
+  else if Tag = 'rw:SlideButton' then
+    Result := '<rw:SlideButton Text="Slide to confirm"'
   else if ATag = 'Button' then
     Result := '<Button Content="Button"'
   else if ATag = 'TextBlock' then

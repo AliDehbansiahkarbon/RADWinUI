@@ -69,6 +69,48 @@
 "props": {"Items": "tabitems", "SelectedIndex": "int", "AccentFrom": "brush", "AccentTo": "brush", "ActiveForeground": "brush", "ShowLabels": "bool", "IconSize": "number", "AnimationDuration": "int", "Pages": "string", "BubbleCount": "int"},
 "unit": "RADWinUI.TabBars",
 "wrapper": "TWinUIBubbleFloatTabBar"
+},
+"RADWinUI.Controls.HoldButton": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Confirmed": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Text": "string", "AccentFrom": "brush", "AccentTo": "brush", "DoneText": "string", "Icon": "string", "HoldDuration": "int", "ResetAfter": "int"},
+"unit": "RADWinUI.ActionButtons",
+"wrapper": "TWinUIHoldButton"
+},
+"RADWinUI.Controls.SendButton": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Click": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Text": "string", "AccentFrom": "brush", "AccentTo": "brush", "DoneText": "string", "ResetAfter": "int"},
+"unit": "RADWinUI.ActionButtons",
+"wrapper": "TWinUISendButton"
+},
+"RADWinUI.Controls.ConfettiButton": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Click": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Text": "string", "AccentFrom": "brush", "AccentTo": "brush", "ConfettiCount": "int"},
+"unit": "RADWinUI.ActionButtons",
+"wrapper": "TWinUIConfettiButton"
+},
+"RADWinUI.Controls.CopyButton": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Copied": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Text": "string", "AccentFrom": "brush", "AccentTo": "brush", "DoneText": "string", "ResetAfter": "int", "CopyToClipboard": "bool"},
+"unit": "RADWinUI.ActionButtons",
+"wrapper": "TWinUICopyButton"
+},
+"RADWinUI.Controls.ShineButton": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Click": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Text": "string", "AccentFrom": "brush", "AccentTo": "brush", "ShineInterval": "int", "Sparkles": "bool", "GlowBrush": "brush"},
+"unit": "RADWinUI.ActionButtons",
+"wrapper": "TWinUIShineButton"
+},
+"RADWinUI.Controls.SlideButton": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Confirmed": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"Text": "string", "AccentFrom": "brush", "AccentTo": "brush", "DoneText": "string", "ResetAfter": "int", "Shimmer": "bool"},
+"unit": "RADWinUI.ActionButtons",
+"wrapper": "TWinUISlideButton"
 }
 },
 "namespace": "using:RADWinUI.Controls",
@@ -82,7 +124,13 @@
 {"category": "Tab Bars", "name": "FloatingNotchTabBar", "runtime": "RADWinUI.Controls.FloatingNotchTabBar"},
 {"category": "Tab Bars", "name": "IconFillTabBar", "runtime": "RADWinUI.Controls.IconFillTabBar"},
 {"category": "Tab Bars", "name": "ExpandingLabelTabBar", "runtime": "RADWinUI.Controls.ExpandingLabelTabBar"},
-{"category": "Tab Bars", "name": "BubbleFloatTabBar", "runtime": "RADWinUI.Controls.BubbleFloatTabBar"}
+{"category": "Tab Bars", "name": "BubbleFloatTabBar", "runtime": "RADWinUI.Controls.BubbleFloatTabBar"},
+{"category": "Action Buttons", "name": "HoldButton", "runtime": "RADWinUI.Controls.HoldButton"},
+{"category": "Action Buttons", "name": "SendButton", "runtime": "RADWinUI.Controls.SendButton"},
+{"category": "Action Buttons", "name": "ConfettiButton", "runtime": "RADWinUI.Controls.ConfettiButton"},
+{"category": "Action Buttons", "name": "CopyButton", "runtime": "RADWinUI.Controls.CopyButton"},
+{"category": "Action Buttons", "name": "ShineButton", "runtime": "RADWinUI.Controls.ShineButton"},
+{"category": "Action Buttons", "name": "SlideButton", "runtime": "RADWinUI.Controls.SlideButton"}
 ],
 "types": {
 "NotchPanel": "RADWinUI.Controls.NotchPanel",
@@ -94,6 +142,12 @@
 "FloatingNotchTabBar": "RADWinUI.Controls.FloatingNotchTabBar",
 "IconFillTabBar": "RADWinUI.Controls.IconFillTabBar",
 "ExpandingLabelTabBar": "RADWinUI.Controls.ExpandingLabelTabBar",
-"BubbleFloatTabBar": "RADWinUI.Controls.BubbleFloatTabBar"
+"BubbleFloatTabBar": "RADWinUI.Controls.BubbleFloatTabBar",
+"HoldButton": "RADWinUI.Controls.HoldButton",
+"SendButton": "RADWinUI.Controls.SendButton",
+"ConfettiButton": "RADWinUI.Controls.ConfettiButton",
+"CopyButton": "RADWinUI.Controls.CopyButton",
+"ShineButton": "RADWinUI.Controls.ShineButton",
+"SlideButton": "RADWinUI.Controls.SlideButton"
 }
 }

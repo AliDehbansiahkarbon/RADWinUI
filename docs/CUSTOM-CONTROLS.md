@@ -2,7 +2,7 @@
 
 RADWinUI controls do not have to come from WinUI. A class derived from `TWinUICustomControl` (unit `RADWinUI.CustomControls`) is a real XAML element: XAML creates it, its properties are dependency properties, so bindings, styles and animations work on them, and Pascal sees the same object through `FindElement`.
 
-RADWinUI's own controls are built this way. They are in `RADWinUI.Controls` and `RADWinUI.TabBars`, and on the Tool Palette in the Overlay and Tab Bars categories.
+RADWinUI's own controls are built this way. They are in `RADWinUI.Controls`, `RADWinUI.TabBars` and `RADWinUI.ActionButtons`, and on the Tool Palette in the Overlay, Tab Bars and Action Buttons categories.
 
 ## Using them in XAML
 
@@ -77,6 +77,35 @@ Liquid Bulge and Floating Notch keep some room above the bar for the bulge and t
 
 `SelectedText` is the selected tab's label, `ItemCount` and `Item[Index]` read the tabs.
 
+## The action buttons
+
+Six animated buttons, ready to drop from the Action Buttons category. Each one shows its label as soon as it is on the window, and `Play` runs its effect from code.
+
+| Control | What it does | Own properties | Event |
+| --- | --- | --- | --- |
+| `TWinUIHoldButton` | A round button. Hold it down and a ring fills around it, then it turns into a check and the caption under it changes to `DoneText`. Let go early and the ring runs back. | `DoneText`, `Icon` (a name such as Delete, or a Segoe Fluent Icons code point), `HoldDuration`, `ResetAfter`, `IsDone`, `Progress` | `Confirmed` |
+| `TWinUISendButton` | A gradient pill. A click sends the paper plane off with a trail and the label flips to `DoneText`. | `DoneText`, `ResetAfter`, `IsDone` | `Click` |
+| `TWinUIConfettiButton` | A gradient pill. A click bursts confetti out of it, the pieces flutter, turn over and fall. | `ConfettiCount` (up to 120), `FlyingCount` | `Click` |
+| `TWinUICopyButton` | A field with a copy icon. A click puts `Text` on the clipboard, the icon turns into a check and a `DoneText` tooltip pops up above it. | `DoneText`, `ResetAfter`, `CopyToClipboard`, `IsDone` | `Copied` |
+| `TWinUIShineButton` | A glowing gradient pill. A diagonal shine sweeps across it every `ShineInterval` and when the pointer comes over it, and sparkles twinkle around it. | `ShineInterval` (0 for hover and click only), `Sparkles`, `GlowBrush` | `Click` |
+| `TWinUISlideButton` | A track with a knob. Drag the knob to the end: the track fills, the knob turns into a check and the label changes to `DoneText`. Let go before the end and it springs back. | `DoneText`, `ResetAfter`, `Shimmer`, `IsDone`, `Position` | `Confirmed` |
+
+```xml
+<rw:HoldButton x:Name="DeleteButton" Text="Hold to delete" DoneText="Deleted" Confirmed="DeleteConfirmed"/>
+<rw:CopyButton x:Name="InviteLink" Text="join.app/x7Kq2" Copied="LinkCopied"/>
+```
+
+They all have these properties:
+
+| Property | Meaning |
+| --- | --- |
+| `Text` | The label. The Copy button copies it, the Hold button shows it under the circle. |
+| `AccentFrom`, `AccentTo` | The accent gradient. Each button has its own unless set: violet to cyan, violet to pink or blue. |
+| `ResetAfter` | Milliseconds the done look stays before the button is back, 0 keeps it until `Reset`. Hold, Send, Copy and Slide have it. |
+| `Background`, `BorderBrush`, `Foreground`, `FontSize`, `CornerRadius` | The usual Control properties: the surface of the Hold, Copy and Slide buttons, its edge, the text, and the corners of the Copy field. On a light `Background` the icons pick darker colours by themselves. |
+
+Enter and Space work like a click, or like holding for the Hold button. The Slide button slides by itself on Enter or Space. `Play` runs a button's effect from code and `Reset` puts it back without animation. The confetti, the plane and the Copy tooltip go beyond the button's edges, so leave some space around them.
+
 ## Writing your own
 
 ```pascal
@@ -134,4 +163,4 @@ The type index XamlCodeGen and the designer read is `src\Framework\RADWinUI.Cont
 
 Each element is a COM aggregate, the way C# and C++/WinRT build one: a Delphi outer object around WinUI's `ContentControl`. The application's `IXamlMetadataProvider` answers XAML's questions about `RADWinUI.Controls.*` types with the registered descriptions, and the dependency properties are registered with `DependencyProperty.Register` the first time a type is used.
 
-Tests: `tests\CustomControls\CustomControlTest` (every property kind, bindings both ways, template, events, creation from Pascal), `tests\CustomControls\OverlayControlsTest` (the Overlay controls) and `tests\CustomControls\TabBarsTest` (the tab bars).
+Tests: `tests\CustomControls\CustomControlTest` (every property kind, bindings both ways, template, events, creation from Pascal), `tests\CustomControls\OverlayControlsTest` (the Overlay controls) `tests\CustomControls\TabBarsTest` (the tab bars) and `tests\CustomControls\ActionButtonsTest` (the action buttons).

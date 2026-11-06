@@ -4,6 +4,7 @@ All notable changes to RADWinUI.
 
 ## Unreleased
 
+- New Tool Palette category Action Buttons with six ready-made animated buttons (unit `RADWinUI.ActionButtons`, XAML prefix `rw:`): `TWinUIHoldButton` (hold to confirm), `TWinUISendButton` (a paper plane flies off), `TWinUIConfettiButton` (a confetti burst), `TWinUICopyButton` (copies its text, with a check and a tooltip), `TWinUIShineButton` (a shine sweep with sparkles) and `TWinUISlideButton` (slide to confirm). Each has a `Text`, one event and `Play` to run its effect from code.
 - New Tool Palette category Tab Bars with six ready-made animated tab bars (unit `RADWinUI.TabBars`, XAML prefix `rw:`): `TWinUISlidingPillTabBar`, `TWinUILiquidBulgeTabBar`, `TWinUIFloatingNotchTabBar`, `TWinUIIconFillTabBar`, `TWinUIExpandingLabelTabBar` and `TWinUIBubbleFloatTabBar`. Drop one and it shows four tabs right away.
 - The tabs are one `Items` text, `Label:Icon` separated by commas. In the Object Inspector its `...` button opens an editor to add, remove and reorder tabs and pick each icon from a grid.
 - `Pages` names one element per tab and shows the selected tab's element, so switching pages needs no code. `SelectionChanged` fires for anything else.

@@ -103,6 +103,110 @@ begin
   end;
 end;
 
+/// The action buttons: what each one shows in the moment it does its thing
+procedure DrawActionButton(ACanvas: TCanvas; const AName: string);
+
+  procedure Solid(AShade: Integer);
+  begin
+    // Lighter shades become more transparent (see RenderIcon)
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.Brush.Color := RGB(AShade, 122 + (AShade - 32) * 133 div 223, 216 + (AShade - 32) * 39 div 223);
+  end;
+
+begin
+  ACanvas.Pen.Color := RGB(32, 122, 216);
+  if AName = 'holdbutton' then
+  begin
+    // A ring three quarters full around a round button
+    Solid(215);
+    ACanvas.Pen.Style := psClear;
+    ACanvas.Ellipse(20, 20, 77, 77);
+    ACanvas.Pen.Style := psSolid;
+    ACanvas.Pen.Width := 8;
+    ACanvas.Brush.Style := bsClear;
+    ACanvas.Arc(8, 8, 88, 88, 48, 8, 8, 48);
+    Solid(32);
+    ACanvas.Pen.Width := 1;
+    ACanvas.RoundRect(38, 36, 58, 62, 6, 6);
+  end
+  else if AName = 'sendbutton' then
+  begin
+    // A pill and the paper plane leaving it
+    Solid(215);
+    ACanvas.Pen.Style := psClear;
+    ACanvas.RoundRect(4, 40, 76, 76, 36, 36);
+    Solid(32);
+    ACanvas.Polygon([Point(50, 30), Point(92, 12), Point(74, 50), Point(66, 36)]);
+    ACanvas.Pen.Style := psSolid;
+    ACanvas.Pen.Width := 4;
+    ACanvas.MoveTo(16, 58); ACanvas.LineTo(44, 58);
+  end
+  else if AName = 'confettibutton' then
+  begin
+    // A pill with confetti bursting out of its top
+    Solid(215);
+    ACanvas.Pen.Style := psClear;
+    ACanvas.RoundRect(6, 52, 90, 86, 34, 34);
+    Solid(32);
+    ACanvas.Rectangle(14, 30, 22, 42);
+    ACanvas.Ellipse(34, 8, 44, 18);
+    ACanvas.Rectangle(52, 22, 64, 30);
+    ACanvas.Ellipse(74, 28, 84, 38);
+    ACanvas.Rectangle(80, 6, 88, 18);
+    ACanvas.Ellipse(8, 8, 16, 16);
+    ACanvas.Pen.Style := psSolid;
+  end
+  else if AName = 'copybutton' then
+  begin
+    // A field with text and the copy square, now a check
+    Solid(215);
+    ACanvas.Pen.Style := psClear;
+    ACanvas.RoundRect(2, 26, 94, 70, 18, 18);
+    Solid(32);
+    ACanvas.RoundRect(56, 32, 88, 64, 12, 12);
+    ACanvas.Pen.Style := psSolid;
+    ACanvas.Pen.Width := 5;
+    ACanvas.MoveTo(12, 48); ACanvas.LineTo(44, 48);
+    ACanvas.Pen.Color := clWhite;
+    ACanvas.MoveTo(63, 48); ACanvas.LineTo(70, 55); ACanvas.LineTo(81, 41);
+  end
+  else if AName = 'shinebutton' then
+  begin
+    // A pill with a diagonal shine and a sparkle beside it
+    Solid(120);
+    ACanvas.Pen.Style := psClear;
+    ACanvas.RoundRect(4, 34, 92, 72, 38, 38);
+    ACanvas.Brush.Color := clWhite;
+    ACanvas.Polygon([Point(40, 72), Point(54, 34), Point(64, 34), Point(50, 72)]);
+    Solid(32);
+    ACanvas.Polygon([Point(80, 2), Point(84, 14), Point(96, 18), Point(84, 22), Point(80, 34), Point(76, 22),
+      Point(64, 18), Point(76, 14)]);
+    ACanvas.Pen.Style := psSolid;
+  end
+  else
+  begin
+    // Slide: a track filled behind the knob
+    Solid(215);
+    ACanvas.Pen.Style := psClear;
+    ACanvas.RoundRect(2, 30, 94, 66, 36, 36);
+    Solid(120);
+    ACanvas.RoundRect(2, 30, 70, 66, 36, 36);
+    Solid(32);
+    ACanvas.Ellipse(40, 32, 72, 64);
+    ACanvas.Pen.Style := psSolid;
+    ACanvas.Pen.Width := 4;
+    ACanvas.Pen.Color := clWhite;
+    ACanvas.MoveTo(50, 41); ACanvas.LineTo(57, 48); ACanvas.LineTo(50, 55);
+    ACanvas.MoveTo(58, 41); ACanvas.LineTo(65, 48); ACanvas.LineTo(58, 55);
+  end;
+end;
+
+function IsActionButton(const AName: string): Boolean;
+begin
+  Result := (AName = 'holdbutton') or (AName = 'sendbutton') or (AName = 'confettibutton') or
+    (AName = 'copybutton') or (AName = 'shinebutton') or (AName = 'slidebutton');
+end;
+
 procedure DrawControl(ACanvas: TCanvas; const AName: string);
 var
   Name, Letters: string;
@@ -258,6 +362,8 @@ begin
   end
   else if Name.EndsWith('tabbar') then
     DrawTabBar(ACanvas, Name)
+  else if IsActionButton(Name) then
+    DrawActionButton(ACanvas, Name)
   else if Name = 'pipspager' then
   begin
     Circle(3, 10, 7, 14); Circle(10, 10, 14, 14); Circle(17, 10, 21, 14);

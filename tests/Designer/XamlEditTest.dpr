@@ -305,6 +305,9 @@ begin
   Same(EnsureNamespace('<Window xmlns:rw="using:RADWinUI.Controls">', 'rw', 'using:RADWinUI.Controls'),
     '<Window xmlns:rw="using:RADWinUI.Controls">', 'xmlns:rw is declared once');
   Check(PaletteCategoryOf('GlowTile') = 'Overlay', 'GlowTile is in Overlay');
+  Check(PaletteCategoryOf('SlideButton') = 'Action Buttons', 'SlideButton is in Action Buttons');
+  Check(ToolboxXaml('SendButton', 0, 0) = '<rw:SendButton Text="Send"/>',
+    'an action button comes with its rw: prefix and its label');
   if Failures > 0 then
   begin
     Writeln('XAML edit test FAILED (', Failures, ')');
