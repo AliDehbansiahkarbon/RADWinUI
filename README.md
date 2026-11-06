@@ -1,7 +1,9 @@
-# RADWinUI
+# <img src="docs/images/radwinui-logo.png" alt="RADWinUI logo" width="48" align="center" /> RADWinUI
 
 <p align="center">
-  <img src="docs/images/radwinui-logo.png" alt="RADWinUI logo" width="200" />
+  <a href="https://www.youtube.com/playlist?list=PLOixRJGvMdjE">
+    <img src="docs/images/radwinui-poster.png" alt="RADWinUI: native WinUI 3 apps for Delphi, designed visually in RAD Studio" />
+  </a>
 </p>
 
 <p align="center">
