@@ -1,4 +1,4 @@
-# <img src="docs/images/radwinui-logo.png" alt="RADWinUI logo" width="48" align="center" /> RADWinUI
+# RADWinUI <img src="docs/images/radwinui-logo.png" alt="RADWinUI logo" width="48" align="top" />
 
 <p align="center">
   <a href="https://www.youtube.com/playlist?list=PLOixRJGvMdjE">
