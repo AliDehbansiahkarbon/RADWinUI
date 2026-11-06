@@ -156,7 +156,15 @@ In Design, **Delete** removes the selected control with one undoable XAML edit.
 **Ctrl+Z** undoes the edit, and **Ctrl+Y** or **Ctrl+Shift+Z** redoes it. These
 commands use the XAML editor's own history, including property, layout, insertion
 and movement edits. The Window and its required root content are protected from
-deletion.
+deletion. **Ctrl+X** cuts the selected control, **Esc** selects its parent.
+**Ctrl+Arrow** moves it by one pixel in a Grid or Canvas, **Ctrl+Shift+Arrow** by
+eight. Blue guide lines show when its edges or centre line up with a neighbour or
+its panel, a drag snaps to them (hold Alt to place it freely).
+
+Right-click a control for the designer's menu, the same commands plus Bring to
+Front, Send to Back, View Source, Split View and the control's own commands, such
+as Add Row on a Grid or Add TabViewItem on a TabView. Every command is one
+undoable XAML edit.
 
 RAD Studio's existing **Structure** view shows the Window and its visual control
 hierarchy while Design is active. Clicking a tree item selects that control and

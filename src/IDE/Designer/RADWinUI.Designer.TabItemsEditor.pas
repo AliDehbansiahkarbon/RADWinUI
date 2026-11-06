@@ -16,7 +16,7 @@ implementation
 
 uses
   Winapi.Windows, System.SysUtils, System.Classes, System.Types, System.Math, Vcl.Graphics, Vcl.Controls,
-  Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Grids, RADWinUI.TabBarIcons;
+  Vcl.Forms, Vcl.StdCtrls, Vcl.ExtCtrls, Vcl.Grids, Vcl.Themes, RADWinUI.TabBarIcons, RADWinUI.Designer.Dialogs;
 
 const
   GridColumns = 10;
@@ -61,6 +61,7 @@ var
 begin
   Form := TTabItemsForm.CreateFor(AText);
   try
+    ThemeForm(Form);
     Result := Form.ShowModal = mrOk;
     if Result then
       AText := Form.Text;
@@ -365,19 +366,20 @@ begin
   Chosen := False;
   if (Index <= High(FIcons)) and (Current >= 0) and ResolveTabBarIcon(FItems[Current].Icon, Glyph, Filled) then
     Chosen := Glyph = FIcons[Index].Glyph;
+  // The theme's colours, the system ones would paint a light grid in a dark IDE
   if Chosen then
-    Canvas.Brush.Color := clHighlight
+    Canvas.Brush.Color := StyleServices.GetSystemColor(clHighlight)
   else
-    Canvas.Brush.Color := clWindow;
+    Canvas.Brush.Color := StyleServices.GetSystemColor(clWindow);
   Canvas.FillRect(Rect);
   if Index > High(FIcons) then
     Exit;
   Canvas.Font.Name := FIconFont;
   Canvas.Font.Size := 14;
   if Chosen then
-    Canvas.Font.Color := clHighlightText
+    Canvas.Font.Color := StyleServices.GetSystemColor(clHighlightText)
   else
-    Canvas.Font.Color := clWindowText;
+    Canvas.Font.Color := StyleServices.GetSystemColor(clWindowText);
   Line := FIcons[Index].Glyph;
   DrawText(Canvas.Handle, PChar(Line), 1, Rect, DT_CENTER or DT_VCENTER or DT_SINGLELINE);
 end;

@@ -37,6 +37,19 @@ unit RADWinUI.Preview.Host;
   (RADWinUI.Designer.XamlEdit.ApplyDesignerEvent) and sends the new text.
   TOOL and DRAG do what the buttons and a drag do, for tests, their event
   results are also pushed on the event pipe.
+
+  A right click selects the element under the pointer like a left click, then
+  pushes CONTEXTMENU <x> <y> <hit>: the screen pixel where the IDE shows its
+  menu, hit 0 when the click was beside every element. The Menu key and
+  Shift+F10 push it for the selected element. Esc pushes SELECTPARENT and
+  Ctrl+X CUT, next to COPY, PASTE, DELETEKEY, UNDO and REDO.
+
+  Ctrl+Arrow moves the selected child of a Grid or Canvas by 1 DIP, with Shift
+  by 8: NUDGE <line> <column> <left> <top>, its new place in the parent (the
+  IDE writes Canvas.Left/Top, or Margin with Left/Top alignment). The request
+  NUDGEKEY <dx> <dy> does the same for keys the IDE received. Dragging and
+  moving show alignment guides with siblings and the parent, a drag snaps to
+  them unless Alt is held.
   The host also exits when the client disconnects, so an IDE that dies leaves
   no preview behind, the IDE starts a new host when it needs one.
 
@@ -109,6 +122,14 @@ type
     FPressed: Boolean;      // pointer down on the selected element
     FDragging: Boolean;     // ... and moved: a drag
     FPressReply: string;    // SELECTED of the press, reported on release (not a drag)
+    FRightPressed: Boolean; // right button down on the canvas, selected already
+    FRightHit: string;      // SELECTED of the right click, NONE beside every element
+    FGuideX, FGuideY: TWinUIRectangle; // alignment guides: a vertical and a horizontal line
+    FGuideTimer: TWinUITimer;          // hides the guides of keyboard moves
+    FSnap: RADWinUI.Abi.Point;         // the snap of the current drag
+    FNudgeKey: string;                 // the element of the last keyboard move ...
+    FNudgeLeft, FNudgeTop: Integer;    // ... its place sent to the IDE ...
+    FNudgeAt: Cardinal;                // ... and when
     FToolDrag: string;      // toolbox item under a pressed pointer
     FPressAt: RADWinUI.Abi.Point;
     FDropMark: TWinUIRectangle;
@@ -126,6 +147,11 @@ type
     procedure FitPreviewArea;
     procedure Queue(const AEvent: string);
     function ToContent(AScreenX, AScreenY: Integer): RADWinUI.Abi.Point;
+    procedure QueueContextMenu(const APoint: RADWinUI.Abi.Point; AHit: Boolean);
+    function Nudge(ADX, ADY: Integer): string;
+    function ShowGuides(const ATopLeft: RADWinUI.Abi.Point; AWidth, AHeight: Double; const APanel: IFrameworkElement;
+      ASnap: Boolean): RADWinUI.Abi.Point;
+    procedure HideGuides(Sender: TObject);
     function DropTarget(const APoint: RADWinUI.Abi.Point; const AMoving: string): string;
     function PlaceAt(const APoint: RADWinUI.Abi.Point): string;
     function MoveTo(const APoint: RADWinUI.Abi.Point): string;
@@ -174,7 +200,8 @@ uses
   System.Math,
   RADWinUI.Interop.Core,
   RADWinUI.Framework,
-  RADWinUI.Designer.Palette;
+  RADWinUI.Designer.Palette,
+  RADWinUI.Designer.Snap;
 
 const
   ToolboxWidth = 180; // DIPs added to the window so the previewed content keeps its <Window> size
@@ -621,7 +648,9 @@ begin
     '<Border x:Name="PreviewHost"/>' +
     '<Canvas x:Name="Adorner" Background="Transparent">' +
     '<Rectangle x:Name="SelectionBox" Visibility="Collapsed" Stroke="#FF0078D4" StrokeThickness="2"/>' +
-    '<Rectangle x:Name="DropMark" Visibility="Collapsed" Fill="#C00078D4" RadiusX="2" RadiusY="2"/></Canvas>' +
+    '<Rectangle x:Name="DropMark" Visibility="Collapsed" Fill="#C00078D4" RadiusX="2" RadiusY="2"/>' +
+    '<Rectangle x:Name="GuideX" Visibility="Collapsed" Width="1" Fill="#FF0078D4"/>' +
+    '<Rectangle x:Name="GuideY" Visibility="Collapsed" Height="1" Fill="#FF0078D4"/></Canvas>' +
     '</Grid></ScrollViewer>' +
     '<TextBlock x:Name="SelectionText" AutomationProperties.AutomationId="PreviewSelection" Grid.Row="2" ' +
     'Grid.ColumnSpan="2" Margin="8,4" Opacity="0.7" Text="Click an element to select it"/></Grid>';
@@ -654,10 +683,16 @@ begin
   FAdornerTimer.Interval := 200; // follows layout changes of the selected element
   FAdornerTimer.OnTimer := PlaceAdorner;
   FDropMark := FindElement<TWinUIRectangle>('DropMark');
+  FGuideX := FindElement<TWinUIRectangle>('GuideX');
+  FGuideY := FindElement<TWinUIRectangle>('GuideY');
+  FGuideTimer := TWinUITimer.Create;
+  FGuideTimer.Interval := 1000;
+  FGuideTimer.OnTimer := HideGuides;
   (TWinUIObject.IntfOf(FShell, IUIElement) as IUIElement).add_PreviewKeyDown(TKeyEventHandler.Create(
     procedure(ASender: IInspectable; AArgs: IKeyRoutedEventArgs)
     var
       Key: Integer;
+      At: RADWinUI.Abi.Point;
     begin
       if (Ord(AArgs.Key) = VK_F9) and (GetAsyncKeyState(VK_MENU) >= 0) then
       begin
@@ -682,11 +717,50 @@ begin
         AArgs.Handled := True;
         Exit;
       end;
+      if (Ord(AArgs.Key) = VK_ESCAPE) and (FSelected <> '') and (GetAsyncKeyState(VK_CONTROL) >= 0) and
+        (GetAsyncKeyState(VK_SHIFT) >= 0) and (GetAsyncKeyState(VK_MENU) >= 0) then
+      begin
+        if not AArgs.KeyStatus.WasKeyDown then
+          Queue('SELECTPARENT');
+        AArgs.Handled := True;
+        Exit;
+      end;
+      // The context menu from the keyboard, at the selected element
+      if ((Ord(AArgs.Key) = VK_APPS) or ((Ord(AArgs.Key) = VK_F10) and (GetAsyncKeyState(VK_SHIFT) < 0))) and
+        (GetAsyncKeyState(VK_CONTROL) >= 0) and (GetAsyncKeyState(VK_MENU) >= 0) then
+      begin
+        if not AArgs.KeyStatus.WasKeyDown then
+        begin
+          At.X := 8;
+          At.Y := 8;
+          if (FSelected <> '') and (FSelectedElement <> nil) then
+            At := (FSelectedElement as IUIElement).TransformToVisual(nil).TransformPoint(At);
+          QueueContextMenu(At, FSelected <> '');
+        end;
+        AArgs.Handled := True;
+        Exit;
+      end;
+      // Ctrl+Arrow moves the selected element, before the arrows could go to the IDE
+      if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_MENU) >= 0) and
+        (Ord(AArgs.Key) in [VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN]) then
+      begin
+        Key := IfThen(GetAsyncKeyState(VK_SHIFT) < 0, 8, 1);
+        case Ord(AArgs.Key) of
+          VK_LEFT: Queue(Nudge(-Key, 0));
+          VK_RIGHT: Queue(Nudge(Key, 0));
+          VK_UP: Queue(Nudge(0, -Key));
+          VK_DOWN: Queue(Nudge(0, Key));
+        end;
+        AArgs.Handled := True;
+        Exit;
+      end;
       if GetAsyncKeyState(VK_CONTROL) < 0 then
       begin
         AArgs.Handled := True;
         if AArgs.Key = RADWinUI.Abi.VirtualKey.C then
           Queue('COPY')
+        else if AArgs.Key = RADWinUI.Abi.VirtualKey.X then
+          Queue('CUT')
         else if AArgs.Key = RADWinUI.Abi.VirtualKey.V then
           Queue('PASTE')
         else if AArgs.Key = RADWinUI.Abi.VirtualKey.Z then
@@ -722,7 +796,14 @@ begin
     begin
       (TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).Focus(RADWinUI.Abi.FocusState.Pointer);
       FPressAt := AArgs.GetCurrentPoint(nil).Position;
-      if FTool <> '' then
+      FRightPressed := AArgs.GetCurrentPoint(nil).Properties.IsRightButtonPressed;
+      if FRightPressed then
+      begin
+        // Selects at once, the menu follows on release (RightTapped). A picked tool stays picked.
+        FRightHit := SelectAt(FPressAt);
+        Queue(FRightHit);
+      end
+      else if FTool <> '' then
       begin
         Queue(PlaceAt(FPressAt));
         ShowMark(False);
@@ -731,6 +812,7 @@ begin
       begin
         FPressReply := SelectAt(FPressAt);
         GrabAt(FPressAt);
+        FSnap := Default(RADWinUI.Abi.Point);
         FPressed := True;
         FDragging := False;
         // The drag follows the cursor itself: WinUI took the pointer capture away from
@@ -754,6 +836,25 @@ begin
   FDragTimer := TWinUITimer.Create;
   FDragTimer.Interval := 15;
   FDragTimer.OnTimer := DragTick;
+  // The release of a right click, or a press and hold with touch or pen
+  (TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).add_RightTapped(TRightTappedEventHandler.Create(
+    procedure(ASender: IInspectable; AArgs: IRightTappedRoutedEventArgs)
+    begin
+      if not FRightPressed then
+      begin
+        // Touch and pen started as a left press: no drag, select here
+        FDragTimer.Enabled := False;
+        FPressed := False;
+        FDragging := False;
+        FPressReply := '';
+        ShowMark(False);
+        FRightHit := SelectAt(AArgs.GetPosition(nil));
+        Queue(FRightHit);
+      end;
+      FRightPressed := False;
+      QueueContextMenu(AArgs.GetPosition(nil), FRightHit <> 'NONE');
+      AArgs.Handled := True;
+    end));
   (TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).add_DoubleTapped(TDoubleTappedEventHandler.Create(
     procedure(ASender: IInspectable; AArgs: IDoubleTappedRoutedEventArgs)
     var
@@ -1326,6 +1427,13 @@ begin
     RestoreDocked;
     Result := 'OK';
   end
+  else if Request.StartsWith('NUDGEKEY ') then
+  begin
+    Parts := Request.Split([' ']);
+    if Length(Parts) <> 3 then Exit('ERROR invalid move');
+    Queue(Nudge(StrToIntDef(Parts[1], 0), StrToIntDef(Parts[2], 0)));
+    Result := 'OK';
+  end
   else if Request.StartsWith('SELECTPOS ') then
   begin
     Parts := Request.Split([' ']);
@@ -1482,6 +1590,180 @@ begin
   Result.Y := Pixel.Y / Scale;
 end;
 
+/// CONTEXTMENU at APoint (content coordinates) in screen pixels, AHit False when no element is there.
+procedure TPreviewWindow.QueueContextMenu(const APoint: RADWinUI.Abi.Point; AHit: Boolean);
+var
+  Pixel: TPoint;
+  Scale: Double;
+  WindowHandle: HWND;
+begin
+  WindowHandle := FHostWindow;
+  if WindowHandle = 0 then
+    WindowHandle := HWND(AppWindow.Id.Value);
+  Scale := GetDpiForWindow(WindowHandle) / 96;
+  Pixel := TPoint.Create(Round(APoint.X * Scale), Round(APoint.Y * Scale));
+  ClientToScreen(WindowHandle, Pixel);
+  Queue(Format('CONTEXTMENU %d %d %d', [Pixel.X, Pixel.Y, Ord(AHit)]));
+end;
+
+/// NUDGE for a keyboard move of the selected element by ADX, ADY DIPs, NONE when its parent lays it out.
+function TPreviewWindow.Nudge(ADX, ADY: Integer): string;
+var
+  Panel: IFrameworkElement;
+  Slot: RADWinUI.Abi.Rect;
+  Origin, TopLeft: RADWinUI.Abi.Point;
+  Kind: string;
+  Parts: TArray<string>;
+  Left, Top, ActualLeft, ActualTop: Integer;
+begin
+  Result := 'NONE';
+  if (FSelected = '') or (FRoot = nil) then
+    Exit;
+  if FSelectedElement = nil then
+    FSelectedElement := FindByKey(FRoot as IDependencyObject, FSelected);
+  if (FSelectedElement = nil) or
+    not Supports(VisualTreeHelper.GetParent(FSelectedElement as IDependencyObject), IFrameworkElement, Panel) or
+    not FElements.ContainsKey(KeyOf(Panel)) then
+    Exit;
+  Kind := FElements[KeyOf(Panel)].Split([' '])[2];
+  if (Kind <> 'Grid') and (Kind <> 'Canvas') then
+    Exit;
+  // Where it is now in its parent: Canvas.Left/Top in a Canvas, the Margin's left and top in a Grid cell
+  Origin.X := 0;
+  Origin.Y := 0;
+  Origin := (FSelectedElement as IUIElement).TransformToVisual(Panel as IUIElement).TransformPoint(Origin);
+  if Kind = 'Canvas' then
+  begin
+    ActualLeft := Round(Origin.X - FSelectedElement.Margin.Left);
+    ActualTop := Round(Origin.Y - FSelectedElement.Margin.Top);
+  end
+  else
+  begin
+    Slot := LayoutInformation.GetLayoutSlot(FSelectedElement);
+    ActualLeft := Round(Origin.X - Slot.X);
+    ActualTop := Round(Origin.Y - Slot.Y);
+  end;
+  // Repeated keys build on the place sent last: the preview shows a move once the IDE has written it
+  if (FNudgeKey = FSelected) and (GetTickCount - FNudgeAt < 1000) then
+  begin
+    Left := FNudgeLeft + ADX;
+    Top := FNudgeTop + ADY;
+  end
+  else
+  begin
+    Left := ActualLeft + ADX;
+    Top := ActualTop + ADY;
+  end;
+  FNudgeKey := FSelected;
+  FNudgeLeft := Left;
+  FNudgeTop := Top;
+  FNudgeAt := GetTickCount;
+  // The guides where it goes, without snapping: the keys move it exactly
+  TopLeft.X := 0;
+  TopLeft.Y := 0;
+  TopLeft := (FSelectedElement as IUIElement).TransformToVisual(nil).TransformPoint(TopLeft);
+  TopLeft.X := TopLeft.X + Left - ActualLeft;
+  TopLeft.Y := TopLeft.Y + Top - ActualTop;
+  ShowGuides(TopLeft, FSelectedElement.ActualWidth, FSelectedElement.ActualHeight, Panel, False);
+  FGuideTimer.Enabled := False;
+  FGuideTimer.Enabled := True;
+  Parts := FElements[FSelected].Split([' ']);
+  Result := Format('NUDGE %s %s %d %d', [Parts[0], Parts[1], Left, Top]);
+end;
+
+/// Shows the guides of the selected element at ATopLeft (content coordinates) with the other
+/// children of APanel and the panel itself. With ASnap, returns the move that lines it up
+/// and shows the lines it snaps to, else shows only the lines it is exactly on.
+function TPreviewWindow.ShowGuides(const ATopLeft: RADWinUI.Abi.Point; AWidth, AHeight: Double;
+  const APanel: IFrameworkElement; ASnap: Boolean): RADWinUI.Abi.Point;
+
+  procedure Place(AGuide: TWinUIRectangle; const AFound: TSnapGuide; AVertical: Boolean);
+  var
+    From, Upto: RADWinUI.Abi.Point;
+    Line: IUIElement;
+  begin
+    if not AFound.Found or (not ASnap and (Abs(AFound.Delta) >= 0.5)) then
+    begin
+      AGuide.Visibility := TWinUIVisibility.Collapsed;
+      Exit;
+    end;
+    if AVertical then
+    begin
+      From.X := AFound.At;
+      From.Y := AFound.First;
+      Upto.X := AFound.At;
+      Upto.Y := AFound.Last;
+    end
+    else
+    begin
+      From.X := AFound.First;
+      From.Y := AFound.At;
+      Upto.X := AFound.Last;
+      Upto.Y := AFound.At;
+    end;
+    From := (TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).TransformToVisual(nil).Inverse.TransformPoint(From);
+    Upto := (TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).TransformToVisual(nil).Inverse.TransformPoint(Upto);
+    Line := TWinUIObject.IntfOf(AGuide, IUIElement) as IUIElement;
+    Canvas.SetLeft(Line, From.X);
+    Canvas.SetTop(Line, From.Y);
+    if AVertical then
+      AGuide.Height := Max(Upto.Y - From.Y, 1)
+    else
+      AGuide.Width := Max(Upto.X - From.X, 1);
+    AGuide.Visibility := TWinUIVisibility.Visible;
+  end;
+
+var
+  Others: TArray<TSnapRect>;
+  Children: IVector_UIElement;
+  Child: IUIElement;
+  Origin: RADWinUI.Abi.Point;
+  Moving: TSnapRect;
+  GuideX, GuideY: TSnapGuide;
+  I: Integer;
+begin
+  Result := Default(RADWinUI.Abi.Point);
+  if APanel = nil then
+  begin
+    HideGuides(nil);
+    Exit;
+  end;
+  Origin := Default(RADWinUI.Abi.Point);
+  Origin := (APanel as IUIElement).TransformToVisual(nil).TransformPoint(Origin);
+  Others := [TSnapRect.Create(Origin.X, Origin.Y, APanel.ActualWidth, APanel.ActualHeight)];
+  if Supports(APanel, IPanel) then
+  begin
+    Children := (APanel as IPanel).Children;
+    for I := 0 to Integer(Children.Size) - 1 do
+    begin
+      Child := Children.GetAt(I);
+      if (Child.Visibility <> RADWinUI.Abi.Visibility.Visible) or
+        ((FSelectedElement <> nil) and ((Child as IUnknown) = (FSelectedElement as IUnknown))) then
+        Continue;
+      Origin := Default(RADWinUI.Abi.Point);
+      Origin := Child.TransformToVisual(nil).TransformPoint(Origin);
+      Others := Others + [TSnapRect.Create(Origin.X, Origin.Y, (Child as IFrameworkElement).ActualWidth,
+        (Child as IFrameworkElement).ActualHeight)];
+    end;
+  end;
+  Moving := TSnapRect.Create(ATopLeft.X, ATopLeft.Y, AWidth, AHeight);
+  GuideX := SnapAxis(Moving, Others, True);
+  GuideY := SnapAxis(Moving, Others, False);
+  if ASnap and GuideX.Found then
+    Result.X := GuideX.Delta;
+  if ASnap and GuideY.Found then
+    Result.Y := GuideY.Delta;
+  Place(FGuideX, GuideX, True);
+  Place(FGuideY, GuideY, False);
+end;
+
+procedure TPreviewWindow.HideGuides(Sender: TObject);
+begin
+  FGuideTimer.Enabled := False;
+  FGuideX.Visibility := TWinUIVisibility.Collapsed;
+  FGuideY.Visibility := TWinUIVisibility.Collapsed;
+end;
+
 /// The content fills the visible area when smaller (star rows keep working) and scrolls when bigger.
 procedure TPreviewWindow.FitPreviewArea;
 var
@@ -1500,6 +1782,7 @@ procedure TPreviewWindow.DragTick(Sender: TObject);
 var
   Cursor: TPoint;
   At, Origin: RADWinUI.Abi.Point;
+  Target: string;
 begin
   GetCursorPos(Cursor);
   At := ToContent(Cursor.X, Cursor.Y);
@@ -1510,11 +1793,18 @@ begin
       if Abs(At.X - FPressAt.X) + Abs(At.Y - FPressAt.Y) > 8 then
         FDragging := True;
       if FDragging then
-        if (DropTarget(At, FSelected) <> '') and FreeTarget and (FSelectedElement <> nil) then
+      begin
+        Target := DropTarget(At, FSelected);
+        if (Target <> '') and FreeTarget and (FSelectedElement <> nil) then
         begin
-          // In a Grid or Canvas the element goes where it is dropped: its outline follows the pointer
+          // In a Grid or Canvas the element goes where it is dropped: its outline follows the pointer,
+          // lined up with a sibling or the panel when it comes close (not while Alt is held)
           Origin.X := At.X - FGrab.X;
           Origin.Y := At.Y - FGrab.Y;
+          FSnap := ShowGuides(Origin, FSelectedElement.ActualWidth, FSelectedElement.ActualHeight,
+            FindByKey(FRoot as IDependencyObject, Target.Split(['|'])[0]), GetAsyncKeyState(VK_MENU) >= 0);
+          Origin.X := Origin.X + FSnap.X;
+          Origin.Y := Origin.Y + FSnap.Y;
           Origin := (TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).TransformToVisual(nil).Inverse
             .TransformPoint(Origin);
           FMark.X := Origin.X;
@@ -1524,13 +1814,23 @@ begin
           ShowMark(True);
         end
         else
-          ShowMark(DropTarget(At, FSelected) <> '');
+        begin
+          FSnap := Default(RADWinUI.Abi.Point);
+          HideGuides(nil);
+          ShowMark(Target <> '');
+        end;
+      end;
     end;
     Exit;
   end;
   FDragTimer.Enabled := False;
+  HideGuides(nil);
   if FDragging then
-    Queue(MoveTo(At))
+  begin
+    At.X := At.X + FSnap.X;
+    At.Y := At.Y + FSnap.Y;
+    Queue(MoveTo(At));
+  end
   else
     Queue(FPressReply);
   FPressReply := '';

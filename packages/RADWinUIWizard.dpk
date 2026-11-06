@@ -50,6 +50,7 @@ contains
   RADWinUI.Designer.PaletteIcons in '..\src\IDE\Designer\RADWinUI.Designer.PaletteIcons.pas',
   RADWinUI.Designer.Palette in '..\src\IDE\Designer\RADWinUI.Designer.Palette.pas',
   RADWinUI.TabBarIcons in '..\src\Framework\RADWinUI.TabBarIcons.pas',
+  RADWinUI.Designer.Dialogs in '..\src\IDE\Designer\RADWinUI.Designer.Dialogs.pas',
   RADWinUI.Designer.TabItemsEditor in '..\src\IDE\Designer\RADWinUI.Designer.TabItemsEditor.pas',
   RADWinUI.Designer.ObjectInspector in '..\src\IDE\Designer\RADWinUI.Designer.ObjectInspector.pas',
   RADWinUI.Designer.Retention in '..\src\IDE\Designer\RADWinUI.Designer.Retention.pas',

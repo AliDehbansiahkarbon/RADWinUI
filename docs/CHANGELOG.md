@@ -11,6 +11,13 @@ All notable changes to RADWinUI.
 - A `Transparent` backdrop on a window with a normal frame shows the desktop. Windows painted the title bar colour behind it before.
 - On a light `Background` the tab bars pick darker colours for the selected tab by themselves.
 - Controls written in Delphi can give a property its own Object Inspector editor (`TWinUICustomType.SetEditor`).
+- The designer has a context menu: Undo, Redo, Cut, Copy, Paste, Delete, Select Parent, Bring to Front, Send to Back, View Source and Split View, then the commands of the right-clicked control (its default event handler, Add Row and Add Column on a Grid, Orientation on a StackPanel, Add item on TabView, NavigationView, lists, ComboBox, MenuBar, RadioButtons and Pivot, Edit Items... on a tab bar, Edit Text...).
+- Split View shows the XAML code and the live designer side by side, the designer in the docked preview panel. Selection and edits follow both ways.
+- Ctrl+X cuts and Esc selects the parent in the designer, the Menu key and Shift+F10 open its menu.
+- Ctrl+Arrow moves the selected control by one pixel, Ctrl+Shift+Arrow by eight, in a Grid or a Canvas. A row of key presses is one undo step.
+- Alignment guides like the VCL designer's: blue lines while a control is dragged or moved with the keys, a drag snaps to them (Alt places it freely).
+- In Split View the Structure view shows the design tree while the designer has the focus.
+- The designer's dialogs follow the IDE theme: the Edit Text box, the tab items editor, the RADWinUI messages and the File > New messages.
 
 ## 1.0.0 (30 Oct 2026)
 

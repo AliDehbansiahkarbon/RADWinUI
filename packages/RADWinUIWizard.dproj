@@ -76,6 +76,7 @@
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.PaletteIcons.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Palette.pas"/>
         <DCCReference Include="..\src\Framework\RADWinUI.TabBarIcons.pas"/>
+        <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Dialogs.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.TabItemsEditor.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.ObjectInspector.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Retention.pas"/>

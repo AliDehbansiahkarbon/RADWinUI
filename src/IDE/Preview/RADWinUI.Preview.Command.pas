@@ -59,7 +59,9 @@ uses
   RADWinUI.Designer.PaletteIcons,
   RADWinUI.Designer.Palette,
   RADWinUI.Designer.Structure,
-  RADWinUI.Designer.ObjectInspector;
+  RADWinUI.Designer.ObjectInspector,
+  RADWinUI.Designer.TabItemsEditor,
+  RADWinUI.Designer.Dialogs;
 
 type
   TPreviewCommand = class;
@@ -253,6 +255,13 @@ type
     FStructureContext: IOTAStructureContext;
     FSaveNotifiers: TInterfaceList;
     FCleaning: Boolean;
+    FContextMenu: TPopupMenu;
+    FContextProperty: string; // the property Edit Text... or Edit Items... of the shown menu edits
+    FSplitView: Boolean;      // Split View started the docked preview next to the XAML code
+    FPreviewFocused: Boolean; // the Split View designer had the keyboard focus at the last tick
+    FNudgeBase, FNudgeText: string; // the XAML before and after the current burst of keyboard moves
+    FNudgeLine, FNudgeColumn: Integer;
+    FNudgeAt: Cardinal;
     procedure WatchWindow(const APath: string);
     procedure SyncStructure;
     procedure SelectInStructure(ALine, AColumn: Integer);
@@ -266,6 +275,26 @@ type
     procedure StructureEvent(const AEvent: string);
     procedure CopySelection;
     procedure PasteSelection;
+    procedure CutSelection;
+    function SelectedIndex(const AElements: TArray<TXamlElement>): Integer;
+    procedure SelectParent;
+    procedure ReorderSelection(AToFront: Boolean);
+    procedure EditSelection(ACommand: Integer);
+    procedure ViewSelectionSource;
+    function SplitActive: Boolean;
+    function Designing: Boolean;
+    procedure ToggleSplitView;
+    function PreviewHasFocus: Boolean;
+    procedure SyncSplitStructure;
+    procedure ShowSplitStructure;
+    procedure EndSplitStructure;
+    function XamlBuffer: IOTAEditBuffer;
+    procedure NudgeSelection(const AEvent: string);
+    function AddContextItem(AParent: TMenuItem; const ACaption: string; ACommand: Integer; AEnabled: Boolean;
+      AShortCut: TShortCut = 0): TMenuItem;
+    procedure AddControlItems(const AXaml: string; const AElements: TArray<TXamlElement>; AIndex: Integer);
+    procedure ShowContextMenu(AX, AY: Integer; AHit: Boolean);
+    procedure ContextClick(Sender: TObject);
     procedure DesignKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure DesignShowingChanged(Sender: TObject);
     procedure ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
@@ -314,6 +343,12 @@ type
 
 var
   Command: TPreviewCommand;
+
+const
+  // Commands of the designer's context menu (TMenuItem.Tag)
+  cmUndo = 1; cmRedo = 2; cmCut = 3; cmCopy = 4; cmPaste = 5; cmDelete = 6; cmSelectParent = 7; cmFront = 8;
+  cmBack = 9; cmViewSource = 10; cmSplit = 11; cmEvent = 12; cmAddRow = 13; cmAddColumn = 14; cmHorizontal = 15;
+  cmVertical = 16; cmAddItem = 17; cmEditItems = 18; cmEditText = 19;
 
 /// The host exe of the RADWinUI checkout: Release build, else Debug, '' when not built.
 function HostExe: string;
@@ -611,7 +646,7 @@ var
   Found: Boolean;
   Context: IOTAStructureContext;
 begin
-  if not FDesignViewActive or (FStructure = nil) or not SameText(FStructure.Path, FXamlPath) then Exit;
+  if not Designing or (FStructure = nil) or not SameText(FStructure.Path, FXamlPath) then Exit;
   try
     Context := FStructureContext; // keep it alive if a queued action changes the active editor
     (Context as TDesignerStructure).DispatchSelection;
@@ -657,7 +692,7 @@ var
   Current: TXamlElement;
   Found: Boolean;
 begin
-  if not FDesignViewActive then Exit;
+  if not Designing then Exit;
   if FInspector <> nil then FInspector.Commit;
   Found := False;
   for Current in XamlElements(SourceText(FXamlPath)) do
@@ -677,6 +712,9 @@ begin
   FSelectionPath := FXamlPath;
   if FClient <> nil then
     FClient.Request(Format('SELECTPOS %d %d', [AElement.Line, AElement.Column]), Reply);
+  // Split View: the code next to the preview follows the selection
+  if not FDesignViewActive then
+    GotoSource(FXamlPath, AElement.Line, AElement.Column);
   ShowInspector;
   SelectInStructure(FSelection.Line, FSelection.Column);
   if ADefault then
@@ -1587,6 +1625,7 @@ begin
   FWatch.FCommand := nil;
   FWatch.Free;
   FDockedItem.Free;
+  FContextMenu.Free;
   FDockedAction.Free;
   FIndex.Free;
   FMenuTimer.Free;
@@ -1740,7 +1779,9 @@ end;
 /// with Alt and never a modifier key alone.
 function IsIdeShortcutKey(AKey: Word; AShift: TShiftState): Boolean;
 begin
-  Result := not (ssAlt in AShift) and not (AKey in [VK_SHIFT, VK_CONTROL, VK_MENU, VK_LWIN, VK_RWIN]) and
+  // Ctrl+Arrow moves the selected element
+  Result := not (ssAlt in AShift) and
+    not (AKey in [VK_SHIFT, VK_CONTROL, VK_MENU, VK_LWIN, VK_RWIN, VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN]) and
     ((ssCtrl in AShift) or ((AKey >= VK_F1) and (AKey <= VK_F11)));
 end;
 
@@ -1849,8 +1890,8 @@ begin
     IfThen(Xaml = '', '(no .xaml found)', Xaml));
   if Xaml = '' then
   begin
-    MessageDlg('RADWinUI Preview: no window to show. Open a RADWinUI window (its .xaml or its .pas unit), ' +
-      'or a RADWinUI project with a MainWindow.xaml.', mtInformation, [mbOK], 0);
+    ThemedMessageDlg('RADWinUI Preview: no window to show. Open a RADWinUI window (its .xaml or its .pas unit), ' +
+      'or a RADWinUI project with a MainWindow.xaml.', mtInformation, [mbOK]);
     Exit;
   end;
   FXamlPath := Xaml;
@@ -1889,16 +1930,16 @@ begin
   if Exe = '' then
   begin
     // Build All of the RADWinUI group builds the host, when only the package was built, build it on demand
-    if MessageDlg('The preview host is not built yet (Build All of ' + RADWinUIGroup + ' builds it). ' +
+    if ThemedMessageDlg('The preview host is not built yet (Build All of ' + RADWinUIGroup + ' builds it). ' +
       'Build it now (about 10 seconds)?', mtConfirmation,
-      [mbYes, mbNo], 0) <> mrYes then
+      [mbYes, mbNo]) <> mrYes then
       Exit;
     if not RunHidden(Format('powershell -NoProfile -ExecutionPolicy Bypass -File "%s" ' +
       '-Project src\IDE\Preview\RADWinUIPreview.dpr -Config Release',
       [TPath.Combine(RootFolder, 'scripts\Build.ps1')])) or (HostExe = '') then
     begin
-      MessageDlg('Building the preview failed. See ' + TPath.Combine(RootFolder, 'build\logs\RADWinUIPreview.log') +
-        ', or open ' + RADWinUIGroup + ' and use Build All.', mtError, [mbOK], 0);
+      ThemedMessageDlg('Building the preview failed. See ' + TPath.Combine(RootFolder, 'build\logs\RADWinUIPreview.log') +
+        ', or open ' + RADWinUIGroup + ' and use Build All.', mtError, [mbOK]);
       Exit;
     end;
     Exe := HostExe;
@@ -1965,6 +2006,7 @@ var
   Xaml: string;
   Selection: TDesignerSelection;
   WasDesign: Boolean;
+  Parts: TArray<string>;
 begin
   WasDesign := FDesignViewActive;
   try
@@ -2005,6 +2047,7 @@ begin
       except
         on E: Exception do Log('Object Inspector update failed: ' + E.ClassName + ': ' + E.Message);
       end;
+      SyncSplitStructure;
       SyncStructure;
       // An event can navigate to Pascal/Code and hide Design. Input still queued
       // for that hidden surface must not immediately navigate back to XAML.
@@ -2022,6 +2065,19 @@ begin
           IdeShortcut(StrToIntDef(Copy(Xaml, 10, MaxInt), 0));
           Break; // any IDE action can change the active desktop and designer
         end
+        else if Xaml.StartsWith('CONTEXTMENU ') then
+        begin
+          Parts := Xaml.Split([' ']);
+          if Length(Parts) = 4 then
+            ShowContextMenu(StrToIntDef(Parts[1], 0), StrToIntDef(Parts[2], 0), Parts[3] = '1');
+          Break; // its commands run once the menu closes, they can change the view
+        end
+        else if Xaml = 'SELECTPARENT' then
+          SelectParent
+        else if Xaml.StartsWith('NUDGE ') then
+          NudgeSelection(Xaml)
+        else if Xaml = 'CUT' then
+          CutSelection
         else if Xaml = 'COPY' then
           CopySelection
         else if Xaml = 'PASTE' then
@@ -2078,7 +2134,7 @@ begin
       Xaml := FClient.Status;
       Log('preview failed: ' + Xaml);
       Stop;
-      MessageDlg('RADWinUI Preview: ' + Xaml, mtWarning, [mbOK], 0);
+      ThemedMessageDlg('RADWinUI Preview: ' + Xaml, mtWarning, [mbOK]);
     end;
   except
     on E: Exception do
@@ -2086,7 +2142,7 @@ begin
       // Never let the preview take the IDE down: stop and say why
       Log('preview stopped: ' + E.ClassName + ': ' + E.Message);
       Stop;
-      MessageDlg('RADWinUI Preview stopped: ' + E.Message, mtWarning, [mbOK], 0);
+      ThemedMessageDlg('RADWinUI Preview stopped: ' + E.Message, mtWarning, [mbOK]);
     end;
   end;
 end;
@@ -2096,6 +2152,9 @@ begin
   // Moving the code editor while Design is visible can hide/recreate its frame.
   if not FDesignViewActive then
     GotoSource(FXamlPath, FSelection.Line, FSelection.Column);
+  // A click in the Split View designer brings its tree back to the Structure view
+  if SplitActive then
+    ShowSplitStructure;
   ShowInspector;
   SelectInStructure(FSelection.Line, FSelection.Column);
 end;
@@ -2117,14 +2176,14 @@ begin
     else FInspectorDirty := True;
   except
     on E: Exception do
-      MessageDlg('RADWinUI: ' + E.Message, mtWarning, [mbOK], 0);
+      ThemedMessageDlg('RADWinUI: ' + E.Message, mtWarning, [mbOK]);
   end;
 end;
 
 function TPreviewCommand.DesignEditState: TEditState;
 begin
   Result := [];
-  if not FDesignViewActive then Exit;
+  if not Designing then Exit;
   Include(Result, esCanUndo);
   Include(Result, esCanRedo);
   if (FSelection.Line < 1) or
@@ -2133,7 +2192,7 @@ begin
   Include(Result, esCanCopy);
   try
     if CanDeleteSelection then
-      Include(Result, esCanDelete);
+      Result := Result + [esCanDelete, esCanCut];
   except
     on EXamlEdit do ; // incomplete XAML is not deletable
   end;
@@ -2148,6 +2207,7 @@ begin
     eaUndo: UndoDesigner(False);
     eaRedo: UndoDesigner(True);
     eaDelete: DeleteSelection;
+    eaCut: CutSelection;
     eaCopy: CopySelection;
     eaPaste: PasteSelection;
   else
@@ -2206,26 +2266,31 @@ begin
     end;
 end;
 
-procedure TPreviewCommand.UndoDesigner(ARedo: Boolean);
+/// The editor buffer of the XAML, nil when it has none.
+function TPreviewCommand.XamlBuffer: IOTAEditBuffer;
 var
   Editor: IOTASourceEditor;
-  Buffer: IOTAEditBuffer;
   Iterator: IOTAEditBufferIterator;
   I: Integer;
+begin
+  Result := nil;
+  Editor := EditorOf(FXamlPath);
+  if Editor.EditViewCount > 0 then Result := Editor.EditViews[0].Buffer
+  else if (BorlandIDEServices as IOTAEditorServices).GetEditBufferIterator(Iterator) then
+    for I := 0 to Iterator.Count - 1 do
+      if SameText(Iterator.EditBuffers[I].FileName, FXamlPath) then
+        Exit(Iterator.EditBuffers[I]);
+end;
+
+procedure TPreviewCommand.UndoDesigner(ARedo: Boolean);
+var
+  Buffer: IOTAEditBuffer;
   Changed: Boolean;
 begin
-  if not FDesignViewActive then Exit;
+  if not Designing then Exit;
   try
     if FInspector <> nil then FInspector.Commit;
-    Editor := EditorOf(FXamlPath);
-    if Editor.EditViewCount > 0 then Buffer := Editor.EditViews[0].Buffer
-    else if (BorlandIDEServices as IOTAEditorServices).GetEditBufferIterator(Iterator) then
-      for I := 0 to Iterator.Count - 1 do
-        if SameText(Iterator.EditBuffers[I].FileName, FXamlPath) then
-        begin
-          Buffer := Iterator.EditBuffers[I];
-          Break;
-        end;
+    Buffer := XamlBuffer;
     if Buffer = nil then Exit;
     if ARedo then Changed := Buffer.Redo else Changed := Buffer.Undo;
     if Changed then
@@ -2247,7 +2312,7 @@ begin
     Clipboard.AsText := CopyElement(SourceText(FXamlPath), FSelection.Line, FSelection.Column);
   except
     on E: Exception do
-      MessageDlg('RADWinUI Copy: ' + E.Message, mtWarning, [mbOK], 0);
+      ThemedMessageDlg('RADWinUI Copy: ' + E.Message, mtWarning, [mbOK]);
   end;
 end;
 
@@ -2264,14 +2329,531 @@ begin
     SyncCode(True);
   except
     on E: Exception do
-      MessageDlg('RADWinUI Paste: ' + E.Message, mtWarning, [mbOK], 0);
+      ThemedMessageDlg('RADWinUI Paste: ' + E.Message, mtWarning, [mbOK]);
+  end;
+end;
+
+/// Whether the keyboard focus is in the Split View designer, the host's window in the docked panel.
+function TPreviewCommand.PreviewHasFocus: Boolean;
+var
+  Child: HWND;
+  Info: TGUIThreadInfo;
+begin
+  Result := False;
+  if (FPreviewSurface = nil) or not FPreviewSurface.HandleAllocated then Exit;
+  Child := GetWindow(FPreviewSurface.Handle, GW_CHILD);
+  if Child = 0 then Exit;
+  Info := Default(TGUIThreadInfo);
+  Info.cbSize := SizeOf(Info);
+  Result := GetGUIThreadInfo(GetWindowThreadProcessId(Child, nil), Info) and (Info.hwndFocus <> 0) and
+    ((Info.hwndFocus = Child) or IsChild(Child, Info.hwndFocus));
+end;
+
+/// Split View: the Structure view shows the design tree once the designer has the focus,
+/// as it does for Design. The code editor shows what the IDE gives it when it gets the focus back.
+procedure TPreviewCommand.SyncSplitStructure;
+var
+  Focused: Boolean;
+begin
+  if not FSplitView or FDesignViewActive then Exit;
+  // The panel was closed: Split View is over
+  if (FPreviewSurface <> nil) and FPreviewSurface.HandleAllocated and (FParentWindow = FPreviewSurface.Handle) and
+    ((FPreviewDockForm = nil) or not FPreviewDockForm.Visible) then
+  begin
+    Log('Split View panel closed: ' + FXamlPath);
+    EndSplitStructure;
+    Stop;
+    Exit;
+  end;
+  if not SplitActive then Exit;
+  Focused := PreviewHasFocus;
+  if Focused and not FPreviewFocused then
+    ShowSplitStructure;
+  FPreviewFocused := Focused;
+end;
+
+/// The design tree in the Structure view, for the Split View designer.
+procedure TPreviewCommand.ShowSplitStructure;
+var
+  Context: IOTAStructureContext;
+begin
+  try
+    Context := StructureForFile(FXamlPath);
+    if (Context <> nil) and not FStructure.Shown then
+    begin
+      Log('Split View designer active: Structure shows ' + FXamlPath);
+      (BorlandIDEServices as IOTAStructureView).SetStructureContext(Context);
+    end;
+  except
+    on E: Exception do Log('Split View structure failed: ' + E.ClassName + ': ' + E.Message);
+  end;
+end;
+
+/// Split View ended without Design: the design tree leaves the Structure view.
+procedure TPreviewCommand.EndSplitStructure;
+begin
+  FSplitView := False;
+  FPreviewFocused := False;
+  try
+    if (FStructure <> nil) and FStructure.Shown then
+      (BorlandIDEServices as IOTAStructureView).SetStructureContext(nil);
+  except
+    on E: Exception do Log('Structure reset failed: ' + E.ClassName + ': ' + E.Message);
+  end;
+end;
+
+/// NUDGE <line> <column> <left> <top>, a Ctrl+Arrow move. The moves of one burst (one element,
+/// less than 1.5 s apart, nothing else edited) are one undo step: each takes back the previous one.
+procedure TPreviewCommand.NudgeSelection(const AEvent: string);
+var
+  Parts: TArray<string>;
+  Line, Column, Left, Top: Integer;
+  Xaml: string;
+  Buffer: IOTAEditBuffer;
+begin
+  Parts := AEvent.Split([' ']);
+  if Length(Parts) <> 5 then Exit;
+  Line := StrToIntDef(Parts[1], 0);
+  Column := StrToIntDef(Parts[2], 0);
+  Left := StrToIntDef(Parts[3], 0);
+  Top := StrToIntDef(Parts[4], 0);
+  try
+    Xaml := SourceText(FXamlPath);
+    if not CanNudgeElement(Xaml, Line, Column) then Exit;
+    if (Xaml = FNudgeText) and (Line = FNudgeLine) and (Column = FNudgeColumn) and
+      (GetTickCount - FNudgeAt < 1500) then
+    begin
+      Buffer := XamlBuffer;
+      if (Buffer <> nil) and Buffer.Undo then
+        if SourceText(FXamlPath) = FNudgeBase then
+          Xaml := FNudgeBase
+        else
+        begin
+          Buffer.Redo; // not the move it should have taken back: this one becomes its own step
+          FNudgeBase := Xaml;
+        end
+      else
+        FNudgeBase := Xaml;
+    end
+    else
+      FNudgeBase := Xaml;
+    FNudgeText := NudgeElement(Xaml, Line, Column, Left, Top);
+    ApplyText(FXamlPath, Xaml, FNudgeText);
+    FNudgeLine := Line;
+    FNudgeColumn := Column;
+    FNudgeAt := GetTickCount;
+    FInspectorDirty := True;
+  except
+    on E: Exception do Log('designer move: ' + E.Message);
+  end;
+end;
+
+procedure TPreviewCommand.CutSelection;
+var
+  State: TEditState;
+begin
+  State := DesignEditState;
+  if not (esCanCopy in State) or not (esCanCut in State) then
+    Exit;
+  try
+    Clipboard.AsText := CopyElement(SourceText(FXamlPath), FSelection.Line, FSelection.Column);
+  except
+    on E: Exception do
+    begin
+      ThemedMessageDlg('RADWinUI Cut: ' + E.Message, mtWarning, [mbOK]);
+      Exit; // nothing goes that is not on the clipboard
+    end;
+  end;
+  DeleteSelection;
+end;
+
+/// The index of the selected element in AElements, -1 when nothing of this file is selected.
+function TPreviewCommand.SelectedIndex(const AElements: TArray<TXamlElement>): Integer;
+begin
+  if SameText(FSelectionPath, FXamlPath) and (FSelection.Line > 0) then
+    for Result := 0 to High(AElements) do
+      if not AElements[Result].DesignOnly and (AElements[Result].Tag = FSelection.Tag) and
+        (((FSelection.Name <> '') and (AElements[Result].Name = FSelection.Name)) or
+         ((FSelection.Name = '') and (AElements[Result].Line = FSelection.Line) and
+          (AElements[Result].Column = FSelection.Column))) then
+        Exit;
+  Result := -1;
+end;
+
+/// The element that contains AElements[AIndex], past property elements such as Grid.RowDefinitions, or -1.
+function ParentElement(const AElements: TArray<TXamlElement>; AIndex: Integer): Integer;
+begin
+  Result := AElements[AIndex].ParentIndex;
+  while (Result >= 0) and (AElements[Result].DesignOnly or AElements[Result].Tag.Contains('.')) do
+    Result := AElements[Result].ParentIndex;
+end;
+
+procedure TPreviewCommand.SelectParent;
+var
+  Elements: TArray<TXamlElement>;
+  I: Integer;
+begin
+  if not Designing then Exit;
+  try
+    Elements := XamlElements(SourceText(FXamlPath));
+    I := SelectedIndex(Elements);
+    if I >= 0 then I := ParentElement(Elements, I);
+    if I >= 0 then SelectStructureElement(Elements[I], False);
+  except
+    on E: EXamlEdit do ; // unfinished XAML has no parents to go to
+  end;
+end;
+
+procedure TPreviewCommand.ReorderSelection(AToFront: Boolean);
+var
+  Xaml, Updated: string;
+  Elements: TArray<TXamlElement>;
+  Parent: TXamlElement;
+  I, J, Moved: Integer;
+begin
+  Xaml := SourceText(FXamlPath);
+  Elements := XamlElements(Xaml);
+  I := SelectedIndex(Elements);
+  if (I < 0) or not CanReorderElement(Xaml, Elements[I].Line, Elements[I].Column, AToFront) then Exit;
+  Parent := Elements[Elements[I].ParentIndex];
+  Updated := ReorderElement(Xaml, Elements[I].Line, Elements[I].Column, AToFront);
+  ApplyText(FXamlPath, Xaml, Updated);
+  // The parent did not move, the element is now its first or last child
+  Elements := XamlElements(Updated);
+  Moved := -1;
+  for I := 0 to High(Elements) do
+    if (Elements[I].Line = Parent.Line) and (Elements[I].Column = Parent.Column) then
+      for J := 0 to High(Elements) do
+        if (Elements[J].ParentIndex = I) and not Elements[J].Tag.Contains('.') and ((Moved < 0) or AToFront) then
+          Moved := J;
+  SyncCode(True);
+  // The preview loads the new text before it selects in it
+  if FClient <> nil then FClient.Tick(FXamlPath, Updated);
+  if Moved >= 0 then SelectStructureElement(Elements[Moved], False);
+  SyncStructure;
+end;
+
+/// Add Row, Add Column or Add Item on the selected element, one undoable change.
+procedure TPreviewCommand.EditSelection(ACommand: Integer);
+var
+  Xaml, Updated: string;
+  Elements: TArray<TXamlElement>;
+  I: Integer;
+begin
+  Xaml := SourceText(FXamlPath);
+  Elements := XamlElements(Xaml);
+  I := SelectedIndex(Elements);
+  if I < 0 then Exit;
+  case ACommand of
+    cmAddRow: Updated := AddGridTrack(Xaml, Elements[I].Line, Elements[I].Column, False);
+    cmAddColumn: Updated := AddGridTrack(Xaml, Elements[I].Line, Elements[I].Column, True);
+    cmAddItem: Updated := AddItem(Xaml, Elements[I].Line, Elements[I].Column);
+  else
+    Exit;
+  end;
+  ApplyText(FXamlPath, Xaml, Updated);
+  SyncCode(True);
+  SyncStructure;
+  FInspectorDirty := True;
+end;
+
+/// The XAML code at the selected element's start tag.
+procedure TPreviewCommand.ViewSelectionSource;
+var
+  Line, Column: Integer;
+begin
+  if not FileExists(FXamlPath) then Exit;
+  Line := 1;
+  Column := 1;
+  if SameText(FSelectionPath, FXamlPath) and (FSelection.Line > 0) then
+  begin
+    Line := FSelection.Line;
+    Column := FSelection.Column;
+  end;
+  if FDesignViewActive then ShowXamlCode;
+  GotoSource(FXamlPath, Line, Column);
+end;
+
+/// The docked preview Split View opened shows the window next to its code.
+function TPreviewCommand.SplitActive: Boolean;
+begin
+  Result := FSplitView and not FDesignViewActive and (FClient <> nil) and FDocked and
+    (FPreviewSurface <> nil) and FPreviewSurface.HandleAllocated and (FParentWindow = FPreviewSurface.Handle) and
+    (FPreviewDockForm <> nil) and FPreviewDockForm.Visible;
+end;
+
+/// The preview edits the XAML: in Design, or in Split View next to the code.
+function TPreviewCommand.Designing: Boolean;
+begin
+  Result := FDesignViewActive or SplitActive;
+end;
+
+procedure TPreviewCommand.ToggleSplitView;
+var
+  Path: string;
+begin
+  Path := FXamlPath;
+  if SplitActive then
+  begin
+    Log('Split View off: ' + Path);
+    FSplitView := False;
+    FPreviewFocused := False;
+    Stop;
+    if (FPreviewDockForm <> nil) and FPreviewDockForm.Visible then
+      FPreviewDockForm.Close;
+    ShowDesignForFile(Path);
+    Exit;
+  end;
+  if not FDesignViewActive or not FileExists(Path) then Exit;
+  Log('Split View on: ' + Path);
+  FSplitView := True;
+  ShowXamlCode;
+  // Once the editor shows Code: the renderer moves from the Design frame to the docked preview
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      if (Command <> Self) or not FSplitView then Exit;
+      if FDesignViewActive or not SameText(FindXaml, Path) then
+      begin
+        FSplitView := False;
+        Exit;
+      end;
+      RunPreview(True);
+      if SameText(FSelectionPath, Path) and (FSelection.Line > 0) then
+        GotoSource(Path, FSelection.Line, FSelection.Column);
+    end);
+end;
+
+function TPreviewCommand.AddContextItem(AParent: TMenuItem; const ACaption: string; ACommand: Integer;
+  AEnabled: Boolean; AShortCut: TShortCut): TMenuItem;
+begin
+  Result := TMenuItem.Create(FContextMenu);
+  Result.Caption := ACaption;
+  Result.Tag := ACommand;
+  Result.Enabled := AEnabled;
+  Result.ShortCut := AShortCut; // shown only: the keys reach the designer, not this menu
+  if ACommand <> 0 then Result.OnClick := ContextClick;
+  AParent.Add(Result);
+end;
+
+/// Whether AEdit makes a change rather than raising EXamlEdit.
+function Applies(const AEdit: TFunc<string>): Boolean;
+begin
+  try
+    AEdit;
+    Result := True;
+  except
+    on EXamlEdit do Result := False;
+  end;
+end;
+
+/// The group of the right-clicked element's own commands, under its name. Nothing when it has none.
+procedure TPreviewCommand.AddControlItems(const AXaml: string; const AElements: TArray<TXamlElement>;
+  AIndex: Integer);
+var
+  Items, Orientation: TMenuItem;
+  Element: TXamlElement;
+  Event, Handler, Value, Name: string;
+  Props: TArray<TDesignerProperty>;
+  Prop: TDesignerProperty;
+  First, Count, I: Integer;
+  HasChildren: Boolean;
+begin
+  Items := FContextMenu.Items;
+  Element := AElements[AIndex];
+  First := Items.Count;
+  AddContextItem(Items, '-', 0, True);
+  AddContextItem(Items, Trim(Element.Tag + ' ' + Element.Name), 0, False);
+  Count := Items.Count;
+  Event := FIndex.DefaultEventOf(Element.Tag);
+  if Event <> '' then
+    if GetAttribute(AXaml, Element.Line, Element.Column, Event, Handler) and (Handler <> '') then
+      AddContextItem(Items, 'Go to ' + Handler, cmEvent, True)
+    else
+      AddContextItem(Items, 'Create ' + Event + ' Handler', cmEvent, True);
+  if Element.Tag = 'Grid' then
+  begin
+    AddContextItem(Items, 'Add Row', cmAddRow, Applies(
+      function: string
+      begin
+        Result := AddGridTrack(AXaml, Element.Line, Element.Column, False);
+      end));
+    AddContextItem(Items, 'Add Column', cmAddColumn, Applies(
+      function: string
+      begin
+        Result := AddGridTrack(AXaml, Element.Line, Element.Column, True);
+      end));
+  end;
+  if Element.Tag = 'StackPanel' then
+  begin
+    if not GetAttribute(AXaml, Element.Line, Element.Column, 'Orientation', Value) then
+      Value := 'Vertical';
+    Orientation := AddContextItem(Items, 'Orientation', 0, True);
+    AddContextItem(Orientation, 'Horizontal', cmHorizontal, True).Checked := SameText(Value, 'Horizontal');
+    AddContextItem(Orientation, 'Vertical', cmVertical, True).Checked := SameText(Value, 'Vertical');
+    for I := 0 to Orientation.Count - 1 do
+    begin
+      Orientation[I].RadioItem := True;
+      Orientation[I].GroupIndex := 1;
+    end;
+  end;
+  if ItemTagOf(Element.Tag) <> '' then
+    AddContextItem(Items, 'Add ' + ItemTagOf(Element.Tag), cmAddItem, Applies(
+      function: string
+      begin
+        Result := AddItem(AXaml, Element.Line, Element.Column);
+      end));
+  Props := FIndex.PropertiesOf(Element.Tag);
+  for Prop in Props do
+    if Prop.Kind = 'tabitems' then
+    begin
+      FContextProperty := Prop.Name;
+      AddContextItem(Items, 'Edit Items...', cmEditItems, True);
+    end;
+  // Text or Content as an attribute only while the element has no content of its own
+  HasChildren := False;
+  for I := 0 to High(AElements) do
+    if (AElements[I].ParentIndex = AIndex) and not AElements[I].Tag.Contains('.') then
+      HasChildren := True;
+  for Name in ['Text', 'Content', 'Header', 'Title'] do
+    if (FContextProperty = '') and (not HasChildren or (Name = 'Header') or (Name = 'Title')) then
+      for Prop in Props do
+        if Prop.Name = Name then
+        begin
+          FContextProperty := Name;
+          AddContextItem(Items, 'Edit ' + Name + '...', cmEditText, True);
+          Break;
+        end;
+  if Items.Count = Count then
+    while Items.Count > First do
+      Items[Items.Count - 1].Free;
+end;
+
+procedure TPreviewCommand.ShowContextMenu(AX, AY: Integer; AHit: Boolean);
+var
+  Xaml: string;
+  Elements: TArray<TXamlElement>;
+  State: TEditState;
+  I: Integer;
+  Items: TMenuItem;
+begin
+  if not Designing or (Application.ModalLevel <> 0) then Exit;
+  try
+    if FInspector <> nil then FInspector.Commit;
+    if FIndex = nil then
+      FIndex := TDesignerTypeIndex.Create(TPath.Combine(RootFolder, 'src\Generated\RADWinUI.Xaml.json'));
+    Xaml := SourceText(FXamlPath);
+    try
+      Elements := XamlElements(Xaml);
+    except
+      on EXamlEdit do Elements := nil; // unfinished XAML: only the commands that need no structure
+    end;
+    // Beside every element: the window itself
+    if not AHit and (Length(Elements) > 0) then
+      SelectStructureElement(Elements[0], False);
+    I := SelectedIndex(Elements);
+    State := DesignEditState;
+    if FContextMenu = nil then
+    begin
+      FContextMenu := TPopupMenu.Create(nil);
+      FContextMenu.AutoHotkeys := maManual;
+    end;
+    FContextMenu.Items.Clear;
+    FContextProperty := '';
+    Items := FContextMenu.Items;
+    AddContextItem(Items, '&Undo', cmUndo, esCanUndo in State, ShortCut(Ord('Z'), [ssCtrl]));
+    AddContextItem(Items, '&Redo', cmRedo, esCanRedo in State, ShortCut(Ord('Y'), [ssCtrl]));
+    AddContextItem(Items, '-', 0, True);
+    AddContextItem(Items, 'Cu&t', cmCut, (esCanCopy in State) and (esCanCut in State), ShortCut(Ord('X'), [ssCtrl]));
+    AddContextItem(Items, '&Copy', cmCopy, esCanCopy in State, ShortCut(Ord('C'), [ssCtrl]));
+    AddContextItem(Items, '&Paste', cmPaste, esCanPaste in State, ShortCut(Ord('V'), [ssCtrl]));
+    AddContextItem(Items, '&Delete', cmDelete, esCanDelete in State, ShortCut(VK_DELETE, []));
+    AddContextItem(Items, '-', 0, True);
+    AddContextItem(Items, 'Select P&arent', cmSelectParent, (I >= 0) and (ParentElement(Elements, I) >= 0),
+      ShortCut(VK_ESCAPE, []));
+    AddContextItem(Items, 'Bring to &Front', cmFront, (I >= 0) and
+      CanReorderElement(Xaml, Elements[I].Line, Elements[I].Column, True));
+    AddContextItem(Items, 'Send to &Back', cmBack, (I >= 0) and
+      CanReorderElement(Xaml, Elements[I].Line, Elements[I].Column, False));
+    AddContextItem(Items, '-', 0, True);
+    AddContextItem(Items, '&View Source', cmViewSource, True, ShortCut(VK_F12, []));
+    AddContextItem(Items, '&Split View', cmSplit, True).Checked := SplitActive;
+    if I >= 0 then AddControlItems(Xaml, Elements, I);
+    FContextMenu.Popup(AX, AY);
+  except
+    on E: Exception do Log('designer menu: ' + E.ClassName + ': ' + E.Message);
+  end;
+end;
+
+procedure TPreviewCommand.ContextClick(Sender: TObject);
+var
+  Xaml, Value: string;
+begin
+  if not Designing then Exit;
+  try
+    case (Sender as TMenuItem).Tag of
+      cmUndo: UndoDesigner(False);
+      cmRedo: UndoDesigner(True);
+      cmCut: CutSelection;
+      cmCopy: CopySelection;
+      cmPaste: PasteSelection;
+      cmDelete: DeleteSelection;
+      cmSelectParent: SelectParent;
+      cmFront: ReorderSelection(True);
+      cmBack: ReorderSelection(False);
+      cmViewSource: ViewSelectionSource;
+      cmSplit: ToggleSplitView;
+      cmEvent: EventHandler(FIndex.DefaultEventOf(FSelection.Tag), '');
+      cmAddRow, cmAddColumn, cmAddItem: EditSelection((Sender as TMenuItem).Tag);
+      cmHorizontal: PropertyChange('Orientation', 'Horizontal');
+      cmVertical: PropertyChange('Orientation', 'Vertical');
+      cmEditItems, cmEditText:
+        begin
+          Xaml := SourceText(FXamlPath);
+          GetAttribute(Xaml, FSelection.Line, FSelection.Column, AttributeOf(FContextProperty), Value);
+          if (Sender as TMenuItem).Tag = cmEditItems then
+          begin
+            if EditTabItems(Value) then PropertyChange(FContextProperty, Value);
+          end
+          else if AskText('RADWinUI', FContextProperty + ' of ' + Trim(FSelection.Tag + ' ' + FSelection.Name) + ':',
+            Value) then
+            PropertyChange(FContextProperty, Value);
+        end;
+    end;
+  except
+    on E: Exception do
+      ThemedMessageDlg('RADWinUI: ' + E.Message, mtWarning, [mbOK]);
   end;
 end;
 
 procedure TPreviewCommand.DesignKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
+var
+  Reply: string;
+  Step, DX, DY: Integer;
 begin
   if (Key = VK_F12) and (Shift = []) then
     ShowXamlCode
+  else if ((Key = VK_APPS) and (Shift = [])) or ((Key = VK_F10) and (Shift = [ssShift])) then
+    ShowContextMenu(FDesignSurface.ClientOrigin.X + 8, FDesignSurface.ClientOrigin.Y + 8, True)
+  else if (Key = VK_ESCAPE) and (Shift = []) then
+    SelectParent
+  else if (Key in [VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN]) and ((Shift = [ssCtrl]) or (Shift = [ssCtrl, ssShift])) then
+  begin
+    // The host knows where the element is: it sends the NUDGE
+    Step := 1;
+    if ssShift in Shift then Step := 8;
+    DX := 0;
+    DY := 0;
+    case Key of
+      VK_LEFT: DX := -Step;
+      VK_RIGHT: DX := Step;
+      VK_UP: DY := -Step;
+      VK_DOWN: DY := Step;
+    end;
+    if FClient <> nil then FClient.Request(Format('NUDGEKEY %d %d', [DX, DY]), Reply);
+  end
+  else if (Key = Ord('X')) and (Shift = [ssCtrl]) then
+    CutSelection
   else if (Key = Ord('C')) and (Shift = [ssCtrl]) then
     CopySelection
   else if (Key = Ord('V')) and (Shift = [ssCtrl]) then
@@ -2367,7 +2949,7 @@ begin
   if Result then
     FPreviewDockForm.Show
   else
-    MessageDlg('RADWinUI Docked Preview could not create its IDE panel.', mtError, [mbOK], 0);
+    ThemedMessageDlg('RADWinUI Docked Preview could not create its IDE panel.', mtError, [mbOK]);
 end;
 
 procedure TPreviewCommand.PreviewFrameCreated(AFrame: TCustomFrame);
@@ -2438,6 +3020,14 @@ begin
     Surface := TCustomFrame(AViewObject).FindComponent('RADWinUIDesignSurface') as TDesignPanel;
     if (FClient <> nil) and (not FDocked or (FParentWindow <> Surface.Handle)) then
       Stop;
+    // Design is back: the docked preview Split View opened goes, the renderer moved here
+    if FSplitView then
+    begin
+      FSplitView := False;
+      FPreviewFocused := False;
+      if (FPreviewDockForm <> nil) and FPreviewDockForm.Visible then
+        FPreviewDockForm.Close;
+    end;
     // Ignore input left over from the previous display before changing its source.
     if FClient <> nil then
     begin
@@ -2527,6 +3117,8 @@ begin
       FPreviewDockForm := nil;
     if FDocked and (FClient <> nil) then
       Stop;
+    if FSplitView and not FDesignViewActive then
+      EndSplitStructure;
   end;
 end;
 
@@ -2574,7 +3166,7 @@ begin
     FInspectorDirty := True;
   except
     on E: Exception do
-      MessageDlg('RADWinUI: ' + E.Message, mtWarning, [mbOK], 0);
+      ThemedMessageDlg('RADWinUI: ' + E.Message, mtWarning, [mbOK]);
   end;
 end;
 
@@ -2627,7 +3219,7 @@ begin
     on E: Exception do
     begin
       Log('event handler: ' + E.ClassName + ': ' + E.Message);
-      MessageDlg('RADWinUI: ' + E.Message, mtWarning, [mbOK], 0);
+      ThemedMessageDlg('RADWinUI: ' + E.Message, mtWarning, [mbOK]);
     end;
   end;
 end;
@@ -2643,7 +3235,7 @@ begin
     FInspectorDirty := True;
   except
     on E: Exception do
-      MessageDlg('RADWinUI: ' + E.Message, mtWarning, [mbOK], 0);
+      ThemedMessageDlg('RADWinUI: ' + E.Message, mtWarning, [mbOK]);
   end;
 end;
 

@@ -57,6 +57,7 @@
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
         <DCCReference Include="..\Designer\RADWinUI.Designer.Palette.pas"/>
+        <DCCReference Include="..\Designer\RADWinUI.Designer.Snap.pas"/>
         <DCCReference Include="RADWinUI.Preview.Host.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>

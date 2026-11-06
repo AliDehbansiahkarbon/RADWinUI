@@ -165,6 +165,9 @@ Designer, in the XAML editor's **Design** tab:
 | Drag from RADWinUI Components in the Tool Palette, or double-click an entry | inserts the control on the Design surface |
 | Drag the selected element | in a Grid or Canvas: moves it freely, its outline follows the pointer (Margin, or Canvas.Left/Top), in a StackPanel: reorders it at the blue line |
 | Delete / Ctrl+Z / Ctrl+Shift+Z | deletes the selected element / undoes / redoes a XAML edit |
+| Right-click an element | the designer's menu: edit commands, Select Parent, Bring to Front / Send to Back, View Source, Split View, and the element's own commands (event handler, Add Row/Column, Add item, Edit Text...) |
+| Esc | selects the parent of the selected element |
+| Ctrl+Arrow / Ctrl+Shift+Arrow | moves the selected element in a Grid or Canvas by 1 / 8 pixels, blue guides show alignment with its neighbours |
 
 Tools > RADWinUI Preview remains available as a separate rendering window. The integrated Design tab uses the native Tool Palette, Object Inspector and Structure view.
 

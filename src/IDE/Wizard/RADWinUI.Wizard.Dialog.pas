@@ -5,7 +5,7 @@ unit RADWinUI.Wizard.Dialog;
   form drawn with the IDE theme, so it matches the light and dark IDE styles.
   It shows what is wrong with the values while they are typed, and Create stays
   disabled until they can be used. The folder button opens the Windows folder
-  picker. Messages use a task dialog.
+  picker. Messages use the themed message box of RADWinUI.Designer.Dialogs.
 }
 
 interface
@@ -24,7 +24,7 @@ type
 function AskNewProject(var AName, ALocation: string; const AValidate: TWizardValidator): Boolean;
 /// <summary>Asks for a new window's unit name. False when cancelled.</summary>
 function AskNewWindow(var AUnitName: string; const AValidate: TWizardValidator): Boolean;
-/// <summary>A task dialog with a heading and a message, owned by the IDE window.</summary>
+/// <summary>A message with a heading, drawn with the IDE theme.</summary>
 procedure ShowWizardMessage(const ATitle, AHeading, AText: string; AWarning: Boolean);
 /// <summary>The folder AskNewProject offers first: the last one used, else Documents.</summary>
 function LastProjectFolder: string;
@@ -42,7 +42,8 @@ uses
   Vcl.StdCtrls,
   Vcl.Dialogs,
   Vcl.Themes,
-  ToolsAPI;
+  ToolsAPI,
+  RADWinUI.Designer.Dialogs;
 
 const
   SettingsValue = 'ProjectFolder';
@@ -340,24 +341,11 @@ begin
 end;
 
 procedure ShowWizardMessage(const ATitle, AHeading, AText: string; AWarning: Boolean);
-var
-  Dialog: TTaskDialog;
 begin
-  Dialog := TTaskDialog.Create(nil);
-  try
-    Dialog.Caption := ATitle;
-    Dialog.Title := AHeading;
-    Dialog.Text := AText;
-    Dialog.CommonButtons := [tcbOk];
-    if AWarning then
-      Dialog.MainIcon := tdiWarning
-    else
-      Dialog.MainIcon := tdiInformation;
-    Dialog.Flags := [tfPositionRelativeToWindow, tfAllowDialogCancellation];
-    Dialog.Execute(Application.ActiveFormHandle);
-  finally
-    Dialog.Free;
-  end;
+  if AWarning then
+    ThemedMessageDlg(AHeading + sLineBreak + sLineBreak + AText, mtWarning, [mbOK], ATitle)
+  else
+    ThemedMessageDlg(AHeading + sLineBreak + sLineBreak + AText, mtInformation, [mbOK], ATitle);
 end;
 
 end.

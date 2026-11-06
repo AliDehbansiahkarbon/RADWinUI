@@ -96,6 +96,39 @@ function ApplyDesignerEvent(AXaml: string; const AEvent: string): string;
 /// </summary>
 function PlaceElement(AXaml: string; ALine, ACol, APanelLine, APanelCol: Integer; const AKind: string;
   ARow, AColumn, ALeft, ATop: Integer): string;
+/// <summary>
+///   Whether ReorderElement moves the element at ALine:ACol: it has siblings in a panel
+///   (not the Window's content) and is not already last (AToFront) or first.
+/// </summary>
+function CanReorderElement(const AXaml: string; ALine, ACol: Integer; AToFront: Boolean): Boolean;
+/// <summary>
+///   AXaml with the element at ALine:ACol as the last child of its parent (AToFront: drawn
+///   on top of its siblings) or the first. Grid.Row, Grid.Column and the rest stay as they are.
+/// </summary>
+function ReorderElement(AXaml: string; ALine, ACol: Integer; AToFront: Boolean): string;
+/// <summary>
+///   AXaml with one more star row (AColumn False) or column in the Grid at ALine:ACol. A Grid
+///   without definitions gets two, the first one is the row or column it had implicitly.
+/// </summary>
+function AddGridTrack(AXaml: string; ALine, ACol: Integer; AColumn: Boolean): string;
+/// <summary>The item element of an items control (TabViewItem for TabView), '' when ATag has none.</summary>
+function ItemTagOf(const ATag: string): string;
+/// <summary>
+///   AXaml with one more item in the items control at ALine:ACol, labeled after the items it
+///   has ("Tab 3"). Raises EXamlEdit when its items come from an ItemsSource.
+/// </summary>
+function AddItem(AXaml: string; ALine, ACol: Integer): string;
+/// <summary>
+///   Whether NudgeElement can place the element at ALine:ACol: a child of a Canvas, or of a
+///   Grid that Align does not lay out. The Window's content and other panels' children cannot.
+/// </summary>
+function CanNudgeElement(const AXaml: string; ALine, ACol: Integer): Boolean;
+/// <summary>
+///   AXaml with the element at ALine:ACol at ALeft, ATop (DIPs) in its parent, like a free
+///   move: Canvas.Left and Canvas.Top in a Canvas, Margin with Left/Top alignment in a Grid
+///   (its row and column stay). Raises EXamlEdit where CanNudgeElement is False.
+/// </summary>
+function NudgeElement(AXaml: string; ALine, ACol, ALeft, ATop: Integer): string;
 
 implementation
 
@@ -934,6 +967,207 @@ begin
   if Panel > From then
     Dec(Panel, Count);
   Result := InsertChildAt(Result, Panel, MaxInt, Snippet);
+end;
+
+/// The index in AElements of the element whose start tag is at ALine:ACol.
+function ElementIndexAt(const AElements: TArray<TXamlElement>; ALine, ACol: Integer): Integer;
+begin
+  for Result := 0 to High(AElements) do
+    if (AElements[Result].Line = ALine) and (AElements[Result].Column = ACol) then
+      Exit;
+  raise EXamlEdit.CreateFmt('No element at line %d, column %d', [ALine, ACol]);
+end;
+
+function CanReorderElement(const AXaml: string; ALine, ACol: Integer; AToFront: Boolean): Boolean;
+var
+  Elements: TArray<TXamlElement>;
+  Children: TArray<TRange>;
+  Child: TRange;
+  I, ContentEnd, Target: Integer;
+begin
+  Elements := XamlElements(AXaml);
+  I := ElementIndexAt(Elements, ALine, ACol);
+  if Elements[I].DesignOnly or (Elements[I].ParentIndex < 0) or
+    (Elements[Elements[I].ParentIndex].Tag = 'Window') then
+    Exit(False);
+  Children := ChildrenOf(AXaml, Elements[Elements[I].ParentIndex].Start, ContentEnd);
+  if Length(Children) < 2 then
+    Exit(False);
+  if AToFront then
+    Target := Children[High(Children)].Start
+  else
+    Target := Children[0].Start;
+  Result := False;
+  for Child in Children do
+    if Child.Start = Elements[I].Start then
+      Exit(Target <> Elements[I].Start);
+end;
+
+function ReorderElement(AXaml: string; ALine, ACol: Integer; AToFront: Boolean): string;
+var
+  Elements: TArray<TXamlElement>;
+  Element: TRange;
+  I, From, Count: Integer;
+  Snippet: string;
+begin
+  if not CanReorderElement(AXaml, ALine, ACol, AToFront) then
+    Exit(AXaml);
+  Elements := XamlElements(AXaml);
+  I := ElementIndexAt(Elements, ALine, ACol);
+  Element := ElementAt(AXaml, Elements[I].Start);
+  Snippet := Copy(AXaml, Element.Start, Element.Stop - Element.Start);
+  // The parent starts before the element: removing the element does not move it
+  Result := RemoveRange(AXaml, Element, From, Count);
+  if AToFront then
+    Result := InsertChildAt(Result, Elements[Elements[I].ParentIndex].Start, MaxInt, Snippet)
+  else
+    Result := InsertChildAt(Result, Elements[Elements[I].ParentIndex].Start, 0, Snippet);
+end;
+
+/// Whether Align writes the rows and columns of AGrid (its RADWinUI Align block).
+function AlignLaysOut(const AXaml: string; const AGrid: TXamlElement): Boolean;
+begin
+  Result := (AGrid.Tag = 'Grid') and
+    TRegEx.IsMatch(AXaml.Substring(AGrid.TagEnd - 1), '^\s*<!-- RADWinUI Align: begin -->');
+end;
+
+function CanNudgeElement(const AXaml: string; ALine, ACol: Integer): Boolean;
+var
+  Elements: TArray<TXamlElement>;
+  I, Parent: Integer;
+begin
+  Elements := XamlElements(AXaml);
+  I := ElementIndexAt(Elements, ALine, ACol);
+  Parent := Elements[I].ParentIndex;
+  Result := not Elements[I].DesignOnly and (Parent >= 0) and
+    ((Elements[Parent].Tag = 'Canvas') or ((Elements[Parent].Tag = 'Grid') and not AlignLaysOut(AXaml, Elements[Parent])));
+end;
+
+function NudgeElement(AXaml: string; ALine, ACol, ALeft, ATop: Integer): string;
+var
+  Elements: TArray<TXamlElement>;
+begin
+  if not CanNudgeElement(AXaml, ALine, ACol) then
+    raise EXamlEdit.Create('Its parent lays this element out, it cannot be moved freely');
+  Elements := XamlElements(AXaml);
+  if Elements[Elements[ElementIndexAt(Elements, ALine, ACol)].ParentIndex].Tag = 'Canvas' then
+  begin
+    Result := SetAttribute(AXaml, ALine, ACol, 'Canvas.Left', IntToStr(ALeft));
+    Exit(SetAttribute(Result, ALine, ACol, 'Canvas.Top', IntToStr(ATop)));
+  end;
+  Result := SetAttribute(AXaml, ALine, ACol, 'HorizontalAlignment', 'Left');
+  Result := SetAttribute(Result, ALine, ACol, 'VerticalAlignment', 'Top');
+  Result := SetAttribute(Result, ALine, ACol, 'Margin', Format('%d,%d,0,0', [ALeft, ATop]));
+end;
+
+function AddGridTrack(AXaml: string; ALine, ACol: Integer; AColumn: Boolean): string;
+const
+  Definitions: array[Boolean] of string = ('Grid.RowDefinitions', 'Grid.ColumnDefinitions');
+  Tracks: array[Boolean] of string = ('<RowDefinition Height="*"/>', '<ColumnDefinition Width="*"/>');
+var
+  Elements: TArray<TXamlElement>;
+  I, J, ContentEnd: Integer;
+  NL, Indent: string;
+begin
+  Elements := XamlElements(AXaml);
+  I := ElementIndexAt(Elements, ALine, ACol);
+  if Elements[I].Tag <> 'Grid' then
+    raise EXamlEdit.Create('Rows and columns belong to a Grid');
+  if AlignLaysOut(AXaml, Elements[I]) then
+    raise EXamlEdit.Create('Align lays out the rows and columns of this Grid. Use a nested Grid for your own.');
+  for J := 0 to High(Elements) do
+    if (Elements[J].ParentIndex = I) and (Elements[J].Tag = Definitions[AColumn]) then
+    begin
+      Result := InsertChildAt(AXaml, Elements[J].Start, MaxInt, Tracks[AColumn]);
+      // Empty definitions still make one implicit track: it gets written out too
+      if ChildrenOf(AXaml, Elements[J].Start, ContentEnd) = nil then
+        Result := InsertChildAt(Result, Elements[J].Start, MaxInt, Tracks[AColumn]);
+      Exit;
+    end;
+  NL := LineBreak(AXaml);
+  Indent := IndentAt(AXaml, Elements[I].Start) + '    ';
+  Result := InsertChildAt(AXaml, Elements[I].Start, 0, '<' + Definitions[AColumn] + '>' +
+    NL + Indent + '    ' + Tracks[AColumn] + NL + Indent + '    ' + Tracks[AColumn] +
+    NL + Indent + '</' + Definitions[AColumn] + '>');
+end;
+
+type
+  TItemsKind = record
+    Control, Items, Item, Attribute, Text: string;
+  end;
+
+const
+  ItemsKinds: array[0..8] of TItemsKind = (
+    (Control: 'TabView'; Items: 'TabItems'; Item: 'TabViewItem'; Attribute: 'Header'; Text: 'Tab'),
+    (Control: 'NavigationView'; Items: 'MenuItems'; Item: 'NavigationViewItem'; Attribute: 'Content'; Text: 'Item'),
+    (Control: 'ListView'; Items: 'Items'; Item: 'ListViewItem'; Attribute: 'Content'; Text: 'Item'),
+    (Control: 'GridView'; Items: 'Items'; Item: 'GridViewItem'; Attribute: 'Content'; Text: 'Item'),
+    (Control: 'ListBox'; Items: 'Items'; Item: 'ListBoxItem'; Attribute: 'Content'; Text: 'Item'),
+    (Control: 'ComboBox'; Items: 'Items'; Item: 'ComboBoxItem'; Attribute: 'Content'; Text: 'Item'),
+    (Control: 'MenuBar'; Items: 'Items'; Item: 'MenuBarItem'; Attribute: 'Title'; Text: 'Menu'),
+    (Control: 'RadioButtons'; Items: 'Items'; Item: 'RadioButton'; Attribute: 'Content'; Text: 'Option'),
+    (Control: 'Pivot'; Items: 'Items'; Item: 'PivotItem'; Attribute: 'Header'; Text: 'Item'));
+
+function ItemsKindOf(const ATag: string; out AKind: TItemsKind): Boolean;
+var
+  Kind: TItemsKind;
+begin
+  for Kind in ItemsKinds do
+    if Kind.Control = ATag then
+    begin
+      AKind := Kind;
+      Exit(True);
+    end;
+  Result := False;
+end;
+
+function ItemTagOf(const ATag: string): string;
+var
+  Kind: TItemsKind;
+begin
+  if ItemsKindOf(ATag, Kind) then
+    Result := Kind.Item
+  else
+    Result := '';
+end;
+
+function AddItem(AXaml: string; ALine, ACol: Integer): string;
+var
+  Elements: TArray<TXamlElement>;
+  Kind: TItemsKind;
+  I, J, Items, Count: Integer;
+  Source, Value, NL, Indent, Item, Holder: string;
+begin
+  Elements := XamlElements(AXaml);
+  I := ElementIndexAt(Elements, ALine, ACol);
+  if not ItemsKindOf(Elements[I].Tag, Kind) then
+    raise EXamlEdit.CreateFmt('%s has no items to add to', [Elements[I].Tag]);
+  for Source in TArray<string>.Create('ItemsSource', Kind.Items + 'Source') do
+    if GetAttribute(AXaml, ALine, ACol, Source, Value) then
+      raise EXamlEdit.CreateFmt('The items of this %s come from its %s', [Kind.Control, Source]);
+  // Items are children of the control or of its items property element
+  Holder := Kind.Control + '.' + Kind.Items;
+  Items := -1;
+  Count := 0;
+  for J := 0 to High(Elements) do
+    if Elements[J].DesignOnly then
+      Continue
+    else if (Elements[J].ParentIndex = I) and (Elements[J].Tag = Holder) then
+      Items := J
+    else if (Elements[J].Tag = Kind.Item) and ((Elements[J].ParentIndex = I) or
+      ((Elements[J].ParentIndex >= 0) and (Elements[Elements[J].ParentIndex].ParentIndex = I) and
+      (Elements[Elements[J].ParentIndex].Tag = Holder))) then
+      Inc(Count);
+  Item := '<' + Kind.Item + ' ' + Kind.Attribute + '="' + Kind.Text + ' ' + IntToStr(Count + 1) + '"/>';
+  if Items >= 0 then
+    Exit(InsertChildAt(AXaml, Elements[Items].Start, MaxInt, Item));
+  // Items and TabItems are content properties, a NavigationView's content is its page
+  if Kind.Control <> 'NavigationView' then
+    Exit(InsertChildAt(AXaml, Elements[I].Start, MaxInt, Item));
+  NL := LineBreak(AXaml);
+  Indent := IndentAt(AXaml, Elements[I].Start) + '    ';
+  Result := InsertChildAt(AXaml, Elements[I].Start, 0, '<' + Holder + '>' + NL + Indent + '    ' + Item +
+    NL + Indent + '</' + Holder + '>');
 end;
 
 function ApplyDesignerEvent(AXaml: string; const AEvent: string): string;
