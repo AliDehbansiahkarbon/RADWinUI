@@ -149,6 +149,11 @@ type
     destructor Destroy; override;
     /// <summary>The listeners of the event AName (XAML wiring of the short handler form).</summary>
     function EventByName(const AName: string): TWinUIEvent<TWinValue>;
+    /// <summary>
+    ///   The window whose XAML created the control, or the last owner of one
+    ///   created in Pascal. nil when there is none.
+    /// </summary>
+    function OwnerWindow: TObject;
   end;
   {$M-}
 
@@ -797,6 +802,24 @@ begin
     if SameText(CustomType.Events[I], AName) then
       Exit(GetEvent(I));
   raise EArgumentException.CreateFmt('%s has no event %s', [ClassName, AName]);
+end;
+
+function TWinUICustomControl.OwnerWindow: TObject;
+var
+  Next: TWinUIObject;
+begin
+  Result := nil;
+  if FHost <> nil then
+    Result := TWinUIControlHost(FHost).FOwnerWindow;
+  if Result = nil then
+  begin
+    Next := Owner;
+    while Next <> nil do
+    begin
+      Result := Next;
+      Next := Next.Owner;
+    end;
+  end;
 end;
 
 function TWinUICustomControl.GetHandler(AIndex: Integer): TWinUIWinValueEventHandler;

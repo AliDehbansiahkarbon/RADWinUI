@@ -44,6 +44,8 @@ var
   CustomXamlLoadOwner: TObject;
   /// <summary>Frees the Delphi XAML elements a window loaded, when the window is destroyed.</summary>
   CustomXamlOwnerGone: procedure(AOwner: TObject);
+  /// <summary>True in the XAML designer's host, where controls have no data or system to talk to.</summary>
+  CustomXamlDesignTime: Boolean;
 
 type
   TWinUIApplication = class;

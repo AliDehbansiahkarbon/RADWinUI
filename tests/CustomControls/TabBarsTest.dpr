@@ -24,7 +24,8 @@ uses
   RADWinUI.TabBarIcons,
   RADWinUI.TabBars,
   // The type index it compares lists every own control
-  RADWinUI.ActionButtons;
+  RADWinUI.ActionButtons,
+  RADWinUI.DBControls;
 
 type
   TTestWindow = class(TWinUIWindow)

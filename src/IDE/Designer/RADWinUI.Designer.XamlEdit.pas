@@ -900,6 +900,19 @@ begin
     Result := '<rw:ShineButton Text="Upgrade to Pro"'
   else if Tag = 'rw:SlideButton' then
     Result := '<rw:SlideButton Text="Slide to confirm"'
+  // The data controls with their link written out, to fill in from the Object Inspector
+  else if Tag = 'rw:DBNavigator' then
+    Result := '<rw:DBNavigator DataSource=""'
+  else if Tag = 'rw:DBGrid' then
+    Result := '<rw:DBGrid DataSource="" Columns=""'
+  else if Tag = 'rw:DBCtrlGrid' then
+    Result := '<rw:DBCtrlGrid DataSource=""'
+  else if Tag = 'rw:DBCheckBox' then
+    Result := '<rw:DBCheckBox DataSource="" DataField="" Text="DBCheckBox"'
+  else if (Tag = 'rw:DBLookupComboBox') or (Tag = 'rw:DBLookupListBox') then
+    Result := '<' + Tag + ' DataSource="" DataField="" ListSource="" KeyField="" ListField=""'
+  else if Tag.StartsWith('rw:DB') then
+    Result := '<' + Tag + ' DataSource="" DataField=""'
   else if ATag = 'Button' then
     Result := '<Button Content="Button"'
   else if ATag = 'TextBlock' then

@@ -23,7 +23,8 @@ uses
   RADWinUI.Controls,
   // The type index it compares lists every own control
   RADWinUI.TabBars,
-  RADWinUI.ActionButtons;
+  RADWinUI.ActionButtons,
+  RADWinUI.DBControls;
 
 type
   TTestWindow = class(TWinUIWindow)

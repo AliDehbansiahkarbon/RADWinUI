@@ -22,7 +22,8 @@ uses
   RADWinUI.CustomControls,
   RADWinUI.Controls,
   RADWinUI.TabBars,
-  RADWinUI.ActionButtons;
+  RADWinUI.ActionButtons,
+  RADWinUI.DBControls;
 
 type
   TTestWindow = class(TWinUIWindow)

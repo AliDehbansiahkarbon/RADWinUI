@@ -2,7 +2,7 @@
 
 RADWinUI controls do not have to come from WinUI. A class derived from `TWinUICustomControl` (unit `RADWinUI.CustomControls`) is a real XAML element: XAML creates it, its properties are dependency properties, so bindings, styles and animations work on them, and Pascal sees the same object through `FindElement`.
 
-RADWinUI's own controls are built this way. They are in `RADWinUI.Controls`, `RADWinUI.TabBars` and `RADWinUI.ActionButtons`, and on the Tool Palette in the Overlay, Tab Bars and Action Buttons categories.
+RADWinUI's own controls are built this way. They are in `RADWinUI.Controls`, `RADWinUI.TabBars`, `RADWinUI.ActionButtons` and `RADWinUI.DBControls`, and on the Tool Palette in the Overlay, Tab Bars, Action Buttons and Data Controls categories.
 
 ## Using them in XAML
 
@@ -106,6 +106,62 @@ They all have these properties:
 
 Enter and Space work like a click, or like holding for the Hold button. The Slide button slides by itself on Enter or Space. `Play` runs a button's effect from code and `Reset` puts it back without animation. The confetti, the plane and the Copy tooltip go beyond the button's edges, so leave some space around them.
 
+## The data controls
+
+Seventeen data-aware controls in the Data Controls category. They work like the VCL's Data Controls: each one is bound to a `TDataSource` of `Data.DB`, shows the current record and writes the user's changes back. Any dataset works, such as FireDAC or `TClientDataSet`.
+
+```xml
+<rw:DBNavigator DataSource="CustomersSource" VisibleButtons="First, Prior, Next, Last, Post, Cancel"/>
+<rw:DBGrid DataSource="CustomersSource" Columns="Name:180, City, Balance:110" Height="300"/>
+<rw:DBEdit DataSource="CustomersSource" DataField="Name" Header="Name"/>
+<rw:DBLookupComboBox DataSource="CustomersSource" DataField="CountryID"
+                     ListSource="CountriesSource" KeyField="ID" ListField="CountryName" Header="Country"/>
+```
+
+`DataSource` in XAML is the name of a `TDataSource`. The control looks for it first among the published fields and properties of the window, then among the components of every data module the program has created, oldest first. `Module.Source` names the data module too. Create the data module before the window, so the window finds its data sources. `TWinUIDataSources.AddModule` lets the controls look into other owners of data components as well. In Pascal, the `DataSource` property takes the `TDataSource` itself, as in the VCL, and wins over the name in XAML:
+
+```pascal
+NameEdit.DataSource := CustomerData.CustomersSource;
+```
+
+They all have these properties:
+
+| Property | Meaning |
+| --- | --- |
+| `DataSource` | The name of the `TDataSource`. |
+| `DataField` | The field the control shows and edits. The grids and the navigator have none. |
+| `ReadOnly` | The user cannot change the value. A field or dataset that cannot be changed makes the control read-only as well. |
+
+Editing works like the VCL. Typing in a control or picking a value puts the dataset into Edit. The value goes into the field when the control loses the focus, and the record is written on `Post`. In a DBEdit, Enter writes the field and Esc puts the field's value back. A DBMemo takes Enter for a new line. The navigator's Post and Cancel buttons post or cancel the record, and moving to another row of a grid posts it. Errors of the dataset, such as a failed validation, are reported like other errors.
+
+| Control | Like | Own properties |
+| --- | --- | --- |
+| `TWinUIDBGrid` | `TDBGrid` | `Columns`: the fields and their widths, `Field:Width, Field`, empty for every visible field. `ReadOnly` (False): the cells can be edited unless it is set. `SortOnHeaderClick` (True): a click on a header sorts datasets that have `IndexFieldNames`, such as FireDAC and `TClientDataSet`, and a second click sorts FireDAC down. `RowHeight` (36). |
+| `TWinUIDBNavigator` | `TDBNavigator` | `VisibleButtons`: the buttons shown, separated by commas, from First, Prior, Next, Last, Insert, Delete, Edit, Post, Cancel and Refresh, empty for all. `ConfirmDelete` (True): Delete asks first in a flyout. The `Click` event, `ClickedButton` tells which button. `BtnClick` does what a button does from code. |
+| `TWinUIDBText` | `TDBText` | `WordWrap` (False). |
+| `TWinUIDBEdit` | `TDBEdit` | `Header`, `PlaceholderText`. |
+| `TWinUIDBMemo` | `TDBMemo` | `Header`, `PlaceholderText`. Several lines of text. |
+| `TWinUIDBImage` | `TDBImage` | `Stretch` (Uniform): None, Fill, Uniform or UniformToFill. Shows a PNG, JPEG, BMP or GIF from a BLOB field. `LoadFromFile` puts a picture into the field from code. |
+| `TWinUIDBListBox` | `TDBListBox` | `Items`: the choices, separated by commas. |
+| `TWinUIDBComboBox` | `TDBComboBox` | `Items`, `Header`, `PlaceholderText`, `IsEditable` (False): the user can also type a value that is not in `Items`. |
+| `TWinUIDBCheckBox` | `TDBCheckBox` | `Text`, `ValueChecked` (True), `ValueUnchecked` (False). Several values can be separated by `;`, such as `Yes;Y`, and the first one is written. |
+| `TWinUIDBRadioGroup` | `TDBRadioGroup` | `Items`, `Values`: the value written for each item, separated by commas, the item's text when there are none. `Header`, `Columns` (1). |
+| `TWinUIDBLookupListBox` | `TDBLookupListBox` | `ListSource`, `KeyField`, `ListField`. |
+| `TWinUIDBLookupComboBox` | `TDBLookupComboBox` | `ListSource`, `KeyField`, `ListField`, `Header`, `PlaceholderText`. |
+| `TWinUIDBRichEdit` | `TDBRichEdit` | `Header`, `PlainText` (False): writes plain text instead of RTF. |
+| `TWinUIDBCtrlGrid` | `TDBCtrlGrid` | `ItemTemplate`: a `DataTemplate` for one record, whose bindings name fields, such as `{Binding Name}`. `Tiles` (False): puts the records side by side. `ReadOnly` (False). |
+| `TWinUIDBDatePicker` | WinUI's CalendarDatePicker | `Header`, `PlaceholderText`. |
+| `TWinUIDBNumberBox` | WinUI's NumberBox | `Header`, `PlaceholderText`, `SpinButtons` (True). |
+| `TWinUIDBToggleSwitch` | WinUI's ToggleSwitch | `Header`, `ValueChecked` (True), `ValueUnchecked` (False), as on the check box. |
+
+The lookups take their choices from the records of `ListSource`, a data source named like `DataSource`. They show `ListField` and write `KeyField` into `DataField`.
+
+```xml
+<rw:DBCtrlGrid DataSource="CustomersSource" Tiles="True" ItemTemplate="{StaticResource CustomerTile}" Height="160"/>
+```
+
+In the Object Inspector, `DataSource` and `ListSource` list the data sources, and `DataField`, `KeyField` and `ListField` list the fields of their datasets. The lists come from the `.dfm` files of the project's data modules and forms, so persistent fields and `FieldDefs` are there, but fields a query only makes when it opens are not. Any name can be typed. The Design view has no data: there each control shows its field names as placeholders.
+
 ## Writing your own
 
 ```pascal
@@ -163,4 +219,4 @@ The type index XamlCodeGen and the designer read is `src\Framework\RADWinUI.Cont
 
 Each element is a COM aggregate, the way C# and C++/WinRT build one: a Delphi outer object around WinUI's `ContentControl`. The application's `IXamlMetadataProvider` answers XAML's questions about `RADWinUI.Controls.*` types with the registered descriptions, and the dependency properties are registered with `DependencyProperty.Register` the first time a type is used.
 
-Tests: `tests\CustomControls\CustomControlTest` (every property kind, bindings both ways, template, events, creation from Pascal), `tests\CustomControls\OverlayControlsTest` (the Overlay controls) `tests\CustomControls\TabBarsTest` (the tab bars) and `tests\CustomControls\ActionButtonsTest` (the action buttons).
+Tests: `tests\CustomControls\CustomControlTest` (every property kind, bindings both ways, template, events, creation from Pascal), `tests\CustomControls\OverlayControlsTest` (the Overlay controls), `tests\CustomControls\TabBarsTest` (the tab bars), `tests\CustomControls\ActionButtonsTest` (the action buttons) and `tests\CustomControls\DBControlsTest` (the data controls).

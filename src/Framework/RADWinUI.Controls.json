@@ -111,6 +111,125 @@
 "props": {"Text": "string", "AccentFrom": "brush", "AccentTo": "brush", "DoneText": "string", "ResetAfter": "int", "Shimmer": "bool"},
 "unit": "RADWinUI.ActionButtons",
 "wrapper": "TWinUISlideButton"
+},
+"RADWinUI.Controls.DBGrid": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "Columns": "datafields", "ReadOnly": "bool", "SortOnHeaderClick": "bool", "RowHeight": "number"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBGrid"
+},
+"RADWinUI.Controls.DBNavigator": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Click": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"DataSource": "datasource", "VisibleButtons": "string", "ConfirmDelete": "bool"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBNavigator"
+},
+"RADWinUI.Controls.DBText": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "WordWrap": "bool"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBText"
+},
+"RADWinUI.Controls.DBEdit": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "Header": "string", "PlaceholderText": "string"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBEdit"
+},
+"RADWinUI.Controls.DBMemo": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "Header": "string", "PlaceholderText": "string"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBMemo"
+},
+"RADWinUI.Controls.DBImage": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "Stretch": "enum:None|Fill|Uniform|UniformToFill"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBImage"
+},
+"RADWinUI.Controls.DBListBox": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "Items": "string"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBListBox"
+},
+"RADWinUI.Controls.DBComboBox": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "Items": "string", "Header": "string", "PlaceholderText": "string", "IsEditable": "bool"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBComboBox"
+},
+"RADWinUI.Controls.DBCheckBox": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "Text": "string", "ValueChecked": "string", "ValueUnchecked": "string"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBCheckBox"
+},
+"RADWinUI.Controls.DBRadioGroup": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "Items": "string", "Values": "string", "Header": "string", "Columns": "int"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBRadioGroup"
+},
+"RADWinUI.Controls.DBLookupListBox": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "ListSource": "datasource", "KeyField": "listfield", "ListField": "listfield"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBLookupListBox"
+},
+"RADWinUI.Controls.DBLookupComboBox": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "ListSource": "datasource", "KeyField": "listfield", "ListField": "listfield", "Header": "string", "PlaceholderText": "string"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBLookupComboBox"
+},
+"RADWinUI.Controls.DBRichEdit": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "Header": "string", "PlainText": "bool"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBRichEdit"
+},
+"RADWinUI.Controls.DBCtrlGrid": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "ItemTemplate": "object", "Tiles": "bool", "ReadOnly": "bool"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBCtrlGrid"
+},
+"RADWinUI.Controls.DBDatePicker": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "Header": "string", "PlaceholderText": "string"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBDatePicker"
+},
+"RADWinUI.Controls.DBNumberBox": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "Header": "string", "PlaceholderText": "string", "SpinButtons": "bool"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBNumberBox"
+},
+"RADWinUI.Controls.DBToggleSwitch": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {},
+"props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "Header": "string", "ValueChecked": "string", "ValueUnchecked": "string"},
+"unit": "RADWinUI.DBControls",
+"wrapper": "TWinUIDBToggleSwitch"
 }
 },
 "namespace": "using:RADWinUI.Controls",
@@ -130,7 +249,24 @@
 {"category": "Action Buttons", "name": "ConfettiButton", "runtime": "RADWinUI.Controls.ConfettiButton"},
 {"category": "Action Buttons", "name": "CopyButton", "runtime": "RADWinUI.Controls.CopyButton"},
 {"category": "Action Buttons", "name": "ShineButton", "runtime": "RADWinUI.Controls.ShineButton"},
-{"category": "Action Buttons", "name": "SlideButton", "runtime": "RADWinUI.Controls.SlideButton"}
+{"category": "Action Buttons", "name": "SlideButton", "runtime": "RADWinUI.Controls.SlideButton"},
+{"category": "Data Controls", "name": "DBGrid", "runtime": "RADWinUI.Controls.DBGrid"},
+{"category": "Data Controls", "name": "DBNavigator", "runtime": "RADWinUI.Controls.DBNavigator"},
+{"category": "Data Controls", "name": "DBText", "runtime": "RADWinUI.Controls.DBText"},
+{"category": "Data Controls", "name": "DBEdit", "runtime": "RADWinUI.Controls.DBEdit"},
+{"category": "Data Controls", "name": "DBMemo", "runtime": "RADWinUI.Controls.DBMemo"},
+{"category": "Data Controls", "name": "DBImage", "runtime": "RADWinUI.Controls.DBImage"},
+{"category": "Data Controls", "name": "DBListBox", "runtime": "RADWinUI.Controls.DBListBox"},
+{"category": "Data Controls", "name": "DBComboBox", "runtime": "RADWinUI.Controls.DBComboBox"},
+{"category": "Data Controls", "name": "DBCheckBox", "runtime": "RADWinUI.Controls.DBCheckBox"},
+{"category": "Data Controls", "name": "DBRadioGroup", "runtime": "RADWinUI.Controls.DBRadioGroup"},
+{"category": "Data Controls", "name": "DBLookupListBox", "runtime": "RADWinUI.Controls.DBLookupListBox"},
+{"category": "Data Controls", "name": "DBLookupComboBox", "runtime": "RADWinUI.Controls.DBLookupComboBox"},
+{"category": "Data Controls", "name": "DBRichEdit", "runtime": "RADWinUI.Controls.DBRichEdit"},
+{"category": "Data Controls", "name": "DBCtrlGrid", "runtime": "RADWinUI.Controls.DBCtrlGrid"},
+{"category": "Data Controls", "name": "DBDatePicker", "runtime": "RADWinUI.Controls.DBDatePicker"},
+{"category": "Data Controls", "name": "DBNumberBox", "runtime": "RADWinUI.Controls.DBNumberBox"},
+{"category": "Data Controls", "name": "DBToggleSwitch", "runtime": "RADWinUI.Controls.DBToggleSwitch"}
 ],
 "types": {
 "NotchPanel": "RADWinUI.Controls.NotchPanel",
@@ -148,6 +284,23 @@
 "ConfettiButton": "RADWinUI.Controls.ConfettiButton",
 "CopyButton": "RADWinUI.Controls.CopyButton",
 "ShineButton": "RADWinUI.Controls.ShineButton",
-"SlideButton": "RADWinUI.Controls.SlideButton"
+"SlideButton": "RADWinUI.Controls.SlideButton",
+"DBGrid": "RADWinUI.Controls.DBGrid",
+"DBNavigator": "RADWinUI.Controls.DBNavigator",
+"DBText": "RADWinUI.Controls.DBText",
+"DBEdit": "RADWinUI.Controls.DBEdit",
+"DBMemo": "RADWinUI.Controls.DBMemo",
+"DBImage": "RADWinUI.Controls.DBImage",
+"DBListBox": "RADWinUI.Controls.DBListBox",
+"DBComboBox": "RADWinUI.Controls.DBComboBox",
+"DBCheckBox": "RADWinUI.Controls.DBCheckBox",
+"DBRadioGroup": "RADWinUI.Controls.DBRadioGroup",
+"DBLookupListBox": "RADWinUI.Controls.DBLookupListBox",
+"DBLookupComboBox": "RADWinUI.Controls.DBLookupComboBox",
+"DBRichEdit": "RADWinUI.Controls.DBRichEdit",
+"DBCtrlGrid": "RADWinUI.Controls.DBCtrlGrid",
+"DBDatePicker": "RADWinUI.Controls.DBDatePicker",
+"DBNumberBox": "RADWinUI.Controls.DBNumberBox",
+"DBToggleSwitch": "RADWinUI.Controls.DBToggleSwitch"
 }
 }

@@ -207,6 +207,140 @@ begin
     (AName = 'copybutton') or (AName = 'shinebutton') or (AName = 'slidebutton');
 end;
 
+/// The data controls: the control drawn small at the top left, and a database
+/// cylinder at the bottom right, like VCL's Data Controls icons
+procedure DrawDataControl(ACanvas: TCanvas; const AName: string);
+var
+  Name: string;
+  I: Integer;
+begin
+  Name := Copy(AName, 3, MaxInt);
+  ACanvas.Pen.Color := RGB(32, 122, 216);
+  ACanvas.Pen.Width := 6;
+  ACanvas.Brush.Style := bsClear;
+  if (Name = 'grid') then
+  begin
+    ACanvas.Rectangle(4, 6, 66, 58);
+    ACanvas.MoveTo(4, 22); ACanvas.LineTo(66, 22);
+    ACanvas.MoveTo(4, 40); ACanvas.LineTo(66, 40);
+    ACanvas.MoveTo(28, 6); ACanvas.LineTo(28, 58);
+  end
+  else if Name = 'ctrlgrid' then
+  begin
+    ACanvas.RoundRect(4, 6, 32, 30, 8, 8); ACanvas.RoundRect(38, 6, 66, 30, 8, 8);
+    ACanvas.RoundRect(4, 36, 32, 60, 8, 8); ACanvas.RoundRect(38, 36, 66, 60, 8, 8);
+  end
+  else if Name = 'navigator' then
+  begin
+    // |<  >|
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.Brush.Color := RGB(32, 122, 216);
+    ACanvas.Pen.Width := 1;
+    ACanvas.Rectangle(4, 14, 10, 50);
+    ACanvas.Polygon([Point(12, 32), Point(34, 14), Point(34, 50)]);
+    ACanvas.Polygon([Point(64, 32), Point(42, 14), Point(42, 50)]);
+    ACanvas.Rectangle(66, 14, 72, 50);
+  end
+  else if Name = 'text' then
+  begin
+    for I := 0 to 2 do
+    begin
+      ACanvas.MoveTo(6, 14 + I * 16); ACanvas.LineTo(62 - I * 14, 14 + I * 16);
+    end;
+  end
+  else if (Name = 'edit') or (Name = 'numberbox') then
+  begin
+    ACanvas.Rectangle(4, 18, 70, 46);
+    ACanvas.MoveTo(16, 24); ACanvas.LineTo(16, 40);
+    if Name = 'numberbox' then
+    begin
+      ACanvas.Pen.Width := 4;
+      ACanvas.MoveTo(50, 30); ACanvas.LineTo(56, 24); ACanvas.LineTo(62, 30);
+      ACanvas.MoveTo(50, 36); ACanvas.LineTo(56, 42); ACanvas.LineTo(62, 36);
+    end;
+  end
+  else if (Name = 'memo') or (Name = 'richedit') then
+  begin
+    ACanvas.Rectangle(4, 4, 66, 60);
+    if Name = 'richedit' then
+      ACanvas.Pen.Width := 9;
+    ACanvas.MoveTo(14, 18); ACanvas.LineTo(54, 18);
+    ACanvas.Pen.Width := 4;
+    ACanvas.MoveTo(14, 32); ACanvas.LineTo(54, 32);
+    ACanvas.MoveTo(14, 46); ACanvas.LineTo(40, 46);
+  end
+  else if Name = 'image' then
+  begin
+    ACanvas.Rectangle(4, 6, 66, 58);
+    ACanvas.Pen.Width := 5;
+    ACanvas.MoveTo(10, 50); ACanvas.LineTo(28, 30); ACanvas.LineTo(40, 42); ACanvas.LineTo(48, 34);
+    ACanvas.LineTo(60, 50);
+    ACanvas.Ellipse(44, 14, 56, 26);
+  end
+  else if (Name = 'listbox') or (Name = 'lookuplistbox') then
+  begin
+    ACanvas.Rectangle(4, 4, 66, 60);
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.Brush.Color := RGB(32, 122, 216);
+    ACanvas.Rectangle(10, 24, 60, 36);
+    ACanvas.Brush.Style := bsClear;
+    ACanvas.Pen.Width := 4;
+    ACanvas.MoveTo(14, 14); ACanvas.LineTo(50, 14);
+    ACanvas.MoveTo(14, 48); ACanvas.LineTo(44, 48);
+  end
+  else if (Name = 'combobox') or (Name = 'lookupcombobox') then
+  begin
+    ACanvas.Rectangle(4, 18, 70, 46);
+    ACanvas.MoveTo(46, 28); ACanvas.LineTo(54, 36); ACanvas.LineTo(62, 28);
+  end
+  else if Name = 'checkbox' then
+  begin
+    ACanvas.Rectangle(8, 10, 54, 56);
+    ACanvas.Pen.Width := 8;
+    ACanvas.MoveTo(16, 34); ACanvas.LineTo(28, 46); ACanvas.LineTo(46, 20);
+  end
+  else if Name = 'radiogroup' then
+  begin
+    ACanvas.Ellipse(6, 6, 30, 30); ACanvas.Ellipse(6, 36, 30, 60);
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.Brush.Color := RGB(32, 122, 216);
+    ACanvas.Ellipse(13, 13, 23, 23);
+    ACanvas.Pen.Width := 4;
+    ACanvas.MoveTo(38, 18); ACanvas.LineTo(66, 18);
+    ACanvas.MoveTo(38, 48); ACanvas.LineTo(66, 48);
+  end
+  else if Name = 'datepicker' then
+  begin
+    ACanvas.Rectangle(6, 10, 66, 60);
+    ACanvas.MoveTo(6, 26); ACanvas.LineTo(66, 26);
+    ACanvas.MoveTo(20, 4); ACanvas.LineTo(20, 16);
+    ACanvas.MoveTo(52, 4); ACanvas.LineTo(52, 16);
+  end
+  else if Name = 'toggleswitch' then
+  begin
+    ACanvas.RoundRect(4, 16, 70, 48, 32, 32);
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.Brush.Color := RGB(32, 122, 216);
+    ACanvas.Ellipse(42, 22, 62, 42);
+  end;
+  // The database
+  ACanvas.Pen.Width := 1;
+  ACanvas.Pen.Color := RGB(32, 122, 216);
+  ACanvas.Brush.Style := bsSolid;
+  ACanvas.Brush.Color := clWhite;
+  ACanvas.Rectangle(56, 54, 96, 96);
+  ACanvas.Brush.Color := RGB(32, 122, 216);
+  ACanvas.Ellipse(60, 80, 94, 94);
+  ACanvas.Rectangle(60, 64, 94, 87);
+  ACanvas.Pen.Color := clWhite;
+  ACanvas.Pen.Width := 3;
+  ACanvas.Ellipse(60, 56, 94, 72);
+  ACanvas.Brush.Style := bsClear;
+  ACanvas.Arc(60, 66, 94, 80, 60, 73, 94, 73);
+  ACanvas.Pen.Width := 6;
+  ACanvas.Pen.Color := RGB(32, 122, 216);
+end;
+
 procedure DrawControl(ACanvas: TCanvas; const AName: string);
 var
   Name, Letters: string;
@@ -360,6 +494,8 @@ begin
     // Play and pause
     Line(4, 7, 4, 17); Line(4, 7, 11, 12); Line(4, 17, 11, 12); Line(15, 7, 15, 17); Line(19, 7, 19, 17);
   end
+  else if Name.StartsWith('db') then
+    DrawDataControl(ACanvas, Name)
   else if Name.EndsWith('tabbar') then
     DrawTabBar(ACanvas, Name)
   else if IsActionButton(Name) then

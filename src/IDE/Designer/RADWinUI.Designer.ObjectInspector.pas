@@ -10,7 +10,8 @@ interface
 uses
   System.SysUtils, System.Classes, System.TypInfo,
   ToolsAPI, DesignIntf, PropInspAPI,
-  RADWinUI.Designer.Model, RADWinUI.Designer.XamlEdit, RADWinUI.Designer.TabItemsEditor;
+  RADWinUI.Designer.Model, RADWinUI.Designer.XamlEdit, RADWinUI.Designer.TabItemsEditor,
+  RADWinUI.Designer.DataModules;
 
 type
   TInspectorEditKind = (ieProperty, ieEvent, ieClearEvent, ieSelect);
@@ -59,6 +60,40 @@ type
   end;
 
 implementation
+
+/// The folders of the active project and its units, where its data modules are
+function ProjectFolders: TArray<string>;
+
+  procedure Add(const AFileName: string);
+  var
+    Folder, Known: string;
+  begin
+    Folder := ExtractFileDir(AFileName);
+    if Folder = '' then
+      Exit;
+    for Known in Result do
+      if SameText(Known, Folder) then
+        Exit;
+    Result := Result + [Folder];
+  end;
+
+var
+  Project: IOTAProject;
+  Module: IOTAModule;
+  I: Integer;
+begin
+  Result := nil;
+  Project := GetActiveProject;
+  if Project <> nil then
+  begin
+    Add(Project.FileName);
+    for I := 0 to Project.GetModuleCount - 1 do
+      Add(Project.GetModule(I).FileName);
+  end;
+  Module := (BorlandIDEServices as IOTAModuleServices).CurrentModule;
+  if Module <> nil then
+    Add(Module.FileName);
+end;
 
 type
   TXamlProperty = class(TInterfacedObject, IProperty, IProperty70, IProperty80,
@@ -441,7 +476,19 @@ begin
     Prop := AProps[I];
     Values := Prop.EnumValues;
     if Prop.Kind = 'bool' then Values := ['True', 'False'];
-    if Prop.Kind = 'tabitems' then
+    // The data controls: the data sources and fields of the project's data modules
+    if Prop.Kind = 'datasource' then
+      Values := DataSourceNames(ProjectFolders)
+    else if Prop.Kind = 'datafield' then
+      Values := DataFieldNames(ProjectFolders, AValue('DataSource'))
+    else if Prop.Kind = 'listfield' then
+      Values := DataFieldNames(ProjectFolders, AValue('ListSource'));
+    if (Prop.Kind = 'datasource') or (Prop.Kind = 'datafield') or (Prop.Kind = 'listfield') or
+      (Prop.Kind = 'datafields') then
+      FProperties[I] := TXamlProperty.Create(AContext, Prop.Name, AValue(Prop.Name),
+        'The name of a TDataSource or field. The list shows those of the project''s data modules (.dfm), ' +
+        'any name can be typed.', Values, False)
+    else if Prop.Kind = 'tabitems' then
       FProperties[I] := TXamlProperty.Create(AContext, Prop.Name, AValue(Prop.Name),
         'The tabs, Label:Icon separated by commas. Click ... to add, reorder and pick icons.', nil, False,
         Prop.Kind)

@@ -306,6 +306,11 @@ begin
     '<Window xmlns:rw="using:RADWinUI.Controls">', 'xmlns:rw is declared once');
   Check(PaletteCategoryOf('GlowTile') = 'Overlay', 'GlowTile is in Overlay');
   Check(PaletteCategoryOf('SlideButton') = 'Action Buttons', 'SlideButton is in Action Buttons');
+  Check((PaletteCategoryOf('DBGrid') = 'Data Controls') and (PaletteCategoryOf('DBToggleSwitch') = 'Data Controls'),
+    'DBGrid and DBToggleSwitch are in Data Controls');
+  Check(PaletteXamlTag('DBEdit') = 'rw:DBEdit', 'a data control is written with rw:');
+  Check(ToolboxXaml('DBEdit', 0, 0) = '<rw:DBEdit DataSource="" DataField=""/>',
+    'a data control comes with DataSource and DataField to fill in');
   Check(ToolboxXaml('SendButton', 0, 0) = '<rw:SendButton Text="Send"/>',
     'an action button comes with its rw: prefix and its label');
   if Failures > 0 then

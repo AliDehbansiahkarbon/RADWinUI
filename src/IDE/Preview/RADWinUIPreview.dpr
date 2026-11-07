@@ -7,10 +7,13 @@ uses
   RADWinUI.Controls, // XAML of the window may use RADWinUI's own controls (rw:)
   RADWinUI.TabBars,
   RADWinUI.ActionButtons,
+  RADWinUI.DBControls,
+  RADWinUI.Runtime.Application,
   RADWinUI.Designer.Palette in '..\Designer\RADWinUI.Designer.Palette.pas',
   RADWinUI.Designer.Snap in '..\Designer\RADWinUI.Designer.Snap.pas',
   RADWinUI.Preview.Host in 'RADWinUI.Preview.Host.pas';
 
 begin
+  CustomXamlDesignTime := True;
   TWinUIApp.Run(TPreviewWindow);
 end.
