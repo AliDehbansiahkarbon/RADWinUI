@@ -137,7 +137,7 @@ try {
     $Exports = & $Tdump -ee "$TryRoot\build\packages\$Bpl" 2>&1 | Select-String -Pattern "8RegisterEv'|::Register\(\)'"
     Check (@($Exports).Count -eq 1) "$Bpl exports one Register"
   }
-  $SampleWindows = [ordered]@{ Gallery = 'MainWindow'; Luma = 'MainWindow'; Haven = 'MainWindow'; Lucent = 'MainWindow'; TabBars = 'MainWindow'; ActionButtons = 'MainWindow'; Counter = 'MainWindow'; Greeter = 'GreetWindow'; ListDemo = 'ListWindow'; Contacts = 'ContactsWindow'; Profile = 'ProfileWindow' }
+  $SampleWindows = [ordered]@{ Gallery = 'MainWindow'; Luma = 'MainWindow'; Haven = 'MainWindow'; Lucent = 'MainWindow'; TabBars = 'MainWindow'; ActionButtons = 'MainWindow'; DataControls = 'MainWindow'; Counter = 'MainWindow'; Greeter = 'GreetWindow'; ListDemo = 'ListWindow'; Contacts = 'ContactsWindow'; Profile = 'ProfileWindow' }
   foreach ($Demo in $SampleWindows.Keys) {
     Remove-Item "$TryRoot\samples\$Demo\$($SampleWindows[$Demo]).Xaml.pas"
   }

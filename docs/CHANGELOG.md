@@ -4,6 +4,7 @@ All notable changes to RADWinUI.
 
 ## Unreleased
 
+- New sample: Data Controls, customers and their orders in a FireDAC data module, shown and edited with the data controls: a grid with a navigator, a form for the current customer, the orders as a master/detail grid you can edit and every customer as a tile. It follows the Windows theme and has a transparency slider.
 - New Tool Palette category Data Controls with 17 data-aware controls (unit `RADWinUI.DBControls`, XAML prefix `rw:`) that bind to a Delphi `TDataSource` like the VCL's Data Controls: `TWinUIDBGrid`, `TWinUIDBNavigator`, `TWinUIDBText`, `TWinUIDBEdit`, `TWinUIDBMemo`, `TWinUIDBImage`, `TWinUIDBListBox`, `TWinUIDBComboBox`, `TWinUIDBCheckBox`, `TWinUIDBRadioGroup`, `TWinUIDBLookupListBox`, `TWinUIDBLookupComboBox`, `TWinUIDBRichEdit` and `TWinUIDBCtrlGrid`, plus `TWinUIDBDatePicker`, `TWinUIDBNumberBox` and `TWinUIDBToggleSwitch`. Any dataset works, such as FireDAC or `TClientDataSet`.
 - In XAML, `DataSource` is the name of a `TDataSource`: a published field of the window or a component of a data module, also written as `Module.Source`. In code, the `DataSource` property takes the `TDataSource` itself. The Object Inspector offers the data sources and fields it finds in the project's `.dfm` files.
 - New sample: Action Buttons, one see-through window that shows all six action buttons, with accent colours, Play all and a transparency slider. It follows the Windows theme.

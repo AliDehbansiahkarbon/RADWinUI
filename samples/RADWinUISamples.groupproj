@@ -1,4 +1,4 @@
-﻿<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
     <PropertyGroup>
         <ProjectGuid>{51C6AF69-A754-4F86-A11D-ADBF4C2F4A26}</ProjectGuid>
     </PropertyGroup>
@@ -19,6 +19,9 @@
             <Dependencies/>
         </Projects>
         <Projects Include="ActionButtons\ActionButtons.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="DataControls\DataControls.dproj">
             <Dependencies/>
         </Projects>
         <Projects Include="Counter\Counter.dproj">
@@ -98,6 +101,15 @@
     <Target Name="ActionButtons:Make">
         <MSBuild Projects="ActionButtons\ActionButtons.dproj" Targets="Make"/>
     </Target>
+    <Target Name="DataControls">
+        <MSBuild Projects="DataControls\DataControls.dproj"/>
+    </Target>
+    <Target Name="DataControls:Clean">
+        <MSBuild Projects="DataControls\DataControls.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="DataControls:Make">
+        <MSBuild Projects="DataControls\DataControls.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Counter">
         <MSBuild Projects="Counter\Counter.dproj"/>
     </Target>
@@ -144,13 +156,13 @@
         <MSBuild Projects="Profile\Profile.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Gallery;Luma;Haven;Lucent;TabBars;ActionButtons;Counter;Greeter;ListDemo;Contacts;Profile"/>
+        <CallTarget Targets="Gallery;Luma;Haven;Lucent;TabBars;ActionButtons;DataControls;Counter;Greeter;ListDemo;Contacts;Profile"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Gallery:Clean;Luma:Clean;Haven:Clean;Lucent:Clean;TabBars:Clean;ActionButtons:Clean;Counter:Clean;Greeter:Clean;ListDemo:Clean;Contacts:Clean;Profile:Clean"/>
+        <CallTarget Targets="Gallery:Clean;Luma:Clean;Haven:Clean;Lucent:Clean;TabBars:Clean;ActionButtons:Clean;DataControls:Clean;Counter:Clean;Greeter:Clean;ListDemo:Clean;Contacts:Clean;Profile:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Gallery:Make;Luma:Make;Haven:Make;Lucent:Make;TabBars:Make;ActionButtons:Make;Counter:Make;Greeter:Make;ListDemo:Make;Contacts:Make;Profile:Make"/>
+        <CallTarget Targets="Gallery:Make;Luma:Make;Haven:Make;Lucent:Make;TabBars:Make;ActionButtons:Make;DataControls:Make;Counter:Make;Greeter:Make;ListDemo:Make;Contacts:Make;Profile:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

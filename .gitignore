@@ -63,6 +63,7 @@ samples/Haven/Haven.res
 samples/Lucent/Lucent.res
 samples/TabBars/TabBars.res
 samples/ActionButtons/ActionButtons.res
+samples/DataControls/DataControls.res
 samples/Gallery/Gallery.res
 samples/Counter/Counter.res
 samples/Greeter/Greeter.res
