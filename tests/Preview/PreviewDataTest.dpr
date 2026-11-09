@@ -8,6 +8,7 @@ uses
   RADWinUI.Interop.Core,
   RADWinUI.Designer.XamlEdit in '..\..\src\IDE\Designer\RADWinUI.Designer.XamlEdit.pas',
   RADWinUI.Designer.Palette in '..\..\src\IDE\Designer\RADWinUI.Designer.Palette.pas',
+  RADWinUI.Designer.Snap in '..\..\src\IDE\Designer\RADWinUI.Designer.Snap.pas',
   RADWinUI.Preview.Host in '..\..\src\IDE\Preview\RADWinUI.Preview.Host.pas';
 
 const
