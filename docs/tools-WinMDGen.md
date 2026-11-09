@@ -15,12 +15,15 @@ Or directly:
 
 ```text
 WinMDGen --winmd <file or folder> [--winmd ...] --out ..\..\src\Generated
-         [--unit RADWinUI.Abi] [--namespace Microsoft.UI ...] [--xaml-unit RADWinUI.Xaml] [--sdk "Windows App SDK 2.5.1"]
+         [--unit RADWinUI.Abi] [--namespace Microsoft.UI ...] [--extra-namespace Microsoft.Windows ...]
+         [--xaml-unit RADWinUI.Xaml] [--sdk "Windows App SDK 2.6.5"]
 ```
 
-Inputs: the WinUI, InteractiveExperiences, Foundation and WebView2 package metadata, plus the Windows platform metadata (`C:\Windows\System32\WinMetadata`, or the Windows SDK contract `.winmd` files). A folder is searched recursively.
+Inputs: the WinUI, InteractiveExperiences, Foundation, AI and WebView2 package metadata, plus the Windows platform metadata (`C:\Windows\System32\WinMetadata`, or the Windows SDK contract `.winmd` files). A folder is searched recursively.
 
 Without `--namespace`, the projection covers `Microsoft.UI`, `Microsoft.Foundation`, `Microsoft.Graphics`, `Windows.Foundation` and `Windows.Media.Control`, plus every type they use.
+
+Without `--extra-namespace`, it also covers `Microsoft.Windows`, `Microsoft.Graphics.Imaging`, `Windows.ApplicationModel.DataTransfer`, `Windows.Graphics.Imaging` and `Windows.Storage`. A type of an extra namespace never takes a plain name from a `--namespace` type, so adding one keeps every existing name. Namespaces with `Internal` or `Private` in their name are always skipped. The rules are in [PROJECTION.md](PROJECTION.md).
 
 `Generate-Projection.ps1` also writes `src\Framework\RADWinUI.Controls.json`, the type index of RADWinUI's own controls, with `tools\ControlsIndex`.
 

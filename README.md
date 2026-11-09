@@ -29,7 +29,7 @@ RADWinUI works the way a Delphi developer expects. File > New creates the projec
 
 ## Main Features
 
-- **Real WinUI 3 controls.** 1102 typed Pascal classes (`TWinUIButton`, `TWinUINavigationView`, ...) generated from Microsoft's metadata for Windows App SDK 2.5.1.
+- **Real WinUI 3 controls.** 1102 typed Pascal classes (`TWinUIButton`, `TWinUINavigationView`, ...) generated from Microsoft's metadata for Windows App SDK 2.6.5, plus the rest of the SDK for Pascal code: app lifecycle, notifications, file pickers, resources and on-device AI.
 - **XAML plus Object Pascal.** Each window is a `.xaml` file and a `.pas` unit. A generated base class gives you one typed field per named control and wires events to your published methods.
 - **Checked at build time.** Missing handlers, wrong handler signatures, unknown binding paths and unknown converters stop the build with the file, the line and a fix.
 - **Data binding.** `{Binding}` to published properties of your Pascal classes, one-way and two-way, with built-in and custom converters.
@@ -76,10 +76,10 @@ RADWinUI works the way a Delphi developer expects. File > New creates the projec
 | RAD Studio / Delphi | 13 Florence |
 | IDE | 64-bit IDE (`bin64\bds.exe`) and classic 32-bit IDE (`bin\bds.exe`) |
 | Application platform | Win64 |
-| Windows App SDK | 2.5.1 (stable) |
+| Windows App SDK | 2.6.5 (stable) |
 | Windows | 10 version 1809 or later, Windows 11 recommended |
 
-The apps you build need the Windows App Runtime 2.5 (x64) on the end user's PC, unless you deploy them self-contained. WinUI 3 does not run elevated: do not start RAD Studio as administrator.
+The apps you build need the Windows App Runtime 2.6 (x64) on the end user's PC, unless you deploy them self-contained. WinUI 3 does not run elevated: do not start RAD Studio as administrator.
 
 ## Installation
 
@@ -91,7 +91,7 @@ RADWinUI ships as source code. RAD Studio builds everything on your machine, the
    powershell -ExecutionPolicy Bypass -File scripts\Get-WindowsAppSDK.ps1
    ```
 
-   Without these files the build stops with *Windows App SDK files are missing*. A release ZIP already contains them. Add `-InstallRuntime` if the Windows App Runtime 2.5 is not installed on your PC.
+   Without these files the build stops with *Windows App SDK files are missing*. A release ZIP already contains them. Add `-InstallRuntime` if the Windows App Runtime 2.6 is not installed on your PC.
 1. Start RAD Studio without administrator rights. If an older RADWinUI package is installed, remove it first (Component > Install Packages).
 2. File > Open Project, in the RADWinUI folder, the group for your IDE:
    - `RADWinUI.groupproj` in the 64-bit IDE
@@ -177,12 +177,12 @@ Made something with RADWinUI? The [rules for sharing an app](community/README.md
 .\scripts\Deploy-App.ps1 -Project samples\Counter\Counter.dpr -SelfContained   # runtime included, about 55 MB
 ```
 
-A small app needs Microsoft's free Windows App Runtime 2.5 installed once per PC, like the VC++ runtime or WebView2. A self-contained app needs nothing: copy the folder and run. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for licensing, signing and setup notes.
+A small app needs Microsoft's free Windows App Runtime 2.6 installed once per PC, like the VC++ runtime or WebView2. A self-contained app needs nothing: copy the folder and run. See [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for licensing, signing and setup notes.
 
 ## Notes And Limitations
 
 - Applications are Win64 only. The IDE package works in both the 32-bit and the 64-bit IDE.
-- RADWinUI targets RAD Studio 13 Florence and Windows App SDK 2.5.1.
+- RADWinUI targets RAD Studio 13 Florence and Windows App SDK 2.6.5.
 - Apps ship as a plain folder: a small app, or a self-contained one.
 - RADWinUI is not code-signed. Sign your own applications with your certificate.
 - Push notifications and other Windows App SDK features that need the runtime's Singleton package do not work self-contained.
@@ -195,7 +195,7 @@ A small app needs Microsoft's free Windows App Runtime 2.5 installed once per PC
 | `RADWinUI : error RW1002 : RADWinUI was not found` | The project is outside the RADWinUI folder. Set `RADWINUI_ROOT` to the RADWinUI folder, then build again. |
 | No Install on the package | Open the group of your IDE: `RADWinUI.groupproj` in the 64-bit IDE, `RADWinUI32.groupproj` in the classic 32-bit IDE. |
 | `XamlCodeGen did not run`, or a build stops at its pre-build event | Open the group of your IDE and use Build All: it makes `bin\XamlCodeGen.exe`. |
-| The app exits at start with a runtime error | Install the Windows App Runtime 2.5 (x64), or deploy self-contained. |
+| The app exits at start with a runtime error | Install the Windows App Runtime 2.6 (x64), or deploy self-contained. |
 | Nothing happens when the app starts from the IDE | Start RAD Studio without administrator rights. |
 | An app closed unexpectedly | Look in `%LOCALAPPDATA%\RADWinUI\Crashes` for its report. |
 

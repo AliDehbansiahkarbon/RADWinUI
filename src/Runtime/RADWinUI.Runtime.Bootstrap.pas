@@ -10,7 +10,7 @@ unit RADWinUI.Runtime.Bootstrap;
   Self-contained (Deploy-App.ps1 -SelfContained): the runtime DLLs
   sit next to the exe and its manifest registers their classes, Initialize only
   loads Microsoft.WindowsAppRuntime.dll, as the SDK's auto-initializer does. Values below come from WindowsAppSDK-VersionInfo.h
-  in the Microsoft.WindowsAppSDK.Runtime 2.5.1 NuGet package.
+  in the Microsoft.WindowsAppSDK.Runtime 2.6.5 NuGet package.
 }
 
 interface
@@ -20,10 +20,10 @@ uses
   System.SysUtils;
 
 const
-  WindowsAppSDKReleaseMajorMinor = $00020005;          // 2.5
-  WindowsAppSDKRuntimeVersion: UInt64 = $0002000500010000; // 2.5.1.0
+  WindowsAppSDKReleaseMajorMinor = $00020006;          // 2.6
+  WindowsAppSDKRuntimeVersion: UInt64 = $0002000600050000; // 2.6.5.0
   WindowsAppSDKVersionTag = '';                        // stable channel
-  WindowsAppSDKVersionText = '2.5.1';
+  WindowsAppSDKVersionText = '2.6.5';
 
   BootstrapDllName = 'Microsoft.WindowsAppRuntime.Bootstrap.dll';
   RuntimeDllName = 'Microsoft.WindowsAppRuntime.dll';
@@ -59,7 +59,7 @@ type
     ///   RADWINUI_ROOT (<root>\third_party\...) is tried after it.
     /// </summary>
     class property FallbackFolder: string read FFallbackFolder write FFallbackFolder;
-    /// <summary>Loads the bootstrap DLL and binds the process to Windows App Runtime 2.5.</summary>
+    /// <summary>Loads the bootstrap DLL and binds the process to Windows App Runtime 2.6.</summary>
     /// <remarks>Raises EWinAppRuntimeError when the DLL or a compatible runtime is missing.</remarks>
     class procedure Initialize(AOptions: Cardinal = MddBootstrapInitializeOptions_OnNoMatch_ShowUI);
     /// <summary>Reverts Initialize. Safe to call when Initialize was not called or failed.</summary>

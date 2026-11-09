@@ -10,7 +10,7 @@ Runtime                 Bootstrap · environment checks · dispatcher · XAML lo
 Generated projection    Pascal units generated from Windows App SDK .winmd files
 Interop core            combase: RoInitialize, HSTRING, activation factories, HRESULT errors
 -------------------------------------------------------------------------------------
-Windows App SDK 2.5.1   Microsoft.UI.Xaml (real WinUI 3 controls), DispatcherQueue, Composition
+Windows App SDK 2.6.5   Microsoft.UI.Xaml (real WinUI 3 controls), DispatcherQueue, Composition
 ```
 
 ![The Design view hosted by the WinUI process, with the native Object Inspector and Structure view](images/ide-gallery-dark.png)

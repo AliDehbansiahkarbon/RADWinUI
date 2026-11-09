@@ -6,7 +6,7 @@ They are committed, so a fresh clone builds without the SDK metadata. Regenerate
 
 | Unit | Contents |
 | --- | --- |
-| `RADWinUI.Abi.pas` | Every enum, struct, interface, delegate and generic interface instance of `Microsoft.UI.*`, `Microsoft.Foundation`, `Microsoft.Graphics.*` and `Windows.Foundation.*`; a Delphi class for each delegate; a record per runtime class for activation and static members |
+| `RADWinUI.Abi.pas` | Every enum, struct, interface, delegate and generic interface instance of `Microsoft.UI.*`, `Microsoft.Foundation`, `Microsoft.Graphics.*`, `Windows.Foundation.*` and the app platform (`Microsoft.Windows.*`, files, streams, bitmaps and the clipboard, see [PROJECTION.md](PROJECTION.md)); a Delphi class for each delegate; a record per runtime class for activation and static members |
 | `RADWinUI.Xaml.pas` | The `TWinUI*` wrapper classes app code uses: Delphi properties, events and methods for every runtime class in `Microsoft.UI.*` |
 | `RADWinUI.Xaml.json` | The type index XamlCodeGen and the designer read: XAML element names, events and editable properties |
 

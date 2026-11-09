@@ -37,7 +37,7 @@ type
     Directory: string;
     /// <summary>RADWinUI checkout (src, tools, third_party).</summary>
     Root: string;
-    /// <summary>Windows App SDK release folder name under third_party, for example 2.5.1.</summary>
+    /// <summary>Windows App SDK release folder name under third_party, for example 2.6.5.</summary>
     SdkRelease: string;
   end;
 

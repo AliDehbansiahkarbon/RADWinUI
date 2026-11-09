@@ -7,7 +7,7 @@ A RADWinUI app ships in one of two ways:
 | | Small app | Self-contained app |
 | --- | --- | --- |
 | What you ship | `<App>.exe` and `Microsoft.WindowsAppRuntime.Bootstrap.dll`, about 1 MB | the exe with the Windows App Runtime in its folder, about 55 MB |
-| What the user installs | Microsoft's free Windows App Runtime 2.5 x64, once per PC, like the VC++ runtime or WebView2 | nothing: copy the folder and run |
+| What the user installs | Microsoft's free Windows App Runtime 2.6 x64, once per PC, like the VC++ runtime or WebView2 | nothing: copy the folder and run |
 | Runtime updates | Windows keeps the installed runtime up to date | only when you ship a new build |
 | Choose it when | your users can install a prerequisite, or your setup installs it for them | you want no prerequisite, offline installs or a portable folder |
 
@@ -21,7 +21,7 @@ Either way, nothing else is needed: no .NET, no Delphi packages (the RTL is link
 1. **Build.** Open your project in RAD Studio, choose the **Release** configuration and the **Windows 64-bit** platform, then Project > Build. The exe is in `Win64\Release` of the project folder.
 2. **Collect the files.** Put these two files in a new folder:
    - `<App>.exe` from `Win64\Release`;
-   - `Microsoft.WindowsAppRuntime.Bootstrap.dll`. Projects made with File > New > RADWinUI Application copy it next to the exe on every build. Otherwise take it from the RADWinUI folder: `third_party\WindowsAppSDK\2.5.1\Microsoft.WindowsAppSDK.Foundation\runtimes\win-x64\native\`.
+   - `Microsoft.WindowsAppRuntime.Bootstrap.dll`. Projects made with File > New > RADWinUI Application copy it next to the exe on every build. Otherwise take it from the RADWinUI folder: `third_party\WindowsAppSDK\2.6.5\Microsoft.WindowsAppSDK.Foundation\runtimes\win-x64\native\`.
 
    Add the images, data files or other assets your own code loads, in the same relative places as during development.
 3. **Add the license terms.** The bootstrap DLL is Microsoft's distributable code: ship Microsoft's license with it (`license.txt` in the same `Microsoft.WindowsAppSDK.Foundation` folder, for example as `Microsoft.WindowsAppSDK.LICENSE.txt`) and see [Licenses](#licenses).
@@ -33,7 +33,7 @@ Either way, nothing else is needed: no .NET, no Delphi packages (the RTL is link
 
    Use your certificate authority's timestamp server, or `/a` or `/n "<subject>"` for a certificate in the Windows certificate store. Do not re-sign `Microsoft.WindowsAppRuntime.Bootstrap.dll`: Microsoft has signed it.
 5. **Ship** the folder as a ZIP or inside your setup (Inno Setup, InstallAware, MSI and so on), and sign the setup too.
-6. **Tell your users about the Windows App Runtime.** They install it once per machine with `WindowsAppRuntimeInstall-x64.exe` from Microsoft's [Windows App SDK downloads](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads) page (pick the 2.5 runtime). Your setup may also run that installer for them, see [The Windows App Runtime](#the-windows-app-runtime).
+6. **Tell your users about the Windows App Runtime.** They install it once per machine with `WindowsAppRuntimeInstall-x64.exe` from Microsoft's [Windows App SDK downloads](https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads) page (pick the 2.6 runtime). Your setup may also run that installer for them, see [The Windows App Runtime](#the-windows-app-runtime).
 
 To test, copy the folder to a PC without RAD Studio and start the exe. A Release build looks for the bootstrap DLL only next to the exe, Debug builds made by the wizard also try the RADWinUI folder, which an end user does not have.
 
@@ -74,7 +74,7 @@ Trade-offs: no prerequisite, works offline and without the Microsoft Store, but 
 
 ## The Windows App Runtime
 
-End users install it with `WindowsAppRuntimeInstall-x64.exe` from Microsoft's Windows App SDK downloads page: https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads (pick the 2.5 runtime). It installs per machine and is updated by Windows. Without it, the app stops at start with `EWinAppRuntimeError` and the reason from `MddBootstrapInitialize2`, catch it in the `.dpr` to show your own message or start the installer.
+End users install it with `WindowsAppRuntimeInstall-x64.exe` from Microsoft's Windows App SDK downloads page: https://learn.microsoft.com/windows/apps/windows-app-sdk/downloads (pick the 2.6 runtime). It installs per machine and is updated by Windows. Without it, the app stops at start with `EWinAppRuntimeError` and the reason from `MddBootstrapInitialize2`, catch it in the `.dpr` to show your own message or start the installer.
 
 Microsoft's deployment guidance calls this `.exe` a redistributable and directs unpackaged apps to bundle it with their own installer or setup script. Your setup may therefore include the unmodified Microsoft installer for the required runtime version and architecture. The folder produced by `Deploy-App.ps1` leaves it as a separate prerequisite, RADWinUI does not bundle the runtime MSIX packages.
 

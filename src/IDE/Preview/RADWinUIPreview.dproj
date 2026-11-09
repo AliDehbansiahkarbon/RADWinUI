@@ -37,7 +37,7 @@
         <DCC_DcuOutput>.\$(Platform)\$(Config)\dcu</DCC_DcuOutput>
         <DCC_UnitSearchPath>..\..\..\src\Interop;..\..\..\src\Generated;..\..\..\src\Runtime;..\..\..\src\Framework;$(DCC_UnitSearchPath)</DCC_UnitSearchPath>
         <!-- The host is a WinUI app: the Windows App Runtime bootstrap DLL goes next to it -->
-        <PostBuildEvent>(if exist "$(MSBuildProjectDirectory)\..\..\..\third_party\WindowsAppSDK\2.5.1\Microsoft.WindowsAppSDK.Foundation\runtimes\win-x64\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" (copy /Y "$(MSBuildProjectDirectory)\..\..\..\third_party\WindowsAppSDK\2.5.1\Microsoft.WindowsAppSDK.Foundation\runtimes\win-x64\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" "$(MSBuildProjectDirectory)\$(Platform)\$(Config)" &gt;nul) else (echo RADWinUI : error RW1001 : Windows App SDK files are missing. Run scripts\Get-WindowsAppSDK.ps1 once - see docs\GETTING-STARTED.md, step 0. &amp; exit 1))</PostBuildEvent>
+        <PostBuildEvent>(if exist "$(MSBuildProjectDirectory)\..\..\..\third_party\WindowsAppSDK\2.6.5\Microsoft.WindowsAppSDK.Foundation\runtimes\win-x64\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" (copy /Y "$(MSBuildProjectDirectory)\..\..\..\third_party\WindowsAppSDK\2.6.5\Microsoft.WindowsAppSDK.Foundation\runtimes\win-x64\native\Microsoft.WindowsAppRuntime.Bootstrap.dll" "$(MSBuildProjectDirectory)\$(Platform)\$(Config)" &gt;nul) else (echo RADWinUI : error RW1001 : Windows App SDK files are missing. Run scripts\Get-WindowsAppSDK.ps1 once - see docs\GETTING-STARTED.md, step 0. &amp; exit 1))</PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
         <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
         <DCC_UNIT_PLATFORM>false</DCC_UNIT_PLATFORM>

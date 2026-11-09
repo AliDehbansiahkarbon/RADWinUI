@@ -34,6 +34,7 @@ $Inputs = @(
   (Join-Path $Packages 'Microsoft.WindowsAppSDK.WinUI\metadata'),
   (Join-Path $Packages 'Microsoft.WindowsAppSDK.InteractiveExperiences\metadata\10.0.18362.0'),
   (Join-Path $Packages 'Microsoft.WindowsAppSDK.Foundation\metadata'),
+  (Join-Path $Packages 'Microsoft.WindowsAppSDK.AI\metadata'),
   (Join-Path $Packages 'Microsoft.Web.WebView2\lib'),
   (Join-Path $env:SystemRoot 'System32\WinMetadata')
 )

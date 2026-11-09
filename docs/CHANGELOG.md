@@ -4,6 +4,11 @@ All notable changes to RADWinUI.
 
 ## Unreleased
 
+- Windows App SDK 2.6.5: RADWinUI now builds against the current stable release, so apps need the Windows App Runtime 2.6. `scripts\Get-WindowsAppSDK.ps1 -InstallRuntime` downloads the new packages and installs the runtime.
+- The projection covers the whole Windows App SDK, not only the UI: `Microsoft.Windows.*` (app lifecycle, app notifications, file and folder pickers, resources, on-device AI and the rest), `Microsoft.Graphics.Imaging`, and the Windows types these APIs use: `Windows.Storage.*`, `Windows.Graphics.Imaging` and `Windows.ApplicationModel.DataTransfer`. Every existing type keeps its name.
+- About 30 members of the wrapper classes now take or return these types instead of `IInspectable`, for example `BitmapSource.SetSource` takes an `IRandomAccessStream` and `DragEventArgs.Data` returns an `IDataPackage`. Code that passed an `IInspectable` needs a cast such as `Stream as IRandomAccessStream`.
+- WinMDGen has `--extra-namespace` for namespaces whose types never take a plain name from the UI namespaces, and skips namespaces that are package internals.
+
 - New sample: Data Controls, customers and their orders in a FireDAC data module, shown and edited with the data controls: a grid with a navigator, a form for the current customer, the orders as a master/detail grid you can edit and every customer as a tile. It follows the Windows theme and has a transparency slider.
 - New Tool Palette category Data Controls with 17 data-aware controls (unit `RADWinUI.DBControls`, XAML prefix `rw:`) that bind to a Delphi `TDataSource` like the VCL's Data Controls: `TWinUIDBGrid`, `TWinUIDBNavigator`, `TWinUIDBText`, `TWinUIDBEdit`, `TWinUIDBMemo`, `TWinUIDBImage`, `TWinUIDBListBox`, `TWinUIDBComboBox`, `TWinUIDBCheckBox`, `TWinUIDBRadioGroup`, `TWinUIDBLookupListBox`, `TWinUIDBLookupComboBox`, `TWinUIDBRichEdit` and `TWinUIDBCtrlGrid`, plus `TWinUIDBDatePicker`, `TWinUIDBNumberBox` and `TWinUIDBToggleSwitch`. Any dataset works, such as FireDAC or `TClientDataSet`.
 - In XAML, `DataSource` is the name of a `TDataSource`: a published field of the window or a component of a data module, also written as `Module.Source`. In code, the `DataSource` property takes the `TDataSource` itself. The Object Inspector offers the data sources and fields it finds in the project's `.dfm` files.

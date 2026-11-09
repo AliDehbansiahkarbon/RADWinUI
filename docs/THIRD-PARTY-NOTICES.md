@@ -2,9 +2,9 @@
 
 RADWinUI's own code is under the MIT license ([LICENSE](../LICENSE)). This file lists what comes from others, what a RADWinUI release or a RADWinUI app redistributes, and under which terms.
 
-## Microsoft Windows App SDK 2.5.1
+## Microsoft Windows App SDK 2.6.5
 
-Packages `Microsoft.WindowsAppSDK.Foundation` 2.3.12, `.WinUI` 2.3.9, `.InteractiveExperiences` 2.1.9, `.Runtime` 2.5.1, (c) Microsoft Corporation. Microsoft Software License Terms, in `license.txt` of each package, `scripts\Get-WindowsAppSDK.ps1` downloads them from nuget.org.
+Packages `Microsoft.WindowsAppSDK.Foundation`, `.WinUI`, `.InteractiveExperiences`, `.AI` and `.Runtime` 2.6.5, (c) Microsoft Corporation. Microsoft Software License Terms, in `license.txt` of each package, `scripts\Get-WindowsAppSDK.ps1` downloads them from nuget.org.
 
 | What | In the repository | In a release | In an app |
 | --- | --- | --- | --- |

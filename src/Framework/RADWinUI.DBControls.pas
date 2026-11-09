@@ -2489,7 +2489,7 @@ begin
       if (Mem <> nil) and Succeeded(CreateRandomAccessStreamOverStream(Mem, 0, IID_IRandomAccessStream, Stream)) then
         try
           Bitmap := BitmapImage.New;
-          (Bitmap as IBitmapSource).SetSource(Stream);
+          (Bitmap as IBitmapSource).SetSource(Stream as IRandomAccessStream);
           (IntfOf(FImage, IImage) as IImage).put_Source(Bitmap as IImageSource);
           Shown := True;
         except

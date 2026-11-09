@@ -7,7 +7,7 @@ From an empty machine to a WinUI 3 app built, previewed, designed and deployed f
 | You need | Why |
 | --- | --- |
 | RAD Studio 13 Florence with Delphi, Win64 platform | compiles apps and the IDE package |
-| Windows App Runtime 2.5 x64 | runs WinUI 3 apps (end users need it too, see [Deployment](DEPLOYMENT.md)) |
+| Windows App Runtime 2.6 x64 | runs WinUI 3 apps (end users need it too, see [Deployment](DEPLOYMENT.md)) |
 | Windows 10 1809 or later, Windows 11 recommended | |
 
 No Python and nothing prebuilt: a release is source code, and RAD Studio builds the
@@ -22,7 +22,7 @@ powershell -ExecutionPolicy Bypass -File scripts\Get-WindowsAppSDK.ps1
 
 Without these files the first build stops with *RADWinUI : error RW1001 : Windows App SDK files
 are missing*. A release ZIP already contains the one file the build needs, so there you can skip
-this step. Add `-InstallRuntime` to the command when the Windows App Runtime 2.5 is not installed
+this step. Add `-InstallRuntime` to the command when the Windows App Runtime 2.6 is not installed
 on your PC yet.
 
 In RAD Studio, started **without** administrator rights (WinUI 3 does not run elevated):
@@ -189,7 +189,7 @@ builds Release and writes `build\deploy\MyApp` with the exe, the bootstrap DLL a
 | `RADWinUI : error RW1002 : RADWinUI was not found` | The project is outside the RADWinUI folder. Set `RADWINUI_ROOT` to the RADWinUI folder (in Windows or in Tools > Options > IDE > Environment Variables), then build again. |
 | `RADWinUI : error RW1003 : ...XamlCodeGen.exe is missing` | Open the group of your IDE and use Build All once: it makes `bin\XamlCodeGen.exe`. |
 | `Microsoft.WindowsAppRuntime.Bootstrap.dll was not found in: ...` | build once (the post-build copies it), or set `RADWINUI_ROOT` |
-| The app exits at start with a runtime error | install the Windows App Runtime 2.5 x64 |
+| The app exits at start with a runtime error | install the Windows App Runtime 2.6 x64 |
 | Nothing happens when started from an elevated IDE | start RAD Studio without administrator rights |
 | `XamlCodeGen did not run`, or a build stops at its pre-build event | open the group of your IDE (`RADWinUI.groupproj` in the 64-bit IDE, `RADWinUI32.groupproj` in the classic 32-bit IDE) and Build All (it makes `bin\XamlCodeGen.exe`). A project made by 0.9.3-rc.3 or older runs `py -3 ...xamlcodegen.py` before each build: in Project > Options > Building > Build Events, change it to `"<RADWinUI>\bin\XamlCodeGen.exe" "$(MSBuildProjectDirectory)"` |
 | No Tools > RADWinUI Preview | Build All of the group of your IDE, install its package, then restart the IDE |

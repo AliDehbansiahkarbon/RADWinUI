@@ -65,6 +65,8 @@ type
     U: TUniverse;
     UnitName, Header: string;
     Namespaces: TArray<string>;
+    /// <summary>Namespaces projected in full whose types never take a plain name from a type in Namespaces.</summary>
+    ExtraNamespaces: TArray<string>;
     Names: TDictionary<string, string>;      // full name -> Pascal name
     Included: TList<TTypeDef>;               // sorted by full name
     IncludedNames: TStringSet;
@@ -73,9 +75,11 @@ type
     Unknown: TStringSet;                     // referenced but not in the loaded metadata
     DelegateClasses: TDictionary<string, string>; // delegate interface name -> Delphi class
     constructor Create(AUniverse: TUniverse; const AUnitName: string; const ANamespaces: TArray<string>;
-      const AHeader: string);
+      const AHeader: string; const AExtraNamespaces: TArray<string> = nil);
     destructor Destroy; override;
     function InScope(const ANamespace: string): Boolean;
+    /// <summary>True for a namespace selected through ExtraNamespaces by a more specific entry than any in Namespaces.</summary>
+    function IsExtra(const ANamespace: string): Boolean;
     function TypeName(ARef: TTypeRef; AContext: TStringSet = nil): string;
     /// <summary>Pascal names of a type's methods (OverloadAttribute names, made unique).</summary>
     function MethodNames(Td: TTypeDef): TMethodNames;
@@ -253,12 +257,13 @@ end;
 { TProjection }
 
 constructor TProjection.Create(AUniverse: TUniverse; const AUnitName: string; const ANamespaces: TArray<string>;
-  const AHeader: string);
+  const AHeader: string; const AExtraNamespaces: TArray<string>);
 begin
   inherited Create;
   U := AUniverse;
   UnitName := AUnitName;
   Namespaces := ANamespaces;
+  ExtraNamespaces := AExtraNamespaces;
   Header := AHeader;
   Names := TDictionary<string, string>.Create;
   Included := TList<TTypeDef>.Create;
@@ -286,14 +291,39 @@ begin
   inherited;
 end;
 
-function TProjection.InScope(const ANamespace: string): Boolean;
+// Length of the longest entry of AList that is ANamespace or one of its parents, 0 for none
+function MatchLength(const ANamespace: string; const AList: TArray<string>): Integer;
 var
   N: string;
 begin
-  for N in Namespaces do
-    if (ANamespace = N) or ANamespace.StartsWith(N + '.') then
+  Result := 0;
+  for N in AList do
+    if ((ANamespace = N) or ANamespace.StartsWith(N + '.')) and (Length(N) > Result) then
+      Result := Length(N);
+end;
+
+// Implementation details that a package's metadata exposes but apps must not call,
+// such as Microsoft.Windows.AI.FoundationInternal or Microsoft.Windows.PrivateCommon
+function IsHiddenNamespace(const ANamespace: string): Boolean;
+var
+  Part: string;
+begin
+  for Part in ANamespace.Split(['.']) do
+    if Part.Contains('Internal') or Part.StartsWith('Private') then
       Exit(True);
   Result := False;
+end;
+
+function TProjection.InScope(const ANamespace: string): Boolean;
+begin
+  Result := ((MatchLength(ANamespace, Namespaces) > 0) or (MatchLength(ANamespace, ExtraNamespaces) > 0)) and
+    not IsHiddenNamespace(ANamespace);
+end;
+
+function TProjection.IsExtra(const ANamespace: string): Boolean;
+begin
+  // The more specific entry wins: Microsoft.Graphics.Imaging is extra although Microsoft.Graphics is not
+  Result := MatchLength(ANamespace, ExtraNamespaces) > MatchLength(ANamespace, Namespaces);
 end;
 
 function TProjection.SortedValueTypes: TArray<string>;
@@ -447,7 +477,7 @@ var
   AllNamed: TArray<string>;
   Full, Simple, Keep, Base, Name: string;
   Fulls: TStringList;
-  Preferred: TArray<string>;
+  Core, Extra, External: TArray<string>;
   Used: TStringSet;
   Refs: TArray<TTypeRef>;
   Ref: TTypeRef;
@@ -481,14 +511,33 @@ begin
         Continue;
       end;
       // Collision: the type from a selected namespace keeps the plain name when it is
-      // the only one, every other gets a namespace prefix.
-      Preferred := nil;
+      // the only one, every other gets a namespace prefix. Types of the extra namespaces
+      // come last, so adding an extra namespace never renames a type that had a plain name.
+      Core := nil;
+      Extra := nil;
+      External := nil;
       for Full in Fulls do
-        if IncludedNames.ContainsKey(Full) then
-          Preferred := Preferred + [Full];
+        if not IncludedNames.ContainsKey(Full) then
+          External := External + [Full]
+        else if IsExtra(Copy(Full, 1, LastDelimiter('.', Full) - 1)) then
+          Extra := Extra + [Full]
+        else
+          Core := Core + [Full];
       Keep := '';
-      if (Length(Preferred) = 1) and not InList(DelphiTypeNames, Simple) then
-        Keep := Preferred[0];
+      if InList(DelphiTypeNames, Simple) then
+        Keep := ''
+      else if Length(Core) > 0 then
+      begin
+        if Length(Core) = 1 then
+          Keep := Core[0];
+      end
+      else if Length(Extra) > 0 then
+      begin
+        if Length(External) = 1 then
+          Keep := External[0]
+        else if (Length(External) = 0) and (Length(Extra) = 1) then
+          Keep := Extra[0];
+      end;
       for Full in Fulls do
         if Full = Keep then
           Names.AddOrSetValue(Full, Escape(SimpleName(Full)))

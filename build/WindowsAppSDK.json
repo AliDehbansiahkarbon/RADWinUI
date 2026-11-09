@@ -1,12 +1,13 @@
 {
-  "release": "2.5.1",
-  "majorMinor": "0x00020005",
-  "runtimeVersion": "2.5.1.0",
+  "release": "2.6.5",
+  "majorMinor": "0x00020006",
+  "runtimeVersion": "2.6.5.0",
   "packages": {
-    "Microsoft.WindowsAppSDK.Foundation": "2.3.12",
-    "Microsoft.WindowsAppSDK.WinUI": "2.3.9",
-    "Microsoft.WindowsAppSDK.InteractiveExperiences": "2.1.9",
-    "Microsoft.WindowsAppSDK.Runtime": "2.5.1",
+    "Microsoft.WindowsAppSDK.Foundation": "2.6.5",
+    "Microsoft.WindowsAppSDK.WinUI": "2.6.5",
+    "Microsoft.WindowsAppSDK.InteractiveExperiences": "2.6.5",
+    "Microsoft.WindowsAppSDK.AI": "2.6.5",
+    "Microsoft.WindowsAppSDK.Runtime": "2.6.5",
     "Microsoft.Web.WebView2": "1.0.3719.77"
   }
 }

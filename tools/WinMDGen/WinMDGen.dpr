@@ -2,7 +2,8 @@ program WinMDGen;
 
 (*
   Command line: WinMDGen --winmd <file or folder> [--winmd ...] --out <folder>
-    [--unit RADWinUI.Abi] [--namespace Microsoft.UI ...] [--xaml-unit RADWinUI.Xaml] [--sdk <text>]
+    [--unit RADWinUI.Abi] [--namespace Microsoft.UI ...] [--extra-namespace Microsoft.Windows ...]
+    [--xaml-unit RADWinUI.Xaml] [--sdk <text>]
   Writes the ABI projection, the XAML wrappers and the XamlCodeGen type index.
 *)
 
@@ -60,7 +61,7 @@ function Run: Integer;
 var
   I: Integer;
   Arg, OutDir, UnitName, XamlUnit, Sdk, Header, Text, Path, Name: string;
-  WinMDs, Namespaces, Files: TArray<string>;
+  WinMDs, Namespaces, Extras, Files: TArray<string>;
   U: TUniverse;
   Proj: TProjection;
   Wrappers: TXamlWrappers;
@@ -79,6 +80,7 @@ begin
     else if Arg = '--out' then OutDir := ParamStr(I)
     else if Arg = '--unit' then UnitName := ParamStr(I)
     else if Arg = '--namespace' then Namespaces := Namespaces + [ParamStr(I)]
+    else if Arg = '--extra-namespace' then Extras := Extras + [ParamStr(I)]
     else if Arg = '--xaml-unit' then XamlUnit := ParamStr(I)
     else if Arg = '--sdk' then Sdk := ParamStr(I)
     else
@@ -88,12 +90,17 @@ begin
   if (Length(WinMDs) = 0) or (OutDir = '') then
   begin
     Writeln(ErrOutput, 'usage: WinMDGen --winmd <file or folder> [--winmd ...] --out <folder> [--unit name] ' +
-      '[--namespace ns ...] [--xaml-unit name] [--sdk text]');
+      '[--namespace ns ...] [--extra-namespace ns ...] [--xaml-unit name] [--sdk text]');
     Exit(2);
   end;
   if Length(Namespaces) = 0 then
     Namespaces := ['Microsoft.UI', 'Microsoft.Foundation', 'Microsoft.Graphics', 'Windows.Foundation',
       'Windows.Media.Control'];
+  // The app platform beside the UI: lifecycle, notifications, pickers, resources, AI,
+  // and the Windows types they hand out (files, streams, bitmaps, the clipboard)
+  if Length(Extras) = 0 then
+    Extras := ['Microsoft.Windows', 'Microsoft.Graphics.Imaging', 'Windows.ApplicationModel.DataTransfer',
+      'Windows.Graphics.Imaging', 'Windows.Storage'];
   Files := Collect(WinMDs);
   if Length(Files) = 0 then
   begin
@@ -107,7 +114,7 @@ begin
     'Source metadata: ' + Sdk + #10;
   U := TUniverse.Create(Files);
   try
-    Proj := TProjection.Create(U, UnitName, Namespaces, Header);
+    Proj := TProjection.Create(U, UnitName, Namespaces, Header, Extras);
     try
       Text := Proj.Emit;
       ForceDirectories(OutDir);
