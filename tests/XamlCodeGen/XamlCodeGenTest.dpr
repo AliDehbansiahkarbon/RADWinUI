@@ -1,4 +1,4 @@
-﻿program XamlCodeGenTest;
+program XamlCodeGenTest;
 
 {
   Tests of XamlCodeGen, in process: the generated
@@ -347,6 +347,120 @@ begin
   Check(Error.Contains('MainWindow.xaml(8): <rw:Nope> is not a RADWinUI control'), 'an unknown rw: element is refused');
 end;
 
+/// <Page> and <UserControl> roots, user controls used from other XAML, and <Frame>.
+procedure TestPagesAndUserControls;
+const
+  PageXaml =
+    '<Page xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"' + #10 +
+    '    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="using:MyApp"' + #10 +
+    '    x:Class="TContactsPage" Background="Transparent" Loaded="PageLoaded">' + #10 +
+    '  <StackPanel>' + #10 +
+    '    <local:ContactCard x:Name="Card" Title="Ada" Margin="4" Clicked="CardClicked"/>' + #10 +
+    '    <local:ContactCard Title="Bob" Clicked="OtherClicked"/>' + #10 +
+    '    <Frame x:Name="Details"/>' + #10 +
+    '  </StackPanel>' + #10 +
+    '</Page>';
+  PageUnit =
+    'unit ContactsPage;' + #10 + 'interface' + #10 + 'type' + #10 +
+    '  TContactsPage = class(TContactsPageBase)' + #10 + '  published' + #10 +
+    '    procedure PageLoaded(Sender: TObject; E: TWinUIRoutedEventArgs);' + #10 +
+    '    procedure CardClicked(Sender: TObject; const E: TWinValue);' + #10 +
+    '    procedure OtherClicked(Sender: TObject);' + #10 +
+    '  end;' + #10 + 'implementation' + #10 + 'end.';
+  CardXaml =
+    '<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"' + #10 +
+    '    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TContactCard">' + #10 +
+    '  <Border>' + #10 +
+    '    <Button x:Name="OpenButton" Content="Open" Click="OpenClick"/>' + #10 +
+    '  </Border>' + #10 +
+    '</UserControl>';
+  CardUnit =
+    'unit ContactCard;' + #10 + 'interface' + #10 + 'type' + #10 +
+    '  TContactCard = class(TContactCardBase)' + #10 + '  protected' + #10 +
+    '    class procedure DefineType(AType: TWinUICustomType); override;' + #10 + '  published' + #10 +
+    '    procedure OpenClick(Sender: TObject);' + #10 +
+    '    property Title: string index 0 read GetText write SetText;' + #10 +
+    '    property OnClicked: TWinUIWinValueEventHandler index 0 read GetHandler write SetHandler;' + #10 +
+    '  end;' + #10 + 'implementation' + #10 +
+    'class procedure TContactCard.DefineType(AType: TWinUICustomType);' + #10 + 'begin' + #10 +
+    '  inherited;' + #10 + '  AType.AddProperty(''Title'', TWinUIPropertyKind.Text);' + #10 +
+    '  AType.AddEvent(''Clicked'');' + #10 + 'end;' + #10 + 'end.';
+var
+  Folder, Text, Error, Xaml: string;
+
+  function Gen(const AName: string): string;
+  begin
+    Error := '';
+    try
+      Result := TFile.ReadAllText(GenerateFile(TPath.Combine(Folder, AName), Index), TEncoding.UTF8);
+    except
+      on E: ECodeGenError do
+      begin
+        Error := E.Message;
+        Result := '';
+      end;
+    end;
+  end;
+
+begin
+  Writeln('Pages and user controls');
+  Folder := NewFolder;
+  Save(Folder, 'ContactsPage.xaml', PageXaml);
+  Save(Folder, 'ContactsPage.pas', PageUnit);
+  Save(Folder, 'ContactCard.xaml', CardXaml);
+  Save(Folder, 'ContactCard.pas', CardUnit);
+  Text := Gen('ContactsPage.xaml');
+  if Error <> '' then
+    Writeln('    unexpected error: ', Error);
+  Check(Text.Contains('TContactsPageBase = class(TWinUIXamlPage)') and Text.Contains('constructor Create; override;') and
+    Text.Contains('inherited CreateFromXaml(PageXaml);'), 'a <Page> root gives a TWinUIXamlPage base');
+  Check(Text.Contains('Card: TContactCard;') and Text.Contains('  ContactCard,') and Text.Contains('  RADWinUI.Pages;'),
+    'a user control element gets a field of its class and its unit');
+  Check(Text.Contains('Details: TWinUIPageFrame;'), 'a <Frame> is a TWinUIPageFrame');
+  Check(Text.Contains('Self.OnLoaded := TWinUIRoutedEventHandler(PublishedMethod(''PageLoaded''));'),
+    'an event attribute of the page itself is wired to the page');
+  Check(Text.Contains('Card.OnClicked := TWinUIWinValueEventHandler(PublishedMethod(''CardClicked''));') and
+    Text.Contains('FindElement<TContactCard>(''_rw1'').EventByName(''Clicked'').Add(NotifyProc<TWinValue>(''OtherClicked''));'),
+    'user control events, full and short handler');
+  Xaml := Text.Substring(Text.IndexOf('PageXaml ='), Text.IndexOf('constructor TContactsPageBase.Create;') - Text.IndexOf('PageXaml ='));
+  Check(not Xaml.Contains('x:Class') and Xaml.Contains('Background="Transparent"') and not Xaml.Contains('Loaded='),
+    'the page XAML keeps its attributes but not x:Class or event attributes');
+
+  Text := Gen('ContactCard.xaml');
+  if Error <> '' then
+    Writeln('    unexpected error: ', Error);
+  Check(Text.Contains('TContactCardBase = class(TWinUIXamlUserControl)') and Text.Contains('procedure Initialize; override;') and
+    Text.Contains('LoadContentXaml(ContentXaml);'), 'a <UserControl> root gives a TWinUIXamlUserControl base');
+  Check(Text.Contains('TWinUICustomControls.Register(TContactCard, ''ContactCard'', ''User controls'');') and
+    Text.Contains('uses' + #13#10 + '  ContactCard;'), 'the generated unit registers the user control');
+  Check(Text.Contains('OpenButton: TWinUIButton;') and
+    Text.Contains('OpenButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>(''OpenClick''));'),
+    'fields and events inside a user control');
+
+  Save(Folder, 'ContactsPage.xaml', PageXaml.Replace('local:ContactCard Title="Bob"', 'local:Nope Title="Bob"'));
+  Gen('ContactsPage.xaml');
+  Check(Error.Contains('ContactsPage.xaml(6): <Nope> is not a user control of this project'), 'an unknown user control is refused');
+  Save(Folder, 'ContactsPage.xaml', PageXaml.Replace('Title="Ada"', 'Titel="Ada"'));
+  Gen('ContactsPage.xaml');
+  Check(Error.Contains('TContactCard has no property or event Titel') and Error.Contains('Title'),
+    'an unknown property of a user control is refused, with the known ones');
+  Save(Folder, 'ContactCard.pas', CardUnit.Replace('    property OnClicked: TWinUIWinValueEventHandler index 0 read GetHandler write SetHandler;' + #10, ''));
+  Save(Folder, 'ContactsPage.xaml', PageXaml);
+  Gen('ContactsPage.xaml');
+  Check(Error.Contains('needs "property OnClicked: TWinUIWinValueEventHandler'), 'a full handler needs the OnName property');
+  Save(Folder, 'ContactCard.pas', CardUnit);
+  Save(Folder, 'ContactCard.xaml', CardXaml.Replace('x:Class="TContactCard"', 'x:Class="TContactCard" Width="200"'));
+  Gen('ContactCard.xaml');
+  Check(Error.Contains('<UserControl> takes no attributes besides x:Class, set Width on its content element'),
+    'attributes on <UserControl> are refused');
+  Save(Folder, 'ContactCard.xaml', CardXaml.Replace('<Border>', '<Border xmlns:local="using:MyApp"><local:ContactCard/>'));
+  Gen('ContactCard.xaml');
+  Check(Error.Contains('the user control TContactCard cannot contain itself'), 'a user control cannot contain itself');
+  Save(Folder, 'ContactCard.xaml', CardXaml.Replace('x:Name="OpenButton"', 'x:Name="Title"'));
+  Gen('ContactCard.xaml');
+  Check(Error.Contains('x:Name="Title" would hide a member of TContactCard'), 'an x:Name that hides a user control property is refused');
+end;
+
 /// Every sample's committed MainWindow.Xaml.pas is exactly what the generator writes now.
 procedure TestSamples(const ARoot: string);
 var
@@ -379,6 +493,7 @@ begin
     TestUnits;
     TestBindings;
     TestCustomControls;
+    TestPagesAndUserControls;
     TestSamples(ParamStr(1));
   finally
     Index.Free;

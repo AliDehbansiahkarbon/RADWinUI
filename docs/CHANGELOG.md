@@ -4,6 +4,12 @@ All notable changes to RADWinUI.
 
 ## Unreleased
 
+- Pages: a `.xaml` file with a `<Page>` root and its `.pas` unit, like a window. A `<Frame>` is a `TWinUIPageFrame` (unit `RADWinUI.Pages`) that navigates between them: `Navigate(TPageClass, Parameter)` with any object, string, number or Boolean, `GoBack`, `GoForward`, `BackStack`, WinUI's page transitions, and `NavigatedTo`, `NavigatedFrom` and `NavigatingFrom` on the page, which can cancel and finish the navigation later with `Proceed`. A page with `KeepAlive` keeps its state.
+- `AttachNavigationView` lets a NavigationView drive a frame: menu items name their page class in `Tag`, the selection follows navigation and the back button goes back.
+- User controls: a `.xaml` file with a `<UserControl>` root and its `.pas` unit. Other XAML of the project uses it as `<local:Name/>` with any `using:` namespace, with its properties and events checked at build time and a typed field in the generated unit.
+- File > New > Other > Delphi Files has RADWinUI Page and RADWinUI User Control. The designer and the preview open pages and user controls, and show the project's user controls as labelled frames.
+- New sample: Crew, a team directory in a NavigationView with four pages, a page parameter, a page that keeps its state, a page that asks before it is left, and a user control used three times.
+- An app with a NavigationView no longer crashes when it ends, and wrapping a NavigationView element whose wrapper class the app does not use no longer corrupts the heap.
 - New unit `RADWinUI.Dialogs`: `ShowMessage`, `MessageDlg` and `InputQuery` on WinUI's ContentDialog, and `TWinUIOpenDialog`, `TWinUISaveDialog` and `TWinUIFolderDialog` on the Windows App SDK pickers, with VCL-style filters. The result arrives in a callback on the UI thread. Several dialogs requested at once open one after the other.
 - New unit `RADWinUI.Notifications`: `TWinUINotification` shows Windows notifications with a title, text, images, buttons and text boxes, in apps with or without MSIX.
 - `TWinUIApp.OnActivated` and `LaunchActivation` tell how the app was started: a normal launch with its arguments, files, a link or a notification click. `SingleInstance` hands a second start to the running app, which comes to the front. `RegisterFileTypes` and `RegisterProtocol` make Windows start the app for files and links.

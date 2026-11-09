@@ -60,6 +60,14 @@ function Invoke-Named($Win, [string]$Name) {
   $Btn = Wait-For { $Win.FindFirst($Scope, $Cond) } "button '$Name'"
   $Btn.GetCurrentPattern([Windows.Automation.InvokePattern]::Pattern).Invoke()
 }
+# A NavigationView item or another list item with this name: selecting it is a click
+function Select-Named($Win, [string]$Name) {
+  $Cond = New-Object Windows.Automation.AndCondition(
+    (New-Object Windows.Automation.PropertyCondition($AE::NameProperty, $Name)),
+    (New-Object Windows.Automation.PropertyCondition($AE::ControlTypeProperty, [Windows.Automation.ControlType]::ListItem)))
+  $Item = Wait-For { $Win.FindFirst($Scope, $Cond) } "item '$Name'"
+  $Item.GetCurrentPattern([Windows.Automation.SelectionItemPattern]::Pattern).Select()
+}
 function Set-Text($Element, [string]$Text) {
   $Pattern = $Element.GetCurrentPattern([Windows.Automation.ValuePattern]::Pattern)
   $Pattern.SetValue($Text)
@@ -234,6 +242,33 @@ $Results = @(
     $null = Wait-For { (Get-Id $Win 'LogText').Current.Name -like '*MessageDlg error: mrOk*' } 'the logged result'
     Write-Host "  [ok] MessageDlg result logged"
   }
+  Test-Sample 'Crew' {
+    param($Win)
+    # Pages, a parameter, a page that asks before it is left, a KeepAlive page and a user control
+    Expect-Name $Win 'PageTitle' 'Home'
+    Invoke-Named $Win 'Open Ada Lovelace'
+    Expect-Name $Win 'PageTitle' 'Ada Lovelace'
+    Set-Text (Get-Id $Win 'RoleBox') 'Chief engineer'
+    Expect-Name $Win 'Status' 'Edited'
+    Invoke-Named $Win 'Back'
+    $null = Get-Named $Win 'Save changes to Ada Lovelace?'
+    Invoke-Named $Win 'Cancel'
+    Expect-Name $Win 'PageTitle' 'Ada Lovelace'
+    Invoke-Named $Win 'Back'
+    $null = Get-Named $Win 'Save changes to Ada Lovelace?'
+    Invoke-Named $Win 'No'
+    Expect-Name $Win 'PageTitle' 'Home'
+    Write-Host "  [ok] card -> profile with the person, Save changes? Cancel stays, No leaves"
+    Select-Named $Win 'People'
+    Expect-Name $Win 'PageTitle' 'People'
+    Set-Text (Get-Id $Win 'SearchBox') 'grace'
+    Expect-Name $Win 'CountText' '1 person'
+    Select-Named $Win 'Home'
+    Expect-Name $Win 'PageTitle' 'Home'
+    Select-Named $Win 'People'
+    Expect-Value $Win 'SearchBox' 'grace'
+    Write-Host "  [ok] NavigationView items navigate, the KeepAlive page keeps its search"
+  }
 )
 
 # Closing a window must not crash the app afterwards (the WinUI DLLs stay
@@ -255,6 +290,10 @@ $Results += ($LASTEXITCODE -eq 0)
 Write-Host 'Dialogs, notifications and activation'
 & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\AppServices\AppServicesTest.dpr' | Out-Null
 & (Join-Path $RepoRoot 'tests\AppServices\Win64\Debug\AppServicesTest.exe') | Select-Object -Skip 1
+$Results += ($LASTEXITCODE -eq 0)
+Write-Host 'Pages, navigation and user controls'
+& (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Pages\PagesTest.dpr' | Out-Null
+& (Join-Path $RepoRoot 'tests\Pages\Win64\Debug\PagesTest.exe') | Select-Object -Skip 1
 $Results += ($LASTEXITCODE -eq 0)
 
 if ($Results -contains $false) {

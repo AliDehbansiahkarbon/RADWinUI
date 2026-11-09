@@ -79,6 +79,21 @@ begin
   Check(Pos('<DCCReference Include="SecondWindow.Xaml.pas"/>', TFile.ReadAllText(DProj)) > 0,
     'window: added to the .dproj');
 
+  // RADWinUI Page and RADWinUI User Control
+  Check(ValidateNewFile(P.Directory, 'SecondWindow', fkPage) <> '', 'page: rejects an existing unit');
+  WriteNewFile(P.Directory, 'DetailsPage', fkPage);
+  Check(TFile.ReadAllText(TPath.Combine(P.Directory, 'DetailsPage.xaml')).Contains('<Page') and
+    TFile.ReadAllText(TPath.Combine(P.Directory, 'DetailsPage.pas')).Contains('TDetailsPage = class(TDetailsPageBase)'),
+    'page: writes DetailsPage.xaml with a <Page> root and its unit');
+  AddWindowToProjectFiles(DProj, 'DetailsPage');
+  WriteNewFile(P.Directory, 'InfoCard', fkUserControl);
+  Check(TFile.ReadAllText(TPath.Combine(P.Directory, 'InfoCard.xaml')).Contains('<UserControl') and
+    TFile.ReadAllText(TPath.Combine(P.Directory, 'InfoCard.pas')).Contains('AType.AddProperty(''Caption'''),
+    'user control: writes InfoCard.xaml with a <UserControl> root and a Caption property');
+  AddWindowToProjectFiles(DProj, 'InfoCard');
+  Check(Pos('InfoCard in ''InfoCard.pas''', TFile.ReadAllText(ChangeFileExt(DProj, '.dpr'))) > 0,
+    'user control: added to the .dpr uses clause');
+
   if Failures > 0 then
   begin
     Writeln('Result: FAIL (', Failures, ')');

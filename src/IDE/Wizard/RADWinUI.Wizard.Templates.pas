@@ -68,6 +68,25 @@ procedure WriteWindow(const ADirectory, AUnitName: string);
 ///   IDE (the IDE wizard adds the units through ToolsAPI instead).
 /// </summary>
 procedure AddWindowToProjectFiles(const ADProjPath, AUnitName: string);
+type
+  /// <summary>What File > New adds to a project: a window, a page or a user control.</summary>
+  TWizardFileKind = (fkWindow, fkPage, fkUserControl);
+
+/// <summary>Checks a new unit name in ADirectory, returns '' or the reason it cannot be used.</summary>
+function ValidateNewFile(const ADirectory, AUnitName: string; AKind: TWizardFileKind): string;
+/// <summary>The XAML of a new page class AClassName.</summary>
+function PageXaml(const AClassName, ATitle: string): string;
+/// <summary>The unit AUnitName with the page class AClassName.</summary>
+function PageUnit(const AUnitName, AClassName: string): string;
+/// <summary>The XAML of a new user control class AClassName.</summary>
+function UserControlXaml(const AClassName, ACaption: string): string;
+/// <summary>The unit AUnitName with the user control class AClassName and one property.</summary>
+function UserControlUnit(const AUnitName, AClassName: string): string;
+/// <summary>
+///   Writes AUnitName.xaml and AUnitName.pas (class T + AUnitName) of a window,
+///   page or user control in ADirectory, XamlCodeGen generates AUnitName.Xaml.pas.
+/// </summary>
+procedure WriteNewFile(const ADirectory, AUnitName: string; AKind: TWizardFileKind);
 
 /// <summary>Writes the project files, returns the .dproj path. MainWindow.Xaml.pas comes from XamlCodeGenCommand.</summary>
 function WriteProject(const AProject: TWizardProject): string;
@@ -418,12 +437,7 @@ end;
 
 function ValidateWindow(const ADirectory, AUnitName: string): string;
 begin
-  if not IsIdentifier(AUnitName) then
-    Exit('The window unit name must be a Pascal identifier (letters, digits, underscore).');
-  if FileExists(TPath.Combine(ADirectory, AUnitName + '.pas')) or
-    FileExists(TPath.Combine(ADirectory, AUnitName + '.xaml')) then
-    Exit('The project folder already has ' + AUnitName + '.pas or ' + AUnitName + '.xaml.');
-  Result := '';
+  Result := ValidateNewFile(ADirectory, AUnitName, fkWindow);
 end;
 
 function WindowXaml(const AClassName, ATitle: string): string;
@@ -496,6 +510,160 @@ begin
   end;
 end;
 
+function ValidateNewFile(const ADirectory, AUnitName: string; AKind: TWizardFileKind): string;
+const
+  Nouns: array[TWizardFileKind] of string = ('window', 'page', 'user control');
+begin
+  if not IsIdentifier(AUnitName) then
+    Exit('The ' + Nouns[AKind] + ' unit name must be a Pascal identifier (letters, digits, underscore).');
+  if FileExists(TPath.Combine(ADirectory, AUnitName + '.pas')) or
+    FileExists(TPath.Combine(ADirectory, AUnitName + '.xaml')) then
+    Exit('The project folder already has ' + AUnitName + '.pas or ' + AUnitName + '.xaml.');
+  Result := '';
+end;
+
+function PageXaml(const AClassName, ATitle: string): string;
+begin
+  Result := Lines([
+    '<Page',
+    '    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"',
+    '    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"',
+    '    x:Class="' + AClassName + '">',
+    '    <StackPanel Spacing="12" Margin="32">',
+    '        <TextBlock x:Name="PageTitle" Text="' + XmlEscape(ATitle) + '" Style="{StaticResource TitleTextBlockStyle}"/>',
+    '        <TextBlock x:Name="ParameterText" Opacity="0.7"/>',
+    '        <Button x:Name="BackButton" Content="Back"/>',
+    '    </StackPanel>',
+    '</Page>']);
+end;
+
+function PageUnit(const AUnitName, AClassName: string): string;
+begin
+  Result := Lines([
+    'unit ' + AUnitName + ';',
+    '',
+    'interface',
+    '',
+    'uses',
+    '  RADWinUI.Xaml,',
+    '  RADWinUI.Pages,',
+    '  ' + AUnitName + '.Xaml;',
+    '',
+    'type',
+    '  // Shown by a frame: ContentFrame.Navigate(' + AClassName + ') or Navigate(' + AClassName + ', Parameter)',
+    '  ' + AClassName + ' = class(' + AClassName + 'Base)   // generated from ' + AUnitName + '.xaml',
+    '  protected',
+    '    procedure NavigatedTo(const AArgs: TWinUINavigationArgs); override;',
+    '  published',
+    '    procedure BackButtonClick(Sender: TObject);',
+    '  end;',
+    '',
+    'implementation',
+    '',
+    'procedure ' + AClassName + '.NavigatedTo(const AArgs: TWinUINavigationArgs);',
+    'begin',
+    '  ParameterText.Text := AArgs.Parameter.AsString;',
+    '  BackButton.IsEnabled := Frame.CanGoBack;',
+    'end;',
+    '',
+    'procedure ' + AClassName + '.BackButtonClick(Sender: TObject);',
+    'begin',
+    '  Frame.GoBack;',
+    'end;',
+    '',
+    'end.']);
+end;
+
+function UserControlXaml(const AClassName, ACaption: string): string;
+begin
+  Result := Lines([
+    '<UserControl',
+    '    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"',
+    '    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"',
+    '    x:Class="' + AClassName + '">',
+    '    <Border Padding="16,12" CornerRadius="8" BorderThickness="1"',
+    '            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"',
+    '            BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">',
+    '        <TextBlock x:Name="CaptionText" Text="' + XmlEscape(ACaption) + '"/>',
+    '    </Border>',
+    '</UserControl>']);
+end;
+
+function UserControlUnit(const AUnitName, AClassName: string): string;
+var
+  XamlName: string;
+begin
+  XamlName := AClassName.Substring(1);
+  Result := Lines([
+    'unit ' + AUnitName + ';',
+    '',
+    'interface',
+    '',
+    'uses',
+    '  RADWinUI.Framework,',
+    '  RADWinUI.Xaml,',
+    '  RADWinUI.CustomControls,',
+    '  ' + AUnitName + '.Xaml;',
+    '',
+    'type',
+    '  // In other XAML of the project: xmlns:local="using:MyApp" and <local:' + XamlName + ' Caption="Hello"/>',
+    '  ' + AClassName + ' = class(' + AClassName + 'Base)   // generated from ' + AUnitName + '.xaml',
+    '  protected',
+    '    // One AddProperty per published property below, the index is its position',
+    '    class procedure DefineType(AType: TWinUICustomType); override;',
+    '    procedure PropertyChanged(AIndex: Integer); override;',
+    '  published',
+    '    property Caption: string index 0 read GetText write SetText;',
+    '  end;',
+    '',
+    'implementation',
+    '',
+    'class procedure ' + AClassName + '.DefineType(AType: TWinUICustomType);',
+    'begin',
+    '  inherited;',
+    '  AType.AddProperty(''Caption'', TWinUIPropertyKind.Text);',
+    'end;',
+    '',
+    'procedure ' + AClassName + '.PropertyChanged(AIndex: Integer);',
+    'begin',
+    '  CaptionText.Text := Caption;',
+    'end;',
+    '',
+    'end.']);
+end;
+
+procedure WriteNewFile(const ADirectory, AUnitName: string; AKind: TWizardFileKind);
+var
+  Error, ClassName, Xaml, Code: string;
+  Utf8: TEncoding;
+begin
+  Error := ValidateNewFile(ADirectory, AUnitName, AKind);
+  if Error <> '' then
+    raise EArgumentException.Create(Error);
+  ClassName := 'T' + AUnitName;
+  case AKind of
+    fkPage:
+      begin
+        Xaml := PageXaml(ClassName, AUnitName);
+        Code := PageUnit(AUnitName, ClassName);
+      end;
+    fkUserControl:
+      begin
+        Xaml := UserControlXaml(ClassName, AUnitName);
+        Code := UserControlUnit(AUnitName, ClassName);
+      end;
+  else
+    Xaml := WindowXaml(ClassName, AUnitName);
+    Code := WindowUnit(AUnitName, ClassName);
+  end;
+  Utf8 := TUTF8Encoding.Create(False);
+  try
+    TFile.WriteAllText(TPath.Combine(ADirectory, AUnitName + '.xaml'), Xaml, Utf8);
+    TFile.WriteAllText(TPath.Combine(ADirectory, AUnitName + '.pas'), Code, Utf8);
+  finally
+    Utf8.Free;
+  end;
+end;
 procedure AddWindowToProjectFiles(const ADProjPath, AUnitName: string);
 const
   Anchor = '        <BuildConfiguration Include="Base">';

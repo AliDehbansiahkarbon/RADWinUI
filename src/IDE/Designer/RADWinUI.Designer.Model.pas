@@ -99,6 +99,7 @@ implementation
 
 uses
   System.Math,
+  System.StrUtils,
   System.IOUtils,
   System.JSON,
   System.RegularExpressions,
@@ -296,7 +297,7 @@ function TDesignerTypeIndex.IsVisual(const ATag: string): Boolean;
 var
   Cls: string;
 begin
-  if ATag = 'Window' then
+  if MatchStr(ATag, ['Window', 'Page', 'UserControl']) then
     Exit(True);
   for Cls in Chain(ATag) do
     if Cls = 'Microsoft.UI.Xaml.UIElement' then
@@ -350,7 +351,7 @@ end;
 
 function WindowClass(const AXaml: string): string;
 begin
-  Result := TRegEx.Match(AXaml, '<Window\b[^>]*?\sx:Class\s*=\s*"([A-Za-z_]\w*)"').Groups[1].Value;
+  Result := TRegEx.Match(AXaml, '<(?:Window|Page|UserControl)\b[^>]*?\sx:Class\s*=\s*"([A-Za-z_]\w*)"').Groups[1].Value;
 end;
 
 /// 1-based line of the character at 0-based AIndex.

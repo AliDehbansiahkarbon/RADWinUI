@@ -1,0 +1,38 @@
+<Page
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    x:Class="TPeoplePage">
+  <Grid RowSpacing="12" MaxWidth="720" HorizontalAlignment="Left">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <TextBlock x:Name="PageTitle" Text="People" Style="{StaticResource TitleLargeTextBlockStyle}"/>
+    <StackPanel Grid.Row="1" Spacing="4">
+      <TextBox x:Name="SearchBox" PlaceholderText="Search by name or role" Width="360" HorizontalAlignment="Left"
+               TextChanged="SearchChanged" AutomationProperties.Name="Search people"/>
+      <TextBlock x:Name="CountText" FontSize="12" Opacity="0.7" d:Text="8 people"/>
+    </StackPanel>
+    <ListView x:Name="PeopleList" Grid.Row="2" IsItemClickEnabled="True" SelectionMode="None" ItemClick="PersonClick">
+      <d:ListView.Items>
+        <x:String>Ada Lovelace</x:String>
+        <x:String>Grace Hopper</x:String>
+      </d:ListView.Items>
+      <ListView.ItemTemplate>
+        <DataTemplate x:DataType="TPerson">
+          <StackPanel Orientation="Horizontal" Spacing="12" Padding="0,8">
+            <PersonPicture DisplayName="{Binding Name}" Width="36" Height="36"/>
+            <StackPanel VerticalAlignment="Center">
+              <TextBlock Text="{Binding Name}" d:Text="{Binding}" FontWeight="SemiBold"/>
+              <TextBlock Text="{Binding Role}" d:Text="Engineering lead" FontSize="12" Opacity="0.7"/>
+            </StackPanel>
+          </StackPanel>
+        </DataTemplate>
+      </ListView.ItemTemplate>
+    </ListView>
+  </Grid>
+</Page>

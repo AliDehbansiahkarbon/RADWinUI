@@ -243,6 +243,150 @@ AlwaysOnTop := True;                          // Overlay sets it, a normal windo
 
 The Overlay category of the Tool Palette has the controls such a window usually needs: a notch panel, glowing tiles, a global hotkey and the media playing on the PC. They are described in [CUSTOM-CONTROLS.md](CUSTOM-CONTROLS.md).
 
+## Pages and navigation (RADWinUI.Pages)
+
+A page is a `.xaml` file with a `<Page>` root and its `.pas` unit, made like a window: File > New > Other > Delphi Files > **RADWinUI Page**.
+
+```xml
+<Page xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+      xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+      x:Class="TProfilePage">
+    <StackPanel Spacing="12">
+        <TextBlock x:Name="PageTitle" Style="{StaticResource TitleTextBlockStyle}"/>
+        <Button x:Name="SaveButton" Content="Save" Click="SaveClick"/>
+    </StackPanel>
+</Page>
+```
+
+XamlCodeGen writes `TProfilePageBase = class(TWinUIXamlPage)` with a field per `x:Name` and the event wiring. Your `TProfilePage` inherits it and overrides what it needs:
+
+```pascal
+procedure TProfilePage.NavigatedTo(const AArgs: TWinUINavigationArgs);
+begin
+  FPerson := AArgs.Parameter.AsObject as TPerson;  // what Navigate was given
+  PageTitle.Text := FPerson.Name;
+end;
+```
+
+A `<Frame>` in a window, page or user control is a `TWinUIPageFrame`. It shows one page at a time:
+
+```pascal
+ContentFrame.Navigate(THomePage);
+ContentFrame.Navigate(TProfilePage, Person);  // any object, string, number or Boolean
+ContentFrame.GoBack;
+```
+
+| Member | |
+| --- | --- |
+| `Navigate(TPageClass)`, `Navigate(TPageClass, Parameter)` | Creates the page and shows it. The current page goes on the back stack, the forward stack is cleared. |
+| `GoBack`, `GoForward`, `CanGoBack`, `CanGoForward` | Shows the previous or next page again, with the parameter it was shown with. |
+| `BackStack`, `ForwardStack`, `ClearBackStack` | The page classes behind and ahead of the current one, oldest first. |
+| `CurrentPage`, `OnNavigated` | The page shown, and an event after every navigation. |
+| `AttachNavigationView(Nav, [THomePage, TPeoplePage], TSettingsPage)` | Lets a NavigationView drive the frame, see below. |
+
+- A page is created when the frame shows it and freed after it is left, also when the user goes back to it later: then a new one is created with the same parameter. A page that sets `KeepAlive := True` in its constructor is created once, and the frame shows that instance again with its state, such as a search the user typed. The frame frees it when it goes itself.
+- `NavigatedTo(AArgs)`: the page is shown. `AArgs.Mode` is New, Back or Forward, `AArgs.Parameter` what Navigate was given, `AArgs.OtherPage` the class of the page left.
+- `NavigatedFrom(AArgs)`: the page was left.
+- `NavigatingFrom(var AArgs)`: the frame is about to leave the page. Set `AArgs.Cancel := True` to stay. To ask first, cancel, ask with `MessageDlg`, and call `AArgs.Proceed` in the answer: it runs the same navigation without asking the page again.
+
+```pascal
+procedure TProfilePage.NavigatingFrom(var AArgs: TWinUINavigatingArgs);
+var
+  Proceed: TProc;
+begin
+  if not Dirty then
+    Exit;
+  AArgs.Cancel := True;
+  Proceed := AArgs.Proceed;
+  MessageDlg('Save changes?', TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo, TMsgDlgBtn.mbCancel],
+    procedure(AResult: TModalResult)
+    begin
+      if AResult = mrYes then
+        Save;
+      if AResult <> mrCancel then
+        Proceed;
+    end);
+end;
+```
+
+- `Frame` is the page's frame, so a page navigates on with `Frame.Navigate(TOtherPage)` and `Frame.GoBack`.
+- The frame plays WinUI's page transitions: the new page comes in from below, and slides in from the left when the user goes back.
+
+### NavigationView
+
+```xml
+<NavigationView x:Name="Nav" IsBackButtonVisible="Visible">
+    <NavigationView.MenuItems>
+        <NavigationViewItem Content="Home" Tag="THomePage"/>
+        <NavigationViewItem Content="People" Tag="TPeoplePage"/>
+    </NavigationView.MenuItems>
+    <Frame x:Name="ContentFrame"/>
+</NavigationView>
+```
+
+```pascal
+ContentFrame.AttachNavigationView(Nav, [THomePage, TPeoplePage], TSettingsPage);
+ContentFrame.Navigate(THomePage);
+```
+
+A click on an item whose `Tag` is the name of one of the page classes shows that page, the settings item shows the settings page, and the back button goes back. After every navigation, also from code and back, the selected item follows the current page and the back button is enabled when `CanGoBack`. One click asks a page that refuses to be left only once.
+
+## User controls
+
+A user control is a `.xaml` file with a `<UserControl>` root and its `.pas` unit: File > New > Other > Delphi Files > **RADWinUI User Control**. Other XAML of the project uses it like any control, with any `using:` namespace:
+
+```xml
+<Page ... xmlns:local="using:Crew">
+    <local:PersonCard x:Name="AdaCard" PersonName="Ada Lovelace" Role="Engineering" Opened="CardOpened"/>
+</Page>
+```
+
+```xml
+<UserControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+             xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             x:Class="TPersonCard">
+    <Button x:Name="CardButton" Click="CardClick">
+        <TextBlock x:Name="NameText"/>
+    </Button>
+</UserControl>
+```
+
+```pascal
+type
+  TPersonCard = class(TPersonCardBase)
+  protected
+    class procedure DefineType(AType: TWinUICustomType); override;
+    procedure PropertyChanged(AIndex: Integer); override;
+  published
+    procedure CardClick(Sender: TObject);
+    property PersonName: string index 0 read GetText write SetText;
+    property OnOpened: TWinUIWinValueEventHandler index 0 read GetHandler write SetHandler;
+  end;
+
+class procedure TPersonCard.DefineType(AType: TWinUICustomType);
+begin
+  inherited;
+  AType.AddProperty('PersonName', TWinUIPropertyKind.Text);
+  AType.AddEvent('Opened');
+end;
+
+procedure TPersonCard.PropertyChanged(AIndex: Integer);
+begin
+  NameText.Text := PersonName;
+end;
+
+procedure TPersonCard.CardClick(Sender: TObject);
+begin
+  Fire(0); // raises Opened
+end;
+```
+
+- XamlCodeGen writes `TPersonCardBase = class(TWinUIXamlUserControl)`: it loads the content, fills the `x:Name` fields, wires the events and registers the control, so nothing else is needed to use it.
+- Properties and events are declared like those of [controls written in Delphi](CUSTOM-CONTROLS.md#writing-your-own): one `AddProperty` per published indexed property, one `AddEvent` per event. They are dependency properties, so XAML attributes, bindings and styles work on them. `PropertyChanged` runs after XAML, a binding or Pascal set one.
+- In the XAML that uses it, the element gets a field of the user control's class (`AdaCard: TPersonCard`) and its unit is added to the uses clause. An event takes `(Sender: TObject; const E: TWinValue)`, which needs the `OnName` property, or `(Sender: TObject)`.
+- The build stops on a user control that has no `.xaml` file in the project folder, an attribute that is neither its own property or event nor one of a `ContentControl`, and a user control that contains itself.
+- The designer and the preview run without the app's code: there a user control shows as a labelled frame of its size.
+
 ## Dialogs and pickers (RADWinUI.Dialogs)
 
 Message boxes, input boxes and the Windows file and folder pickers, named as in the VCL. WinUI never blocks the UI thread while a dialog is open, so the answer arrives in a callback, always on the UI thread.

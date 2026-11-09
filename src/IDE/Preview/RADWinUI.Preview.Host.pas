@@ -532,12 +532,13 @@ var
   Root: TMatch;
   Tag, Parent: TXamlTag;
   Stack: TArray<Integer>;
-  Name, Title, Width, Height: string;
+  Name, Title, Width, Height, RootName: string;
   P, I, Close, ParentAt: Integer;
+  Prop: TMatch;
 begin
   Result := AXaml;
   AWindow := '||';
-  Root := TRegEx.Match(Result, '<Window\b[^>]*>');
+  Root := TRegEx.Match(Result, '<(Window|Page|UserControl)\b[^>]*>');
   if Root.Success then
   begin
     // The root tag keeps only its xmlns declarations and mc:Ignorable
@@ -553,12 +554,17 @@ begin
           Overwrite(Result, Tag.Attributes[I].Start, Blank(Copy(Result, Tag.Attributes[I].Start, Tag.Attributes[I].Length)));
       end;
     AWindow := Title + '|' + Width + '|' + Height;
-    Overwrite(Result, Root.Index + 1, 'Grid  ');
-    Close := Result.LastIndexOf('</Window');
+    RootName := Root.Groups[1].Value;
+    // <Window>, <Page> and <UserControl> all become a Grid, padded to the same length
+    Overwrite(Result, Root.Index + 1, 'Grid'.PadRight(RootName.Length));
+    Close := Result.LastIndexOf('</' + RootName);
     if Close >= 0 then
-      Overwrite(Result, Close + 1, '</Grid  ');
-  end;
-  P := 1;
+      Overwrite(Result, Close + 1, '</' + 'Grid'.PadRight(RootName.Length));
+    // and so do their property elements: <Page.Resources> is <Grid.Resources>
+    for Prop in TRegEx.Matches(Copy(Result, 1, MaxInt), '</?' + RootName + '(\.\w+)') do
+      Overwrite(Result, Prop.Groups[1].Index - RootName.Length,
+        'Grid' + Prop.Groups[1].Value + StringOfChar(' ', RootName.Length - 4));
+  end;  P := 1;
   while NextTag(Result, P, Tag) do
   begin
     if Tag.Name.StartsWith('d:') and Tag.Name.EndsWith('.Items') then
@@ -1216,8 +1222,8 @@ begin
   Position := 1;
   Depth := 0;
   Count := 0;
-  // The first start tag is the Grid that was <Window>
-  Skip := Ord(TRegEx.IsMatch(AXaml, '^\s*(<\?[^>]*>\s*)?(<!--.*?-->\s*)*<Window\b', [roSingleLine]));
+  // The first start tag is the Grid that was <Window>, <Page> or <UserControl>
+  Skip := Ord(TRegEx.IsMatch(AXaml, '^\s*(<\?[^>]*>\s*)?(<!--.*?-->\s*)*<(Window|Page|UserControl)\b', [roSingleLine]));
   Builder := TStringBuilder.Create(Length(AText) + 4096);
   try
     P := 1;

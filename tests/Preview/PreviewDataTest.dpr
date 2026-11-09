@@ -5,7 +5,7 @@ program PreviewDataTest;
 uses
   Winapi.Windows, System.SysUtils,
   RADWinUI.Forms, RADWinUI.Framework, RADWinUI.Xaml, RADWinUI.Abi,
-  RADWinUI.Interop.Core,
+  RADWinUI.Interop.Core, RADWinUI.CustomControls, RADWinUI.Runtime.Application,
   RADWinUI.Designer.XamlEdit in '..\..\src\IDE\Designer\RADWinUI.Designer.XamlEdit.pas',
   RADWinUI.Designer.Palette in '..\..\src\IDE\Designer\RADWinUI.Designer.Palette.pas',
   RADWinUI.Designer.Snap in '..\..\src\IDE\Designer\RADWinUI.Designer.Snap.pas',
@@ -28,11 +28,20 @@ const
     '</d:ComboBox.Items></ComboBox>' + #13#10 +
     '  <Button x:Name="AfterSample" Content="Real control"/>' + #13#10 +
     '</StackPanel></Window>';
+  // A page with resources and a user control of the app, which the preview does not have
+  PageXaml = '<Page xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" ' +
+    'xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" xmlns:local="using:Crew" x:Class="THomePage">' + #13#10 +
+    '<Page.Resources><SolidColorBrush x:Key="Accent" Color="Orange"/></Page.Resources>' + #13#10 +
+    '<StackPanel>' + #13#10 +
+    '  <local:PersonCard x:Name="AdaCard" PersonName="Ada" Margin="4" Opened="CardOpened"/>' + #13#10 +
+    '  <TextBlock x:Name="Caption" Text="Home" Foreground="{StaticResource Accent}"/>' + #13#10 +
+    '</StackPanel></Page>';
 
 type
   TDataWindow = class(TPreviewWindow)
   private
     FCheck: TWinUITimer;
+    FStep: Integer;
     procedure CheckData(Sender: TObject);
   public
     constructor Create; override;
@@ -81,6 +90,9 @@ begin
   for Element in Elements do
     if Element.Name = 'SampleTile' then
       Check(Element.DesignOnly, 'sample descendants are marked design-only');
+  Text := PreviewXaml(PageXaml, Window);
+  Check((Length(Text) = Length(PageXaml)) and Text.Contains('<Grid.Resources>') and not Text.Contains('<Page'),
+    'a <Page> previews as a Grid, its resources too, without moving any text');
   Check(Load('', DataXaml) = '', 'the actual preview host loads all four sample collections');
   FCheck := TWinUITimer.Create;
   FCheck.Interval := 300;
@@ -99,8 +111,22 @@ var
   Root: TWinUIFrameworkElement;
   People: TWinUIListView;
   Element: TXamlElement;
+  Error: string;
 begin
   FCheck.Enabled := False;
+  Inc(FStep);
+  if FStep = 2 then
+  begin
+    // The placeholder's template is applied by the first layout pass
+    Root := FindElement<TWinUIBorder>('PreviewHost').Child as TWinUIFrameworkElement;
+    Check(HasText(TWinUIObject.IntfOf(Root, IDependencyObject) as IDependencyObject, 'PersonCard') and
+      HasText(TWinUIObject.IntfOf(Root, IDependencyObject) as IDependencyObject, 'Home'),
+      'the user control shows as a labelled placeholder, the rest of the page as written');
+    Writeln('Preview data test PASSED');
+    Flush(Output);
+    Close;
+    Exit;
+  end;
   Root := FindElement<TWinUIBorder>('PreviewHost').Child as TWinUIFrameworkElement;
   People := TWinUIObject.Wrap(Self, Root.FindName('People').Obj, TWinUIListView) as TWinUIListView;
   Check((People.Items.Count = 2) and (People.Items[1].AsString = 'Bea'), 'native list contains the sample strings');
@@ -120,12 +146,13 @@ begin
       Check(Command(Format('SELECTPOS %d %d', [Element.Line, Element.Column])) =
         Format('SELECTED %d %d Button AfterSample', [Element.Line, Element.Column]),
         'selection after sample data keeps source coordinates');
-  Writeln('Preview data test PASSED');
-  Flush(Output);
-  Close;
+  Error := Load('', PageXaml);
+  Check(Error = '', 'a page with a user control of the app loads in the preview ' + Error);
+  FCheck.Enabled := True;
 end;
 
 begin
+  CustomXamlDesignTime := True; // as in the preview host
   TWinUIApp.OnException := TDataWindow.Failed;
   try
     TWinUIApp.Run(TDataWindow);

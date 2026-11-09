@@ -190,12 +190,6 @@ uses
   Winapi.Windows;
 
 type
-  TGUIDArray = array[0..MaxInt div SizeOf(TGUID) - 1] of TGUID;
-  PGUIDArray = ^TGUIDArray;
-
-procedure CoTaskMemFree(APtr: Pointer); stdcall; external 'ole32.dll';
-
-type
   // IVector<T> for any interface-typed T: every such instance has this vtable
   // layout, so one declaration serves them all once queried with the instance IID.
   IVectorLayout = interface(IInspectable)
@@ -326,23 +320,17 @@ end;
 class function TWinUIObject.FindByInterfaces(const AObj: IInspectable;
   ADefault: TWinUIObjectClass): TWinUIObjectClass;
 var
-  Count, I, J: Integer;
-  Iids: PGUID;
-  List: PGUIDArray;
+  J: Integer;
+  Unk: IInterface;
 begin
   // The object implements the default interface of every runtime class it derives
-  // from, the deepest linked wrapper among those is the most derived one.
+  // from, the deepest linked wrapper among those is the most derived one. Asked with
+  // QueryInterface, not GetIids: freeing the IID array of a NavigationView with
+  // CoTaskMemFree corrupts the heap.
   Result := ADefault;
-  AObj.GetIids(Cardinal(Count), Iids);
-  try
-    List := PGUIDArray(Iids);
-    for I := 0 to Count - 1 do
-      for J := 0 to High(FRegistryIIDs) do
-        if (FRegistryIIDs[J] = List[I]) and FRegistryClasses[J].InheritsFrom(Result) then
-          Result := FRegistryClasses[J];
-  finally
-    CoTaskMemFree(Iids);
-  end;
+  for J := 0 to High(FRegistryIIDs) do
+    if FRegistryClasses[J].InheritsFrom(Result) and (AObj.QueryInterface(FRegistryIIDs[J], Unk) = S_OK) then
+      Result := FRegistryClasses[J];
 end;
 
 class function TWinUIObject.Wrap(AOwner: TWinUIObject; const AObj: IInterface;

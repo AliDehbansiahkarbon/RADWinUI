@@ -1,6 +1,6 @@
 # XamlCodeGen
 
-Generates the Pascal base class of a XAML window. It is a Delphi console tool: `XamlCodeGen.dpr` with `RADWinUI.CodeGen.pas` (the generator), `RADWinUI.CodeGen.Bindings.pas` (binding and converter checks) and `RADWinUI.CodeGen.Xml.pas` (its XML reader and writer). `RADWinUI.groupproj` builds it into `bin\XamlCodeGen.exe`.
+Generates the Pascal base class of a XAML window, page or user control. It is a Delphi console tool: `XamlCodeGen.dpr` with `RADWinUI.CodeGen.pas` (the generator), `RADWinUI.CodeGen.Bindings.pas` (binding and converter checks) and `RADWinUI.CodeGen.Xml.pas` (its XML reader and writer). `RADWinUI.groupproj` builds it into `bin\XamlCodeGen.exe`.
 
 ```text
 bin\XamlCodeGen.exe samples\Counter\MainWindow.xaml     # one window
@@ -12,6 +12,9 @@ Every project's pre-build event runs it on the project folder, `scripts\Build.ps
 | Input | Output |
 | --- | --- |
 | `MainWindow.xaml`: `<Window x:Class="TMainWindow" Title="...">` with one content element | `MainWindow.Xaml.pas`: `TMainWindowBase = class(TWinUIWindow)` |
+| `ContactsPage.xaml`: `<Page x:Class="TContactsPage">` | `ContactsPage.Xaml.pas`: `TContactsPageBase = class(TWinUIXamlPage)`, its constructor loads the page |
+| `ContactCard.xaml`: `<UserControl x:Class="TContactCard">` with one content element | `ContactCard.Xaml.pas`: `TContactCardBase = class(TWinUIXamlUserControl)`, its `Initialize` loads the content, and the unit registers `TContactCard` as the XAML element `ContactCard` |
+| the other `.xaml` files of the folder with a `<UserControl>` root, and their `.pas` units | the user controls a XAML file may use, with the properties (`AddProperty`) and events (`AddEvent`) of each |
 | `MainWindow.pas`: `TMainWindow = class(TMainWindowBase)` with published handlers | wiring code in the base constructor |
 | `src\Generated\RADWinUI.Xaml.json` (written by WinMDGen) | element types and events |
 | `src\Framework\RADWinUI.Controls.json` (written by `tools\ControlsIndex`) | RADWinUI's own `rw:` controls |
@@ -22,6 +25,8 @@ Every project's pre-build event runs it on the project folder, `scripts\Build.ps
 - `{Binding}` paths are checked against `DataContextType="TName"` on `<Window>` and `x:DataType` on a `DataTemplate`.
 - `Converter={StaticResource Name}` must name a built-in converter, one registered with `TWinUIApp.RegisterConverter('Name', ...)` in the project's sources, or an `x:Key` of the XAML, a `Format` parameter needs one `%s`.
 - `DataContextType` also gives the base a typed `ViewModel` property.
+- An element of a `using:` namespace other than `RADWinUI.Controls` is a user control of the project: its field has the user control's class and its unit goes into the uses clause. Unknown user controls, unknown attributes on them and a user control that contains itself stop the build.
+- A `<Frame>` field is a `TWinUIPageFrame` (unit `RADWinUI.Pages`).
 - Design-time values (`d:` and `mc:` attributes and elements) never reach the app.
 - Errors (missing handler, wrong signature, an `x:Name` that hides a window member, an unknown binding path or converter) stop the build with the file, the line and the reason.
 

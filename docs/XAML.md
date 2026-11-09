@@ -1,6 +1,6 @@
 # XAML reference
 
-What a RADWinUI window `.xaml` may contain, what the build checks, and what the preview and designer do with it. The tool is `tools\XamlCodeGen` (details in [tools-XamlCodeGen.md](tools-XamlCodeGen.md)), the build stops on every rule below with the file, the line and the reason.
+What a RADWinUI window, page or user control `.xaml` may contain, what the build checks, and what the preview and designer do with it. The tool is `tools\XamlCodeGen` (details in [tools-XamlCodeGen.md](tools-XamlCodeGen.md)), the build stops on every rule below with the file, the line and the reason.
 
 ## A window file
 
@@ -29,6 +29,29 @@ What a RADWinUI window `.xaml` may contain, what the build checks, and what the 
 | `x:Name` must not hide a window member (`Title`, `Content`, `Width`, `Show`, ...) or be a Pascal keyword | each name becomes a field of the base class |
 | `x:Name` is unique | same |
 
+## Page and user control files
+
+A page has a `<Page x:Class="TName">` root, a user control a `<UserControl x:Class="TName">` root, each with its `.pas` unit, made with File > New > **RADWinUI Page** and **RADWinUI User Control**. XamlCodeGen writes `TNameBase` like for a window: a field per `x:Name`, the event wiring, and for a user control its registration. See [FRAMEWORK-API.md](FRAMEWORK-API.md#pages-and-navigation-radwinuipages).
+
+| Rule | Why |
+| --- | --- |
+| `<Page>` keeps its own attributes (`Background`, `NavigationCacheMode` is ignored, use `KeepAlive`), and an event of the page itself such as `Loaded="PageLoaded"` is wired to the page | the whole page is loaded as it is written |
+| `<UserControl>` takes only `x:Class` and one content element | its look is its content, set sizes and colours there |
+| `DataContextType` works on `<Page>` like on `<Window>` and gives a `ViewModel` property, not on `<UserControl>` | a user control binds to the DataContext of the place that uses it |
+| `x:Name` must not hide a member of the page or the user control (`Frame`, `Content`, `Background`, the user control's own properties, ...) | each name becomes a field |
+| A `<Frame>` in any XAML is a `TWinUIPageFrame` | it navigates between the project's pages |
+
+## The project's user controls
+
+Any `using:` namespace declared on the root refers to the project's user controls: the `.xaml` files with a `<UserControl>` root in the same folder.
+
+```xml
+<Page ... xmlns:local="using:MyApp" x:Class="THomePage">
+    <local:PersonCard x:Name="AdaCard" PersonName="Ada Lovelace" Opened="CardOpened"/>
+</Page>
+```
+
+The element gets a field of the user control's class, its unit is added to the uses clause, and its events take `(Sender: TObject; const E: TWinValue)` or `(Sender: TObject)`. The build stops on an element that is not a user control of the project (`<Nope> is not a user control of this project`), on an attribute that is neither one of its properties or events nor a `ContentControl` property, and on a user control that contains itself.
 ## Default window appearance
 
 Give a normal window's root panel a theme resource background:

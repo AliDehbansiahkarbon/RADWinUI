@@ -155,6 +155,26 @@ type
     /// </summary>
     function OwnerWindow: TObject;
   end;
+
+  /// <summary>
+  ///   Base of a user control made of a .xaml file and its .pas unit, like a
+  ///   window. XamlCodeGen generates the class between it and the user's class,
+  ///   which loads the content, fills the x:Name fields and registers the control,
+  ///   so other XAML uses it as &lt;local:ContactCard/&gt; with any using: namespace.
+  /// </summary>
+  TWinUIXamlUserControl = class(TWinUICustomControl)
+  protected
+    procedure Initialize; override;
+    /// <summary>Loads AXaml as the content. The generated Initialize calls it.</summary>
+    procedure LoadContentXaml(const AXaml: string);
+    /// <summary>The published method AName, for event wiring by XamlCodeGen.</summary>
+    function PublishedMethod(const AName: string): TMethod;
+    /// <summary>A listener that calls the (Sender: TObject) published method AName.</summary>
+    function NotifyProc<T>(const AName: string): TWinUIEventProc<T>;
+  public
+    /// <summary>The element named AName (x:Name) in the content, wrapped, nil when missing.</summary>
+    function FindElement<T: TWinUIObject>(const AName: string): T;
+  end;
   {$M-}
 
   TWinUICustomControls = class
@@ -300,8 +320,62 @@ type
     constructor Create(const AFullName: string; AKind: TypeKind);
   end;
 
+  /// <summary>
+  ///   In the designer and the preview, which run without the app's code: an
+  ///   element of an app namespace (&lt;local:ContactCard&gt;) shows as a labelled
+  ///   frame. ContentControl's members (Margin, Width, Grid.Row) work, the user
+  ///   control's own attributes are accepted and ignored.
+  /// </summary>
+  TPlaceholderXamlType = class(TXamlInfoObject, IXamlType)
+  strict private
+    FFullName: string;
+    FBase: IXamlType;
+  protected
+    function get_BaseType: IXamlType; safecall;
+    function get_ContentProperty: IXamlMember; safecall;
+    function get_FullName: HSTRING; safecall;
+    function get_IsArray: Boolean; safecall;
+    function get_IsCollection: Boolean; safecall;
+    function get_IsConstructible: Boolean; safecall;
+    function get_IsDictionary: Boolean; safecall;
+    function get_IsMarkupExtension: Boolean; safecall;
+    function get_IsBindable: Boolean; safecall;
+    function get_ItemType: IXamlType; safecall;
+    function get_KeyType: IXamlType; safecall;
+    function get_BoxedType: IXamlType; safecall;
+    function get_UnderlyingType: TypeName; safecall;
+    function ActivateInstance: IInspectable; safecall;
+    function CreateFromString(AValue: HSTRING): IInspectable; safecall;
+    function GetMember(AName: HSTRING): IXamlMember; safecall;
+    procedure AddToVector(AInstance: IInspectable; AValue: IInspectable); safecall;
+    procedure AddToMap(AInstance: IInspectable; AKey: IInspectable; AValue: IInspectable); safecall;
+    procedure RunInitializer; safecall;
+  public
+    constructor Create(const AFullName: string);
+  end;
+
+  /// <summary>An attribute of a placeholder that only XAML's parser sees.</summary>
+  TPlaceholderXamlMember = class(TXamlInfoObject, IXamlMember)
+  strict private
+    FName: string;
+    FOwner: IXamlType;
+  protected
+    function get_IsAttachable: Boolean; safecall;
+    function get_IsDependencyProperty: Boolean; safecall;
+    function get_IsReadOnly: Boolean; safecall;
+    function get_Name: HSTRING; safecall;
+    function get_TargetType: IXamlType; safecall;
+    function get_Type: IXamlType; safecall;
+    function GetValue(AInstance: IInspectable): IInspectable; safecall;
+    procedure SetValue(AInstance: IInspectable; AValue: IInspectable); safecall;
+  public
+    constructor Create(const AOwner: IXamlType; const AName: string);
+  end;
+
 var
   Registry: TArray<TWinUICustomType>;
+  Placeholders: TArray<IXamlType>;
+  PlaceholderNames: TArray<string>;
   // Every host that exists, so the controls of a closed window and those left
   // at shutdown are freed
   Hosts: TArray<TWinUIControlHost>;
@@ -1188,6 +1262,215 @@ procedure TSimpleXamlType.RunInitializer;
 begin
 end;
 
+{ TPlaceholderXamlType }
+
+constructor TPlaceholderXamlType.Create(const AFullName: string);
+begin
+  inherited Create;
+  FFullName := AFullName;
+  FBase := BaseXamlType('Microsoft.UI.Xaml.Controls.ContentControl');
+end;
+
+function TPlaceholderXamlType.get_BaseType: IXamlType;
+begin
+  Result := FBase;
+end;
+
+function TPlaceholderXamlType.get_ContentProperty: IXamlMember;
+begin
+  Result := nil;
+end;
+
+function TPlaceholderXamlType.get_FullName: HSTRING;
+begin
+  Result := NewHString(FFullName);
+end;
+
+function TPlaceholderXamlType.get_IsArray: Boolean;
+begin
+  Result := False;
+end;
+
+function TPlaceholderXamlType.get_IsCollection: Boolean;
+begin
+  Result := False;
+end;
+
+function TPlaceholderXamlType.get_IsConstructible: Boolean;
+begin
+  Result := True;
+end;
+
+function TPlaceholderXamlType.get_IsDictionary: Boolean;
+begin
+  Result := False;
+end;
+
+function TPlaceholderXamlType.get_IsMarkupExtension: Boolean;
+begin
+  Result := False;
+end;
+
+function TPlaceholderXamlType.get_IsBindable: Boolean;
+begin
+  Result := False;
+end;
+
+function TPlaceholderXamlType.get_ItemType: IXamlType;
+begin
+  Result := nil;
+end;
+
+function TPlaceholderXamlType.get_KeyType: IXamlType;
+begin
+  Result := nil;
+end;
+
+function TPlaceholderXamlType.get_BoxedType: IXamlType;
+begin
+  Result := nil;
+end;
+
+function TPlaceholderXamlType.get_UnderlyingType: TypeName;
+begin
+  Result.&Name := NewHString(FFullName);
+  Result.Kind := TypeKind.Custom;
+end;
+
+function TPlaceholderXamlType.ActivateInstance: IInspectable;
+begin
+  // A ContentControl, as the user control is one, holding a labelled frame
+  Result := XamlReader.Load(WinStr(
+    '<ContentControl xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" IsTabStop="False" ' +
+    'HorizontalContentAlignment="Stretch" VerticalContentAlignment="Stretch">' +
+    '<Border BorderThickness="1" BorderBrush="{ThemeResource ControlStrongStrokeColorDefaultBrush}" CornerRadius="4" ' +
+    'Padding="12,8" MinHeight="36"><TextBlock Opacity="0.7" Text="' + FFullName.Substring(FFullName.LastIndexOf('.') + 1) +
+    '"/></Border></ContentControl>'));
+end;
+
+function TPlaceholderXamlType.CreateFromString(AValue: HSTRING): IInspectable;
+begin
+  raise ENotSupportedException.Create('a placeholder has no text form');
+end;
+
+function TPlaceholderXamlType.GetMember(AName: HSTRING): IXamlMember;
+begin
+  Result := nil;
+  if FBase <> nil then
+    Result := FBase.GetMember(AName);
+  if Result = nil then
+    Result := TPlaceholderXamlMember.Create(Self, HStringToString(AName));
+end;
+
+procedure TPlaceholderXamlType.AddToVector(AInstance, AValue: IInspectable);
+begin
+end;
+
+procedure TPlaceholderXamlType.AddToMap(AInstance, AKey, AValue: IInspectable);
+begin
+end;
+
+procedure TPlaceholderXamlType.RunInitializer;
+begin
+end;
+
+{ TPlaceholderXamlMember }
+
+constructor TPlaceholderXamlMember.Create(const AOwner: IXamlType; const AName: string);
+begin
+  inherited Create;
+  FOwner := AOwner;
+  FName := AName;
+end;
+
+function TPlaceholderXamlMember.get_IsAttachable: Boolean;
+begin
+  Result := False;
+end;
+
+function TPlaceholderXamlMember.get_IsDependencyProperty: Boolean;
+begin
+  Result := False;
+end;
+
+function TPlaceholderXamlMember.get_IsReadOnly: Boolean;
+begin
+  Result := False;
+end;
+
+function TPlaceholderXamlMember.get_Name: HSTRING;
+begin
+  Result := NewHString(FName);
+end;
+
+function TPlaceholderXamlMember.get_TargetType: IXamlType;
+begin
+  Result := FOwner;
+end;
+
+function TPlaceholderXamlMember.get_Type: IXamlType;
+begin
+  Result := TSimpleXamlType.Create('String', TypeKind.Primitive);
+end;
+
+function TPlaceholderXamlMember.GetValue(AInstance: IInspectable): IInspectable;
+begin
+  Result := nil;
+end;
+
+procedure TPlaceholderXamlMember.SetValue(AInstance, AValue: IInspectable);
+begin
+end;
+
+{ TWinUIXamlUserControl }
+procedure TWinUIXamlUserControl.Initialize;
+begin
+  inherited;
+  // Like WinUI's UserControl: the content fills the control, which takes no focus itself
+  HorizontalContentAlignment := TWinUIHorizontalAlignment.Stretch;
+  VerticalContentAlignment := TWinUIVerticalAlignment.Stretch;
+  IsTabStop := False;
+end;
+
+procedure TWinUIXamlUserControl.LoadContentXaml(const AXaml: string);
+begin
+  // Controls in this XAML belong to the window that loads the user control
+  Content := XamlReader.Load(WinStr(AXaml));
+end;
+
+function TWinUIXamlUserControl.FindElement<T>(const AName: string): T;
+var
+  Root: IFrameworkElement;
+begin
+  if not Supports(Content.Obj, IFrameworkElement, Root) then
+    Exit(nil);
+  Result := T(TWinUIObject.Wrap(Self, Root.FindName(WinStr(AName)),
+    TWinUIObjectClass(GetTypeData(TypeInfo(T))^.ClassType)));
+end;
+
+function TWinUIXamlUserControl.PublishedMethod(const AName: string): TMethod;
+begin
+  Result.Code := MethodAddress(AName);
+  Result.Data := Self;
+  if Result.Code = nil then
+    raise EInvalidOpException.CreateFmt('%s has no published method %s for its XAML events', [ClassName, AName]);
+end;
+
+function TWinUIXamlUserControl.NotifyProc<T>(const AName: string): TWinUIEventProc<T>;
+var
+  Method: TMethod;
+begin
+  Method := PublishedMethod(AName);
+  Result :=
+    procedure(Sender: TObject; E: T)
+    var
+      Handler: procedure(Sender: TObject) of object;
+    begin
+      TMethod(Handler) := Method;
+      Handler(Sender);
+    end;
+end;
+
 { TWinUICustomControls }
 
 class procedure TWinUICustomControls.Register(AClass: TWinUICustomControlClass; const AXamlName, ACategory: string);
@@ -1297,9 +1580,33 @@ end;
 
 function ResolveCustomType(const AFullName: string): IXamlType;
 var
-  CustomType: TWinUICustomType;
+  CustomType, Candidate: TWinUICustomType;
+  I: Integer;
 begin
   CustomType := TWinUICustomControls.Find(AFullName);
+  // A user control answers to its name in any app namespace (using:MyApp), never in WinUI's own
+  if (CustomType = nil) and (AFullName.LastIndexOf('.') > 0) and not AFullName.StartsWith('Microsoft.') and
+    not AFullName.StartsWith('Windows.') then
+    for Candidate in TWinUICustomControls.Types do
+      if Candidate.ControlClass.InheritsFrom(TWinUIXamlUserControl) and
+        (Candidate.XamlName = AFullName.Substring(AFullName.LastIndexOf('.') + 1)) then
+      begin
+        CustomType := Candidate;
+        Break;
+      end;
+  if (CustomType = nil) and CustomXamlDesignTime and (AFullName.LastIndexOf('.') > 0) and
+    not AFullName.StartsWith('Microsoft.') and not AFullName.StartsWith('Windows.') and
+    not AFullName.StartsWith(CustomControlsNamespace + '.') then
+  begin
+    // The designer has no user controls of the app: they show as placeholders
+    for I := 0 to High(PlaceholderNames) do
+      if PlaceholderNames[I] = AFullName then
+        Exit(Placeholders[I]);
+    Result := TPlaceholderXamlType.Create(AFullName);
+    Placeholders := Placeholders + [Result];
+    PlaceholderNames := PlaceholderNames + [AFullName];
+    Exit;
+  end;
   if CustomType = nil then
     Exit(nil);
   CustomType.EnsureRegistered;
@@ -1325,6 +1632,8 @@ begin
   Registry := nil;
   Templates := nil;
   TemplateClasses := nil;
+  Placeholders := nil;
+  PlaceholderNames := nil;
   ControlsProvider := nil;
   ContentControlFactoryCache := nil;
 end;

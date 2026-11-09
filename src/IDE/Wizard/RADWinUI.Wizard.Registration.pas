@@ -2,7 +2,7 @@ unit RADWinUI.Wizard.Registration;
 
 {
   File > New > Other > Delphi Projects > RADWinUI Application, and
-  File > New > Other > Delphi Files > RADWinUI Window.
+  File > New > Other > Delphi Files > RADWinUI Window, Page and User Control.
 
   Asks for a project name and a parent folder in a dialog drawn with the IDE
   theme (RADWinUI.Wizard.Dialog), writes the project with
@@ -53,9 +53,13 @@ type
     function GetPersonality: string;
   end;
 
-  TRADWinUIWindowWizard = class(TNotifierObject, IOTAWizard, IOTARepositoryWizard, IOTARepositoryWizard60,
+  /// <summary>File > New > RADWinUI Window, Page or User Control for the active project.</summary>
+  TRADWinUIFileWizard = class(TNotifierObject, IOTAWizard, IOTARepositoryWizard, IOTARepositoryWizard60,
     IOTARepositoryWizard80, IOTAFormWizard)
+  strict private
+    FKind: TWizardFileKind;
   public
+    constructor Create(AKind: TWizardFileKind);
     { IOTAWizard }
     function GetIDString: string;
     function GetName: string;
@@ -235,59 +239,83 @@ begin
     OpenWindowDesigner(Project.Directory, 'MainWindow');
 end;
 
-{ TRADWinUIWindowWizard }
+{ TRADWinUIFileWizard }
 
-function TRADWinUIWindowWizard.GetIDString: string;
+const
+  FileWizardIds: array[TWizardFileKind] of string = ('RADWinUI.Wizard.Window', 'RADWinUI.Wizard.Page',
+    'RADWinUI.Wizard.UserControl');
+  FileWizardNames: array[TWizardFileKind] of string = ('RADWinUI Window', 'RADWinUI Page', 'RADWinUI User Control');
+  FileWizardDefaults: array[TWizardFileKind] of string = ('SecondWindow', 'DetailsPage', 'InfoCard');
+
+constructor TRADWinUIFileWizard.Create(AKind: TWizardFileKind);
 begin
-  Result := 'RADWinUI.Wizard.Window';
+  inherited Create;
+  FKind := AKind;
 end;
 
-function TRADWinUIWindowWizard.GetName: string;
+function TRADWinUIFileWizard.GetIDString: string;
 begin
-  Result := 'RADWinUI Window';
+  Result := FileWizardIds[FKind];
 end;
 
-function TRADWinUIWindowWizard.GetState: TWizardState;
+function TRADWinUIFileWizard.GetName: string;
+begin
+  Result := FileWizardNames[FKind];
+end;
+
+function TRADWinUIFileWizard.GetState: TWizardState;
 begin
   Result := [wsEnabled];
 end;
 
-function TRADWinUIWindowWizard.GetAuthor: string;
+function TRADWinUIFileWizard.GetAuthor: string;
 begin
   Result := 'RADWinUI';
 end;
 
-function TRADWinUIWindowWizard.GetComment: string;
+function TRADWinUIFileWizard.GetComment: string;
+const
+  Comments: array[TWizardFileKind] of string = (
+    'Another window for a RADWinUI application: <Name>.xaml with its code in <Name>.pas',
+    'A page that a frame shows and navigates to: <Name>.xaml with its code in <Name>.pas',
+    'A user control to use in other XAML of the project: <Name>.xaml with its code in <Name>.pas');
 begin
-  Result := 'Another window for a RADWinUI application: <Name>.xaml with its code in <Name>.pas';
+  Result := Comments[FKind];
 end;
 
-function TRADWinUIWindowWizard.GetPage: string;
+function TRADWinUIFileWizard.GetPage: string;
 begin
   Result := 'Delphi Files';
 end;
 
-function TRADWinUIWindowWizard.GetGlyph: THandle;
+function TRADWinUIFileWizard.GetGlyph: THandle;
 begin
   Result := 0;
 end;
 
-function TRADWinUIWindowWizard.GetDesigner: string;
+function TRADWinUIFileWizard.GetDesigner: string;
 begin
   Result := dAny;
 end;
 
-function TRADWinUIWindowWizard.GetGalleryCategory: IOTAGalleryCategory;
+function TRADWinUIFileWizard.GetGalleryCategory: IOTAGalleryCategory;
 begin
   Result := (BorlandIDEServices as IOTAGalleryCategoryManager).FindCategory(sCategoryDelphiNewFiles);
 end;
 
-function TRADWinUIWindowWizard.GetPersonality: string;
+function TRADWinUIFileWizard.GetPersonality: string;
 begin
   Result := sDelphiPersonality;
 end;
 
-procedure TRADWinUIWindowWizard.Execute;
+procedure TRADWinUIFileWizard.Execute;
+const
+  Texts: array[TWizardFileKind] of string = (
+    'Another window for the active project: a .xaml file with its code in a .pas unit, added to the project.',
+    'A page for the active project: a .xaml file with a <Page> root and its code in a .pas unit. ' +
+    'A frame shows it with Navigate.',
+    'A user control for the active project: a .xaml file with a <UserControl> root and its code in a .pas unit. ' +
+    'Other XAML of the project uses it as <local:Name/>.');
 var
   Project: IOTAProject;
   Target: TWizardProject;
@@ -308,14 +336,14 @@ begin
       False);
     Exit;
   end;
-  UnitName := 'SecondWindow';
-  if not AskNewWindow(UnitName,
+  UnitName := FileWizardDefaults[FKind];
+  if not AskNewUnit('New ' + GetName, Texts[FKind], UnitName,
     function(const AName, ALocation: string): string
     begin
-      Result := ValidateWindow(Target.Directory, AName);
+      Result := ValidateNewFile(Target.Directory, AName, FKind);
     end) then
     Exit;
-  WriteWindow(Target.Directory, UnitName);
+  WriteNewFile(Target.Directory, UnitName, FKind);
   if not RunHidden(XamlCodeGenCommand(Target)) then
     ShowWizardMessage(GetName, 'XamlCodeGen did not run', 'bin\XamlCodeGen.exe is missing or failed (Build All of ' +
       RADWinUIGroup + ' makes it). The next build will try again to generate ' + UnitName + '.Xaml.pas.', True);
@@ -367,7 +395,9 @@ begin
     Exit;
   Registered := True;
   RegisterPackageWizard(TRADWinUIWizard.Create);
-  RegisterPackageWizard(TRADWinUIWindowWizard.Create);
+  RegisterPackageWizard(TRADWinUIFileWizard.Create(fkWindow));
+  RegisterPackageWizard(TRADWinUIFileWizard.Create(fkPage));
+  RegisterPackageWizard(TRADWinUIFileWizard.Create(fkUserControl));
   AddPreviewCommand;
   try
     AddSplashBranding;

@@ -142,6 +142,8 @@ end;
 /// Keeps the WinUI DLLs loaded until the process ends. RoUninitialize lets
 /// COM unload them, Microsoft.UI.Xaml.Controls.dll's static destructors then release
 /// objects of the already unloaded Microsoft.ui.xaml.dll: an access violation at every exit.
+/// The same goes for the resource manager that controls such as NavigationView keep for
+/// their localized strings (Microsoft.Windows.ApplicationModel.Resources.dll).
 /// C# and C++/WinRT apps never unload them before the process ends either.
 function GetModuleHandleEx(AFlags: DWORD; AName: PChar; out AModule: HMODULE): BOOL; stdcall;
   external kernel32 name 'GetModuleHandleExW';
@@ -149,7 +151,8 @@ function GetModuleHandleEx(AFlags: DWORD; AName: PChar; out AModule: HMODULE): B
 procedure PinXamlModules;
 const
   GET_MODULE_HANDLE_EX_FLAG_PIN = 1;
-  Names: array[0..1] of string = ('Microsoft.ui.xaml.dll', 'Microsoft.UI.Xaml.Controls.dll');
+  Names: array[0..2] of string = ('Microsoft.ui.xaml.dll', 'Microsoft.UI.Xaml.Controls.dll',
+    'Microsoft.Windows.ApplicationModel.Resources.dll');
 var
   Name: string;
   Module: HMODULE;

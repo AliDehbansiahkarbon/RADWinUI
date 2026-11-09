@@ -1746,9 +1746,9 @@ begin
         Buffer := (BorlandIDEServices as IOTAEditorServices).TopBuffer;
         if (Buffer = nil) or not SameText(Buffer.FileName, AFile) then
           Exit;
-        // Only RADWinUI windows, a resource dictionary or other XAML stays in Code
+        // Only RADWinUI windows, pages and user controls, a resource dictionary or other XAML stays in Code
         Elements := XamlElements(SourceText(AFile));
-        if (Length(Elements) > 0) and (Elements[0].Tag = 'Window') and ShowDesignForFile(AFile) then
+        if (Length(Elements) > 0) and MatchStr(Elements[0].Tag, ['Window', 'Page', 'UserControl']) and ShowDesignForFile(AFile) then
           Log('Opened in Design: ' + AFile);
       except
         on E: Exception do
@@ -2262,7 +2262,7 @@ begin
     begin
       FSelection.Line := Element.Line;
       FSelection.Column := Element.Column;
-      Exit((Element.ParentIndex >= 0) and (Elements[Element.ParentIndex].Tag <> 'Window'));
+      Exit((Element.ParentIndex >= 0) and not MatchStr(Elements[Element.ParentIndex].Tag, ['Window', 'Page', 'UserControl']));
     end;
 end;
 
@@ -2900,7 +2900,7 @@ begin
   for Element in Elements do
   begin
     if Element.DesignOnly then Continue;
-    if FIndex.IsVisual(Element.Tag) or (Element.Tag = 'Window') then Instances := Instances + [Element];
+    if FIndex.IsVisual(Element.Tag) or MatchStr(Element.Tag, ['Window', 'Page', 'UserControl']) then Instances := Instances + [Element];
     if SameText(FSelectionPath, FXamlPath) and (Element.Tag = FSelection.Tag) and
       (((FSelection.Name <> '') and (Element.Name = FSelection.Name)) or
        ((FSelection.Name = '') and (Element.Line = FSelection.Line) and (Element.Column = FSelection.Column))) then

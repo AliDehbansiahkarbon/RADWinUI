@@ -61,6 +61,14 @@ type
     function Event(const AClass, AName: string; out AInfo: TEventInfo): Boolean;
     /// <summary>All events of AClass and its bases, sorted by name.</summary>
     function Events(const AClass: string): TArray<TEventInfo>;
+    /// <summary>True when AClass or a base class has the property AName.</summary>
+    function HasProperty(const AClass, AName: string): Boolean;
+  end;
+
+  /// <summary>A user control of the project: a .xaml file with a &lt;UserControl x:Class&gt; root.</summary>
+  TUserControlInfo = record
+    ClassName, UnitName, XamlFile: string;
+    Properties, Events, OnEvents: TArray<string>;
   end;
 
   /// <summary>Generates the unit text of one window. Raises ECodeGenError.</summary>
@@ -78,11 +86,18 @@ type
     TNamed = record
       Name, ClassName: string;
       Line: Integer;
+      // a user control of the project: its events come from its unit, not the type index
+      IsUser: Boolean;
+      UserEvents: TArray<string>;
     end;
   private
     FXamlPath, FXamlText, FPasText: string;
     FHasTexts: Boolean;
     FIndex: TTypeIndex;
+    // 'Window', 'Page' or 'UserControl'
+    FRootKind: string;
+    FUserControls: TDictionary<string, TUserControlInfo>;
+    FOwnProperties: TArray<string>;
     FStem, FUnitName, FClassName, FBaseName, FPasName: string;
     FDataContextType, FViewModelUnit: string;
     FWindowLine, FContentLine, FAutoNames: Integer;
@@ -99,9 +114,16 @@ type
     function WindowValue(const AName, AValue: string): string;
     procedure CheckBindings(AElement: TXmlElement; const AScope: string);
     procedure Walk(AElement: TXmlElement; const AScope: string; AInTemplate: Boolean);
+    procedure WalkUserControl(AElement: TXmlElement; const ALocal: string);
+    procedure LoadUserControls;
+    procedure CheckFieldName(const AName: string);
+    function EmitPage(const AXaml: string): string;
+    function EmitUserControl(const AXaml: string): string;
     procedure Bind(const AElement, AEvent, AMethod, AHandler, AArgs: string; AExplicit: Boolean; ALine: Integer;
       ACustom: Boolean = False);
     function Emit(const AXaml: string): string;
+    function FieldLines: string;
+    function WiringLines: string;
   public
     /// <summary>
     ///   AXamlText and APasText, with AHasTexts, are editor snapshots (the IDE request),
@@ -152,7 +174,14 @@ const
     ',title,content,width,height,minwidth,minheight,backdrop,show,close,center,activate,findelement,' +
     'loadcontent,owner,winrtobject,intf,create,destroy,free,appwindow,dispatcherqueue,systembackdrop,visible,' +
     'bounds,datacontext,windowstyle,dock,clickthrough,hittestelement,showactivated,alwaysontop,';
-  PascalReserved =
+  PageReservedNames =
+    ',frame,keepalive,navigatedto,navigatedfrom,navigatingfrom,findelement,publishedmethod,notifyproc,viewmodel,' +
+    'content,background,padding,margin,tag,width,height,visibility,opacity,datacontext,name,parent,create,' +
+    'destroy,free,owner,winrtobject,intf,foreground,fontsize,isenabled,';
+  UserControlReservedNames =
+    ',initialize,loadcontentxaml,findelement,publishedmethod,notifyproc,fire,customtype,eventbyname,ownerwindow,' +
+    'content,background,padding,margin,tag,width,height,visibility,opacity,datacontext,name,parent,create,' +
+    'destroy,free,owner,winrtobject,intf,foreground,fontsize,isenabled,';  PascalReserved =
     ',and,array,as,asm,begin,case,class,const,constructor,destructor,div,do,downto,else,end,except,exports,' +
     'file,finalization,finally,for,function,goto,if,implementation,in,inherited,initialization,inline,' +
     'interface,is,label,library,mod,nil,not,object,of,or,out,packed,procedure,program,property,raise,record,' +
@@ -217,6 +246,16 @@ begin
   end;
   Result := TPath.Combine(AFolder, '..\src\Generated\RADWinUI.Xaml.json');
 end;
+
+// The XAML name of a user control: its class name without the T (TContactCard -> ContactCard)
+function XamlNameOf(const AClassName: string): string;
+begin
+  if (AClassName.Length > 1) and (AClassName[1] = 'T') then
+    Result := AClassName.Substring(1)
+  else
+    Result := AClassName;
+end;
+function UserProperties(const APasText: string): TArray<string>; forward;
 
 function InList(const AList, AName: string): Boolean;
 begin
@@ -519,6 +558,24 @@ begin
   end;
 end;
 
+function TTypeIndex.HasProperty(const AClass, AName: string): Boolean;
+var
+  Cls: string;
+  Info: TJSONObject;
+  Props: TJSONValue;
+begin
+  Cls := AClass;
+  while Cls <> '' do
+  begin
+    Info := ClassInfo(Cls);
+    Props := Info.GetValue('props');
+    if (Props is TJSONObject) and (TJSONObject(Props).GetValue(AName) <> nil) then
+      Exit(True);
+    Cls := BaseOf(Info);
+  end;
+  Result := False;
+end;
+
 { TCodeGenerator }
 
 constructor TCodeGenerator.Create(const AXamlPath: string; AIndex: TTypeIndex; const AXamlText, APasText: string;
@@ -542,10 +599,12 @@ begin
   FUnits := TStringList.Create;
   FUnits.Sorted := True;
   FUnits.Duplicates := dupIgnore;
+  FUserControls := TDictionary<string, TUserControlInfo>.Create;
 end;
 
 destructor TCodeGenerator.Destroy;
 begin
+  FUserControls.Free;
   FChecker.Free;
   FUnits.Free;
   FResourceKeys.Free;
@@ -615,7 +674,8 @@ end;
 function TCodeGenerator.Run: string;
 var
   Root, Content, Element: TXmlElement;
-  Name, Value, PasPath, Text: string;
+  Name, Value, PasPath, Text, PasText: string;
+  RootEvents, AttrNames: TArray<string>;
   I: Integer;
   VM: TPasClass;
   Named: TNamed;
@@ -634,50 +694,90 @@ begin
       raise ECodeGenError.Create(FXamlPath + ': ' + E.Message);
   end;
   try
-    if Root.Tag <> '{' + Presentation + '}Window' then
-      raise ECodeGenError.Create(FXamlPath + ': the root element must be <Window>');
+    if Root.Tag = '{' + Presentation + '}Window' then
+      FRootKind := 'Window'
+    else if Root.Tag = '{' + Presentation + '}Page' then
+      FRootKind := 'Page'
+    else if Root.Tag = '{' + Presentation + '}UserControl' then
+      FRootKind := 'UserControl'
+    else
+      raise ECodeGenError.Create(FXamlPath + ': the root element must be <Window>, <Page> or <UserControl>');
     StripDesign(Root);
     FClassName := Root.Get(XClass);
     if (FClassName = '') or not TRegEx.IsMatch(FClassName, '^[A-Za-z_]\w*$') then
-      raise ECodeGenError.Create(FXamlPath + ': <Window> needs x:Class with a Pascal class name, ' +
-        'for example x:Class="TMainWindow"');
+      if FRootKind = 'Window' then
+        raise ECodeGenError.Create(FXamlPath + ': <Window> needs x:Class with a Pascal class name, ' +
+          'for example x:Class="TMainWindow"')
+      else
+        raise ECodeGenError.CreateFmt('%s: <%s> needs x:Class with a Pascal class name, for example x:Class="%s"',
+          [FXamlPath, FRootKind, IfThen(FRootKind = 'Page', 'TContactsPage', 'TContactCard')]);
     FBaseName := FClassName + 'Base';
+    FWindowLine := Root.Line;
+    RootEvents := nil;
+    // a snapshot: page events are removed from the root while the loop runs
+    SetLength(AttrNames, Root.AttrCount);
     for I := 0 to Root.AttrCount - 1 do
+      AttrNames[I] := Root.AttrName[I];
+    for Name in AttrNames do
     begin
-      Name := Root.AttrName[I];
-      Value := Root.AttrValue[I];
+      Value := Root.Get(Name);
       if Name = 'DataContextType' then // RADWinUI: the class {Binding} paths are checked against
       begin
+        if FRootKind = 'UserControl' then
+          raise ECodeGenError.Create(FXamlPath + ': <UserControl> takes no DataContextType, ' +
+            'it binds to the DataContext of the place that uses it');
         if not TRegEx.IsMatch(Value, '^[A-Za-z_]\w*$') then
           raise ECodeGenError.Create(FXamlPath + ': DataContextType must be a Pascal class name');
         FDataContextType := Value;
+        Root.Pop(Name);
         Continue;
       end;
       if Name.StartsWith('{') then
       begin
         if Name <> XClass then
-          raise ECodeGenError.CreateFmt('%s: unsupported attribute %s on <Window>', [FXamlPath, Name]);
+          raise ECodeGenError.CreateFmt('%s: unsupported attribute %s on <%s>', [FXamlPath, Name, FRootKind]);
         Continue;
       end;
-      if IndexStr(Name, WindowAttributes) < 0 then
-        raise ECodeGenError.CreateFmt('%s: <Window> supports %s, not %s',
-          [FXamlPath, string.Join(', ', WindowAttributes), Name]);
-      FWindowProps.AddOrSetValue(Name, WindowValue(Name, Value));
+      if FRootKind = 'Window' then
+      begin
+        if IndexStr(Name, WindowAttributes) < 0 then
+          raise ECodeGenError.CreateFmt('%s: <Window> supports %s, not %s',
+            [FXamlPath, string.Join(', ', WindowAttributes), Name]);
+        FWindowProps.AddOrSetValue(Name, WindowValue(Name, Value));
+      end
+      else if FRootKind = 'UserControl' then
+        raise ECodeGenError.CreateFmt('%s: <UserControl> takes no attributes besides x:Class, ' +
+          'set %s on its content element', [FXamlPath, Name])
+      else if FIndex.Event('Microsoft.UI.Xaml.Controls.Page', Name, Info) then
+      begin
+        // An event of the page itself: wired to the page object below, removed from the XAML
+        RootEvents := RootEvents + [Name + '=' + Root.Pop(Name)];
+      end;
     end;
-    if Root.Count <> 1 then
-      raise ECodeGenError.Create(FXamlPath + ': <Window> must have exactly one content element');
-    Content := Root[0];
-    FWindowLine := Root.Line;
+    Root.Pop(XClass);
+    if FRootKind = 'Page' then
+      // The whole page is loaded, it may hold resources and one content element
+      Content := Root
+    else
+    begin
+      if Root.Count <> 1 then
+        raise ECodeGenError.CreateFmt('%s: <%s> must have exactly one content element', [FXamlPath, FRootKind]);
+      Content := Root[0];
+    end;
     FContentLine := Content.Line;
 
     PasPath := JoinPath(DirName(FXamlPath), FStem + '.pas');
     if FHasTexts then
-      FMethods := PublishedMethods(FPasText, FClassName)
+      PasText := FPasText
     else if FileExists(PasPath) then
-      FMethods := PublishedMethods(TFile.ReadAllText(PasPath, TEncoding.UTF8), FClassName)
+      PasText := TFile.ReadAllText(PasPath, TEncoding.UTF8)
     else
-      FMethods := TDictionary<string, TArray<string>>.Create;
+      PasText := '';
+    FMethods := PublishedMethods(PasText, FClassName);
     FPasName := BaseName(PasPath);
+    if FRootKind = 'UserControl' then
+      FOwnProperties := UserProperties(PasText);
+    LoadUserControls;
 
     FChecker := TBindingChecker.Create(ExtractFileDir(TPath.GetFullPath(FXamlPath)));
     if FDataContextType <> '' then
@@ -696,19 +796,50 @@ begin
     for Element in Root.Iter do
       if Element.Get(XKey) <> '' then
         FResourceKeys.Add(Element.Get(XKey));
-    Walk(Content, FDataContextType, False);
+    for Text in RootEvents do
+    begin
+      Name := Text.Substring(0, Text.IndexOf('='));
+      FIndex.Event('Microsoft.UI.Xaml.Controls.Page', Name, Info);
+      Bind('Self', Name, Text.Substring(Text.IndexOf('=') + 1), Info.Handler, Info.Args, True, Root.Line);
+    end;
+    if FRootKind = 'Page' then
+      // the page element itself is no field: walk its children
+      for I := 0 to Root.Count - 1 do
+        Walk(Root[I], FDataContextType, False)
+    else
+      Walk(Content, FDataContextType, False);
     for Named in FNamed do
-      for Info in FIndex.Events(Named.ClassName) do
-        if FMethods.ContainsKey((Named.Name + Info.Name).ToLower) then
-        begin
-          Exists := False;
-          for B in FBindings do
-            if (B.Element = Named.Name) and (B.Event = Info.Name) then
-              Exists := True;
-          if not Exists then
-            Bind(Named.Name, Info.Name, Named.Name + Info.Name, Info.Handler, Info.Args, False, Named.Line,
-              FIndex.IsCustom(Named.ClassName));
-        end;
+      if Named.IsUser then
+      begin
+        for Text in Named.UserEvents do
+          if FMethods.ContainsKey((Named.Name + Text).ToLower) then
+          begin
+            Exists := False;
+            for B in FBindings do
+              if (B.Element = Named.Name) and (B.Event = Text) then
+                Exists := True;
+            if not Exists then
+              Bind(Named.Name, Text, Named.Name + Text, 'TWinUIWinValueEventHandler', 'TWinValue', False,
+                Named.Line, True);
+          end;
+      end
+      else
+        for Info in FIndex.Events(Named.ClassName) do
+          if FMethods.ContainsKey((Named.Name + Info.Name).ToLower) then
+          begin
+            Exists := False;
+            for B in FBindings do
+              if (B.Element = Named.Name) and (B.Event = Info.Name) then
+                Exists := True;
+            if not Exists then
+              Bind(Named.Name, Info.Name, Named.Name + Info.Name, Info.Handler, Info.Args, False, Named.Line,
+                FIndex.IsCustom(Named.ClassName));
+          end;
+    if FRootKind = 'Page' then
+      Result := EmitPage(ToXml(Content, Registered))
+    else if FRootKind = 'UserControl' then
+      Result := EmitUserControl(ToXml(Content, Registered))
+    else
     Result := Emit(ToXml(Content, Registered));
   finally
     Root.Free;
@@ -823,6 +954,14 @@ begin
       Walk(AElement[I], Scope, True);
     Exit;
   end;
+  // <local:ContactCard>: a user control of the project, in any using: namespace
+  if Tag.StartsWith('{using:') and not IsCustom and not Local.Contains('.') then
+  begin
+    WalkUserControl(AElement, Local);
+    for I := 0 to AElement.Count - 1 do
+      Walk(AElement[I], Scope, False);
+    Exit;
+  end;
   if (IsPresentation or IsCustom) and not Local.Contains('.') then // Button.Flyout is a property element
   begin
     if IsCustom then
@@ -864,17 +1003,19 @@ begin
         UserName := AElement.Get('Name');
       if (UserName <> '') and not UserName.StartsWith('_rw') then
       begin
-        if InList(ReservedNames, UserName.ToLower) or InList(PascalReserved, UserName.ToLower) then
-          raise ECodeGenError.CreateFmt('%s: x:Name="%s" would hide a window member; choose another name',
-            [FXamlPath, UserName]);
-        for Field in FFields do
-          if Field.Name.ToLower = UserName.ToLower then
-            raise ECodeGenError.CreateFmt('%s: duplicate x:Name="%s"', [FXamlPath, UserName]);
+        CheckFieldName(UserName);
         Field.Name := UserName;
         Field.Wrapper := FIndex.Wrapper(Cls);
+        if Cls = 'Microsoft.UI.Xaml.Controls.Frame' then
+        begin
+          // A frame navigates between the project's pages (RADWinUI.Pages)
+          Field.Wrapper := 'TWinUIPageFrame';
+          FUnits.Add('RADWinUI.Pages');
+        end;
         Field.Line := AElement.Line;
         Field.Tag := Local;
         FFields.Add(Field);
+        Named := Default(TNamed);
         Named.Name := UserName;
         Named.ClassName := Cls;
         Named.Line := AElement.Line;
@@ -933,15 +1074,375 @@ begin
   FBindings.Add(B);
 end;
 
-function TCodeGenerator.Emit(const AXaml: string): string;
+// Names that the regular expression's first group finds in APasText, in order, without duplicates
+function NamesIn(const APasText, APattern: string): TArray<string>;
+var
+  M: TMatch;
+  Text: string;
+begin
+  Result := nil;
+  Text := TRegEx.Replace(APasText, '//[^\n]*|\{[^}]*\}|\(\*.*?\*\)', '', [roSingleLine]);
+  for M in TRegEx.Matches(Text, APattern, [roIgnoreCase]) do
+    if IndexText(M.Groups[1].Value, Result) < 0 then
+      Result := Result + [M.Groups[1].Value];
+end;
+
+function UserProperties(const APasText: string): TArray<string>;
+begin
+  Result := NamesIn(APasText, 'AddProperty\(\s*''(\w+)''');
+end;
+
+procedure TCodeGenerator.LoadUserControls;
+var
+  Folder, Path, Text, PasPath, PasText: string;
+  M: TMatch;
+  Info: TUserControlInfo;
+begin
+  Folder := DirName(FXamlPath);
+  if Folder = '' then
+    Folder := '.';
+  if not TDirectory.Exists(Folder) then
+    Exit;
+  for Path in TDirectory.GetFiles(Folder, '*.xaml') do
+  begin
+    if FHasTexts and SameText(TPath.GetFullPath(Path), TPath.GetFullPath(FXamlPath)) then
+      Text := FXamlText
+    else
+      Text := ReadXmlFile(Path);
+    M := TRegEx.Match(Text, '^\s*(?:<\?[^>]*>\s*)?(?:<!--.*?-->\s*)*<UserControl\b[^>]*?\sx:Class\s*=\s*"([A-Za-z_]\w*)"',
+      [roSingleLine]);
+    if not M.Success then
+      Continue;
+    Info := Default(TUserControlInfo);
+    Info.ClassName := M.Groups[1].Value;
+    Info.UnitName := TPath.GetFileNameWithoutExtension(Path);
+    Info.XamlFile := TPath.GetFullPath(Path);
+    PasPath := TPath.ChangeExtension(Path, '.pas');
+    if FHasTexts and SameText(Info.XamlFile, TPath.GetFullPath(FXamlPath)) then
+      PasText := FPasText
+    else if FileExists(PasPath) then
+      PasText := TFile.ReadAllText(PasPath, TEncoding.UTF8)
+    else
+      PasText := '';
+    Info.Properties := UserProperties(PasText);
+    Info.Events := NamesIn(PasText, 'AddEvent\(\s*''(\w+)''');
+    Info.OnEvents := NamesIn(PasText, '\bproperty\s+On(\w+)\s*:');
+    FUserControls.AddOrSetValue(XamlNameOf(Info.ClassName), Info);
+  end;
+end;
+
+procedure TCodeGenerator.CheckFieldName(const AName: string);
+var
+  Field: TField;
+  Reserved: string;
+begin
+  if FRootKind = 'Window' then
+  begin
+    if InList(ReservedNames, AName.ToLower) or InList(PascalReserved, AName.ToLower) then
+      raise ECodeGenError.CreateFmt('%s: x:Name="%s" would hide a window member; choose another name',
+        [FXamlPath, AName]);
+  end
+  else
+  begin
+    if FRootKind = 'Page' then
+      Reserved := PageReservedNames
+    else
+      Reserved := UserControlReservedNames;
+    if InList(Reserved, AName.ToLower) or InList(PascalReserved, AName.ToLower) or
+      (IndexText(AName, FOwnProperties) >= 0) then
+      raise ECodeGenError.CreateFmt('%s: x:Name="%s" would hide a member of %s; choose another name',
+        [FXamlPath, AName, FClassName]);
+  end;
+  for Field in FFields do
+    if Field.Name.ToLower = AName.ToLower then
+      raise ECodeGenError.CreateFmt('%s: duplicate x:Name="%s"', [FXamlPath, AName]);
+end;
+
+procedure TCodeGenerator.WalkUserControl(AElement: TXmlElement; const ALocal: string);
+const
+  BaseClass = 'Microsoft.UI.Xaml.Controls.ContentControl';
+var
+  UC: TUserControlInfo;
+  Name, Attr, Method: string;
+  Attrs: TArray<string>;
+  I: Integer;
+  Info: TEventInfo;
+  Field: TField;
+  Named: TNamed;
+  Auto: Boolean;
+begin
+  if not FUserControls.TryGetValue(ALocal, UC) then
+    raise ECodeGenError.CreateFmt('%s: <%s> is not a user control of this project: no .xaml file next to %s ' +
+      'has <UserControl x:Class="T%s">', [Where(AElement), ALocal, BaseName(FXamlPath), ALocal]);
+  if SameText(UC.XamlFile, TPath.GetFullPath(FXamlPath)) then
+    raise ECodeGenError.CreateFmt('%s: the user control %s cannot contain itself', [Where(AElement), UC.ClassName]);
+  FUnits.Add(UC.UnitName);
+  Name := AElement.Get(XName);
+  if Name = '' then
+    Name := AElement.Get('Name');
+  Auto := False;
+  SetLength(Attrs, AElement.AttrCount);
+  for I := 0 to AElement.AttrCount - 1 do
+    Attrs[I] := AElement.AttrName[I];
+  for Attr in Attrs do
+  begin
+    if Attr.StartsWith('{') or Attr.Contains('.') then
+      Continue;
+    if (IndexText(Attr, UC.Properties) >= 0) or FIndex.HasProperty(BaseClass, Attr) then
+      Continue;
+    if (IndexText(Attr, UC.Events) < 0) and not FIndex.Event(BaseClass, Attr, Info) then
+      raise ECodeGenError.CreateFmt('%s: %s has no property or event %s (its own properties: %s; events: %s)',
+        [Where(AElement), UC.ClassName, Attr, string.Join(', ', UC.Properties), string.Join(', ', UC.Events)]);
+    Method := AElement.Pop(Attr);
+    if Name = '' then
+    begin
+      Inc(FAutoNames);
+      Name := '_rw' + IntToStr(FAutoNames);
+      AElement.SetAttr(XName, Name);
+      FAutoWrappers.AddOrSetValue(Name, UC.ClassName);
+      Auto := True;
+    end;
+    if IndexText(Attr, UC.Events) >= 0 then
+    begin
+      Bind(Name, Attr, Method, 'TWinUIWinValueEventHandler', 'TWinValue', True, AElement.Line, True);
+      if (FBindings.Last.Count = 2) and (IndexText(Attr, UC.OnEvents) < 0) then
+        raise ECodeGenError.CreateFmt('%s: %s="%s" with (Sender: TObject; const E: TWinValue) needs ' +
+          '"property On%s: TWinUIWinValueEventHandler index N read GetHandler write SetHandler;" in the published ' +
+          'section of %s, or the short form %s(Sender: TObject)',
+          [Where(AElement), Attr, Method, Attr, UC.ClassName, Method]);
+    end
+    else
+      Bind(Name, Attr, Method, Info.Handler, Info.Args, True, AElement.Line);
+  end;
+  if (Name <> '') and not Auto and not Name.StartsWith('_rw') then
+  begin
+    CheckFieldName(Name);
+    Field.Name := Name;
+    Field.Wrapper := UC.ClassName;
+    Field.Line := AElement.Line;
+    Field.Tag := ALocal;
+    FFields.Add(Field);
+    Named := Default(TNamed);
+    Named.Name := Name;
+    Named.ClassName := UC.ClassName;
+    Named.Line := AElement.Line;
+    Named.IsUser := True;
+    Named.UserEvents := UC.Events;
+    FNamed.Add(Named);
+  end;
+end;
+
+function TCodeGenerator.EmitPage(const AXaml: string): string;
 var
   Lines: TStringBuilder;
-  Src, VM, Decl, Target, Source, Statement: string;
-  Width, I, J: Integer;
+  Src, VM, U: string;
+
+  procedure W(const AText: string);
+  begin
+    Lines.Append(AText).Append(#13#10);
+  end;
+
+begin
+  Src := BaseName(FXamlPath);
+  VM := '';
+  if FViewModelUnit <> '' then
+    VM := FDataContextType;
+  Lines := TStringBuilder.Create;
+  try
+    W('unit ' + FUnitName + ';');
+    W('');
+    W('{');
+    W('  ' + FBaseName + ': base class of the page ' + FClassName + ', generated from ' + Src);
+    W('  by RADWinUI XamlCodeGen ' + CodeGenVersion + ' (tools/XamlCodeGen).');
+    W('');
+    W('  DO NOT EDIT. Change ' + Src + ' or the published handlers of ' + FClassName);
+    W('  in ' + FPasName + '; the build regenerates this unit.');
+    W('');
+    W('  Fields      one per x:Name element, in XAML order');
+    W('  Create      loads the page, fills the fields, wires the events');
+    W('  Comments    name the XAML line each item comes from');
+    W('}');
+    W('');
+    W('interface');
+    W('');
+    W('uses');
+    W('  RADWinUI.Framework,');
+    W('  RADWinUI.Xaml,');
+    for U in FUnits do
+      if (U <> '') and (U <> 'RADWinUI.Pages') then
+        W('  ' + U + ',');
+    if FViewModelUnit <> '' then
+    begin
+      W('  RADWinUI.Pages,');
+      W('  ' + FViewModelUnit + ';  // ' + FDataContextType + ', the DataContextType');
+    end
+    else
+      W('  RADWinUI.Pages;');
+    W('');
+    W('type');
+    W('  // Published handlers of the descendant are found by name (MethodAddress)');
+    W('  {$M+}');
+    W('  ' + FBaseName + ' = class(TWinUIXamlPage)');
+    if VM <> '' then
+    begin
+      W('  strict private');
+      W('    FViewModel: ' + VM + ';');
+      W('    procedure SetViewModel(AValue: ' + VM + ');');
+    end;
+    W('  protected');
+    Lines.Append(FieldLines);
+    W('  public');
+    W('    constructor Create; override;');
+    if VM <> '' then
+    begin
+      W('    /// <summary>');
+      W('    ///   The ' + VM + ' the XAML binds to (' + Src + '(' + IntToStr(FWindowLine) + '): DataContextType);');
+      W('    ///   setting it sets DataContext. The page does not own it.');
+      W('    /// </summary>');
+      W('    property ViewModel: ' + VM + ' read FViewModel write SetViewModel;');
+    end;
+    W('  end;');
+    W('  {$M-}');
+    W('');
+    W('implementation');
+    W('');
+    W('const');
+    W('  // ' + Src + '(' + IntToStr(FContentLine) + '): the page; event attributes became the');
+    W('  // wiring below, x:Class, x:DataType and RADWinUI attributes are removed');
+    W('  PageXaml =');
+    W('    ' + PascalString(AXaml) + ';');
+    W('');
+    W('constructor ' + FBaseName + '.Create;');
+    W('begin');
+    W('  inherited CreateFromXaml(PageXaml);');
+    Lines.Append(WiringLines);
+    W('end;');
+    W('');
+    if VM <> '' then
+    begin
+      W('procedure ' + FBaseName + '.SetViewModel(AValue: ' + VM + ');');
+      W('begin');
+      W('  FViewModel := AValue;');
+      W('  DataContext := AValue;');
+      W('end;');
+      W('');
+    end;
+    W('end.');
+    Result := Lines.ToString;
+  finally
+    Lines.Free;
+  end;
+end;
+
+function TCodeGenerator.EmitUserControl(const AXaml: string): string;
+var
+  Lines: TStringBuilder;
+  Src, U: string;
+
+  procedure W(const AText: string);
+  begin
+    Lines.Append(AText).Append(#13#10);
+  end;
+
+begin
+  Src := BaseName(FXamlPath);
+  Lines := TStringBuilder.Create;
+  try
+    W('unit ' + FUnitName + ';');
+    W('');
+    W('{');
+    W('  ' + FBaseName + ': base class of the user control ' + FClassName + ', generated from ' + Src);
+    W('  by RADWinUI XamlCodeGen ' + CodeGenVersion + ' (tools/XamlCodeGen).');
+    W('');
+    W('  DO NOT EDIT. Change ' + Src + ' or the published handlers of ' + FClassName);
+    W('  in ' + FPasName + '; the build regenerates this unit.');
+    W('');
+    W('  Fields      one per x:Name element, in XAML order');
+    W('  Initialize  loads the content, fills the fields, wires the events');
+    W('  Register    makes ' + FClassName + ' the XAML element <local:' + XamlNameOf(FClassName) + '>');
+    W('  Comments    name the XAML line each item comes from');
+    W('}');
+    W('');
+    W('interface');
+    W('');
+    W('uses');
+    W('  RADWinUI.Framework,');
+    W('  RADWinUI.Xaml,');
+    for U in FUnits do
+      if (U <> '') and (U <> 'RADWinUI.CustomControls') then
+        W('  ' + U + ',');
+    W('  RADWinUI.CustomControls;');
+    W('');
+    W('type');
+    W('  // Published handlers of the descendant are found by name (MethodAddress)');
+    W('  {$M+}');
+    W('  ' + FBaseName + ' = class(TWinUIXamlUserControl)');
+    W('  protected');
+    Lines.Append(FieldLines);
+    W('    procedure Initialize; override;');
+    W('  end;');
+    W('  {$M-}');
+    W('');
+    W('implementation');
+    W('');
+    W('uses');
+    W('  ' + FStem + ';  // ' + FClassName + ', registered below');
+    W('');
+    W('const');
+    W('  // ' + Src + '(' + IntToStr(FContentLine) + '): the content element; event attributes became the');
+    W('  // wiring below, x:DataType and RADWinUI attributes are removed');
+    W('  ContentXaml =');
+    W('    ' + PascalString(AXaml) + ';');
+    W('');
+    W('procedure ' + FBaseName + '.Initialize;');
+    W('begin');
+    W('  inherited;');
+    W('  LoadContentXaml(ContentXaml);');
+    Lines.Append(WiringLines);
+    W('end;');
+    W('');
+    W('initialization');
+    W('  TWinUICustomControls.Register(' + FClassName + ', ''' + XamlNameOf(FClassName) + ''', ''User controls'');');
+    W('end.');
+    Result := Lines.ToString;
+  finally
+    Lines.Free;
+  end;
+end;
+function TCodeGenerator.FieldLines: string;
+var
+  Lines: TStringBuilder;
+  Src, Decl: string;
+  Width: Integer;
+  Field: TField;
+begin
+  Src := BaseName(FXamlPath);
+  Lines := TStringBuilder.Create;
+  try
+    Width := 0;
+    for Field in FFields do
+      Width := Max(Width, Length('    ' + Field.Name + ': ' + Field.Wrapper + ';'));
+    for Field in FFields do
+    begin
+      Decl := '    ' + Field.Name + ': ' + Field.Wrapper + ';';
+      Lines.Append(Decl.PadRight(Width) + '  // ' + Src + '(' + IntToStr(Field.Line) + ') <' + Field.Tag + '>')
+        .Append(#13#10);
+    end;
+    Result := Lines.ToString;
+  finally
+    Lines.Free;
+  end;
+end;
+
+// The x:Name fields and the event wiring of the generated constructor (or Initialize)
+function TCodeGenerator.WiringLines: string;
+var
+  Lines: TStringBuilder;
+  Src, Target, Source: string;
+  I, J: Integer;
   Field: TField;
   Sorted: TArray<TBindingInfo>;
   B: TBindingInfo;
-  Settings: TList<string>;
 
   procedure W(const AText: string);
   begin
@@ -957,6 +1458,66 @@ var
       Exit(A.How = 'attribute');
     Result := CompareStr(A.Event.ToLower, B.Event.ToLower) < 0;
   end;
+
+begin
+  Src := BaseName(FXamlPath);
+  Lines := TStringBuilder.Create;
+  try
+    if FFields.Count > 0 then
+    begin
+      W('  // x:Name elements');
+      for Field in FFields do
+        W('  ' + Field.Name + ' := FindElement<' + Field.Wrapper + '>(''' + Field.Name + ''');');
+    end;
+    if FBindings.Count > 0 then
+      W('  // Event wiring');
+    // a stable insertion sort
+    Sorted := FBindings.ToArray;
+    for I := 1 to High(Sorted) do
+    begin
+      B := Sorted[I];
+      J := I - 1;
+      while (J >= 0) and Before(B, Sorted[J]) do
+      begin
+        Sorted[J + 1] := Sorted[J];
+        Dec(J);
+      end;
+      Sorted[J + 1] := B;
+    end;
+    for B in Sorted do
+    begin
+      Target := B.Element;
+      if FAutoWrappers.ContainsKey(B.Element) then
+        Target := 'FindElement<' + FAutoWrappers[B.Element] + '>(''' + B.Element + ''')';
+      if B.How = 'attribute' then
+        Source := B.Event + '="' + B.Method + '"'
+      else
+        Source := B.Method + ' by name';
+      W('  // ' + Src + '(' + IntToStr(B.Line) + '): ' + Source);
+      if B.Count = 2 then
+        W('  ' + Target + '.On' + B.Event + ' := ' + B.Handler + '(PublishedMethod(''' + B.Method + '''));')
+      else if B.Custom then
+        // a custom control has no typed property per event
+        W('  ' + Target + '.EventByName(''' + B.Event + ''').Add(NotifyProc<' + B.Args + '>(''' + B.Method + '''));')
+      else
+        W('  ' + Target + '.' + B.Event + '.Add(NotifyProc<' + B.Args + '>(''' + B.Method + '''));');
+    end;
+    Result := Lines.ToString;
+  finally
+    Lines.Free;
+  end;
+end;
+function TCodeGenerator.Emit(const AXaml: string): string;
+var
+  Lines: TStringBuilder;
+  Src, VM, Statement: string;
+  Settings: TList<string>;
+
+  procedure W(const AText: string);
+  begin
+    Lines.Append(AText).Append(#13#10);
+  end;
+
 
 begin
   Src := BaseName(FXamlPath);
@@ -1007,14 +1568,8 @@ begin
       W('    procedure SetViewModel(AValue: ' + VM + ');');
     end;
     W('  protected');
-    Width := 0;
-    for Field in FFields do
-      Width := Max(Width, Length('    ' + Field.Name + ': ' + Field.Wrapper + ';'));
-    for Field in FFields do
-    begin
-      Decl := '    ' + Field.Name + ': ' + Field.Wrapper + ';';
-      W(Decl.PadRight(Width) + '  // ' + Src + '(' + IntToStr(Field.Line) + ') <' + Field.Tag + '>');
-    end;
+    Lines.Append(FieldLines);
+
     W('  public');
     W('    constructor Create; override;');
     if VM <> '' then
@@ -1049,45 +1604,7 @@ begin
         W('  ' + Statement);
     end;
     W('  LoadContent(ContentXaml);');
-    if FFields.Count > 0 then
-    begin
-      W('  // x:Name elements');
-      for Field in FFields do
-        W('  ' + Field.Name + ' := FindElement<' + Field.Wrapper + '>(''' + Field.Name + ''');');
-    end;
-    if FBindings.Count > 0 then
-      W('  // Event wiring');
-    // a stable insertion sort
-    Sorted := FBindings.ToArray;
-    for I := 1 to High(Sorted) do
-    begin
-      B := Sorted[I];
-      J := I - 1;
-      while (J >= 0) and Before(B, Sorted[J]) do
-      begin
-        Sorted[J + 1] := Sorted[J];
-        Dec(J);
-      end;
-      Sorted[J + 1] := B;
-    end;
-    for B in Sorted do
-    begin
-      Target := B.Element;
-      if FAutoWrappers.ContainsKey(B.Element) then
-        Target := 'FindElement<' + FAutoWrappers[B.Element] + '>(''' + B.Element + ''')';
-      if B.How = 'attribute' then
-        Source := B.Event + '="' + B.Method + '"'
-      else
-        Source := B.Method + ' by name';
-      W('  // ' + Src + '(' + IntToStr(B.Line) + '): ' + Source);
-      if B.Count = 2 then
-        W('  ' + Target + '.On' + B.Event + ' := ' + B.Handler + '(PublishedMethod(''' + B.Method + '''));')
-      else if B.Custom then
-        // a custom control has no typed property per event
-        W('  ' + Target + '.EventByName(''' + B.Event + ''').Add(NotifyProc<' + B.Args + '>(''' + B.Method + '''));')
-      else
-        W('  ' + Target + '.' + B.Event + '.Add(NotifyProc<' + B.Args + '>(''' + B.Method + '''));');
-    end;
+    Lines.Append(WiringLines);
     W('end;');
     W('');
     if VM <> '' then

@@ -24,6 +24,8 @@ type
 function AskNewProject(var AName, ALocation: string; const AValidate: TWizardValidator): Boolean;
 /// <summary>Asks for a new window's unit name. False when cancelled.</summary>
 function AskNewWindow(var AUnitName: string; const AValidate: TWizardValidator): Boolean;
+/// <summary>Asks for the unit name of a new page or user control, ATitle and AText describe it.</summary>
+function AskNewUnit(const ATitle, AText: string; var AUnitName: string; const AValidate: TWizardValidator): Boolean;
 /// <summary>A message with a heading, drawn with the IDE theme.</summary>
 procedure ShowWizardMessage(const ATitle, AHeading, AText: string; AWarning: Boolean);
 /// <summary>The folder AskNewProject offers first: the last one used, else Documents.</summary>
@@ -320,12 +322,18 @@ begin
 end;
 
 function AskNewWindow(var AUnitName: string; const AValidate: TWizardValidator): Boolean;
+begin
+  Result := AskNewUnit('New RADWinUI Window',
+    'Another window for the active project: a .xaml file with its code in a .pas unit, ' +
+    'added to the project.', AUnitName, AValidate);
+end;
+
+function AskNewUnit(const ATitle, AText: string; var AUnitName: string; const AValidate: TWizardValidator): Boolean;
 var
   Dialog: TWizardDialog;
 begin
-  Dialog := TWizardDialog.CreateDialog('New RADWinUI Window',
-    'Another window for the active project: a .xaml file with its code in a .pas unit, ' +
-    'added to the project.', '&Unit name', 'Files: %0:s.xaml, %0:s.pas, class T%0:s', False, AValidate);
+  Dialog := TWizardDialog.CreateDialog(ATitle, AText, '&Unit name', 'Files: %0:s.xaml, %0:s.pas, class T%0:s', False,
+    AValidate);
   try
     Dialog.FNameEdit.Text := AUnitName;
     Dialog.FNameEdit.SelectAll;

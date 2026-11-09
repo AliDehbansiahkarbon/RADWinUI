@@ -213,7 +213,7 @@ end.
 - `Fire(Index)` raises an event: its `On` handler first, then the listeners added with `EventByName(Name).Add`.
 - `Create(Owner)` makes one from Pascal. Add it to a panel's `Children` like any other element.
 
-The type index XamlCodeGen and the designer read is `src\Framework\RADWinUI.Controls.json`. `scripts\Generate-Projection.ps1` writes it with `tools\ControlsIndex`, and `tests\CustomControls\OverlayControlsTest` fails when it is out of date. Controls of your own units work in XAML that you load yourself (`LoadContent`). Window `.xaml` files, which XamlCodeGen checks, and the Tool Palette know RADWinUI's own controls only for now.
+The type index XamlCodeGen and the designer read is `src\Framework\RADWinUI.Controls.json`. `scripts\Generate-Projection.ps1` writes it with `tools\ControlsIndex`, and `tests\CustomControls\OverlayControlsTest` fails when it is out of date. Controls of your own units written this way work in XAML that you load yourself (`LoadContent`). Window `.xaml` files, which XamlCodeGen checks, and the Tool Palette know RADWinUI's own controls only for now. A control of your own made from XAML is a [user control](FRAMEWORK-API.md#user-controls): XamlCodeGen knows those, in every window, page and user control of the project.
 
 ## How it works
 

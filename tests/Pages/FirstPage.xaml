@@ -1,0 +1,11 @@
+<Page
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:PagesTest"
+    x:Class="TFirstPage">
+  <StackPanel>
+    <TextBlock x:Name="Caption" Text="First"/>
+    <local:InfoCard x:Name="CardOne" Title="One" Clicked="CardClicked"/>
+    <local:InfoCard x:Name="CardTwo" Title="Two" Clicked="CardClicked"/>
+  </StackPanel>
+</Page>

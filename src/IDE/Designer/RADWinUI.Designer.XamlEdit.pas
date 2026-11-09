@@ -322,7 +322,7 @@ begin
     Element.TagEnd := Match.Index + Match.Length;
     Element.Stop := Element.TagEnd;
     if FindAttribute(Match.Value, 'x:Name', Attribute) or FindAttribute(Match.Value, 'Name', Attribute) or
-      ((Element.Tag = 'Window') and FindAttribute(Match.Value, 'x:Class', Attribute)) then
+      (MatchStr(Element.Tag, ['Window', 'Page', 'UserControl']) and FindAttribute(Match.Value, 'x:Class', Attribute)) then
       Element.Name := Unescape(Attribute.Groups[4].Value.Substring(1, Attribute.Groups[4].Length - 2));
     Result[N] := Element;
     if Match.Groups[3].Value <> '/' then
@@ -342,7 +342,7 @@ begin
   Elements := XamlElements(AXaml);
   for Element in Elements do
     if (Element.Line = ALine) and (Element.Column = ACol) then
-      Exit((Element.ParentIndex >= 0) and (Elements[Element.ParentIndex].Tag <> 'Window'));
+      Exit((Element.ParentIndex >= 0) and not MatchStr(Elements[Element.ParentIndex].Tag, ['Window', 'Page', 'UserControl']));
   Result := False;
 end;
 
@@ -822,7 +822,7 @@ begin
   Root := TRegEx.Match(AXaml, TagPattern, [roSingleLine]);
   while Root.Success and Root.Value.StartsWith('<!--') do
     Root := Root.NextMatch;
-  if Root.Success and (Root.Groups[2].Value = 'Window') then
+  if Root.Success and MatchStr(Root.Groups[2].Value, ['Window', 'Page', 'UserControl']) then
   begin
     if At = Root.Index then
       raise EXamlEdit.Create('Select a panel to paste into');
@@ -1014,7 +1014,7 @@ begin
   Elements := XamlElements(AXaml);
   I := ElementIndexAt(Elements, ALine, ACol);
   if Elements[I].DesignOnly or (Elements[I].ParentIndex < 0) or
-    (Elements[Elements[I].ParentIndex].Tag = 'Window') then
+    MatchStr(Elements[Elements[I].ParentIndex].Tag, ['Window', 'Page', 'UserControl']) then
     Exit(False);
   Children := ChildrenOf(AXaml, Elements[Elements[I].ParentIndex].Start, ContentEnd);
   if Length(Children) < 2 then

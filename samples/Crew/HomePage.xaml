@@ -1,0 +1,18 @@
+<Page
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:Crew"
+    x:Class="THomePage">
+  <ScrollViewer>
+    <StackPanel Spacing="8" MaxWidth="720" HorizontalAlignment="Left">
+      <TextBlock x:Name="PageTitle" Text="Home" Style="{StaticResource TitleLargeTextBlockStyle}"/>
+      <TextBlock x:Name="Summary" Opacity="0.7" TextWrapping="Wrap"/>
+      <TextBlock Text="Favourites" Style="{StaticResource SubtitleTextBlockStyle}" Margin="0,20,0,4"/>
+      <!-- One user control, three times: PersonCard.xaml with PersonCard.pas -->
+      <local:PersonCard PersonName="Ada Lovelace" Role="Engineering lead" Opened="CardOpened"/>
+      <local:PersonCard PersonName="Grace Hopper" Role="Platform architect" Opened="CardOpened"/>
+      <local:PersonCard PersonName="Alan Turing" Role="Research" Opened="CardOpened"/>
+      <HyperlinkButton Content="See everyone" Click="EveryoneClick" Margin="0,12,0,0"/>
+    </StackPanel>
+  </ScrollViewer>
+</Page>
