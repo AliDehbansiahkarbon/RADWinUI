@@ -97,10 +97,10 @@ begin
     Namespaces := ['Microsoft.UI', 'Microsoft.Foundation', 'Microsoft.Graphics', 'Windows.Foundation',
       'Windows.Media.Control'];
   // The app platform beside the UI: lifecycle, notifications, pickers, resources, AI,
-  // and the Windows types they hand out (files, streams, bitmaps, the clipboard)
+  // and the Windows types they hand out (activations, files, streams, bitmaps, the clipboard)
   if Length(Extras) = 0 then
-    Extras := ['Microsoft.Windows', 'Microsoft.Graphics.Imaging', 'Windows.ApplicationModel.DataTransfer',
-      'Windows.Graphics.Imaging', 'Windows.Storage'];
+    Extras := ['Microsoft.Windows', 'Microsoft.Graphics.Imaging', 'Windows.ApplicationModel.Activation',
+      'Windows.ApplicationModel.DataTransfer', 'Windows.Graphics.Imaging', 'Windows.Storage'];
   Files := Collect(WinMDs);
   if Length(Files) = 0 then
   begin

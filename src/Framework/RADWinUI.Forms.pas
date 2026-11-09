@@ -137,6 +137,13 @@ type
     class procedure FreeAll;
     /// <summary>Centers the window on the work area of its display.</summary>
     procedure Center;
+    /// <summary>Restores the window when it is minimized and brings it to the front.</summary>
+    procedure BringToFront;
+    /// <summary>
+    ///   The window of this app that has the focus, else the one created last,
+    ///   nil when no window is open. Dialogs and pickers belong to it.
+    /// </summary>
+    class function Active: TWinUIWindow; static;
     /// <summary>The element named AName (x:Name) in the content, wrapped, nil when missing.</summary>
     function FindElement<T: TWinUIObject>(const AName: string): T;
     /// <summary>Loads a XAML string, sets it as the content and returns its root.</summary>
@@ -219,6 +226,27 @@ type
 
   TWinUIExceptionEvent = procedure(Sender: TObject; E: Exception) of object;
 
+  /// <summary>How the app was started, or reached again while it runs.</summary>
+  TWinUIActivationKind = (Launch, &File, Protocol, Notification, Other);
+
+  TWinUIActivation = record
+    Kind: TWinUIActivationKind;
+    /// <summary>
+    ///   Launch: the command line arguments, without the program name.
+    ///   Protocol: the whole URI. Notification: the Argument of the
+    ///   notification, or of the button that was clicked.
+    /// </summary>
+    Arguments: string;
+    /// <summary>File: the full paths of the files to open.</summary>
+    Files: TArray<string>;
+    /// <summary>Notification: what the user typed in its text boxes, as Id=Value pairs.</summary>
+    Inputs: TArray<string>;
+    /// <summary>The value of the text box AId of a notification, empty when there is none.</summary>
+    function Input(const AId: string): string;
+  end;
+
+  TWinUIActivatedEvent = procedure(Sender: TObject; const AActivation: TWinUIActivation) of object;
+
   /// <summary>Application that creates and shows a main window class on launch.</summary>
   TWinUIApp = class(TWinUIApplication)
   strict private
@@ -227,7 +255,15 @@ type
     class var FOnException: TWinUIExceptionEvent;
     class var FConverterNames: TArray<string>;
     class var FConverters: TArray<IInspectable>;
+    class var FSingleInstance: Boolean;
+    class var FOnActivated: TWinUIActivatedEvent;
+    class var FLaunchActivation: TWinUIActivation;
+    class var FMainInstance: IAppInstance;
+    class var FActivatedToken: EventRegistrationToken;
+    class var FDispatcher: IDispatcherQueue;
     procedure AddResource(const AName: string; const AValue: IInspectable);
+    class function StartInstance: Boolean; static;
+    class procedure CallActivated(const AActivation: TWinUIActivation; ABringToFront: Boolean); static;
   protected
     procedure OnLaunched(const AArgs: ILaunchActivatedEventArgs); override;
   public
@@ -248,8 +284,50 @@ type
     /// </summary>
     class procedure RegisterConverter(const AName: string; const AConvert: TWinUIConvertFunc;
       const AConvertBack: TWinUIConvertFunc = nil);
+    /// <summary>
+    ///   Runs AProc on the UI thread, after the current event, like TThread.Queue.
+    ///   Safe to call from any thread, for example from a WinRT completion handler.
+    /// </summary>
+    class procedure Queue(const AProc: TProc); static;
+    /// <summary>Ends the application after the current event, like the VCL Application.Terminate.</summary>
+    class procedure Terminate; static;
+    /// <summary>
+    ///   Raises OnActivated on the UI thread. RADWinUI.Notifications calls it when
+    ///   the user clicks a notification while the app runs.
+    /// </summary>
+    class procedure NotifyActivated(const AActivation: TWinUIActivation); static;
+    /// <summary>The activation of a notification click, for NotifyActivated.</summary>
+    class function NotificationActivation(const AArgs: IAppNotificationActivatedEventArgs): TWinUIActivation; static;
+    /// <summary>
+    ///   Makes Windows start this program for files with these extensions
+    ///   ('.txt'), shown as ADisplayName in Open with. The app receives them in
+    ///   OnActivated, Kind File. For an app installed without MSIX: call it from
+    ///   the setup or on first run, and UnregisterFileTypes on uninstall.
+    /// </summary>
+    class procedure RegisterFileTypes(const AExtensions: array of string; const ADisplayName: string); static;
+    class procedure UnregisterFileTypes(const AExtensions: array of string); static;
+    /// <summary>
+    ///   Makes Windows start this program for links such as myapp://open/42. The
+    ///   app receives them in OnActivated, Kind Protocol.
+    /// </summary>
+    class procedure RegisterProtocol(const AScheme, ADisplayName: string); static;
+    class procedure UnregisterProtocol(const AScheme: string); static;
     /// <summary>Like the VCL Application.OnException, Sender is the application.</summary>
     class property OnException: TWinUIExceptionEvent read FOnException write FOnException;
+    /// <summary>
+    ///   Set before Run: a second start of the program hands its activation (files,
+    ///   link, arguments) to the running one, which comes to the front and gets
+    ///   OnActivated, and the second process ends without showing a window.
+    /// </summary>
+    class property SingleInstance: Boolean read FSingleInstance write FSingleInstance;
+    /// <summary>
+    ///   Raised once after the main window is shown, with how the app was started,
+    ///   and again for every later activation: a notification click, or another
+    ///   start of a SingleInstance app. Always on the UI thread.
+    /// </summary>
+    class property OnActivated: TWinUIActivatedEvent read FOnActivated write FOnActivated;
+    /// <summary>How the app was started, readable from the main window's constructor on.</summary>
+    class property LaunchActivation: TWinUIActivation read FLaunchActivation;
   end;
 
 implementation
@@ -544,6 +622,29 @@ begin
   if Assigned(CustomXamlOwnerGone) then
     CustomXamlOwnerGone(Self);
   inherited;
+end;
+
+class function TWinUIWindow.Active: TWinUIWindow;
+var
+  W: TWinUIWindow;
+  Foreground: HWND;
+begin
+  Foreground := GetForegroundWindow;
+  for W in FWindows do
+    if W.Handle = Foreground then
+      Exit(W);
+  if Length(FWindows) > 0 then
+    Result := FWindows[High(FWindows)]
+  else
+    Result := nil;
+end;
+
+procedure TWinUIWindow.BringToFront;
+begin
+  if IsIconic(Handle) then
+    ShowWindow(Handle, SW_RESTORE);
+  Activate;
+  SetForegroundWindow(Handle);
 end;
 
 class function TWinUIWindow.IsAlive(AWindow: TWinUIWindow): Boolean;
@@ -1454,6 +1555,7 @@ begin
     end));
   for I := 0 to High(FConverterNames) do
     AddResource(FConverterNames[I], FConverters[I]);
+  FDispatcher := DispatcherQueue.GetForCurrentThread;
   try
     FMainWindowClass.Create.Show;
   except
@@ -1462,8 +1564,15 @@ begin
       // Without its main window the application has nothing to show: report and exit.
       HandleException(E);
       Instance.Exit;
+      Exit;
     end;
   end;
+  // After the main window's own Loaded handlers, like every later activation
+  Queue(
+    procedure
+    begin
+      CallActivated(FLaunchActivation, False);
+    end);
 end;
 
 procedure ShowException(E: Exception);
@@ -1496,6 +1605,11 @@ destructor TWinUIApp.Destroy;
 begin
   // Windows whose deferred free did not run before the message loop ended.
   TWinUIWindow.FreeAll;
+  // The runtime holds the Activated handler until it is removed
+  if FMainInstance <> nil then
+    FMainInstance.remove_Activated(FActivatedToken);
+  FMainInstance := nil;
+  FDispatcher := nil;
   // Before WinRT shuts down, like every other WinRT reference
   WindowsCompositor := nil;
   SystemQueueController := nil;
@@ -1508,7 +1622,294 @@ class procedure TWinUIApp.Run(AMainWindow: TWinUIWindowClass);
 begin
   FMainWindowClass := AMainWindow;
   WinRTHandleException := RouteWinRTException;
+  BeforeApplicationStart := StartInstance;
   inherited Run;
+end;
+
+{ Activation }
+
+function TWinUIActivation.Input(const AId: string): string;
+var
+  Pair: string;
+begin
+  for Pair in Inputs do
+    if SameText(Copy(Pair, 1, Length(AId) + 1), AId + '=') then
+      Exit(Copy(Pair, Length(AId) + 2, MaxInt));
+  Result := '';
+end;
+
+// The command line without the program name, as ParamStr sees it
+function CommandLineArguments: string;
+var
+  I: Integer;
+begin
+  Result := '';
+  for I := 1 to ParamCount do
+  begin
+    if Result <> '' then
+      Result := Result + ' ';
+    if Pos(' ', ParamStr(I)) > 0 then
+      Result := Result + '"' + ParamStr(I) + '"'
+    else
+      Result := Result + ParamStr(I);
+  end;
+end;
+
+// An app without package identity gets the whole command line, program name included
+function WithoutProgramName(const ACommandLine: string): string;
+var
+  S, Name: string;
+  P: Integer;
+begin
+  S := TrimLeft(ACommandLine);
+  if S.StartsWith('"') then
+    P := Pos('"', S, 2)
+  else
+    P := Pos(' ', S);
+  if P = 0 then
+    P := Length(S);
+  Name := ExtractFileName(Copy(S, 1, P).Trim(['"', ' ']));
+  if SameText(ChangeFileExt(Name, ''), ChangeFileExt(ExtractFileName(ParamStr(0)), '')) then
+    Result := Trim(Copy(S, P + 1, MaxInt))
+  else
+    Result := Trim(ACommandLine);
+end;
+
+function ActivationOf(const AArgs: IAppActivationArguments): TWinUIActivation;
+var
+  Launch: Windows_ApplicationModel_Activation_ILaunchActivatedEventArgs;
+  FileArgs: IFileActivatedEventArgs;
+  ProtocolArgs: IProtocolActivatedEventArgs;
+  NotificationArgs: IAppNotificationActivatedEventArgs;
+  Files: IVectorView_IStorageItem;
+  Item: IStorageItem;
+  I: Integer;
+begin
+  Result := Default(TWinUIActivation);
+  Result.Kind := TWinUIActivationKind.Other;
+  if AArgs = nil then
+  begin
+    Result.Kind := TWinUIActivationKind.Launch;
+    Result.Arguments := CommandLineArguments;
+    Exit;
+  end;
+  case AArgs.Kind of
+    ExtendedActivationKind.Launch:
+      begin
+        Result.Kind := TWinUIActivationKind.Launch;
+        if Supports(AArgs.Data, Windows_ApplicationModel_Activation_ILaunchActivatedEventArgs, Launch) then
+          Result.Arguments := WithoutProgramName(TakeHString(Launch.get_Arguments))
+        else
+          Result.Arguments := CommandLineArguments;
+      end;
+    ExtendedActivationKind.&File:
+      if Supports(AArgs.Data, IFileActivatedEventArgs, FileArgs) then
+      begin
+        Result.Kind := TWinUIActivationKind.&File;
+        Files := FileArgs.get_Files;
+        if Files <> nil then
+          for I := 0 to Integer(Files.Size) - 1 do
+          begin
+            Item := Files.GetAt(I);
+            if Item <> nil then
+              Result.Files := Result.Files + [TakeHString(Item.get_Path)];
+          end;
+      end;
+    ExtendedActivationKind.Protocol:
+      if Supports(AArgs.Data, IProtocolActivatedEventArgs, ProtocolArgs) then
+      begin
+        Result.Kind := TWinUIActivationKind.Protocol;
+        if ProtocolArgs.get_Uri <> nil then
+          Result.Arguments := TakeHString(ProtocolArgs.get_Uri.get_AbsoluteUri);
+      end;
+    ExtendedActivationKind.AppNotification:
+      if Supports(AArgs.Data, IAppNotificationActivatedEventArgs, NotificationArgs) then
+        Result := TWinUIApp.NotificationActivation(NotificationArgs);
+  end;
+end;
+
+class function TWinUIApp.NotificationActivation(const AArgs: IAppNotificationActivatedEventArgs): TWinUIActivation;
+var
+  Args2: IAppNotificationActivatedEventArgs2;
+  Map: IMap_String_String;
+  Pairs: IIterable_IKeyValuePair_String_String;
+  It: IIterator_IKeyValuePair_String_String;
+  Pair: IKeyValuePair_String_String;
+begin
+  Result := Default(TWinUIActivation);
+  Result.Kind := TWinUIActivationKind.Notification;
+  if AArgs = nil then
+    Exit;
+  // RADWinUI.Notifications stores the Argument under the key "arg"
+  Result.Arguments := TakeHString(AArgs.get_Argument);
+  if Supports(AArgs, IAppNotificationActivatedEventArgs2, Args2) then
+  begin
+    Map := Args2.get_Arguments;
+    if (Map <> nil) and Map.HasKey(WinStr('arg')) then
+      Result.Arguments := TakeHString(Map.Lookup(WinStr('arg')));
+  end;
+  Map := AArgs.get_UserInput;
+  if Supports(Map, IIterable_IKeyValuePair_String_String, Pairs) then
+  begin
+    It := Pairs.First;
+    while It.get_HasCurrent do
+    begin
+      Pair := It.get_Current;
+      Result.Inputs := Result.Inputs + [TakeHString(Pair.get_Key) + '=' + TakeHString(Pair.get_Value)];
+      It.MoveNext;
+    end;
+  end;
+end;
+
+function CoWaitForMultipleObjects(AFlags, ATimeout: DWORD; AHandleCount: ULONG; AHandles: PHandle;
+  out AIndex: DWORD): HRESULT; stdcall; external 'ole32.dll';
+
+class function TWinUIApp.StartInstance: Boolean;
+var
+  Args: IAppActivationArguments;
+  Redirect: IAsyncAction;
+  Activated: EventHandler_AppActivationArguments;
+  Completed: AsyncActionCompletedHandler;
+  Done: THandle;
+  Index: DWORD;
+begin
+  Result := True;
+  Args := AppInstance.GetCurrent.GetActivatedEventArgs;
+  FLaunchActivation := ActivationOf(Args);
+  if not FSingleInstance then
+    Exit;
+  FMainInstance := AppInstance.FindOrRegisterForKey(WinStr('main'));
+  if FMainInstance.get_IsCurrent then
+  begin
+    // Later starts arrive on a thread pool thread, OnActivated runs on the UI thread.
+    // The handler sits in a variable during the call: passed inline, its reference
+    // count is 0 and the runtime's QueryInterface and Release would free it.
+    Activated := TEventHandler_AppActivationArguments.Create(
+      procedure(ASender: IInspectable; AArgs: IAppActivationArguments)
+      var
+        Activation: TWinUIActivation;
+      begin
+        Activation := ActivationOf(AArgs);
+        Queue(
+          procedure
+          begin
+            CallActivated(Activation, True);
+          end);
+      end);
+    FActivatedToken := FMainInstance.add_Activated(Activated);
+    Exit;
+  end;
+  // Another instance runs: let it come to the front, hand it this start and end.
+  AllowSetForegroundWindow(FMainInstance.get_ProcessId);
+  Done := CreateEvent(nil, True, False, nil);
+  try
+    Redirect := FMainInstance.RedirectActivationToAsync(Args);
+    // In a variable for the same reason as Activated above
+    Completed := TAsyncActionCompletedHandler.Create(
+      procedure(AInfo: IAsyncAction; AStatus: AsyncStatus)
+      begin
+        SetEvent(Done);
+      end);
+    Redirect.Completed := Completed;
+    // Pumps COM calls while it waits, the redirect needs them on this STA thread
+    CoWaitForMultipleObjects(0, 10000, 1, @Done, Index);
+  finally
+    CloseHandle(Done);
+  end;
+  Redirect := nil;
+  FMainInstance := nil;
+  Result := False;
+end;
+
+class procedure TWinUIApp.Queue(const AProc: TProc);
+begin
+  if FDispatcher = nil then
+    raise EWinUIBindError.Create('TWinUIApp.Queue needs the running application');
+  FDispatcher.TryEnqueue(TDispatcherQueueHandler.Create(
+    procedure
+    begin
+      try
+        AProc;
+      except
+        on E: Exception do
+          HandleException(E);
+      end;
+    end));
+end;
+
+class procedure TWinUIApp.Terminate;
+begin
+  if FInstance <> nil then
+    FInstance.Instance.Exit;
+end;
+
+class procedure TWinUIApp.CallActivated(const AActivation: TWinUIActivation; ABringToFront: Boolean);
+var
+  Main: TWinUIWindow;
+begin
+  if ABringToFront then
+  begin
+    Main := TWinUIWindow.Active;
+    if Main <> nil then
+      Main.BringToFront;
+  end;
+  if Assigned(FOnActivated) then
+    FOnActivated(FInstance, AActivation);
+end;
+
+class procedure TWinUIApp.NotifyActivated(const AActivation: TWinUIActivation);
+var
+  Activation: TWinUIActivation;
+begin
+  Activation := AActivation;
+  Queue(
+    procedure
+    begin
+      CallActivated(Activation, True);
+    end);
+end;
+
+function WinStrings(const AValues: array of string): TArray<TWinString>;
+var
+  I: Integer;
+begin
+  SetLength(Result, Length(AValues));
+  for I := 0 to High(AValues) do
+    Result[I] := AValues[I];
+end;
+
+class procedure TWinUIApp.RegisterFileTypes(const AExtensions: array of string; const ADisplayName: string);
+var
+  Types, Verbs: TArray<TWinString>;
+begin
+  if Length(AExtensions) = 0 then
+    Exit;
+  // TWinString holds one HSTRING, so the array is the HSTRING array WinRT expects
+  Types := WinStrings(AExtensions);
+  Verbs := WinStrings(['open']);
+  ActivationRegistrationManager.RegisterForFileTypeActivation(Length(Types), @Types[0],
+    WinStr(ParamStr(0) + ',0'), WinStr(ADisplayName), Length(Verbs), @Verbs[0], WinStr(ParamStr(0)));
+end;
+
+class procedure TWinUIApp.UnregisterFileTypes(const AExtensions: array of string);
+var
+  Types: TArray<TWinString>;
+begin
+  if Length(AExtensions) = 0 then
+    Exit;
+  Types := WinStrings(AExtensions);
+  ActivationRegistrationManager.UnregisterForFileTypeActivation(Length(Types), @Types[0], WinStr(ParamStr(0)));
+end;
+
+class procedure TWinUIApp.RegisterProtocol(const AScheme, ADisplayName: string);
+begin
+  ActivationRegistrationManager.RegisterForProtocolActivation(WinStr(AScheme), WinStr(ParamStr(0) + ',0'),
+    WinStr(ADisplayName), WinStr(ParamStr(0)));
+end;
+
+class procedure TWinUIApp.UnregisterProtocol(const AScheme: string);
+begin
+  ActivationRegistrationManager.UnregisterForProtocolActivation(WinStr(AScheme), WinStr(ParamStr(0)));
 end;
 
 end.

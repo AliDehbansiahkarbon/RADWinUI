@@ -157,6 +157,8 @@ Open `samples\RADWinUISamples.groupproj`, Build All, and run:
 - **[Tab Bars](docs/samples-TabBars.md):** one window that shows all six animated tab bars of the Tool Palette, each on a card of its own, with live accent colours, speed and labels, and a tour that taps through them all.
 - **[Action Buttons](docs/samples-ActionButtons.md):** the six animated buttons of the Tool Palette on one see-through page: hold to confirm, a paper plane, a confetti burst, copy feedback, a shine sweep and slide to confirm, with accent colours and a Play all wave.
 - **[Data Controls](docs/samples-DataControls.md):** customers and their orders in a FireDAC data module, shown and edited with the data-aware controls of the Tool Palette: a grid with a navigator, a form for the current customer, the orders as a master/detail grid and every customer as a tile.
+- **[Quill](docs/samples-Quill.md):** a notes app that uses the app services: open, save and folder pickers, "Save changes?" and rename dialogs, reminders as Windows notifications you can answer, and one running Quill that Windows starts for `.qnote` files and `quill://` links.
+- **[AppServicesDemo](docs/samples-AppServicesDemo.md):** one button for each dialog, picker, notification and activation service, with a log of every result, to try them one at a time.
 
 Smaller samples (Counter, Greeter, ListDemo, Contacts, Profile) show one topic each. They are in the same group, or build one with `scripts\Build.ps1 -Project samples\Counter\Counter.dpr`.
 

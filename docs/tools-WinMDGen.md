@@ -23,7 +23,7 @@ Inputs: the WinUI, InteractiveExperiences, Foundation, AI and WebView2 package m
 
 Without `--namespace`, the projection covers `Microsoft.UI`, `Microsoft.Foundation`, `Microsoft.Graphics`, `Windows.Foundation` and `Windows.Media.Control`, plus every type they use.
 
-Without `--extra-namespace`, it also covers `Microsoft.Windows`, `Microsoft.Graphics.Imaging`, `Windows.ApplicationModel.DataTransfer`, `Windows.Graphics.Imaging` and `Windows.Storage`. A type of an extra namespace never takes a plain name from a `--namespace` type, so adding one keeps every existing name. Namespaces with `Internal` or `Private` in their name are always skipped. The rules are in [PROJECTION.md](PROJECTION.md).
+Without `--extra-namespace`, it also covers `Microsoft.Windows`, `Microsoft.Graphics.Imaging`, `Windows.ApplicationModel.Activation`, `Windows.ApplicationModel.DataTransfer`, `Windows.Graphics.Imaging` and `Windows.Storage`. A type of an extra namespace never takes a plain name from a `--namespace` type, so adding one keeps every existing name. Namespaces with `Internal` or `Private` in their name are always skipped. The rules are in [PROJECTION.md](PROJECTION.md).
 
 `Generate-Projection.ps1` also writes `src\Framework\RADWinUI.Controls.json`, the type index of RADWinUI's own controls, with `tools\ControlsIndex`.
 

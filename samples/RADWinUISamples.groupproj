@@ -24,6 +24,12 @@
         <Projects Include="DataControls\DataControls.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="Quill\Quill.dproj">
+            <Dependencies/>
+        </Projects>
+        <Projects Include="AppServicesDemo\AppServicesDemo.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="Counter\Counter.dproj">
             <Dependencies/>
         </Projects>
@@ -110,6 +116,24 @@
     <Target Name="DataControls:Make">
         <MSBuild Projects="DataControls\DataControls.dproj" Targets="Make"/>
     </Target>
+    <Target Name="Quill">
+        <MSBuild Projects="Quill\Quill.dproj"/>
+    </Target>
+    <Target Name="Quill:Clean">
+        <MSBuild Projects="Quill\Quill.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="Quill:Make">
+        <MSBuild Projects="Quill\Quill.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="AppServicesDemo">
+        <MSBuild Projects="AppServicesDemo\AppServicesDemo.dproj"/>
+    </Target>
+    <Target Name="AppServicesDemo:Clean">
+        <MSBuild Projects="AppServicesDemo\AppServicesDemo.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="AppServicesDemo:Make">
+        <MSBuild Projects="AppServicesDemo\AppServicesDemo.dproj" Targets="Make"/>
+    </Target>
     <Target Name="Counter">
         <MSBuild Projects="Counter\Counter.dproj"/>
     </Target>
@@ -156,13 +180,13 @@
         <MSBuild Projects="Profile\Profile.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Gallery;Luma;Haven;Lucent;TabBars;ActionButtons;DataControls;Counter;Greeter;ListDemo;Contacts;Profile"/>
+        <CallTarget Targets="Gallery;Luma;Haven;Lucent;TabBars;ActionButtons;DataControls;Quill;AppServicesDemo;Counter;Greeter;ListDemo;Contacts;Profile"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Gallery:Clean;Luma:Clean;Haven:Clean;Lucent:Clean;TabBars:Clean;ActionButtons:Clean;DataControls:Clean;Counter:Clean;Greeter:Clean;ListDemo:Clean;Contacts:Clean;Profile:Clean"/>
+        <CallTarget Targets="Gallery:Clean;Luma:Clean;Haven:Clean;Lucent:Clean;TabBars:Clean;ActionButtons:Clean;DataControls:Clean;Quill:Clean;AppServicesDemo:Clean;Counter:Clean;Greeter:Clean;ListDemo:Clean;Contacts:Clean;Profile:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Gallery:Make;Luma:Make;Haven:Make;Lucent:Make;TabBars:Make;ActionButtons:Make;DataControls:Make;Counter:Make;Greeter:Make;ListDemo:Make;Contacts:Make;Profile:Make"/>
+        <CallTarget Targets="Gallery:Make;Luma:Make;Haven:Make;Lucent:Make;TabBars:Make;ActionButtons:Make;DataControls:Make;Quill:Make;AppServicesDemo:Make;Counter:Make;Greeter:Make;ListDemo:Make;Contacts:Make;Profile:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

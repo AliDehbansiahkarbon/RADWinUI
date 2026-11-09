@@ -69,6 +69,25 @@ Button.Click.Remove(Id);
 - One WinRT handler per event serves `OnXxx` and all listeners. It is registered on first use and removed in the wrapper's destructor, so a destroyed wrapper is never called.
 - A published method named after the element and the event, such as `procedure IncrementButtonClick(Sender: TObject)`, is wired without a `Click` attribute in the XAML.
 
+### Handlers for Windows App SDK calls
+
+Code that calls the Windows App SDK directly, outside the XAML events above, passes objects written in Delphi: handlers from `RADWinUI.Abi` (async `Completed` handlers, `AppInstance.Activated`, notification events) or collections such as the file type lists of a picker. Keep such an object in an interface variable for the duration of the call. Created inline, it reaches the runtime with a reference count of 0. A runtime that takes a reference and releases it again frees it before storing it, and the process crashes when the handler is called. A runtime that only reads it never frees it, and the object leaks. RADWinUI's own wrappers already do this.
+
+```pascal
+var
+  Handler: AsyncActionCompletedHandler;
+begin
+  Handler := TAsyncActionCompletedHandler.Create(
+    procedure(AInfo: IAsyncAction; AStatus: AsyncStatus)
+    begin
+      // ...
+    end);
+  Op.Completed := Handler;
+end;
+```
+
+Remove an event handler with its token before the app ends. Until then the runtime keeps the handler alive.
+
 ## Values and boxing
 
 `TWinValue` is a record with implicit conversions:
@@ -223,6 +242,85 @@ AlwaysOnTop := True;                          // Overlay sets it, a normal windo
 - `Handle` is the window's HWND, and descendants can override `HandleMessage` to see its window messages.
 
 The Overlay category of the Tool Palette has the controls such a window usually needs: a notch panel, glowing tiles, a global hotkey and the media playing on the PC. They are described in [CUSTOM-CONTROLS.md](CUSTOM-CONTROLS.md).
+
+## Dialogs and pickers (RADWinUI.Dialogs)
+
+Message boxes, input boxes and the Windows file and folder pickers, named as in the VCL. WinUI never blocks the UI thread while a dialog is open, so the answer arrives in a callback, always on the UI thread.
+
+```pascal
+ShowMessage('Saved.');
+
+MessageDlg('Delete the file?', TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo],
+  procedure(AResult: TModalResult)
+  begin
+    if AResult = mrYes then
+      DeleteFile(FFileName);
+  end);
+
+InputQuery('Rename', 'New name:', FName,
+  procedure(AOk: Boolean; const AValue: string)
+  begin
+    if AOk then
+      FName := AValue;
+  end);
+
+FOpenDialog := TWinUIOpenDialog.Create;   // also TWinUISaveDialog and TWinUIFolderDialog
+FOpenDialog.Filter := 'Text files (*.txt)|*.txt|All files (*.*)|*.*';
+FOpenDialog.Execute(
+  procedure(AOk: Boolean)
+  begin
+    if AOk then
+      Editor.Text := TFile.ReadAllText(FOpenDialog.FileName);
+  end);
+```
+
+- Dialogs and pickers belong to the active window, `TWinUIWindow.Active`. A dialog requested while another one is open waits for it.
+- A WinUI dialog has at most three buttons. Esc gives the result of Cancel, Close, No or Abort, the first of them in the buttons.
+- The pickers keep their settings between `Execute` calls: `Title`, `InitialDir`, `Filter` and `FilterIndex` in VCL syntax, `MultiSelect` and `Files`, `DefaultExt`, `OverwritePrompt` and `Folder`. They work in an elevated app too.
+- The captions of the buttons are resource strings (`SMsgDlgYes` and the others) that a translation can replace.
+
+## Notifications (RADWinUI.Notifications)
+
+```pascal
+Note := TWinUINotification.Create;
+try
+  Note.Title := 'Backup finished';
+  Note.Text := '12 files were copied.';
+  Note.Argument := 'open-backup';
+  Note.AddButton('Open folder', 'open-folder');
+  Note.AddTextBox('reply', 'Type a reply');
+  Note.Show;
+finally
+  Note.Free;
+end;
+```
+
+A click on the notification or one of its buttons reaches `TWinUIApp.OnActivated` with `Kind = TWinUIActivationKind.Notification`, the `Argument` in `Arguments` and the text boxes in `Input('reply')`. When the app is closed, Windows starts it, and the click is its `LaunchActivation`. `Image` and `HeroImage` take a full path or an https URL, `Tag` and `RemoveByTag` replace or remove a notification, `RemoveAll` clears the app's notifications.
+
+## Activation and single instance
+
+```pascal
+begin
+  TWinUIApp.SingleInstance := True;            // a second start goes to the running app
+  TWinUIApp.OnActivated := TMainWindow.Activated;
+  TWinUIApp.Run(TMainWindow);
+end.
+
+class procedure TMainWindow.Activated(Sender: TObject; const AActivation: TWinUIActivation);
+begin
+  case AActivation.Kind of
+    TWinUIActivationKind.Launch: ;                                  // Arguments: the command line
+    TWinUIActivationKind.&File: OpenFiles(AActivation.Files);       // full paths
+    TWinUIActivationKind.Protocol: OpenLink(AActivation.Arguments); // myapp://...
+    TWinUIActivationKind.Notification: ;                            // Arguments and Input(Id)
+  end;
+end;
+```
+
+- `OnActivated` runs once after the main window is shown, with how the app was started, then for every notification click and every start that `SingleInstance` hands over. The running window comes to the front first. `LaunchActivation` is readable from the main window's constructor on.
+- `RegisterFileTypes(['.note'], 'My notes')` and `RegisterProtocol('mynotes', 'My notes')` make Windows start the app for those files and links. An app installed without MSIX calls them from its setup or on first run, and the `Unregister` methods on uninstall.
+- `TWinUIApp.Queue(Proc)` runs `Proc` on the UI thread from any thread, `TWinUIApp.Terminate` ends the app.
+- The [Quill](samples-Quill.md) sample uses the dialogs, the pickers, notifications and activation together. [AppServicesDemo](samples-AppServicesDemo.md) has one button for each of them.
 
 ## Animations (RADWinUI.Motion)
 

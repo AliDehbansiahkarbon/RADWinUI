@@ -46,6 +46,20 @@ var
   CustomXamlOwnerGone: procedure(AOwner: TObject);
   /// <summary>True in the XAML designer's host, where controls have no data or system to talk to.</summary>
   CustomXamlDesignTime: Boolean;
+  /// <summary>
+  ///   Called once WinRT is ready and before the XAML application starts. False
+  ///   ends the process without starting it, for example when another instance
+  ///   of a single-instance app took over this start.
+  /// </summary>
+  BeforeApplicationStart: function: Boolean;
+
+/// <summary>
+///   Runs AProc once WinRT is ready, before the app reads how it was started:
+///   for units that must register with Windows first, such as RADWinUI.Notifications.
+/// </summary>
+procedure OnApplicationStart(const AProc: TProc);
+/// <summary>Runs AProc when the app ends, before WinRT shuts down.</summary>
+procedure OnApplicationShutdown(const AProc: TProc);
 
 type
   TWinUIApplication = class;
@@ -100,6 +114,30 @@ uses
 
 var
   ApplicationFactoryCache: IInspectable;
+  StartProcs, ShutdownProcs: TArray<TProc>;
+
+procedure OnApplicationStart(const AProc: TProc);
+begin
+  StartProcs := StartProcs + [AProc];
+end;
+
+procedure OnApplicationShutdown(const AProc: TProc);
+begin
+  ShutdownProcs := ShutdownProcs + [AProc];
+end;
+
+procedure RunAll(const AProcs: TArray<TProc>);
+var
+  P: TProc;
+begin
+  for P in AProcs do
+  try
+    P;
+  except
+    on E: Exception do
+      OutputDebugString(PChar(E.ClassName + ': ' + E.Message));
+  end;
+end;
 
 /// Keeps the WinUI DLLs loaded until the process ends. RoUninitialize lets
 /// COM unload them, Microsoft.UI.Xaml.Controls.dll's static destructors then release
@@ -254,6 +292,9 @@ begin
   try
     CheckWinRT(RoInitialize(RO_INIT_SINGLETHREADED), 'RoInitialize');
     try
+      RunAll(StartProcs);
+      if Assigned(BeforeApplicationStart) and not BeforeApplicationStart then
+        Exit;
       try
         Application.Start(TApplicationInitializationCallback.Create(
           procedure(AP: IApplicationInitializationCallbackParams)
@@ -264,9 +305,11 @@ begin
         App := nil;
         if Assigned(CustomXamlTypesRelease) then
           CustomXamlTypesRelease;
-        ClearFactoryCache;
       end;
     finally
+      RunAll(ShutdownProcs);
+      // After the shutdown procs, which may use factories, and on the early exit too
+      ClearFactoryCache;
       PinXamlModules;
       RoUninitialize;
     end;

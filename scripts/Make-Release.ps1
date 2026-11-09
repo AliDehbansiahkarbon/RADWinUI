@@ -99,7 +99,7 @@ $UsesPython = @(Get-ChildItem $Release -Recurse -File -Include *.dproj, *.groupp
 Check ($UsesPython.Count -eq 0) "no project or unit runs Python (found: $(($UsesPython | Select-Object -First 3).Name -join ', '))"
 Check (Test-Path (Join-Path $Release 'RADWinUI.groupproj')) 'RADWinUI.groupproj (XamlCodeGen, preview host, package of the 64-bit IDE)'
 Check (Test-Path (Join-Path $Release 'RADWinUI32.groupproj')) 'RADWinUI32.groupproj (XamlCodeGen, preview host, package of the 32-bit IDE)'
-Check (Test-Path (Join-Path $Release 'samples\RADWinUISamples.groupproj')) 'samples\RADWinUISamples.groupproj (all nine samples)'
+Check (Test-Path (Join-Path $Release 'samples\RADWinUISamples.groupproj')) 'samples\RADWinUISamples.groupproj (every sample)'
 Check (Test-Path (Join-Path $Release 'docs\THIRD-PARTY-NOTICES.md')) 'docs\THIRD-PARTY-NOTICES.md'
 Check ((Get-Content (Join-Path $Release 'LICENSE') -TotalCount 1) -eq 'MIT License') 'LICENSE: MIT'
 Check (Test-Path (Join-Path $Release 'docs\GETTING-STARTED.md')) 'docs\GETTING-STARTED.md'
@@ -137,7 +137,7 @@ try {
     $Exports = & $Tdump -ee "$TryRoot\build\packages\$Bpl" 2>&1 | Select-String -Pattern "8RegisterEv'|::Register\(\)'"
     Check (@($Exports).Count -eq 1) "$Bpl exports one Register"
   }
-  $SampleWindows = [ordered]@{ Gallery = 'MainWindow'; Luma = 'MainWindow'; Haven = 'MainWindow'; Lucent = 'MainWindow'; TabBars = 'MainWindow'; ActionButtons = 'MainWindow'; DataControls = 'MainWindow'; Counter = 'MainWindow'; Greeter = 'GreetWindow'; ListDemo = 'ListWindow'; Contacts = 'ContactsWindow'; Profile = 'ProfileWindow' }
+  $SampleWindows = [ordered]@{ Gallery = 'MainWindow'; Luma = 'MainWindow'; Haven = 'MainWindow'; Lucent = 'MainWindow'; TabBars = 'MainWindow'; ActionButtons = 'MainWindow'; DataControls = 'MainWindow'; Quill = 'QuillWindow'; Counter = 'MainWindow'; Greeter = 'GreetWindow'; ListDemo = 'ListWindow'; Contacts = 'ContactsWindow'; Profile = 'ProfileWindow' }
   foreach ($Demo in $SampleWindows.Keys) {
     Remove-Item "$TryRoot\samples\$Demo\$($SampleWindows[$Demo]).Xaml.pas"
   }

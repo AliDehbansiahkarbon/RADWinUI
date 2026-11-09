@@ -2573,6 +2573,70 @@ type
   IEnvironmentManagerStatics = interface;
   IPowerManagerStatics = interface;
   IPowerManagerStatics2 = interface;
+  IActivatedEventArgs = interface;
+  IActivatedEventArgsWithUser = interface;
+  IApplicationViewActivatedEventArgs = interface;
+  IAppointmentsProviderActivatedEventArgs = interface;
+  IAppointmentsProviderAddAppointmentActivatedEventArgs = interface;
+  IAppointmentsProviderRemoveAppointmentActivatedEventArgs = interface;
+  IAppointmentsProviderReplaceAppointmentActivatedEventArgs = interface;
+  IAppointmentsProviderShowAppointmentDetailsActivatedEventArgs = interface;
+  IAppointmentsProviderShowTimeFrameActivatedEventArgs = interface;
+  IBackgroundActivatedEventArgs = interface;
+  IBarcodeScannerPreviewActivatedEventArgs = interface;
+  ICachedFileUpdaterActivatedEventArgs = interface;
+  ICameraSettingsActivatedEventArgs = interface;
+  ICommandLineActivatedEventArgs = interface;
+  ICommandLineActivationOperation = interface;
+  IContactActivatedEventArgs = interface;
+  IContactCallActivatedEventArgs = interface;
+  IContactMapActivatedEventArgs = interface;
+  IContactMessageActivatedEventArgs = interface;
+  IContactPanelActivatedEventArgs = interface;
+  IContactPickerActivatedEventArgs = interface;
+  IContactPostActivatedEventArgs = interface;
+  IContactVideoCallActivatedEventArgs = interface;
+  IContactsProviderActivatedEventArgs = interface;
+  IContinuationActivatedEventArgs = interface;
+  IDeviceActivatedEventArgs = interface;
+  IDevicePairingActivatedEventArgs = interface;
+  IDialReceiverActivatedEventArgs = interface;
+  IFileActivatedEventArgs = interface;
+  IFileActivatedEventArgsWithCallerPackageFamilyName = interface;
+  IFileActivatedEventArgsWithNeighboringFiles = interface;
+  IFileOpenPickerActivatedEventArgs = interface;
+  IFileOpenPickerActivatedEventArgs2 = interface;
+  IFileOpenPickerContinuationEventArgs = interface;
+  IFileSavePickerActivatedEventArgs = interface;
+  IFileSavePickerActivatedEventArgs2 = interface;
+  IFileSavePickerContinuationEventArgs = interface;
+  IFolderPickerContinuationEventArgs = interface;
+  Windows_ApplicationModel_Activation_ILaunchActivatedEventArgs = interface;
+  ILaunchActivatedEventArgs2 = interface;
+  ILockScreenActivatedEventArgs = interface;
+  ILockScreenCallActivatedEventArgs = interface;
+  IPhoneCallActivatedEventArgs = interface;
+  IPickerReturnedActivatedEventArgs = interface;
+  IPrelaunchActivatedEventArgs = interface;
+  IPrint3DWorkflowActivatedEventArgs = interface;
+  IPrintTaskSettingsActivatedEventArgs = interface;
+  IProtocolActivatedEventArgs = interface;
+  IProtocolActivatedEventArgsWithCallerPackageFamilyNameAndData = interface;
+  IProtocolForResultsActivatedEventArgs = interface;
+  IRestrictedLaunchActivatedEventArgs = interface;
+  ISearchActivatedEventArgs = interface;
+  ISearchActivatedEventArgsWithLinguisticDetails = interface;
+  IShareTargetActivatedEventArgs = interface;
+  ISplashScreen = interface;
+  IStartupTaskActivatedEventArgs = interface;
+  ITileActivatedInfo = interface;
+  IToastNotificationActivatedEventArgs = interface;
+  IUserDataAccountProviderActivatedEventArgs = interface;
+  IViewSwitcherProvider = interface;
+  IVoiceCommandActivatedEventArgs = interface;
+  IWalletActionActivatedEventArgs = interface;
+  IWebAccountProviderActivatedEventArgs = interface;
+  IWebAuthenticationBrokerContinuationEventArgs = interface;
   DataProviderHandler = interface;
   ICoreDragDropManager = interface;
   ICoreDragDropManagerStatics = interface;
@@ -3226,6 +3290,7 @@ type
   IIterable_SelectorBarItem = interface;
   IIterable_SetterBase = interface;
   IIterable_ShareProvider = interface;
+  IIterable_ShownTileNotification = interface;
   IIterable_Single = interface;
   IIterable_SortEntry = interface;
   IIterable_StateTriggerBase = interface;
@@ -3356,6 +3421,7 @@ type
   IIterator_SelectorBarItem = interface;
   IIterator_SetterBase = interface;
   IIterator_ShareProvider = interface;
+  IIterator_ShownTileNotification = interface;
   IIterator_Single = interface;
   IIterator_SortEntry = interface;
   IIterator_StateTriggerBase = interface;
@@ -3524,6 +3590,7 @@ type
   IVectorView_SelectorBarItem = interface;
   IVectorView_SetterBase = interface;
   IVectorView_ShareProvider = interface;
+  IVectorView_ShownTileNotification = interface;
   IVectorView_Single = interface;
   IVectorView_SortEntry = interface;
   IVectorView_StateTriggerBase = interface;
@@ -3820,6 +3887,7 @@ type
   TypedEventHandler_ScrollView_ScrollingZoomCompletedEventArgs = interface;
   TypedEventHandler_ScrollViewer_AnchorRequestedEventArgs = interface;
   TypedEventHandler_SelectorBar_SelectorBarSelectionChangedEventArgs = interface;
+  TypedEventHandler_SplashScreen_Object = interface;
   TypedEventHandler_SplitButton_SplitButtonClickEventArgs = interface;
   TypedEventHandler_SplitView_Object = interface;
   TypedEventHandler_SplitView_SplitViewPaneClosingEventArgs = interface;
@@ -8050,6 +8118,66 @@ type
   );
   PWorkloadPriority = ^WorkloadPriority;
 
+  // Windows.ApplicationModel.Activation.ActivationKind
+  ActivationKind = (
+    Launch = 0,
+    Search = 1,
+    ShareTarget = 2,
+    &File = 3,
+    Protocol = 4,
+    FileOpenPicker = 5,
+    FileSavePicker = 6,
+    CachedFileUpdater = 7,
+    ContactPicker = 8,
+    Device = 9,
+    PrintTaskSettings = 10,
+    CameraSettings = 11,
+    RestrictedLaunch = 12,
+    AppointmentsProvider = 13,
+    Contact = 14,
+    LockScreenCall = 15,
+    VoiceCommand = 16,
+    LockScreen = 17,
+    PickerReturned = 1000,
+    WalletAction = 1001,
+    PickFileContinuation = 1002,
+    PickSaveFileContinuation = 1003,
+    PickFolderContinuation = 1004,
+    WebAuthenticationBrokerContinuation = 1005,
+    WebAccountProvider = 1006,
+    ComponentUI = 1007,
+    ProtocolForResults = 1009,
+    ToastNotification = 1010,
+    Print3DWorkflow = 1011,
+    DialReceiver = 1012,
+    DevicePairing = 1013,
+    UserDataAccountsProvider = 1014,
+    FilePickerExperience = 1015,
+    LockScreenComponent = 1016,
+    ContactPanel = 1017,
+    PrintWorkflowForegroundTask = 1018,
+    GameUIProvider = 1019,
+    StartupTask = 1020,
+    CommandLineLaunch = 1021,
+    BarcodeScannerProvider = 1022,
+    PrintSupportJobUI = 1023,
+    PrintSupportSettingsUI = 1024,
+    PhoneCallActivation = 1025,
+    VpnForeground = 1026,
+    PrintSupportEnterpriseManagementUI = 1027
+  );
+  PActivationKind = ^ActivationKind;
+
+  // Windows.ApplicationModel.Activation.ApplicationExecutionState
+  ApplicationExecutionState = (
+    NotRunning = 0,
+    Running = 1,
+    Suspended = 2,
+    Terminated = 3,
+    ClosedByUser = 4
+  );
+  PApplicationExecutionState = ^ApplicationExecutionState;
+
   // Windows.ApplicationModel.DataTransfer.ClipboardHistoryItemsResultStatus
   ClipboardHistoryItemsResultStatus = (
     Success = 0,
@@ -8897,6 +9025,16 @@ type
     Other = 3
   );
   PAppRestartFailureReason = ^AppRestartFailureReason;
+
+  // Windows.ApplicationModel.Wallet.WalletActionKind
+  WalletActionKind = (
+    OpenItem = 0,
+    Transaction = 1,
+    MoreTransactions = 2,
+    &Message = 3,
+    Verb = 4
+  );
+  PWalletActionKind = ^WalletActionKind;
 
   // Windows.Globalization.DayOfWeek
   DayOfWeek = (
@@ -32800,9 +32938,9 @@ type
   ILaunchActivatedEventArgs = interface(IInspectable)
   ['{D505CEA9-1BCB-5B29-A8BE-944E00F06F78}']
     function get_Arguments: HSTRING; safecall;
-    function get_UWPLaunchActivatedEventArgs: IInspectable; safecall;
+    function get_UWPLaunchActivatedEventArgs: Windows_ApplicationModel_Activation_ILaunchActivatedEventArgs; safecall;
     property Arguments: HSTRING read get_Arguments;
-    property UWPLaunchActivatedEventArgs: IInspectable read get_UWPLaunchActivatedEventArgs;
+    property UWPLaunchActivatedEventArgs: Windows_ApplicationModel_Activation_ILaunchActivatedEventArgs read get_UWPLaunchActivatedEventArgs;
   end;
 
   // Microsoft.UI.Xaml.IMediaFailedRoutedEventArgs
@@ -40498,6 +40636,512 @@ type
     property EffectivePowerMode2: EffectivePowerMode read get_EffectivePowerMode2;
   end;
 
+  // Windows.ApplicationModel.Activation.IActivatedEventArgs
+  IActivatedEventArgs = interface(IInspectable)
+  ['{CF651713-CD08-4FD8-B697-A281B6544E2E}']
+    function get_Kind: ActivationKind; safecall;
+    function get_PreviousExecutionState: ApplicationExecutionState; safecall;
+    function get_SplashScreen: ISplashScreen; safecall;
+    property Kind: ActivationKind read get_Kind;
+    property PreviousExecutionState: ApplicationExecutionState read get_PreviousExecutionState;
+    property SplashScreen: ISplashScreen read get_SplashScreen;
+  end;
+
+  // Windows.ApplicationModel.Activation.IActivatedEventArgsWithUser
+  IActivatedEventArgsWithUser = interface(IInspectable)
+  ['{1CF09B9E-9962-4936-80FF-AFC8E8AE5C8C}']
+    function get_User: IInspectable; safecall;
+    property User: IInspectable read get_User;
+  end;
+
+  // Windows.ApplicationModel.Activation.IApplicationViewActivatedEventArgs
+  IApplicationViewActivatedEventArgs = interface(IInspectable)
+  ['{930CEF4B-B829-40FC-88F4-8513E8A64738}']
+    function get_CurrentlyShownApplicationViewId: Integer; safecall;
+    property CurrentlyShownApplicationViewId: Integer read get_CurrentlyShownApplicationViewId;
+  end;
+
+  // Windows.ApplicationModel.Activation.IAppointmentsProviderActivatedEventArgs
+  IAppointmentsProviderActivatedEventArgs = interface(IInspectable)
+  ['{3364C405-933C-4E7D-A034-500FB8DCD9F3}']
+    function get_Verb: HSTRING; safecall;
+    property Verb: HSTRING read get_Verb;
+  end;
+
+  // Windows.ApplicationModel.Activation.IAppointmentsProviderAddAppointmentActivatedEventArgs
+  IAppointmentsProviderAddAppointmentActivatedEventArgs = interface(IInspectable)
+  ['{A2861367-CEE5-4E4D-9ED7-41C34EC18B02}']
+    function get_AddAppointmentOperation: IInspectable; safecall;
+    property AddAppointmentOperation: IInspectable read get_AddAppointmentOperation;
+  end;
+
+  // Windows.ApplicationModel.Activation.IAppointmentsProviderRemoveAppointmentActivatedEventArgs
+  IAppointmentsProviderRemoveAppointmentActivatedEventArgs = interface(IInspectable)
+  ['{751F3AB8-0B8E-451C-9F15-966E699BAC25}']
+    function get_RemoveAppointmentOperation: IInspectable; safecall;
+    property RemoveAppointmentOperation: IInspectable read get_RemoveAppointmentOperation;
+  end;
+
+  // Windows.ApplicationModel.Activation.IAppointmentsProviderReplaceAppointmentActivatedEventArgs
+  IAppointmentsProviderReplaceAppointmentActivatedEventArgs = interface(IInspectable)
+  ['{1551B7D4-A981-4067-8A62-0524E4ADE121}']
+    function get_ReplaceAppointmentOperation: IInspectable; safecall;
+    property ReplaceAppointmentOperation: IInspectable read get_ReplaceAppointmentOperation;
+  end;
+
+  // Windows.ApplicationModel.Activation.IAppointmentsProviderShowAppointmentDetailsActivatedEventArgs
+  IAppointmentsProviderShowAppointmentDetailsActivatedEventArgs = interface(IInspectable)
+  ['{3958F065-9841-4CA5-999B-885198B9EF2A}']
+    function get_InstanceStartDate: IReference_DateTime; safecall;
+    function get_LocalId: HSTRING; safecall;
+    function get_RoamingId: HSTRING; safecall;
+    property InstanceStartDate: IReference_DateTime read get_InstanceStartDate;
+    property LocalId: HSTRING read get_LocalId;
+    property RoamingId: HSTRING read get_RoamingId;
+  end;
+
+  // Windows.ApplicationModel.Activation.IAppointmentsProviderShowTimeFrameActivatedEventArgs
+  IAppointmentsProviderShowTimeFrameActivatedEventArgs = interface(IInspectable)
+  ['{9BAEABA6-0E0B-49AA-BABC-12B1DC774986}']
+    function get_TimeToShow: DateTime; safecall;
+    function get_Duration: TimeSpan; safecall;
+    property Duration: TimeSpan read get_Duration;
+    property TimeToShow: DateTime read get_TimeToShow;
+  end;
+
+  // Windows.ApplicationModel.Activation.IBackgroundActivatedEventArgs
+  IBackgroundActivatedEventArgs = interface(IInspectable)
+  ['{AB14BEE0-E760-440E-A91C-44796DE3A92D}']
+    function get_TaskInstance: IInspectable; safecall;
+    property TaskInstance: IInspectable read get_TaskInstance;
+  end;
+
+  // Windows.ApplicationModel.Activation.IBarcodeScannerPreviewActivatedEventArgs
+  IBarcodeScannerPreviewActivatedEventArgs = interface(IInspectable)
+  ['{6772797C-99BF-4349-AF22-E4123560371C}']
+    function get_ConnectionId: HSTRING; safecall;
+    property ConnectionId: HSTRING read get_ConnectionId;
+  end;
+
+  // Windows.ApplicationModel.Activation.ICachedFileUpdaterActivatedEventArgs
+  ICachedFileUpdaterActivatedEventArgs = interface(IInspectable)
+  ['{D06EB1C7-3805-4ECB-B757-6CF15E26FEF3}']
+    function get_CachedFileUpdaterUI: ICachedFileUpdaterUI; safecall;
+    property CachedFileUpdaterUI: ICachedFileUpdaterUI read get_CachedFileUpdaterUI;
+  end;
+
+  // Windows.ApplicationModel.Activation.ICameraSettingsActivatedEventArgs
+  ICameraSettingsActivatedEventArgs = interface(IInspectable)
+  ['{FB67A508-2DAD-490A-9170-DCA036EB114B}']
+    function get_VideoDeviceController: IInspectable; safecall;
+    function get_VideoDeviceExtension: IInspectable; safecall;
+    property VideoDeviceController: IInspectable read get_VideoDeviceController;
+    property VideoDeviceExtension: IInspectable read get_VideoDeviceExtension;
+  end;
+
+  // Windows.ApplicationModel.Activation.ICommandLineActivatedEventArgs
+  ICommandLineActivatedEventArgs = interface(IInspectable)
+  ['{4506472C-006A-48EB-8AFB-D07AB25E3366}']
+    function get_Operation: ICommandLineActivationOperation; safecall;
+    property Operation: ICommandLineActivationOperation read get_Operation;
+  end;
+
+  // Windows.ApplicationModel.Activation.ICommandLineActivationOperation
+  ICommandLineActivationOperation = interface(IInspectable)
+  ['{994B2841-C59E-4F69-BCFD-B61ED4E622EB}']
+    function get_Arguments: HSTRING; safecall;
+    function get_CurrentDirectoryPath: HSTRING; safecall;
+    procedure put_ExitCode(AValue: Integer); safecall;
+    function get_ExitCode: Integer; safecall;
+    function GetDeferral: IDeferral; safecall;
+    property Arguments: HSTRING read get_Arguments;
+    property CurrentDirectoryPath: HSTRING read get_CurrentDirectoryPath;
+    property ExitCode: Integer read get_ExitCode write put_ExitCode;
+  end;
+
+  // Windows.ApplicationModel.Activation.IContactActivatedEventArgs
+  IContactActivatedEventArgs = interface(IInspectable)
+  ['{D627A1C4-C025-4C41-9DEF-F1EAFAD075E7}']
+    function get_Verb: HSTRING; safecall;
+    property Verb: HSTRING read get_Verb;
+  end;
+
+  // Windows.ApplicationModel.Activation.IContactCallActivatedEventArgs
+  IContactCallActivatedEventArgs = interface(IInspectable)
+  ['{C2DF14C7-30EB-41C6-B3BC-5B1694F9DAB3}']
+    function get_ServiceId: HSTRING; safecall;
+    function get_ServiceUserId: HSTRING; safecall;
+    function get_Contact: IInspectable; safecall;
+    property Contact: IInspectable read get_Contact;
+    property ServiceId: HSTRING read get_ServiceId;
+    property ServiceUserId: HSTRING read get_ServiceUserId;
+  end;
+
+  // Windows.ApplicationModel.Activation.IContactMapActivatedEventArgs
+  IContactMapActivatedEventArgs = interface(IInspectable)
+  ['{B32BF870-EEE7-4AD2-AAF1-A87EFFCF00A4}']
+    function get_Address: IInspectable; safecall;
+    function get_Contact: IInspectable; safecall;
+    property Address: IInspectable read get_Address;
+    property Contact: IInspectable read get_Contact;
+  end;
+
+  // Windows.ApplicationModel.Activation.IContactMessageActivatedEventArgs
+  IContactMessageActivatedEventArgs = interface(IInspectable)
+  ['{DE598DB2-0E03-43B0-BF56-BCC40B3162DF}']
+    function get_ServiceId: HSTRING; safecall;
+    function get_ServiceUserId: HSTRING; safecall;
+    function get_Contact: IInspectable; safecall;
+    property Contact: IInspectable read get_Contact;
+    property ServiceId: HSTRING read get_ServiceId;
+    property ServiceUserId: HSTRING read get_ServiceUserId;
+  end;
+
+  // Windows.ApplicationModel.Activation.IContactPanelActivatedEventArgs
+  IContactPanelActivatedEventArgs = interface(IInspectable)
+  ['{52BB63E4-D3D4-4B63-8051-4AF2082CAB80}']
+    function get_ContactPanel: IInspectable; safecall;
+    function get_Contact: IInspectable; safecall;
+    property Contact: IInspectable read get_Contact;
+    property ContactPanel: IInspectable read get_ContactPanel;
+  end;
+
+  // Windows.ApplicationModel.Activation.IContactPickerActivatedEventArgs
+  IContactPickerActivatedEventArgs = interface(IInspectable)
+  ['{CE57AAE7-6449-45A7-971F-D113BE7A8936}']
+    function get_ContactPickerUI: IInspectable; safecall;
+    property ContactPickerUI: IInspectable read get_ContactPickerUI;
+  end;
+
+  // Windows.ApplicationModel.Activation.IContactPostActivatedEventArgs
+  IContactPostActivatedEventArgs = interface(IInspectable)
+  ['{B35A3C67-F1E7-4655-AD6E-4857588F552F}']
+    function get_ServiceId: HSTRING; safecall;
+    function get_ServiceUserId: HSTRING; safecall;
+    function get_Contact: IInspectable; safecall;
+    property Contact: IInspectable read get_Contact;
+    property ServiceId: HSTRING read get_ServiceId;
+    property ServiceUserId: HSTRING read get_ServiceUserId;
+  end;
+
+  // Windows.ApplicationModel.Activation.IContactVideoCallActivatedEventArgs
+  IContactVideoCallActivatedEventArgs = interface(IInspectable)
+  ['{61079DB8-E3E7-4B4F-858D-5C63A96EF684}']
+    function get_ServiceId: HSTRING; safecall;
+    function get_ServiceUserId: HSTRING; safecall;
+    function get_Contact: IInspectable; safecall;
+    property Contact: IInspectable read get_Contact;
+    property ServiceId: HSTRING read get_ServiceId;
+    property ServiceUserId: HSTRING read get_ServiceUserId;
+  end;
+
+  // Windows.ApplicationModel.Activation.IContactsProviderActivatedEventArgs
+  IContactsProviderActivatedEventArgs = interface(IInspectable)
+  ['{4580DCA8-5750-4916-AA52-C0829521EB94}']
+    function get_Verb: HSTRING; safecall;
+    property Verb: HSTRING read get_Verb;
+  end;
+
+  // Windows.ApplicationModel.Activation.IContinuationActivatedEventArgs
+  IContinuationActivatedEventArgs = interface(IInspectable)
+  ['{E58106B5-155F-4A94-A742-C7E08F4E188C}']
+    function get_ContinuationData: IPropertySet; safecall;
+    property ContinuationData: IPropertySet read get_ContinuationData;
+  end;
+
+  // Windows.ApplicationModel.Activation.IDeviceActivatedEventArgs
+  IDeviceActivatedEventArgs = interface(IInspectable)
+  ['{CD50B9A9-CE10-44D2-8234-C355A073EF33}']
+    function get_DeviceInformationId: HSTRING; safecall;
+    function get_Verb: HSTRING; safecall;
+    property DeviceInformationId: HSTRING read get_DeviceInformationId;
+    property Verb: HSTRING read get_Verb;
+  end;
+
+  // Windows.ApplicationModel.Activation.IDevicePairingActivatedEventArgs
+  IDevicePairingActivatedEventArgs = interface(IInspectable)
+  ['{EBA0D1E4-ECC6-4148-94ED-F4B37EC05B3E}']
+    function get_DeviceInformation: IInspectable; safecall;
+    property DeviceInformation: IInspectable read get_DeviceInformation;
+  end;
+
+  // Windows.ApplicationModel.Activation.IDialReceiverActivatedEventArgs
+  IDialReceiverActivatedEventArgs = interface(IInspectable)
+  ['{FB777ED7-85EE-456E-A44D-85D730E70AED}']
+    function get_AppName: HSTRING; safecall;
+    property AppName: HSTRING read get_AppName;
+  end;
+
+  // Windows.ApplicationModel.Activation.IFileActivatedEventArgs
+  IFileActivatedEventArgs = interface(IInspectable)
+  ['{BB2AFC33-93B1-42ED-8B26-236DD9C78496}']
+    function get_Files: IVectorView_IStorageItem; safecall;
+    function get_Verb: HSTRING; safecall;
+    property Files: IVectorView_IStorageItem read get_Files;
+    property Verb: HSTRING read get_Verb;
+  end;
+
+  // Windows.ApplicationModel.Activation.IFileActivatedEventArgsWithCallerPackageFamilyName
+  IFileActivatedEventArgsWithCallerPackageFamilyName = interface(IInspectable)
+  ['{2D60F06B-D25F-4D25-8653-E1C5E1108309}']
+    function get_CallerPackageFamilyName: HSTRING; safecall;
+    property CallerPackageFamilyName: HSTRING read get_CallerPackageFamilyName;
+  end;
+
+  // Windows.ApplicationModel.Activation.IFileActivatedEventArgsWithNeighboringFiles
+  IFileActivatedEventArgsWithNeighboringFiles = interface(IInspectable)
+  ['{433BA1A4-E1E2-48FD-B7FC-B5D6EEE65033}']
+    function get_NeighboringFilesQuery: IStorageFileQueryResult; safecall;
+    property NeighboringFilesQuery: IStorageFileQueryResult read get_NeighboringFilesQuery;
+  end;
+
+  // Windows.ApplicationModel.Activation.IFileOpenPickerActivatedEventArgs
+  IFileOpenPickerActivatedEventArgs = interface(IInspectable)
+  ['{72827082-5525-4BF2-BC09-1F5095D4964D}']
+    function get_FileOpenPickerUI: IFileOpenPickerUI; safecall;
+    property FileOpenPickerUI: IFileOpenPickerUI read get_FileOpenPickerUI;
+  end;
+
+  // Windows.ApplicationModel.Activation.IFileOpenPickerActivatedEventArgs2
+  IFileOpenPickerActivatedEventArgs2 = interface(IInspectable)
+  ['{5E731F66-8D1F-45FB-AF1D-73205C8FC7A1}']
+    function get_CallerPackageFamilyName: HSTRING; safecall;
+    property CallerPackageFamilyName: HSTRING read get_CallerPackageFamilyName;
+  end;
+
+  // Windows.ApplicationModel.Activation.IFileOpenPickerContinuationEventArgs
+  IFileOpenPickerContinuationEventArgs = interface(IInspectable)
+  ['{F0FA3F3A-D4E8-4AD3-9C34-2308F32FCEC9}']
+    function get_Files: IVectorView_StorageFile; safecall;
+    property Files: IVectorView_StorageFile read get_Files;
+  end;
+
+  // Windows.ApplicationModel.Activation.IFileSavePickerActivatedEventArgs
+  IFileSavePickerActivatedEventArgs = interface(IInspectable)
+  ['{81C19CF1-74E6-4387-82EB-BB8FD64B4346}']
+    function get_FileSavePickerUI: IFileSavePickerUI; safecall;
+    property FileSavePickerUI: IFileSavePickerUI read get_FileSavePickerUI;
+  end;
+
+  // Windows.ApplicationModel.Activation.IFileSavePickerActivatedEventArgs2
+  IFileSavePickerActivatedEventArgs2 = interface(IInspectable)
+  ['{6B73FE13-2CF2-4D48-8CBC-AF67D23F1CE7}']
+    function get_CallerPackageFamilyName: HSTRING; safecall;
+    function get_EnterpriseId: HSTRING; safecall;
+    property CallerPackageFamilyName: HSTRING read get_CallerPackageFamilyName;
+    property EnterpriseId: HSTRING read get_EnterpriseId;
+  end;
+
+  // Windows.ApplicationModel.Activation.IFileSavePickerContinuationEventArgs
+  IFileSavePickerContinuationEventArgs = interface(IInspectable)
+  ['{2C846FE1-3BAD-4F33-8C8B-E46FAE824B4B}']
+    function get_File: IStorageFile; safecall;
+    property &File: IStorageFile read get_File;
+  end;
+
+  // Windows.ApplicationModel.Activation.IFolderPickerContinuationEventArgs
+  IFolderPickerContinuationEventArgs = interface(IInspectable)
+  ['{51882366-9F4B-498F-BEB0-42684F6E1C29}']
+    function get_Folder: IStorageFolder; safecall;
+    property Folder: IStorageFolder read get_Folder;
+  end;
+
+  // Windows.ApplicationModel.Activation.ILaunchActivatedEventArgs
+  Windows_ApplicationModel_Activation_ILaunchActivatedEventArgs = interface(IInspectable)
+  ['{FBC93E26-A14A-4B4F-82B0-33BED920AF52}']
+    function get_Arguments: HSTRING; safecall;
+    function get_TileId: HSTRING; safecall;
+    property Arguments: HSTRING read get_Arguments;
+    property TileId: HSTRING read get_TileId;
+  end;
+
+  // Windows.ApplicationModel.Activation.ILaunchActivatedEventArgs2
+  ILaunchActivatedEventArgs2 = interface(IInspectable)
+  ['{0FD37EBC-9DC9-46B5-9ACE-BD95D4565345}']
+    function get_TileActivatedInfo: ITileActivatedInfo; safecall;
+    property TileActivatedInfo: ITileActivatedInfo read get_TileActivatedInfo;
+  end;
+
+  // Windows.ApplicationModel.Activation.ILockScreenActivatedEventArgs
+  ILockScreenActivatedEventArgs = interface(IInspectable)
+  ['{3CA77966-6108-4A41-8220-EE7D133C8532}']
+    function get_Info: IInspectable; safecall;
+    property Info: IInspectable read get_Info;
+  end;
+
+  // Windows.ApplicationModel.Activation.ILockScreenCallActivatedEventArgs
+  ILockScreenCallActivatedEventArgs = interface(IInspectable)
+  ['{06F37FBE-B5F2-448B-B13E-E328AC1C516A}']
+    function get_CallUI: IInspectable; safecall;
+    property CallUI: IInspectable read get_CallUI;
+  end;
+
+  // Windows.ApplicationModel.Activation.IPhoneCallActivatedEventArgs
+  IPhoneCallActivatedEventArgs = interface(IInspectable)
+  ['{54615221-A3C1-4CED-B62F-8C60523619AD}']
+    function get_LineId: TGUID; safecall;
+    property LineId: TGUID read get_LineId;
+  end;
+
+  // Windows.ApplicationModel.Activation.IPickerReturnedActivatedEventArgs
+  IPickerReturnedActivatedEventArgs = interface(IInspectable)
+  ['{360DEFB9-A9D3-4984-A4ED-9EC734604921}']
+    function get_PickerOperationId: HSTRING; safecall;
+    property PickerOperationId: HSTRING read get_PickerOperationId;
+  end;
+
+  // Windows.ApplicationModel.Activation.IPrelaunchActivatedEventArgs
+  IPrelaunchActivatedEventArgs = interface(IInspectable)
+  ['{0C44717B-19F7-48D6-B046-CF22826EAA74}']
+    function get_PrelaunchActivated: Boolean; safecall;
+    property PrelaunchActivated: Boolean read get_PrelaunchActivated;
+  end;
+
+  // Windows.ApplicationModel.Activation.IPrint3DWorkflowActivatedEventArgs
+  IPrint3DWorkflowActivatedEventArgs = interface(IInspectable)
+  ['{3F57E78B-F2AC-4619-8302-EF855E1C9B90}']
+    function get_Workflow: IInspectable; safecall;
+    property Workflow: IInspectable read get_Workflow;
+  end;
+
+  // Windows.ApplicationModel.Activation.IPrintTaskSettingsActivatedEventArgs
+  IPrintTaskSettingsActivatedEventArgs = interface(IInspectable)
+  ['{EE30A0C9-CE56-4865-BA8E-8954AC271107}']
+    function get_Configuration: IInspectable; safecall;
+    property Configuration: IInspectable read get_Configuration;
+  end;
+
+  // Windows.ApplicationModel.Activation.IProtocolActivatedEventArgs
+  IProtocolActivatedEventArgs = interface(IInspectable)
+  ['{6095F4DD-B7C0-46AB-81FE-D90F36D00D24}']
+    function get_Uri: IUriRuntimeClass; safecall;
+    property Uri: IUriRuntimeClass read get_Uri;
+  end;
+
+  // Windows.ApplicationModel.Activation.IProtocolActivatedEventArgsWithCallerPackageFamilyNameAndData
+  IProtocolActivatedEventArgsWithCallerPackageFamilyNameAndData = interface(IInspectable)
+  ['{D84A0C12-5C8F-438C-83CB-C28FCC0B2FDB}']
+    function get_CallerPackageFamilyName: HSTRING; safecall;
+    function get_Data: IPropertySet; safecall;
+    property CallerPackageFamilyName: HSTRING read get_CallerPackageFamilyName;
+    property Data: IPropertySet read get_Data;
+  end;
+
+  // Windows.ApplicationModel.Activation.IProtocolForResultsActivatedEventArgs
+  IProtocolForResultsActivatedEventArgs = interface(IInspectable)
+  ['{E75132C2-7AE7-4517-80AC-DBE8D7CC5B9C}']
+    function get_ProtocolForResultsOperation: IInspectable; safecall;
+    property ProtocolForResultsOperation: IInspectable read get_ProtocolForResultsOperation;
+  end;
+
+  // Windows.ApplicationModel.Activation.IRestrictedLaunchActivatedEventArgs
+  IRestrictedLaunchActivatedEventArgs = interface(IInspectable)
+  ['{E0B7AC81-BFC3-4344-A5DA-19FD5A27BAAE}']
+    function get_SharedContext: IInspectable; safecall;
+    property SharedContext: IInspectable read get_SharedContext;
+  end;
+
+  // Windows.ApplicationModel.Activation.ISearchActivatedEventArgs
+  ISearchActivatedEventArgs = interface(IInspectable)
+  ['{8CB36951-58C8-43E3-94BC-41D33F8B630E}']
+    function get_QueryText: HSTRING; safecall;
+    function get_Language: HSTRING; safecall;
+    property Language: HSTRING read get_Language;
+    property QueryText: HSTRING read get_QueryText;
+  end;
+
+  // Windows.ApplicationModel.Activation.ISearchActivatedEventArgsWithLinguisticDetails
+  ISearchActivatedEventArgsWithLinguisticDetails = interface(IInspectable)
+  ['{C09F33DA-08AB-4931-9B7C-451025F21F81}']
+    function get_LinguisticDetails: IInspectable; safecall;
+    property LinguisticDetails: IInspectable read get_LinguisticDetails;
+  end;
+
+  // Windows.ApplicationModel.Activation.IShareTargetActivatedEventArgs
+  IShareTargetActivatedEventArgs = interface(IInspectable)
+  ['{4BDAF9C8-CDB2-4ACB-BFC3-6648563378EC}']
+    function get_ShareOperation: IShareOperation; safecall;
+    property ShareOperation: IShareOperation read get_ShareOperation;
+  end;
+
+  // Windows.ApplicationModel.Activation.ISplashScreen
+  ISplashScreen = interface(IInspectable)
+  ['{CA4D975C-D4D6-43F0-97C0-0833C6391C24}']
+    function get_ImageLocation: Rect; safecall;
+    function add_Dismissed(AHandler: TypedEventHandler_SplashScreen_Object): EventRegistrationToken; safecall;
+    procedure remove_Dismissed(ACookie: EventRegistrationToken); safecall;
+    property ImageLocation: Rect read get_ImageLocation;
+  end;
+
+  // Windows.ApplicationModel.Activation.IStartupTaskActivatedEventArgs
+  IStartupTaskActivatedEventArgs = interface(IInspectable)
+  ['{03B11A58-5276-4D91-8621-54611864D5FA}']
+    function get_TaskId: HSTRING; safecall;
+    property TaskId: HSTRING read get_TaskId;
+  end;
+
+  // Windows.ApplicationModel.Activation.ITileActivatedInfo
+  ITileActivatedInfo = interface(IInspectable)
+  ['{80E4A3B1-3980-4F17-B738-89194E0B8F65}']
+    function get_RecentlyShownNotifications: IVectorView_ShownTileNotification; safecall;
+    property RecentlyShownNotifications: IVectorView_ShownTileNotification read get_RecentlyShownNotifications;
+  end;
+
+  // Windows.ApplicationModel.Activation.IToastNotificationActivatedEventArgs
+  IToastNotificationActivatedEventArgs = interface(IInspectable)
+  ['{92A86F82-5290-431D-BE85-C4AAEEB8685F}']
+    function get_Argument: HSTRING; safecall;
+    function get_UserInput: IPropertySet; safecall;
+    property Argument: HSTRING read get_Argument;
+    property UserInput: IPropertySet read get_UserInput;
+  end;
+
+  // Windows.ApplicationModel.Activation.IUserDataAccountProviderActivatedEventArgs
+  IUserDataAccountProviderActivatedEventArgs = interface(IInspectable)
+  ['{1BC9F723-8EF1-4A51-A63A-FE711EEAB607}']
+    function get_Operation: IInspectable; safecall;
+    property Operation: IInspectable read get_Operation;
+  end;
+
+  // Windows.ApplicationModel.Activation.IViewSwitcherProvider
+  IViewSwitcherProvider = interface(IInspectable)
+  ['{33F288A6-5C2C-4D27-BAC7-7536088F1219}']
+    function get_ViewSwitcher: IInspectable; safecall;
+    property ViewSwitcher: IInspectable read get_ViewSwitcher;
+  end;
+
+  // Windows.ApplicationModel.Activation.IVoiceCommandActivatedEventArgs
+  IVoiceCommandActivatedEventArgs = interface(IInspectable)
+  ['{AB92DCFD-8D43-4DE6-9775-20704B581B00}']
+    function get_Result: IInspectable; safecall;
+    property Result: IInspectable read get_Result;
+  end;
+
+  // Windows.ApplicationModel.Activation.IWalletActionActivatedEventArgs
+  IWalletActionActivatedEventArgs = interface(IInspectable)
+  ['{FCFC027B-1A1A-4D22-923F-AE6F45FA52D9}']
+    function get_ItemId: HSTRING; safecall;
+    function get_ActionKind: WalletActionKind; safecall;
+    function get_ActionId: HSTRING; safecall;
+    property ActionId: HSTRING read get_ActionId;
+    property ActionKind: WalletActionKind read get_ActionKind;
+    property ItemId: HSTRING read get_ItemId;
+  end;
+
+  // Windows.ApplicationModel.Activation.IWebAccountProviderActivatedEventArgs
+  IWebAccountProviderActivatedEventArgs = interface(IInspectable)
+  ['{72B71774-98EA-4CCF-9752-46D9051004F1}']
+    function get_Operation: IInspectable; safecall;
+    property Operation: IInspectable read get_Operation;
+  end;
+
+  // Windows.ApplicationModel.Activation.IWebAuthenticationBrokerContinuationEventArgs
+  IWebAuthenticationBrokerContinuationEventArgs = interface(IInspectable)
+  ['{75DDA3D4-7714-453D-B7FF-B95E3A1709DA}']
+    function get_WebAuthenticationResult: IInspectable; safecall;
+    property WebAuthenticationResult: IInspectable read get_WebAuthenticationResult;
+  end;
+
   // Windows.ApplicationModel.DataTransfer.DataProviderHandler
   DataProviderHandler = interface(IUnknown)
   ['{E7ECD720-F2F4-4A2D-920E-170A2F482A27}']
@@ -46616,6 +47260,12 @@ type
     function First: IIterator_ShareProvider; safecall;
   end;
 
+  // Windows.Foundation.Collections.IIterable<Windows.UI.Notifications.ShownTileNotification>
+  IIterable_ShownTileNotification = interface(IInspectable)
+  ['{1863BAEE-44F1-5E51-BCDF-A3CDAB826A15}']
+    function First: IIterator_ShownTileNotification; safecall;
+  end;
+
   // Windows.Foundation.Collections.IIterable<Single>
   IIterable_Single = interface(IInspectable)
   ['{B01BEE51-063A-5FDA-BD72-D76637BB8CB8}']
@@ -47893,6 +48543,17 @@ type
     function MoveNext: Boolean; safecall;
     function GetMany(AItemsSize: Cardinal; AItems: Pointer): Cardinal; safecall;
     property Current: IShareProvider read get_Current;
+    property HasCurrent: Boolean read get_HasCurrent;
+  end;
+
+  // Windows.Foundation.Collections.IIterator<Windows.UI.Notifications.ShownTileNotification>
+  IIterator_ShownTileNotification = interface(IInspectable)
+  ['{04D8D70B-7C15-5F60-9894-B21366B427C2}']
+    function get_Current: IInspectable; safecall;
+    function get_HasCurrent: Boolean; safecall;
+    function MoveNext: Boolean; safecall;
+    function GetMany(AItemsSize: Cardinal; AItems: Pointer): Cardinal; safecall;
+    property Current: IInspectable read get_Current;
     property HasCurrent: Boolean read get_HasCurrent;
   end;
 
@@ -49553,6 +50214,16 @@ type
     function GetAt(AIndex: Cardinal): IShareProvider; safecall;
     function get_Size: Cardinal; safecall;
     function IndexOf(AValue: IShareProvider; out AIndex: Cardinal): Boolean; safecall;
+    function GetMany(AStartIndex: Cardinal; AItemsSize: Cardinal; AItems: Pointer): Cardinal; safecall;
+    property Size: Cardinal read get_Size;
+  end;
+
+  // Windows.Foundation.Collections.IVectorView<Windows.UI.Notifications.ShownTileNotification>
+  IVectorView_ShownTileNotification = interface(IInspectable)
+  ['{2B23BAA9-1D54-5440-BD32-86ED70F15C9E}']
+    function GetAt(AIndex: Cardinal): IInspectable; safecall;
+    function get_Size: Cardinal; safecall;
+    function IndexOf(AValue: IInspectable; out AIndex: Cardinal): Boolean; safecall;
     function GetMany(AStartIndex: Cardinal; AItemsSize: Cardinal; AItems: Pointer): Cardinal; safecall;
     property Size: Cardinal read get_Size;
   end;
@@ -52379,6 +53050,12 @@ type
   TypedEventHandler_SelectorBar_SelectorBarSelectionChangedEventArgs = interface(IUnknown)
   ['{058BFD44-AE51-5B80-B228-6BCE60901268}']
     procedure Invoke(ASender: ISelectorBar; AArgs: ISelectorBarSelectionChangedEventArgs); safecall;
+  end;
+
+  // Windows.Foundation.TypedEventHandler<Windows.ApplicationModel.Activation.SplashScreen, Object>
+  TypedEventHandler_SplashScreen_Object = interface(IUnknown)
+  ['{7725B2A5-287D-5ED2-A789-2A6A2673C7FE}']
+    procedure Invoke(ASender: ISplashScreen; AArgs: IInspectable); safecall;
   end;
 
   // Windows.Foundation.TypedEventHandler<Microsoft.UI.Xaml.Controls.SplitButton, Microsoft.UI.Xaml.Controls.SplitButtonClickEventArgs>
@@ -56187,6 +56864,15 @@ type
   public
     constructor Create(const AProc: TypedEventHandler_SelectorBar_SelectorBarSelectionChangedEventArgsProc);
     procedure Invoke(ASender: ISelectorBar; AArgs: ISelectorBarSelectionChangedEventArgs); safecall;
+  end;
+
+  TypedEventHandler_SplashScreen_ObjectProc = reference to procedure(ASender: ISplashScreen; AArgs: IInspectable);
+  TTypedEventHandler_SplashScreen_Object = class(TWinRTDelegate, TypedEventHandler_SplashScreen_Object)
+  strict private
+    FProc: TypedEventHandler_SplashScreen_ObjectProc;
+  public
+    constructor Create(const AProc: TypedEventHandler_SplashScreen_ObjectProc);
+    procedure Invoke(ASender: ISplashScreen; AArgs: IInspectable); safecall;
   end;
 
   TypedEventHandler_SplitButton_SplitButtonClickEventArgsProc = reference to procedure(ASender: ISplitButton; AArgs: ISplitButtonClickEventArgs);
@@ -70986,6 +71672,300 @@ type
     class property UserPresenceStatus: RADWinUI.Abi.UserPresenceStatus read get_UserPresenceStatus;
   end;
 
+  // Windows.ApplicationModel.Activation.AppointmentsProviderAddAppointmentActivatedEventArgs
+  AppointmentsProviderAddAppointmentActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.AppointmentsProviderAddAppointmentActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.AppointmentsProviderRemoveAppointmentActivatedEventArgs
+  AppointmentsProviderRemoveAppointmentActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.AppointmentsProviderRemoveAppointmentActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.AppointmentsProviderReplaceAppointmentActivatedEventArgs
+  AppointmentsProviderReplaceAppointmentActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.AppointmentsProviderReplaceAppointmentActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.AppointmentsProviderShowAppointmentDetailsActivatedEventArgs
+  AppointmentsProviderShowAppointmentDetailsActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.AppointmentsProviderShowAppointmentDetailsActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.AppointmentsProviderShowTimeFrameActivatedEventArgs
+  AppointmentsProviderShowTimeFrameActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.AppointmentsProviderShowTimeFrameActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.BackgroundActivatedEventArgs
+  BackgroundActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.BackgroundActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.BarcodeScannerPreviewActivatedEventArgs
+  BarcodeScannerPreviewActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.BarcodeScannerPreviewActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.CachedFileUpdaterActivatedEventArgs
+  CachedFileUpdaterActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.CachedFileUpdaterActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.CameraSettingsActivatedEventArgs
+  CameraSettingsActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.CameraSettingsActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.CommandLineActivatedEventArgs
+  CommandLineActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.CommandLineActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.CommandLineActivationOperation
+  CommandLineActivationOperation = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.CommandLineActivationOperation';
+  end;
+
+  // Windows.ApplicationModel.Activation.ContactCallActivatedEventArgs
+  ContactCallActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.ContactCallActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.ContactMapActivatedEventArgs
+  ContactMapActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.ContactMapActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.ContactMessageActivatedEventArgs
+  ContactMessageActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.ContactMessageActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.ContactPanelActivatedEventArgs
+  ContactPanelActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.ContactPanelActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.ContactPickerActivatedEventArgs
+  ContactPickerActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.ContactPickerActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.ContactPostActivatedEventArgs
+  ContactPostActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.ContactPostActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.ContactVideoCallActivatedEventArgs
+  ContactVideoCallActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.ContactVideoCallActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.DeviceActivatedEventArgs
+  DeviceActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.DeviceActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.DevicePairingActivatedEventArgs
+  DevicePairingActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.DevicePairingActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.DialReceiverActivatedEventArgs
+  DialReceiverActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.DialReceiverActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.FileActivatedEventArgs
+  FileActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.FileActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.FileOpenPickerActivatedEventArgs
+  FileOpenPickerActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.FileOpenPickerActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.FileOpenPickerContinuationEventArgs
+  FileOpenPickerContinuationEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.FileOpenPickerContinuationEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.FileSavePickerActivatedEventArgs
+  FileSavePickerActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.FileSavePickerActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.FileSavePickerContinuationEventArgs
+  FileSavePickerContinuationEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.FileSavePickerContinuationEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.FolderPickerContinuationEventArgs
+  FolderPickerContinuationEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.FolderPickerContinuationEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.LaunchActivatedEventArgs
+  Windows_ApplicationModel_Activation_LaunchActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.LaunchActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.LockScreenActivatedEventArgs
+  LockScreenActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.LockScreenActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.LockScreenCallActivatedEventArgs
+  LockScreenCallActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.LockScreenCallActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.LockScreenComponentActivatedEventArgs
+  LockScreenComponentActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.LockScreenComponentActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.PhoneCallActivatedEventArgs
+  PhoneCallActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.PhoneCallActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.PickerReturnedActivatedEventArgs
+  PickerReturnedActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.PickerReturnedActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.Print3DWorkflowActivatedEventArgs
+  Print3DWorkflowActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.Print3DWorkflowActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.PrintTaskSettingsActivatedEventArgs
+  PrintTaskSettingsActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.PrintTaskSettingsActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.ProtocolActivatedEventArgs
+  ProtocolActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.ProtocolActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.ProtocolForResultsActivatedEventArgs
+  ProtocolForResultsActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.ProtocolForResultsActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.RestrictedLaunchActivatedEventArgs
+  RestrictedLaunchActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.RestrictedLaunchActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.SearchActivatedEventArgs
+  SearchActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.SearchActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.ShareTargetActivatedEventArgs
+  ShareTargetActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.ShareTargetActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.SplashScreen
+  SplashScreen = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.SplashScreen';
+  end;
+
+  // Windows.ApplicationModel.Activation.StartupTaskActivatedEventArgs
+  StartupTaskActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.StartupTaskActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.TileActivatedInfo
+  TileActivatedInfo = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.TileActivatedInfo';
+  end;
+
+  // Windows.ApplicationModel.Activation.ToastNotificationActivatedEventArgs
+  ToastNotificationActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.ToastNotificationActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.UserDataAccountProviderActivatedEventArgs
+  UserDataAccountProviderActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.UserDataAccountProviderActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.VoiceCommandActivatedEventArgs
+  VoiceCommandActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.VoiceCommandActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.WalletActionActivatedEventArgs
+  WalletActionActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.WalletActionActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.WebAccountProviderActivatedEventArgs
+  WebAccountProviderActivatedEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.WebAccountProviderActivatedEventArgs';
+  end;
+
+  // Windows.ApplicationModel.Activation.WebAuthenticationBrokerContinuationEventArgs
+  WebAuthenticationBrokerContinuationEventArgs = record
+  public const
+    RuntimeClassName = 'Windows.ApplicationModel.Activation.WebAuthenticationBrokerContinuationEventArgs';
+  end;
+
   // Windows.ApplicationModel.DataTransfer.Clipboard
   Clipboard = record
   public const
@@ -77723,6 +78703,19 @@ begin
 end;
 
 procedure TTypedEventHandler_SelectorBar_SelectorBarSelectionChangedEventArgs.Invoke(ASender: ISelectorBar; AArgs: ISelectorBarSelectionChangedEventArgs);
+begin
+  FProc(ASender, AArgs);
+end;
+
+{ TTypedEventHandler_SplashScreen_Object }
+
+constructor TTypedEventHandler_SplashScreen_Object.Create(const AProc: TypedEventHandler_SplashScreen_ObjectProc);
+begin
+  inherited Create;
+  FProc := AProc;
+end;
+
+procedure TTypedEventHandler_SplashScreen_Object.Invoke(ASender: ISplashScreen; AArgs: IInspectable);
 begin
   FProc(ASender, AArgs);
 end;

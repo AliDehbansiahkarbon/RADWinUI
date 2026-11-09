@@ -4,6 +4,14 @@ All notable changes to RADWinUI.
 
 ## Unreleased
 
+- New unit `RADWinUI.Dialogs`: `ShowMessage`, `MessageDlg` and `InputQuery` on WinUI's ContentDialog, and `TWinUIOpenDialog`, `TWinUISaveDialog` and `TWinUIFolderDialog` on the Windows App SDK pickers, with VCL-style filters. The result arrives in a callback on the UI thread. Several dialogs requested at once open one after the other.
+- New unit `RADWinUI.Notifications`: `TWinUINotification` shows Windows notifications with a title, text, images, buttons and text boxes, in apps with or without MSIX.
+- `TWinUIApp.OnActivated` and `LaunchActivation` tell how the app was started: a normal launch with its arguments, files, a link or a notification click. `SingleInstance` hands a second start to the running app, which comes to the front. `RegisterFileTypes` and `RegisterProtocol` make Windows start the app for files and links.
+- `TWinUIApp.Queue` runs code on the UI thread from any thread, `TWinUIApp.Terminate` ends the app, `TWinUIWindow.Active` is the window in use and `BringToFront` restores and activates a window.
+- The projection includes `Windows.ApplicationModel.Activation`.
+- New sample: Quill, a notes app that uses all of the above: the pickers for Open, Save as, Import and Export all, `MessageDlg` before closing an edited note, `InputQuery` to rename, reminders as notifications with a text box and buttons, and a single instance that Windows starts for `.qnote` files and `quill://` links.
+- New sample: AppServicesDemo, one window with a button for each dialog, picker, notification and activation service, and a log of every result.
+
 - Windows App SDK 2.6.5: RADWinUI now builds against the current stable release, so apps need the Windows App Runtime 2.6. `scripts\Get-WindowsAppSDK.ps1 -InstallRuntime` downloads the new packages and installs the runtime.
 - The projection covers the whole Windows App SDK, not only the UI: `Microsoft.Windows.*` (app lifecycle, app notifications, file and folder pickers, resources, on-device AI and the rest), `Microsoft.Graphics.Imaging`, and the Windows types these APIs use: `Windows.Storage.*`, `Windows.Graphics.Imaging` and `Windows.ApplicationModel.DataTransfer`. Every existing type keeps its name.
 - About 30 members of the wrapper classes now take or return these types instead of `IInspectable`, for example `BitmapSource.SetSource` takes an `IRandomAccessStream` and `DragEventArgs.Data` returns an `IDataPackage`. Code that passed an `IInspectable` needs a cast such as `Stream as IRandomAccessStream`.

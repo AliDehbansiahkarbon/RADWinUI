@@ -8256,7 +8256,7 @@ type
   strict private
     F_ILaunchActivatedEventArgs: RADWinUI.Abi.ILaunchActivatedEventArgs;
     function _GetArguments: string;
-    function _GetUWPLaunchActivatedEventArgs: IInspectable;
+    function _GetUWPLaunchActivatedEventArgs: RADWinUI.Abi.Windows_ApplicationModel_Activation_ILaunchActivatedEventArgs;
     class constructor _Register;
   strict protected
     function _ILaunchActivatedEventArgs: RADWinUI.Abi.ILaunchActivatedEventArgs;
@@ -8264,7 +8264,7 @@ type
     constructor Create(AOwner: TWinUIObject);
     function Intf: RADWinUI.Abi.ILaunchActivatedEventArgs;
     property Arguments: string read _GetArguments;
-    property UWPLaunchActivatedEventArgs: IInspectable read _GetUWPLaunchActivatedEventArgs;
+    property UWPLaunchActivatedEventArgs: RADWinUI.Abi.Windows_ApplicationModel_Activation_ILaunchActivatedEventArgs read _GetUWPLaunchActivatedEventArgs;
   end;
 
   // Microsoft.UI.Xaml.Markup.MarkupExtension
@@ -47152,7 +47152,7 @@ begin
   Result := TakeHString(_ILaunchActivatedEventArgs.get_Arguments);
 end;
 
-function TWinUILaunchActivatedEventArgs._GetUWPLaunchActivatedEventArgs: IInspectable;
+function TWinUILaunchActivatedEventArgs._GetUWPLaunchActivatedEventArgs: RADWinUI.Abi.Windows_ApplicationModel_Activation_ILaunchActivatedEventArgs;
 begin
   Result := _ILaunchActivatedEventArgs.get_UWPLaunchActivatedEventArgs;
 end;

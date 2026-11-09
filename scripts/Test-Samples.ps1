@@ -208,6 +208,32 @@ $Results = @(
     $null = Wait-For { -not (Find-By $Win $AE::AutomationIdProperty 'VipBadge') } 'VipBadge collapsed after reset'
     Write-Host "  [ok] reset -> VipBadge collapsed"
   }
+  Test-Sample 'Quill' {
+    param($Win)
+    # Editing marks the note, closing it asks through MessageDlg. No picker or notification opens.
+    Expect-Name $Win 'TitleNote' 'Welcome'
+    Set-Text (Get-Id $Win 'Editor') 'Hello from Quill'
+    Expect-Name $Win 'Status' '3 words - Edited'
+    Expect-Name $Win 'TitleNote' 'Welcome *'
+    Invoke-Named $Win 'Close note'
+    $null = Get-Named $Win 'Save changes to "Welcome"?'
+    Invoke-Named $Win 'No'
+    Expect-Name $Win 'TitleNote' 'Untitled'
+    Expect-Name $Win 'Status' '0 words - Not saved'
+    Invoke-Named $Win 'New note'
+    Expect-Name $Win 'TitleNote' 'Untitled 2'
+    Write-Host "  [ok] edit, Save changes? -> No, new note"
+  }
+  Test-Sample 'AppServicesDemo' {
+    param($Win)
+    # Only the in-window dialogs: no picker, notification or registration
+    Expect-Name $Win 'LaunchText' 'Started as: Launch, arguments ""'
+    Invoke-Named $Win 'MessageDlg error, OK'
+    $null = Get-Named $Win 'The file could not be read.'
+    Invoke-Named $Win 'OK'
+    $null = Wait-For { (Get-Id $Win 'LogText').Current.Name -like '*MessageDlg error: mrOk*' } 'the logged result'
+    Write-Host "  [ok] MessageDlg result logged"
+  }
 )
 
 # Closing a window must not crash the app afterwards (the WinUI DLLs stay
@@ -225,6 +251,10 @@ if ($Crashes) {
 Write-Host 'Native crash report'
 & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Runtime\CrashReportTest.dpr' | Out-Null
 & (Join-Path $RepoRoot 'tests\Runtime\Win64\Debug\CrashReportTest.exe') | Select-Object -Skip 1
+$Results += ($LASTEXITCODE -eq 0)
+Write-Host 'Dialogs, notifications and activation'
+& (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\AppServices\AppServicesTest.dpr' | Out-Null
+& (Join-Path $RepoRoot 'tests\AppServices\Win64\Debug\AppServicesTest.exe') | Select-Object -Skip 1
 $Results += ($LASTEXITCODE -eq 0)
 
 if ($Results -contains $false) {
