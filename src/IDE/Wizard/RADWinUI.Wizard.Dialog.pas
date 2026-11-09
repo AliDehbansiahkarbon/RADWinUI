@@ -61,6 +61,7 @@ type
     FCancelButton: TButton;
     FValidate: TWizardValidator;
     FTargetCaption: string;
+    FPPI: Integer;
     function Scale(AValue: Integer): Integer;
     function AddLabel(const ACaption: string; ATop: Integer): TLabel;
     function AddEdit(ATop, AWidth: Integer): TEdit;
@@ -145,10 +146,9 @@ begin
   Position := poMainFormCenter;
   PopupMode := pmAuto;
   KeyPreview := True;
-  // A CreateNew form is at 96 DPI (Scale is 1 here): the layout and font are made for 96 DPI,
-  // then ScaleForPPI below brings the whole form to the DPI of the IDE window.
-  Font.Assign(Screen.MessageFont);
-  Font.Height := MulDiv(Screen.MessageFont.Height, Screen.DefaultPixelsPerInch, Screen.PixelsPerInch);
+  // Laid out here at the DPI of the IDE window, sizes and font alike
+  FPPI := DialogPPI;
+  PrepareDialog(Self, FPPI);
   Margin := Scale(20);
   ButtonWidth := Scale(96);
   ButtonHeight := Scale(30);
@@ -208,10 +208,7 @@ begin
   FCreateButton.ModalResult := mrOk;
   FCreateButton.SetBounds(FCancelButton.Left - Scale(8) - ButtonWidth, Top, ButtonWidth, ButtonHeight);
   ClientHeight := Top + ButtonHeight + Margin;
-  if Application.MainForm <> nil then
-    ScaleForPPI(Application.MainForm.CurrentPPI)
-  else
-    ScaleForPPI(Screen.PixelsPerInch);
+  FitDialogFrame(Self, FPPI);
 
   ApplyIdeTheme;
   if IsDarkColor(Color) then
@@ -226,7 +223,7 @@ end;
 
 function TWizardDialog.Scale(AValue: Integer): Integer;
 begin
-  Result := MulDiv(AValue, CurrentPPI, 96);
+  Result := DialogScale(AValue, FPPI);
 end;
 
 function TWizardDialog.AddLabel(const ACaption: string; ATop: Integer): TLabel;

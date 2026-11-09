@@ -34,6 +34,8 @@ type
     FGrid: TDrawGrid;
     FIconName: TLabel;
     FUpdating: Boolean;
+    FPPI: Integer;
+    function S(AValue: Integer): Integer;
     function Button(AParent: TWinControl; const ACaption: string; ALeft, ATop, AWidth: Integer;
       AClick: TNotifyEvent): TButton;
     procedure FillList;
@@ -82,10 +84,11 @@ begin
   Self.Caption := 'Tabs';
   BorderStyle := bsDialog;
   Position := poMainFormCenter;
-  ClientWidth := 640;
-  ClientHeight := 420;
-  Font.Name := 'Segoe UI';
-  Font.Size := 9;
+  // Laid out here at the DPI of the IDE window, sizes and font alike
+  FPPI := DialogPPI;
+  PrepareDialog(Self, FPPI);
+  ClientWidth := S(640);
+  ClientHeight := S(420);
   if Screen.Fonts.IndexOf('Segoe Fluent Icons') >= 0 then
     FIconFont := 'Segoe Fluent Icons'
   else
@@ -97,44 +100,44 @@ begin
 
   Caption := TLabel.Create(Self);
   Caption.Parent := Self;
-  Caption.SetBounds(12, 10, 200, 16);
+  Caption.SetBounds(S(12), S(10), S(200), S(16));
   Caption.Caption := 'Tabs, from left to right';
 
   FList := TListBox.Create(Self);
   FList.Parent := Self;
-  FList.SetBounds(12, 30, 200, 300);
+  FList.SetBounds(S(12), S(30), S(200), S(300));
   FList.Style := lbOwnerDrawFixed;
-  FList.ItemHeight := 30;
+  FList.ItemHeight := S(30);
   FList.OnClick := ListClick;
   FList.OnDrawItem := ListDraw;
 
-  Button(Self, '&Add', 12, 338, 96, AddClick);
-  Button(Self, '&Remove', 116, 338, 96, RemoveClick);
-  Button(Self, '&Up', 12, 368, 96, UpClick);
-  Button(Self, '&Down', 116, 368, 96, DownClick);
+  Button(Self, '&Add', S(12), S(338), S(96), AddClick);
+  Button(Self, '&Remove', S(116), S(338), S(96), RemoveClick);
+  Button(Self, '&Up', S(12), S(368), S(96), UpClick);
+  Button(Self, '&Down', S(116), S(368), S(96), DownClick);
 
   Panel := TPanel.Create(Self);
   Panel.Parent := Self;
-  Panel.SetBounds(224, 30, 404, 330);
+  Panel.SetBounds(S(224), S(30), S(412), S(330));
   Panel.BevelOuter := bvNone;
 
   Caption := TLabel.Create(Self);
   Caption.Parent := Panel;
-  Caption.SetBounds(0, 2, 60, 16);
+  Caption.SetBounds(0, S(2), S(60), S(16));
   Caption.Caption := '&Label';
   FTextEdit := TEdit.Create(Self);
   FTextEdit.Parent := Panel;
-  FTextEdit.SetBounds(60, 0, 340, 23);
+  FTextEdit.SetBounds(S(60), 0, S(340), FTextEdit.Height);
   FTextEdit.OnChange := TextChange;
   Caption.FocusControl := FTextEdit;
 
   Caption := TLabel.Create(Self);
   Caption.Parent := Panel;
-  Caption.SetBounds(0, 34, 60, 16);
+  Caption.SetBounds(0, S(34), S(60), S(16));
   Caption.Caption := '&Icon';
   FIconEdit := TEdit.Create(Self);
   FIconEdit.Parent := Panel;
-  FIconEdit.SetBounds(60, 32, 340, 23);
+  FIconEdit.SetBounds(S(60), S(32), S(340), FIconEdit.Height);
   FIconEdit.OnChange := IconChange;
   FIconEdit.Hint := 'A name from the grid, or a Segoe Fluent Icons code point such as E80F (E80F/EA8A for outline/filled)';
   FIconEdit.ShowHint := True;
@@ -142,13 +145,13 @@ begin
 
   FGrid := TDrawGrid.Create(Self);
   FGrid.Parent := Panel;
-  FGrid.SetBounds(0, 66, GridColumns * (CellSize + 1) + 22, 236);
+  FGrid.SetBounds(0, S(66), GridColumns * (S(CellSize) + 1) + S(22), S(236));
   FGrid.FixedCols := 0;
   FGrid.FixedRows := 0;
   FGrid.ColCount := GridColumns;
   FGrid.RowCount := (Length(FIcons) + GridColumns - 1) div GridColumns;
-  FGrid.DefaultColWidth := CellSize;
-  FGrid.DefaultRowHeight := CellSize;
+  FGrid.DefaultColWidth := S(CellSize);
+  FGrid.DefaultRowHeight := S(CellSize);
   FGrid.Options := [goDrawFocusSelected, goThumbTracking];
   FGrid.ScrollBars := ssVertical;
   FGrid.OnDrawCell := GridDraw;
@@ -157,14 +160,15 @@ begin
 
   FIconName := TLabel.Create(Self);
   FIconName.Parent := Panel;
-  FIconName.SetBounds(0, 308, 400, 16);
+  FIconName.SetBounds(0, S(308), S(400), S(16));
 
-  OkButton := Button(Self, 'OK', 452, 384, 84, nil);
+  OkButton := Button(Self, 'OK', S(452), S(384), S(84), nil);
   OkButton.ModalResult := mrOk;
   OkButton.Default := True;
-  CancelButton := Button(Self, 'Cancel', 544, 384, 84, nil);
+  CancelButton := Button(Self, 'Cancel', S(544), S(384), S(84), nil);
   CancelButton.ModalResult := mrCancel;
   CancelButton.Cancel := True;
+  FitDialogFrame(Self, FPPI);
 
   FillList;
   if Length(FItems) > 0 then
@@ -172,12 +176,17 @@ begin
   ShowItem;
 end;
 
+function TTabItemsForm.S(AValue: Integer): Integer;
+begin
+  Result := DialogScale(AValue, FPPI);
+end;
+
 function TTabItemsForm.Button(AParent: TWinControl; const ACaption: string; ALeft, ATop, AWidth: Integer;
   AClick: TNotifyEvent): TButton;
 begin
   Result := TButton.Create(Self);
   Result.Parent := AParent;
-  Result.SetBounds(ALeft, ATop, AWidth, 26);
+  Result.SetBounds(ALeft, ATop, AWidth, S(26));
   Result.Caption := ACaption;
   Result.OnClick := AClick;
 end;
@@ -253,16 +262,16 @@ begin
     Exit;
   ResolveTabBarIcon(FItems[Index].Icon, Glyph, Filled);
   Area := Rect;
-  Area.Right := Area.Left + 32;
+  Area.Right := Area.Left + S(32);
   Canvas.Font.Name := FIconFont;
-  Canvas.Font.Size := 13;
+  Canvas.Font.Height := -MulDiv(13, FPPI, 72);
   Canvas.Brush.Style := bsClear;
   Line := Glyph;
   DrawText(Canvas.Handle, PChar(Line), 1, Area, DT_CENTER or DT_VCENTER or DT_SINGLELINE);
   Area := Rect;
-  Inc(Area.Left, 36);
-  Canvas.Font.Name := 'Segoe UI';
-  Canvas.Font.Size := 9;
+  Inc(Area.Left, S(36));
+  Canvas.Font.Name := Font.Name;
+  Canvas.Font.Height := Font.Height;
   Line := FItems[Index].Text;
   if Line = '' then
     Line := '(no label)';
@@ -375,7 +384,7 @@ begin
   if Index > High(FIcons) then
     Exit;
   Canvas.Font.Name := FIconFont;
-  Canvas.Font.Size := 14;
+  Canvas.Font.Height := -MulDiv(14, FPPI, 72);
   if Chosen then
     Canvas.Font.Color := StyleServices.GetSystemColor(clHighlightText)
   else
