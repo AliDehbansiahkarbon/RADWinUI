@@ -33,7 +33,12 @@ RADWinUI works the way a Delphi developer expects. File > New creates the projec
 - **XAML plus Object Pascal.** Each window is a `.xaml` file and a `.pas` unit. A generated base class gives you one typed field per named control and wires events to your published methods.
 - **Checked at build time.** Missing handlers, wrong handler signatures, unknown binding paths and unknown converters stop the build with the file, the line and a fix.
 - **Data binding.** `{Binding}` to published properties of your Pascal classes, one-way and two-way, with built-in and custom converters.
-- **File > New wizards.** RADWinUI Application and RADWinUI Window create ready-to-run projects.
+- **File > New wizards.** RADWinUI Application creates a ready-to-run project. RADWinUI Window, Page, User Control and Resource File add to it.
+- **Pages and navigation.** Pages in a frame, with parameters, back and forward, page transitions and a page that asks before it is left. A NavigationView drives the frame with one call.
+- **User controls.** A `.xaml` file with its `.pas` unit, used in other XAML as `<local:Name/>` with its own properties and events.
+- **Several windows.** Tool windows, modal windows with a result, VCL-style `OnCloseQuery` and `OnClose`, full screen, compact overlay, a window that opens where the user left it, and WinUI's TitleBar control or a title bar of your own.
+- **App services.** Message and input boxes, file and folder pickers, Windows notifications you can answer, single instance, and the files and links Windows starts your app for.
+- **Several languages.** `x:Uid` texts from `.resw` files, one language or many, right to left included, without MSIX.
 - **Visual designer in the IDE.** A Design view next to Code (F12 switches), drag and drop from the Tool Palette, selection, move, copy, paste, delete, undo and redo. The XAML text stays the single source of truth.
 - **Tool Palette.** 102 controls in thirteen categories (Standard, Layout, Input, Date and Time, Collections, Navigation, Text and Media, Status, Shapes, Overlay, Tab Bars, Action Buttons, Data Controls), named like VCL (`TWinUIButton`) with their own icons. Overlay, Tab Bars, Action Buttons and Data Controls hold controls written in Delphi: NotchPanel, GlowTile, HotKey, MediaSession, six animated tab bars whose tabs and icons you set in the Object Inspector, six animated buttons such as hold to confirm, a confetti burst and slide to confirm, and seventeen data-aware controls such as a grid, a navigator and edits that bind to a `TDataSource` like the VCL's Data Controls.
 - **Object Inspector and Structure view.** Edit WinUI properties and events in the native Object Inspector, see the control tree with icons in the Structure view.
@@ -205,20 +210,43 @@ A small app needs Microsoft's free Windows App Runtime 2.6 installed once per PC
 
 More in [docs/GETTING-STARTED.md](docs/GETTING-STARTED.md#troubleshooting).
 
-## Demo Video
+## Videos
 
 <!--
-  GitHub video: drag the .mp4 into this README in GitHub's web editor (or into an issue) and
-  paste the https://github.com/user-attachments/assets/... URL it gives you on its own line
-  here. GitHub shows it as a video player.
+  To add a video: copy a <td> cell, change the video id in its link (https://youtu.be/<id>) and in
+  its thumbnail (https://img.youtube.com/vi/<id>/maxresdefault.jpg, or hqdefault.jpg when YouTube
+  has no maxres one), then the title and the length. The new cell takes the place of the first
+  empty <td>, and after three cells a new <tr> row starts, filled up with empty cells.
 -->
-<p align="center">
-  <a href="https://youtu.be/ryEtWZgUxhg">
-    <img src="docs/images/video-thumbnail.png" alt="Watch the RADWinUI tour on YouTube" width="720" />
-  </a>
-  <br />
-  <sub>Watch the tour on YouTube: <a href="https://youtu.be/ryEtWZgUxhg">https://youtu.be/ryEtWZgUxhg</a></sub>
-</p>
+<table>
+  <tr>
+    <td align="center" width="33%" valign="top">
+      <a href="https://youtu.be/ryEtWZgUxhg"><img src="docs/images/video-thumbnail.png" alt="RADWinUI announcement" width="100%" /></a><br />
+      <b>Announcement</b> <sub>3:43</sub>
+    </td>
+    <td align="center" width="33%" valign="top">
+      <a href="https://youtu.be/HxK9vPN2y_M"><img src="https://img.youtube.com/vi/HxK9vPN2y_M/maxresdefault.jpg" alt="RADWinUI promo" width="100%" /></a><br />
+      <b>Promo</b> <sub>2:22</sub>
+    </td>
+    <td align="center" width="33%" valign="top">
+      <a href="https://youtu.be/yM245jFXGjs"><img src="https://img.youtube.com/vi/yM245jFXGjs/maxresdefault.jpg" alt="RADWinUI Tab Bars" width="100%" /></a><br />
+      <b>Tab Bars</b> <sub>0:30</sub>
+    </td>
+  </tr>
+  <tr>
+    <td align="center" width="33%" valign="top">
+      <a href="https://youtu.be/U2NFHvaGtqE"><img src="https://img.youtube.com/vi/U2NFHvaGtqE/maxresdefault.jpg" alt="RADWinUI Action Buttons" width="100%" /></a><br />
+      <b>Action Buttons</b> <sub>0:48</sub>
+    </td>
+    <td align="center" width="33%" valign="top">
+      <a href="https://youtu.be/qU1OHQKxSKM"><img src="https://img.youtube.com/vi/qU1OHQKxSKM/maxresdefault.jpg" alt="RADWinUI Data Controls" width="100%" /></a><br />
+      <b>Data Controls</b> <sub>0:52</sub>
+    </td>
+    <td width="33%"></td>
+  </tr>
+</table>
+
+<p align="center"><a href="https://www.youtube.com/playlist?list=PLOixRJGvMdjE">Watch all on YouTube</a></p>
 
 ## Contributing
 
