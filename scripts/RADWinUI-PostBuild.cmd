@@ -1,7 +1,8 @@
 @echo off
 rem Post-build step of a RADWinUI project: copies the Windows App SDK bootstrap
-rem DLL next to the exe. The SDK release comes from build\WindowsAppSDK.json.
-rem Usage: RADWinUI-PostBuild.cmd "<exe output folder>"
+rem DLL next to the exe, and builds resources.pri from the project's
+rem Strings\<language>\*.resw. The SDK release comes from build\WindowsAppSDK.json.
+rem Usage: RADWinUI-PostBuild.cmd "<exe output folder>" ["<project folder>"]
 setlocal
 set "ROOT=%~dp0.."
 set "RELEASE="
@@ -11,6 +12,12 @@ if "%RELEASE%"=="" goto NoSdk
 if not exist "%DLL%" goto NoSdk
 if not exist "%~1" mkdir "%~1"
 copy /Y "%DLL%" "%~1" >nul
+if errorlevel 1 exit /b %ERRORLEVEL%
+rem A project made before the second argument: the exe is in <project>\Win64\<config>
+set "PROJECT=%~2"
+if "%PROJECT%"=="" set "PROJECT=%~1\..\.."
+if not exist "%PROJECT%\Strings" exit /b 0
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Make-Pri.ps1" -ProjectDir "%PROJECT%" -OutDir "%~1"
 exit /b %ERRORLEVEL%
 
 :NoSdk

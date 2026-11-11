@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="NotesHeader.Text" xml:space="preserve"><value>NOTES</value></data>
+  <data name="NoteList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Notes</value></data>
+  <data name="NewButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>New note</value></data>
+  <data name="NewText.Text" xml:space="preserve"><value>New note</value></data>
+  <data name="ImportButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Import</value></data>
+  <data name="ImportText.Text" xml:space="preserve"><value>Import</value></data>
+  <data name="OpenButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Open</value></data>
+  <data name="OpenButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Open</value></data>
+  <data name="OpenText.Text" xml:space="preserve"><value>Open</value></data>
+  <data name="SaveButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Save</value></data>
+  <data name="SaveButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Save</value></data>
+  <data name="SaveText.Text" xml:space="preserve"><value>Save</value></data>
+  <data name="SaveAsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Save as</value></data>
+  <data name="SaveAsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Save as</value></data>
+  <data name="SaveAsText.Text" xml:space="preserve"><value>Save as</value></data>
+  <data name="RenameButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Rename</value></data>
+  <data name="RenameButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Rename</value></data>
+  <data name="RenameText.Text" xml:space="preserve"><value>Rename</value></data>
+  <data name="CloseNoteButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Close note</value></data>
+  <data name="CloseNoteButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Close note</value></data>
+  <data name="CloseNoteText.Text" xml:space="preserve"><value>Close</value></data>
+  <data name="RemindButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Remind me</value></data>
+  <data name="RemindButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Remind me</value></data>
+  <data name="RemindText.Text" xml:space="preserve"><value>Remind me</value></data>
+  <data name="RemindSoon.Text" xml:space="preserve"><value>In 10 seconds</value></data>
+  <data name="RemindMinute.Text" xml:space="preserve"><value>In 1 minute</value></data>
+  <data name="RemindTen.Text" xml:space="preserve"><value>In 10 minutes</value></data>
+  <data name="RemindCancel.Text" xml:space="preserve"><value>Cancel the reminder</value></data>
+  <data name="ExportButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Export all</value></data>
+  <data name="ExportButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Export all notes to a folder</value></data>
+  <data name="ExportText.Text" xml:space="preserve"><value>Export all</value></data>
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Settings</value></data>
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>Settings</value></data>
+  <data name="AboutButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>About</value></data>
+  <data name="AboutButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>About Quill</value></data>
+  <data name="Editor.PlaceholderText" xml:space="preserve"><value>Start writing...</value></data>
+  <data name="Editor.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Editor</value></data>
+  <data name="SettingsTitle.Text" xml:space="preserve"><value>Settings</value></data>
+  <data name="LanguageHeader.Text" xml:space="preserve"><value>LANGUAGE</value></data>
+  <data name="LanguageBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Language</value></data>
+  <data name="LanguageSystem.Content" xml:space="preserve"><value>Windows language</value></data>
+  <data name="LanguageInfo.Text" xml:space="preserve"><value>Quill starts again in the language you pick.</value></data>
+  <data name="LaunchHeader.Text" xml:space="preserve"><value>HOW QUILL STARTED</value></data>
+  <data name="FilesHeader.Text" xml:space="preserve"><value>NOTE FILES</value></data>
+  <data name="FilesInfo.Text" xml:space="preserve"><value>Let Windows open .qnote files with Quill. A file opened while Quill runs goes to this window.</value></data>
+  <data name="RegisterFiles.Content" xml:space="preserve"><value>Register .qnote</value></data>
+  <data name="UnregisterFiles.Content" xml:space="preserve"><value>Unregister</value></data>
+  <data name="UnregisterFiles.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Unregister .qnote</value></data>
+  <data name="LinksHeader.Text" xml:space="preserve"><value>LINKS</value></data>
+  <data name="LinksInfo.Text" xml:space="preserve"><value>Let links like quill://new?text=hello create a note. Try one from Win+R after registering.</value></data>
+  <data name="RegisterLinks.Content" xml:space="preserve"><value>Register quill:</value></data>
+  <data name="UnregisterLinks.Content" xml:space="preserve"><value>Unregister</value></data>
+  <data name="UnregisterLinks.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>Unregister quill:</value></data>
+  <data name="NoteFilter" xml:space="preserve"><value>Notes (*.qnote)|*.qnote|Text files (*.txt)|*.txt|All files (*.*)|*.*</value></data>
+  <data name="WelcomeTitle" xml:space="preserve"><value>Welcome</value></data>
+  <data name="WelcomeText" xml:space="preserve"><value>Welcome to Quill.
+
+Write here, then save the note as a .qnote file. Open and Import read notes back, Export all copies every note to a folder.
+
+Remind me shows a Windows notification later: type a line into it to add it to the note, or snooze it. It works even after Quill is closed.
+
+In Settings, let Windows open .qnote files and quill:// links with Quill, or pick another language. Quill runs once: a second start hands its file or link to this window.</value></data>
+  <data name="KindLaunch" xml:space="preserve"><value>Launch</value></data>
+  <data name="KindFile" xml:space="preserve"><value>File</value></data>
+  <data name="KindProtocol" xml:space="preserve"><value>Link</value></data>
+  <data name="KindNotification" xml:space="preserve"><value>Notification</value></data>
+  <data name="KindOther" xml:space="preserve"><value>Other</value></data>
+  <data name="NotSavedYet" xml:space="preserve"><value>Not saved yet</value></data>
+  <data name="EditedFormat" xml:space="preserve"><value>Edited - %s</value></data>
+  <data name="ExportTitle" xml:space="preserve"><value>Export all notes to</value></data>
+  <data name="Untitled" xml:space="preserve"><value>Untitled</value></data>
+  <data name="UntitledFormat" xml:space="preserve"><value>Untitled %d</value></data>
+  <data name="StateEdited" xml:space="preserve"><value>Edited</value></data>
+  <data name="StateSaved" xml:space="preserve"><value>Saved</value></data>
+  <data name="StateNotSaved" xml:space="preserve"><value>Not saved</value></data>
+  <data name="StatusFormat" xml:space="preserve"><value>%d words - %s</value></data>
+  <data name="ReminderAtFormat" xml:space="preserve"><value> - reminder at %s</value></data>
+  <data name="NotFoundFormat" xml:space="preserve"><value>"%s" was not found.</value></data>
+  <data name="SaveTitleFormat" xml:space="preserve"><value>Save "%s"</value></data>
+  <data name="SaveChangesFormat" xml:space="preserve"><value>Save changes to "%s"?</value></data>
+  <data name="OpenTitle" xml:space="preserve"><value>Open a note</value></data>
+  <data name="ImportTitle" xml:space="preserve"><value>Import notes</value></data>
+  <data name="RenameTitle" xml:space="preserve"><value>Rename note</value></data>
+  <data name="RenamePrompt" xml:space="preserve"><value>New name:</value></data>
+  <data name="RenameFailedFormat" xml:space="preserve"><value>The note could not be renamed to "%s".</value></data>
+  <data name="ExportedFormat" xml:space="preserve"><value>Exported %d notes to %s.</value></data>
+  <data name="SaveFirstFormat" xml:space="preserve"><value>Save "%s" first, so the reminder can open it later?</value></data>
+  <data name="ReminderTitleFormat" xml:space="preserve"><value>Reminder: %s</value></data>
+  <data name="ReminderLine" xml:space="preserve"><value>Add a line to the note</value></data>
+  <data name="ReminderOpen" xml:space="preserve"><value>Open note</value></data>
+  <data name="ReminderSnooze" xml:space="preserve"><value>Snooze 5 minutes</value></data>
+  <data name="AboutText" xml:space="preserve"><value>Quill 1.0, a RADWinUI sample.
+
+Notes, file pickers, message boxes, Windows notifications, single-instance activation and three languages, written in Delphi with WinUI 3.</value></data>
+  <data name="FileTypeName" xml:space="preserve"><value>Quill note</value></data>
+  <data name="FilesRegistered" xml:space="preserve"><value>Windows now opens .qnote files with Quill.</value></data>
+  <data name="FilesUnregistered" xml:space="preserve"><value>.qnote files are no longer registered.</value></data>
+  <data name="LinkName" xml:space="preserve"><value>Quill link</value></data>
+  <data name="LinksRegistered" xml:space="preserve"><value>quill:// links now open Quill. Try quill://new?text=hello</value></data>
+  <data name="LinksUnregistered" xml:space="preserve"><value>quill:// links are no longer registered.</value></data>
+  <data name="RestartFormat" xml:space="preserve"><value>Quill starts again in %s. Restart now?</value></data>
+  <data name="RADWinUI_Yes" xml:space="preserve"><value>Yes</value></data>
+  <data name="RADWinUI_No" xml:space="preserve"><value>No</value></data>
+  <data name="RADWinUI_OK" xml:space="preserve"><value>OK</value></data>
+  <data name="RADWinUI_Cancel" xml:space="preserve"><value>Cancel</value></data>
+  <data name="RADWinUI_Confirm" xml:space="preserve"><value>Confirm</value></data>
+  <data name="RADWinUI_Error" xml:space="preserve"><value>Error</value></data>
+  <data name="RADWinUI_Warning" xml:space="preserve"><value>Warning</value></data>
+  <data name="RADWinUI_Information" xml:space="preserve"><value>Information</value></data>
+</root>

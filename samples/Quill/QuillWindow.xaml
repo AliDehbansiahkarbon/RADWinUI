@@ -7,7 +7,8 @@
     x:Class="TQuillWindow"
     Title="Quill" Width="1100" Height="720" MinWidth="760" MinHeight="480"
     WindowStartupLocation="CenterScreen" Backdrop="Mica" ExtendsContentIntoTitleBar="True">
-  <!-- Every colour is a theme resource, so Quill follows light, dark and the accent colour. -->
+  <!-- Every colour is a theme resource, so Quill follows light, dark and the accent colour.
+       Every text comes from Strings\<language>\Resources.resw through x:Uid. -->
   <Grid>
     <Grid.Resources>
       <ResourceDictionary>
@@ -36,7 +37,7 @@
 
     <!-- Title bar: the whole row drags the window -->
     <Grid x:Name="DragRegion" Grid.ColumnSpan="3" Background="Transparent"/>
-    <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10" Margin="16,0,0,0" VerticalAlignment="Center"
+    <StackPanel x:Name="TitleRow" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10" Margin="16,0,0,0" VerticalAlignment="Center"
                 IsHitTestVisible="False">
       <FontIcon Glyph="&#xE70F;" FontSize="16" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
       <TextBlock Text="Quill" FontWeight="SemiBold"/>
@@ -50,9 +51,9 @@
         <RowDefinition Height="*"/>
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
-      <TextBlock Text="NOTES" Style="{StaticResource SectionTitle}" Margin="8,0,0,0"/>
+      <TextBlock x:Uid="NotesHeader" Style="{StaticResource SectionTitle}" Margin="8,0,0,0"/>
       <ListView x:Name="NoteList" Grid.Row="1" SelectionMode="Single" SelectionChanged="NoteListSelectionChanged"
-                AutomationProperties.Name="Notes">
+                x:Uid="NoteList">
         <d:ListView.Items>
           <x:String>Welcome</x:String>
           <x:String>Shopping list</x:String>
@@ -68,11 +69,11 @@
         </ListView.ItemTemplate>
       </ListView>
       <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="6">
-        <Button x:Name="NewButton" Style="{StaticResource AccentButtonStyle}" Click="NewClick" AutomationProperties.Name="New note">
-          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE710;" FontSize="14"/><TextBlock Text="New note"/></StackPanel>
+        <Button x:Name="NewButton" x:Uid="NewButton" Style="{StaticResource AccentButtonStyle}" Click="NewClick">
+          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE710;" FontSize="14"/><TextBlock x:Uid="NewText"/></StackPanel>
         </Button>
-        <Button x:Name="ImportButton" Click="ImportClick" AutomationProperties.Name="Import">
-          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE8B5;" FontSize="14"/><TextBlock Text="Import"/></StackPanel>
+        <Button x:Name="ImportButton" x:Uid="ImportButton" Click="ImportClick">
+          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE8B5;" FontSize="14"/><TextBlock x:Uid="ImportText"/></StackPanel>
         </Button>
       </StackPanel>
     </Grid>
@@ -84,51 +85,62 @@
         <RowDefinition Height="*"/>
         <RowDefinition Height="Auto"/>
       </Grid.RowDefinitions>
-      <StackPanel Orientation="Horizontal" Spacing="2">
-        <Button Style="{StaticResource ToolButton}" Click="OpenClick" AutomationProperties.Name="Open" ToolTipService.ToolTip="Open">
-          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE8E5;" FontSize="14"/><TextBlock Text="Open"/></StackPanel>
-        </Button>
-        <Button Style="{StaticResource ToolButton}" Click="SaveClick" AutomationProperties.Name="Save" ToolTipService.ToolTip="Save">
-          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE74E;" FontSize="14"/><TextBlock Text="Save"/></StackPanel>
-        </Button>
-        <Button Style="{StaticResource ToolButton}" Click="SaveAsClick" AutomationProperties.Name="Save as" ToolTipService.ToolTip="Save as">
-          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE792;" FontSize="14"/><TextBlock Text="Save as"/></StackPanel>
-        </Button>
-        <Button Style="{StaticResource ToolButton}" Click="RenameClick" AutomationProperties.Name="Rename" ToolTipService.ToolTip="Rename">
-          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE8AC;" FontSize="14"/><TextBlock Text="Rename"/></StackPanel>
-        </Button>
-        <Button Style="{StaticResource ToolButton}" Click="CloseNoteClick" AutomationProperties.Name="Close note" ToolTipService.ToolTip="Close note">
-          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE711;" FontSize="14"/><TextBlock Text="Close"/></StackPanel>
-        </Button>
-        <AppBarSeparator/>
-        <Button Style="{StaticResource ToolButton}" AutomationProperties.Name="Remind me" ToolTipService.ToolTip="Remind me">
-          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE823;" FontSize="14"/><TextBlock Text="Remind me"/></StackPanel>
-          <Button.Flyout>
-            <MenuFlyout Placement="BottomEdgeAlignedLeft">
-              <MenuFlyoutItem x:Name="RemindSoon" Text="In 10 seconds" Click="RemindSoonClick"/>
-              <MenuFlyoutItem x:Name="RemindMinute" Text="In 1 minute" Click="RemindMinuteClick"/>
-              <MenuFlyoutItem x:Name="RemindTen" Text="In 10 minutes" Click="RemindTenClick"/>
-              <MenuFlyoutSeparator/>
-              <MenuFlyoutItem x:Name="RemindCancel" Text="Cancel the reminder" Click="RemindCancelClick"/>
-            </MenuFlyout>
-          </Button.Flyout>
-        </Button>
-        <Button Style="{StaticResource ToolButton}" Click="ExportClick" AutomationProperties.Name="Export all" ToolTipService.ToolTip="Export all notes to a folder">
-          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xEDE1;" FontSize="14"/><TextBlock Text="Export all"/></StackPanel>
-        </Button>
-        <AppBarSeparator/>
-        <Button Style="{StaticResource ToolButton}" Click="SettingsClick" AutomationProperties.Name="Settings" ToolTipService.ToolTip="Settings">
-          <FontIcon Glyph="&#xE713;" FontSize="14"/>
-        </Button>
-        <Button Style="{StaticResource ToolButton}" Click="AboutClick" AutomationProperties.Name="About" ToolTipService.ToolTip="About Quill">
-          <FontIcon Glyph="&#xE946;" FontSize="14"/>
-        </Button>
-      </StackPanel>
+      <Grid ColumnSpacing="2">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <ScrollViewer HorizontalScrollMode="Auto" HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled"
+                      VerticalScrollBarVisibility="Disabled">
+          <StackPanel Orientation="Horizontal" Spacing="2">
+            <Button x:Uid="OpenButton" Style="{StaticResource ToolButton}" Click="OpenClick">
+              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE8E5;" FontSize="14"/><TextBlock x:Uid="OpenText"/></StackPanel>
+            </Button>
+            <Button x:Uid="SaveButton" Style="{StaticResource ToolButton}" Click="SaveClick">
+              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE74E;" FontSize="14"/><TextBlock x:Uid="SaveText"/></StackPanel>
+            </Button>
+            <Button x:Uid="SaveAsButton" Style="{StaticResource ToolButton}" Click="SaveAsClick">
+              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE792;" FontSize="14"/><TextBlock x:Uid="SaveAsText"/></StackPanel>
+            </Button>
+            <Button x:Uid="RenameButton" Style="{StaticResource ToolButton}" Click="RenameClick">
+              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE8AC;" FontSize="14"/><TextBlock x:Uid="RenameText"/></StackPanel>
+            </Button>
+            <Button x:Uid="CloseNoteButton" Style="{StaticResource ToolButton}" Click="CloseNoteClick">
+              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE711;" FontSize="14"/><TextBlock x:Uid="CloseNoteText"/></StackPanel>
+            </Button>
+            <AppBarSeparator/>
+            <Button x:Uid="RemindButton" Style="{StaticResource ToolButton}">
+              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xE823;" FontSize="14"/><TextBlock x:Uid="RemindText"/></StackPanel>
+              <Button.Flyout>
+                <MenuFlyout Placement="BottomEdgeAlignedLeft">
+                  <MenuFlyoutItem x:Name="RemindSoon" x:Uid="RemindSoon" Click="RemindSoonClick"/>
+                  <MenuFlyoutItem x:Name="RemindMinute" x:Uid="RemindMinute" Click="RemindMinuteClick"/>
+                  <MenuFlyoutItem x:Name="RemindTen" x:Uid="RemindTen" Click="RemindTenClick"/>
+                  <MenuFlyoutSeparator/>
+                  <MenuFlyoutItem x:Name="RemindCancel" x:Uid="RemindCancel" Click="RemindCancelClick"/>
+                </MenuFlyout>
+              </Button.Flyout>
+            </Button>
+            <Button x:Uid="ExportButton" Style="{StaticResource ToolButton}" Click="ExportClick">
+              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="&#xEDE1;" FontSize="14"/><TextBlock x:Uid="ExportText"/></StackPanel>
+            </Button>
+          </StackPanel>
+        </ScrollViewer>
+        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">
+          <AppBarSeparator/>
+          <Button x:Uid="SettingsButton" Style="{StaticResource ToolButton}" Click="SettingsClick">
+            <FontIcon Glyph="&#xE713;" FontSize="14"/>
+          </Button>
+          <Button x:Uid="AboutButton" Style="{StaticResource ToolButton}" Click="AboutClick">
+            <FontIcon Glyph="&#xE946;" FontSize="14"/>
+          </Button>
+        </StackPanel>
+      </Grid>
       <Border Grid.Row="1" CornerRadius="8" BorderThickness="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
               BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
-        <TextBox x:Name="Editor" AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent"
-                 Padding="24,20" FontSize="15" PlaceholderText="Start writing..." TextChanged="EditorChanged"
-                 ScrollViewer.VerticalScrollBarVisibility="Auto" AutomationProperties.Name="Editor"/>
+        <TextBox x:Name="Editor" x:Uid="Editor" AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent"
+                 Padding="24,20" FontSize="15" TextChanged="EditorChanged"
+                 ScrollViewer.VerticalScrollBarVisibility="Auto"/>
       </Border>
       <TextBlock x:Name="Status" Grid.Row="2" Margin="4,0,0,0" FontSize="12" Opacity="0.7" d:Text="12 words  ·  Saved"/>
     </Grid>
@@ -139,22 +151,28 @@
             BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
       <ScrollViewer VerticalScrollBarVisibility="Auto">
         <StackPanel Spacing="10">
-          <TextBlock Text="Settings" FontSize="20" FontWeight="SemiBold"/>
-          <TextBlock Text="HOW QUILL STARTED" Style="{StaticResource SectionTitle}" Margin="0,8,0,0"/>
+          <TextBlock x:Uid="SettingsTitle" FontSize="20" FontWeight="SemiBold"/>
+          <TextBlock x:Uid="LanguageHeader" Style="{StaticResource SectionTitle}" Margin="0,8,0,0"/>
+          <ComboBox x:Name="LanguageBox" x:Uid="LanguageBox" HorizontalAlignment="Stretch" SelectionChanged="LanguageChanged">
+            <ComboBoxItem x:Uid="LanguageSystem"/>
+            <ComboBoxItem Content="English"/>
+            <ComboBoxItem Content="Deutsch"/>
+            <ComboBoxItem Content="&#x0641;&#x0627;&#x0631;&#x0633;&#x06CC;"/>
+          </ComboBox>
+          <TextBlock x:Uid="LanguageInfo" TextWrapping="Wrap" Opacity="0.8"/>
+          <TextBlock x:Uid="LaunchHeader" Style="{StaticResource SectionTitle}" Margin="0,8,0,0"/>
           <TextBlock x:Name="LaunchInfo" TextWrapping="Wrap" IsTextSelectionEnabled="True" d:Text="Launch"/>
-          <TextBlock Text="NOTE FILES" Style="{StaticResource SectionTitle}" Margin="0,8,0,0"/>
-          <TextBlock TextWrapping="Wrap" Opacity="0.8"
-                     Text="Let Windows open .qnote files with Quill. A file opened while Quill runs goes to this window."/>
+          <TextBlock x:Uid="FilesHeader" Style="{StaticResource SectionTitle}" Margin="0,8,0,0"/>
+          <TextBlock x:Uid="FilesInfo" TextWrapping="Wrap" Opacity="0.8"/>
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Content="Register .qnote" Click="RegisterFilesClick"/>
-            <Button Content="Unregister" Click="UnregisterFilesClick" AutomationProperties.Name="Unregister .qnote"/>
+            <Button x:Uid="RegisterFiles" Click="RegisterFilesClick"/>
+            <Button x:Uid="UnregisterFiles" Click="UnregisterFilesClick"/>
           </StackPanel>
-          <TextBlock Text="LINKS" Style="{StaticResource SectionTitle}" Margin="0,8,0,0"/>
-          <TextBlock TextWrapping="Wrap" Opacity="0.8"
-                     Text="Let links like quill://new?text=hello create a note. Try one from Win+R after registering."/>
+          <TextBlock x:Uid="LinksHeader" Style="{StaticResource SectionTitle}" Margin="0,8,0,0"/>
+          <TextBlock x:Uid="LinksInfo" TextWrapping="Wrap" Opacity="0.8"/>
           <StackPanel Orientation="Horizontal" Spacing="8">
-            <Button Content="Register quill:" Click="RegisterLinksClick"/>
-            <Button Content="Unregister" Click="UnregisterLinksClick" AutomationProperties.Name="Unregister quill:"/>
+            <Button x:Uid="RegisterLinks" Click="RegisterLinksClick"/>
+            <Button x:Uid="UnregisterLinks" Click="UnregisterLinksClick"/>
           </StackPanel>
           <TextBlock x:Name="SettingsResult" TextWrapping="Wrap" Opacity="0.8" Margin="0,8,0,0"/>
         </StackPanel>

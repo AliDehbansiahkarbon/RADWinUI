@@ -9,5 +9,8 @@
     "Microsoft.WindowsAppSDK.AI": "2.6.5",
     "Microsoft.WindowsAppSDK.Runtime": "2.6.5",
     "Microsoft.Web.WebView2": "1.0.3719.77"
+  },
+  "tools": {
+    "Microsoft.Windows.SDK.BuildTools": "10.0.26100.4948"
   }
 }

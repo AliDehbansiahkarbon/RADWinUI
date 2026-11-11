@@ -42,7 +42,7 @@
         <DCC_UsePackage></DCC_UsePackage>
         <PreBuildEvent><![CDATA[if not exist "$(RADWinUIRoot)\scripts\RADWinUI-PreBuild.cmd" (echo RADWinUI : error RW1002 : RADWinUI was not found. Set the RADWINUI_ROOT environment variable to the RADWinUI folder, then build again. & exit 1) else call "$(RADWinUIRoot)\scripts\RADWinUI-PreBuild.cmd" "$(MSBuildProjectDirectory)"]]></PreBuildEvent>
         <PreBuildEventIgnoreExitCode>False</PreBuildEventIgnoreExitCode>
-        <PostBuildEvent><![CDATA[call "$(RADWinUIRoot)\scripts\RADWinUI-PostBuild.cmd" "$(MSBuildProjectDirectory)\$(DCC_ExeOutput)"]]></PostBuildEvent>
+        <PostBuildEvent><![CDATA[call "$(RADWinUIRoot)\scripts\RADWinUI-PostBuild.cmd" "$(MSBuildProjectDirectory)\$(DCC_ExeOutput)" "$(MSBuildProjectDirectory)"]]></PostBuildEvent>
         <PostBuildEventIgnoreExitCode>False</PostBuildEventIgnoreExitCode>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win64)'!=''">

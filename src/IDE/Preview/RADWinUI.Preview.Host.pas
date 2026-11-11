@@ -112,6 +112,8 @@ type
     FSelected: string;
     FSelectedElement: IFrameworkElement;
     FInserts: TArray<Integer>;
+    // x:Uid -> ' Text="..."' attributes from the default Resources.resw beside the XAML
+    FUidTexts: TDictionary<string, string>;
     FMarkers: TArray<string>;
     FEvents: TArray<string>; // pending event-pipe messages, oldest first
     FEventLock: TRTLCriticalSection;
@@ -170,6 +172,7 @@ type
     procedure AttachToParent(AParent: HWND);
     procedure PlaceAdorner(Sender: TObject);
     function NameElements(const AXaml, AText: string): string;
+    procedure ReadUidTexts(const APath: string);
     procedure DecorateTitleBars;
     function SelectFrom(AObject: IDependencyObject): string;
     function SelectAt(const APoint: RADWinUI.Abi.Point): string;
@@ -802,6 +805,7 @@ begin
   FSelectionText := FindElement<TWinUITextBlock>('SelectionText');
   FElements := TDictionary<string, string>.Create;
   FTitleBars := TDictionary<string, string>.Create;
+  FUidTexts := TDictionary<string, string>.Create;
   FAdornerTimer := TWinUITimer.Create;
   FAdornerTimer.Interval := 200; // follows layout changes of the selected element
   FAdornerTimer.OnTimer := PlaceAdorner;
@@ -1277,6 +1281,7 @@ begin
     FPaletteDeferral.Complete;
   FElements.Free;
   FTitleBars.Free;
+  FUidTexts.Free;
   inherited;
 end;
 
@@ -1289,6 +1294,7 @@ begin
   Result := '';
   try
     AddMissingConverters(AXaml);
+    ReadUidTexts(APath);
     Text := NameElements(AXaml, PreviewXaml(AXaml, Window));
     if not Supports(RADWinUI.Abi.XamlReader.Load(WinStr(Text)), IUIElement, Element) then
       raise Exception.Create('The root must be a UI element (a panel or a control)');
@@ -1320,6 +1326,36 @@ begin
       FErrorText.Text := Result;
       FErrorBar.Visibility := TWinUIVisibility.Visible;
     end;
+  end;
+end;
+
+
+/// The texts of Strings\en-US\Resources.resw beside APath, by x:Uid, ready to insert:
+/// Uid.Property keys with a plain property name, as Property="value" separated by #1.
+procedure TPreviewWindow.ReadUidTexts(const APath: string);
+var
+  Resw, Value, Uid, Prop, Attribute: string;
+  M: TMatch;
+  Dot: Integer;
+begin
+  FUidTexts.Clear;
+  if APath = '' then
+    Exit;
+  Resw := TPath.Combine(ExtractFilePath(APath), 'Strings\en-US\Resources.resw');
+  if not FileExists(Resw) then
+    Exit;
+  for M in TRegEx.Matches(TFile.ReadAllText(Resw, TEncoding.UTF8),
+    '<data\s+name="([^".]+)\.(\w+)"[^>]*>\s*<value>(.*?)</value>', [roSingleLine]) do
+  begin
+    Uid := M.Groups[1].Value;
+    Prop := M.Groups[2].Value;
+    // Still XML text: only quotes and line breaks need escaping, a line break would move every line below
+    Value := M.Groups[3].Value.Replace('"', '&quot;').Replace(#13#10, '&#10;').Replace(#10, '&#10;').Replace(#13, '');
+    Attribute := Prop + '="' + Value + '"';
+    if FUidTexts.ContainsKey(Uid) then
+      FUidTexts[Uid] := FUidTexts[Uid] + #1 + Attribute
+    else
+      FUidTexts.Add(Uid, Attribute);
   end;
 end;
 
@@ -1375,6 +1411,17 @@ begin
       begin
         Dec(Skip);
         Continue;
+      end;
+      // An x:Uid element shows the default language's texts it has no attribute for
+      I := Tag.Find(AText, 'x:Uid');
+      if (I >= 0) and FUidTexts.TryGetValue(Tag.AttrValue(AText, I), Marker) then
+      begin
+        for UserName in Marker.Split([#1], TStringSplitOptions.ExcludeEmpty) do
+          if Tag.Find(AText, UserName.Substring(0, UserName.IndexOf('='))) < 0 then
+          begin
+            FInserts := FInserts + [Tag.Start + 1 + Length(Tag.Name)];
+            FMarkers := FMarkers + [' ' + UserName];
+          end;
       end;
       if (Depth > 0) or not UIElementTags.ContainsKey(Tag.Name) then
         Continue;

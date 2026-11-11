@@ -11,6 +11,7 @@ uses
   RADWinUI.Forms,
   RADWinUI.Dialogs,
   RADWinUI.Notifications,
+  RADWinUI.Resources,
   QuillWindow.Xaml;
 
 type
@@ -43,6 +44,8 @@ type
     FReminderPath: string;
     FReminderAt: TDateTime;
     FCloseConfirmed: Boolean;
+    FRestartPending: Boolean;
+    FShowingLanguage: Boolean;
     function AddNote(const ATitle, AFileName, AText: string): TQuillNote;
     function NextUntitled: string;
     procedure Select(ANote: TQuillNote);
@@ -86,31 +89,70 @@ type
     procedure UnregisterFilesClick(Sender: TObject);
     procedure RegisterLinksClick(Sender: TObject);
     procedure UnregisterLinksClick(Sender: TObject);
+    procedure LanguageChanged(Sender: TObject; E: TWinUISelectionChangedEventArgs);
   end;
+
+/// <summary>The language picked in Settings, '' for the Windows language. Quill.dpr sets it before Run.</summary>
+function SavedLanguage: string;
+
+var
+  /// <summary>Set when Quill closes to start again in another language.</summary>
+  RestartQuill: Boolean;
 
 implementation
 
 uses
   Winapi.Windows,
   System.IOUtils,
-  System.NetEncoding;
+  System.Math,
+  System.StrUtils,
+  System.NetEncoding,
+  System.Win.Registry;
 
 const
   NoteExtension = '.qnote';
-  NoteFilter = 'Notes (*.qnote)|*.qnote|Text files (*.txt)|*.txt|All files (*.*)|*.*';
   LinkScheme = 'quill';
   SnoozeSeconds = 5 * 60;
-  WelcomeText =
-    'Welcome to Quill.' + sLineBreak + sLineBreak +
-    'Write here, then save the note as a .qnote file. Open and Import read notes back, ' +
-    'Export all copies every note to a folder.' + sLineBreak + sLineBreak +
-    'Remind me shows a Windows notification later: type a line into it to add it to the note, ' +
-    'or snooze it. It works even after Quill is closed.' + sLineBreak + sLineBreak +
-    'In Settings, let Windows open .qnote files and quill:// links with Quill. ' +
-    'Quill runs once: a second start hands its file or link to this window.';
+  SettingsKey = 'Software\Quill';
+  // The choices of the Language box, in its order
+  Languages: array[0..3] of string = ('', 'en-US', 'de-DE', 'fa-IR');
+  LanguageNames: array[0..3] of string = ('', 'English', 'Deutsch', #$0641#$0627#$0631#$0633#$06CC);
 
 var
   Quill: TQuillWindow;
+
+// A text of Strings\<language>\Resources.resw in Quill's language
+function S(const AKey: string): string;
+begin
+  Result := TWinUIResources.GetString(AKey, AKey);
+end;
+
+function SavedLanguage: string;
+var
+  Registry: TRegistry;
+begin
+  Result := '';
+  Registry := TRegistry.Create(KEY_READ);
+  try
+    if Registry.OpenKeyReadOnly(SettingsKey) and Registry.ValueExists('Language') then
+      Result := Registry.ReadString('Language');
+  finally
+    Registry.Free;
+  end;
+end;
+
+procedure SaveLanguage(const ALanguage: string);
+var
+  Registry: TRegistry;
+begin
+  Registry := TRegistry.Create;
+  try
+    if Registry.OpenKey(SettingsKey, True) then
+      Registry.WriteString('Language', ALanguage);
+  finally
+    Registry.Free;
+  end;
+end;
 
 function WordCount(const AText: string): Integer;
 var
@@ -131,9 +173,10 @@ end;
 
 function Describe(const AActivation: TWinUIActivation): string;
 const
-  KindNames: array[TWinUIActivationKind] of string = ('Launch', 'File', 'Protocol', 'Notification', 'Other');
+  KindNames: array[TWinUIActivationKind] of string = ('KindLaunch', 'KindFile', 'KindProtocol', 'KindNotification',
+    'KindOther');
 begin
-  Result := KindNames[AActivation.Kind];
+  Result := S(KindNames[AActivation.Kind]);
   if AActivation.Arguments <> '' then
     Result := Result + ': ' + AActivation.Arguments;
   if Length(AActivation.Files) > 0 then
@@ -160,11 +203,11 @@ end;
 function TQuillNote.GetSubtitle: string;
 begin
   if FileName = '' then
-    Result := 'Not saved yet'
+    Result := S('NotSavedYet')
   else
     Result := ExtractFileDir(FileName);
   if Modified then
-    Result := 'Edited - ' + Result;
+    Result := Format(S('EditedFormat'), [Result]);
 end;
 
 { TQuillWindow }
@@ -177,20 +220,34 @@ begin
   Quill := Self;
   SetTitleBar(DragRegion);
   AppWindow.TitleBar.PreferredTheme := TWinUITitleBarTheme.UseDefaultAppMode;
+  // Right to left, the title starts at the right edge, where Windows keeps the caption buttons
+  if TWinUIApp.RightToLeft then
+    TitleRow.Loaded.Add(
+      procedure(Sender: TObject; E: TWinUIRoutedEventArgs)
+      var
+        Inset: TWinUIThickness;
+      begin
+        Inset := TitleRow.Margin;
+        Inset.Left := 16 + AppWindow.TitleBar.RightInset / TitleRow.XamlRoot.RasterizationScale;
+        TitleRow.Margin := Inset;
+      end);
   OnCloseQuery := WindowCloseQuery;
   FNotes := TWinUIBindableList<TQuillNote>.Create;
   NoteList.ItemsSource := FNotes;
   FOpenDialog := TWinUIOpenDialog.Create;
-  FOpenDialog.Filter := NoteFilter;
+  FOpenDialog.Filter := S('NoteFilter');
   FSaveDialog := TWinUISaveDialog.Create;
-  FSaveDialog.Filter := NoteFilter;
+  FSaveDialog.Filter := S('NoteFilter');
   FSaveDialog.DefaultExt := NoteExtension;
   FFolderDialog := TWinUIFolderDialog.Create;
-  FFolderDialog.Title := 'Export all notes to';
+  FFolderDialog.Title := S('ExportTitle');
   FReminder := TWinUITimer.Create;
   FReminder.OnTimer := ReminderTick;
   LaunchInfo.Text := Describe(TWinUIApp.LaunchActivation);
-  Welcome := AddNote('Welcome', '', WelcomeText);
+  FShowingLanguage := True;
+  LanguageBox.SelectedIndex := Max(0, IndexStr(SavedLanguage, Languages));
+  FShowingLanguage := False;
+  Welcome := AddNote(S('WelcomeTitle'), '', S('WelcomeText'));
   Welcome.IsWelcome := True;
   Select(Welcome);
 end;
@@ -229,9 +286,9 @@ begin
   N := 1;
   repeat
     if N = 1 then
-      Result := 'Untitled'
+      Result := S('Untitled')
     else
-      Result := 'Untitled ' + IntToStr(N);
+      Result := Format(S('UntitledFormat'), [N]);
     Taken := False;
     for I := 0 to FNotes.Count - 1 do
       Taken := Taken or SameText(FNotes[I].Title, Result);
@@ -262,14 +319,14 @@ begin
   if FCurrent = nil then
     Exit;
   if FCurrent.Modified then
-    State := 'Edited'
+    State := S('StateEdited')
   else if FCurrent.FileName <> '' then
-    State := 'Saved'
+    State := S('StateSaved')
   else
-    State := 'Not saved';
-  Status.Text := Format('%d words - %s', [WordCount(FCurrent.Text), State]);
+    State := S('StateNotSaved');
+  Status.Text := Format(S('StatusFormat'), [WordCount(FCurrent.Text), State]);
   if FReminder.Enabled then
-    Status.Text := Status.Text + Format(' - reminder at %s', [FormatDateTime('hh:nn:ss', FReminderAt)]);
+    Status.Text := Status.Text + Format(S('ReminderAtFormat'), [FormatDateTime('hh:nn:ss', FReminderAt)]);
   Name := FCurrent.Title;
   if FCurrent.Modified then
     Name := Name + ' *';
@@ -331,7 +388,7 @@ begin
     end;
   if not FileExists(APath) then
   begin
-    MessageDlg(Format('"%s" was not found.', [APath]), TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], nil);
+    MessageDlg(Format(S('NotFoundFormat'), [APath]), TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], nil);
     Exit;
   end;
   Note := AddNote(ChangeFileExt(ExtractFileName(APath), ''), APath, TFile.ReadAllText(APath, TEncoding.UTF8));
@@ -358,7 +415,7 @@ begin
       AThen;
     Exit;
   end;
-  FSaveDialog.Title := Format('Save "%s"', [ANote.Title]);
+  FSaveDialog.Title := Format(S('SaveTitleFormat'), [ANote.Title]);
   FSaveDialog.FileName := ANote.Title + NoteExtension;
   if ANote.FileName <> '' then
     FSaveDialog.InitialDir := ExtractFileDir(ANote.FileName);
@@ -382,13 +439,14 @@ begin
     Exit;
   end;
   Select(ANote);
-  MessageDlg(Format('Save changes to "%s"?', [ANote.Title]), TMsgDlgType.mtConfirmation,
+  MessageDlg(Format(S('SaveChangesFormat'), [ANote.Title]), TMsgDlgType.mtConfirmation,
     [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo, TMsgDlgBtn.mbCancel],
     procedure(AResult: TModalResult)
     begin
       case AResult of
         mrYes: SaveNote(ANote, False, AThen);
         mrNo: AThen;
+        mrCancel: FRestartPending := False; // Quill stays, in its language
       end;
     end);
 end;
@@ -417,7 +475,7 @@ end;
 
 procedure TQuillWindow.OpenClick(Sender: TObject);
 begin
-  FOpenDialog.Title := 'Open a note';
+  FOpenDialog.Title := S('OpenTitle');
   FOpenDialog.MultiSelect := False;
   FOpenDialog.Execute(
     procedure(AOk: Boolean)
@@ -429,7 +487,7 @@ end;
 
 procedure TQuillWindow.ImportClick(Sender: TObject);
 begin
-  FOpenDialog.Title := 'Import notes';
+  FOpenDialog.Title := S('ImportTitle');
   FOpenDialog.MultiSelect := True;
   FOpenDialog.Execute(
     procedure(AOk: Boolean)
@@ -461,7 +519,7 @@ begin
   Note := FCurrent;
   if Note = nil then
     Exit;
-  InputQuery('Rename note', 'New name:', Note.Title,
+  InputQuery(S('RenameTitle'), S('RenamePrompt'), Note.Title,
     procedure(AOk: Boolean; const AValue: string)
     var
       Name, NewPath: string;
@@ -475,7 +533,7 @@ begin
         NewPath := TPath.Combine(ExtractFileDir(Note.FileName), Name + ExtractFileExt(Note.FileName));
         if FileExists(NewPath) or not RenameFile(Note.FileName, NewPath) then
         begin
-          MessageDlg(Format('The note could not be renamed to "%s".', [ExtractFileName(NewPath)]),
+          MessageDlg(Format(S('RenameFailedFormat'), [ExtractFileName(NewPath)]),
             TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], nil);
           Exit;
         end;
@@ -514,7 +572,7 @@ begin
       for I := 0 to FNotes.Count - 1 do
         TFile.WriteAllText(TPath.Combine(FFolderDialog.Folder, FNotes[I].Title + NoteExtension), FNotes[I].Text,
           TEncoding.UTF8);
-      ShowMessage(Format('Exported %d notes to %s.', [FNotes.Count, FFolderDialog.Folder]));
+      ShowMessage(Format(S('ExportedFormat'), [FNotes.Count, FFolderDialog.Folder]));
     end);
 end;
 
@@ -524,16 +582,16 @@ procedure TQuillWindow.WindowCloseQuery(Sender: TObject; var CanClose: Boolean);
 var
   I: Integer;
 begin
-  if FCloseConfirmed then
-    Exit;
-  for I := 0 to FNotes.Count - 1 do
-    if FNotes[I].Modified then
-    begin
-      // The window stays open while Quill asks about each edited note
-      CanClose := False;
-      ConfirmClose(0);
-      Exit;
-    end;
+  if not FCloseConfirmed then
+    for I := 0 to FNotes.Count - 1 do
+      if FNotes[I].Modified then
+      begin
+        // The window stays open while Quill asks about each edited note
+        CanClose := False;
+        ConfirmClose(0);
+        Exit;
+      end;
+  RestartQuill := FRestartPending;
 end;
 
 procedure TQuillWindow.ConfirmClose(AFrom: Integer);
@@ -567,7 +625,7 @@ begin
   if Note.FileName <> '' then
     ScheduleReminder(Note.FileName, ASeconds)
   else
-    MessageDlg(Format('Save "%s" first, so the reminder can open it later?', [Note.Title]),
+    MessageDlg(Format(S('SaveFirstFormat'), [Note.Title]),
       TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo],
       procedure(AResult: TModalResult)
       begin
@@ -606,13 +664,13 @@ begin
     FirstLine := Lines[0];
   N := TWinUINotification.Create;
   try
-    N.Title := 'Reminder: ' + Name;
+    N.Title := Format(S('ReminderTitleFormat'), [Name]);
     N.Text := FirstLine;
     N.Argument := 'open|' + FReminderPath;
     N.Tag := 'reminder';
-    N.AddTextBox('line', 'Add a line to the note');
-    N.AddButton('Open note', 'open|' + FReminderPath);
-    N.AddButton('Snooze 5 minutes', 'snooze|' + FReminderPath);
+    N.AddTextBox('line', S('ReminderLine'));
+    N.AddButton(S('ReminderOpen'), 'open|' + FReminderPath);
+    N.AddButton(S('ReminderSnooze'), 'snooze|' + FReminderPath);
     N.Show;
   finally
     N.Free;
@@ -715,33 +773,54 @@ end;
 
 procedure TQuillWindow.AboutClick(Sender: TObject);
 begin
-  ShowMessage('Quill 1.0, a RADWinUI sample.' + sLineBreak + sLineBreak +
-    'Notes, file pickers, message boxes, Windows notifications and single-instance ' +
-    'activation, written in Delphi with WinUI 3.');
+  ShowMessage(AdjustLineBreaks(S('AboutText')));
 end;
 
 procedure TQuillWindow.RegisterFilesClick(Sender: TObject);
 begin
-  TWinUIApp.RegisterFileTypes([NoteExtension], 'Quill note');
-  SettingsResult.Text := 'Windows now opens .qnote files with Quill.';
+  TWinUIApp.RegisterFileTypes([NoteExtension], S('FileTypeName'));
+  SettingsResult.Text := S('FilesRegistered');
 end;
 
 procedure TQuillWindow.UnregisterFilesClick(Sender: TObject);
 begin
   TWinUIApp.UnregisterFileTypes([NoteExtension]);
-  SettingsResult.Text := '.qnote files are no longer registered.';
+  SettingsResult.Text := S('FilesUnregistered');
 end;
 
 procedure TQuillWindow.RegisterLinksClick(Sender: TObject);
 begin
-  TWinUIApp.RegisterProtocol(LinkScheme, 'Quill link');
-  SettingsResult.Text := 'quill:// links now open Quill. Try quill://new?text=hello';
+  TWinUIApp.RegisterProtocol(LinkScheme, S('LinkName'));
+  SettingsResult.Text := S('LinksRegistered');
 end;
 
 procedure TQuillWindow.UnregisterLinksClick(Sender: TObject);
 begin
   TWinUIApp.UnregisterProtocol(LinkScheme);
-  SettingsResult.Text := 'quill:// links are no longer registered.';
+  SettingsResult.Text := S('LinksUnregistered');
+end;
+
+// The language takes effect at the next start: Quill offers to start again now
+procedure TQuillWindow.LanguageChanged(Sender: TObject; E: TWinUISelectionChangedEventArgs);
+var
+  Index: Integer;
+  Name: string;
+begin
+  Index := LanguageBox.SelectedIndex;
+  if FShowingLanguage or (Index < 0) or (Languages[Index] = SavedLanguage) then
+    Exit;
+  SaveLanguage(Languages[Index]);
+  Name := LanguageNames[Index];
+  if Name = '' then
+    Name := S('LanguageSystem/Content');
+  MessageDlg(Format(S('RestartFormat'), [Name]), TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo],
+    procedure(AResult: TModalResult)
+    begin
+      if AResult <> mrYes then
+        Exit;
+      FRestartPending := True;
+      Close;
+    end);
 end;
 
 end.

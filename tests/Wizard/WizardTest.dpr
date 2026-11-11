@@ -94,6 +94,16 @@ begin
   Check(Pos('InfoCard in ''InfoCard.pas''', TFile.ReadAllText(ChangeFileExt(DProj, '.dpr'))) > 0,
     'user control: added to the .dpr uses clause');
 
+  // RADWinUI Resource File: Strings\<language>\Resources.resw, a new language copies en-US
+  Check(ValidateNewFile(P.Directory, 'xx-not-a-language', fkResource) <> '', 'resource: rejects a name that is no language');
+  WriteNewFile(P.Directory, 'en-US', fkResource);
+  Check(TFile.ReadAllText(ResourceFilePath(P.Directory, 'en-US')).Contains('<data name="AppName"'),
+    'resource: writes Strings\en-US\Resources.resw with an example key');
+  Check(ValidateNewFile(P.Directory, 'en-US', fkResource) <> '', 'resource: rejects a language the project has');
+  WriteNewFile(P.Directory, 'de-DE', fkResource);
+  Check(TFile.ReadAllText(ResourceFilePath(P.Directory, 'de-DE')) = TFile.ReadAllText(ResourceFilePath(P.Directory, 'en-US')),
+    'resource: a new language starts as a copy of en-US');
+
   if Failures > 0 then
   begin
     Writeln('Result: FAIL (', Failures, ')');

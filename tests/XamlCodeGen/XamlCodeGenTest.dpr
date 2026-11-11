@@ -496,6 +496,41 @@ begin
 end;
 
 /// Every sample's committed MainWindow.Xaml.pas is exactly what the generator writes now.
+procedure TestUids;
+const
+  Xaml =
+    '<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"' + #10 +
+    '    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TMainWindow">' + #10 +
+    '  <StackPanel>' + #10 +
+    '    <TextBlock x:Uid="Greeting"/>' + #10 +
+    '    <Button x:Uid="Forgotten"/>' + #10 +
+    '  </StackPanel>' + #10 +
+    '</Window>';
+  Resw =
+    '<root>' + #10 +
+    '  <data name="Greeting.Text" xml:space="preserve"><value>Hello</value></data>' + #10 +
+    '  <data name="Leftover.Text" xml:space="preserve"><value>Old</value></data>' + #10 +
+    '  <data name="Plain" xml:space="preserve"><value>For GetString</value></data>' + #10 +
+    '</root>';
+var
+  Folder: string;
+  Warnings: TArray<string>;
+begin
+  Writeln('x:Uid and Resources.resw');
+  Folder := NewFolder;
+  Save(Folder, 'MainWindow.xaml', Xaml);
+  Check(Length(CheckUids(Folder)) = 0, 'a folder without Strings has no x:Uid warnings');
+  ForceDirectories(TPath.Combine(Folder, 'Strings\en-US'));
+  Save(Folder, 'Strings\en-US\Resources.resw', Resw);
+  Warnings := CheckUids(Folder);
+  Check(Length(Warnings) = 2, Format('two warnings (%d)', [Length(Warnings)]));
+  Check((Length(Warnings) > 1) and Warnings[1].EndsWith('Resources.resw(3): warning RW2002: "Leftover.Text" belongs ' +
+    'to no x:Uid of the XAML files in this folder'), 'RW2002 for a key no x:Uid uses, with its line');
+  Check((Length(Warnings) > 0) and Warnings[0].Contains('MainWindow.xaml(5): warning RW2001: x:Uid "Forgotten" has no ' +
+    'Forgotten.<Property> key'), 'RW2001 for an x:Uid without a key, with its line');
+  TDirectory.Delete(Folder, True);
+end;
+
 procedure TestSamples(const ARoot: string);
 var
   Sample, Copy, Committed: string;
@@ -529,6 +564,7 @@ begin
     TestCustomControls;
     TestPagesAndUserControls;
     TestWindowAttributes;
+    TestUids;
     TestSamples(ParamStr(1));
   finally
     Index.Free;

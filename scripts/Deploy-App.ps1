@@ -10,6 +10,8 @@
   - -SelfContained: the Windows App Runtime itself (Foundation, InteractiveExperiences
     and WinUI runtime files, WebView2 Core) next to the exe, and a manifest embedded
     in the exe that registers its classes, so nothing needs to be installed
+  - resources.pri when the project has Strings\<language>\*.resw (scripts\Make-Pri.ps1),
+    merged with WinUI's own resources for -SelfContained
   - THIRD-PARTY-NOTICES.txt, the license terms and README.txt
   All of these are files the Windows App SDK NuGet packages place next to an app,
   redistributable under license section 3.a.i.
@@ -87,6 +89,9 @@ foreach ($Folder in $OwnFolders | Sort-Object Length -Descending) {
 New-Item -ItemType Directory -Force $Out | Out-Null
 Copy-Item $Exe $Out
 Copy-Item (Join-Path $Foundation 'license.txt') (Join-Path $Out 'Microsoft.WindowsAppSDK.LICENSE.txt')
+# The app's own strings (Strings\<language>\*.resw), built next to the exe by Build.ps1
+$AppPri = Join-Path (Split-Path $Exe) 'resources.pri'
+if (-not $SelfContained -and (Test-Path $AppPri)) { Copy-Item $AppPri $Out }
 
 if ($SelfContained) {
   foreach ($File in $Payload) {
@@ -96,11 +101,16 @@ if ($SelfContained) {
   }
   Copy-Item (Join-Path $SdkRoot 'Microsoft.Web.WebView2\LICENSE.txt') (Join-Path $Out 'Microsoft.Web.WebView2.LICENSE.txt')
   # An unpackaged app's MRT index is resources.pri next to the exe, WinUI's control resources
-  # (XamlControlsResources) are looked up there. RADWinUI apps have no PRI resources of their
-  # own, so WinUI's index serves as-is.
-  # The other component .pri files are not merged in (that needs makepri.exe from the Windows
-  # SDK), merge when an app ships its own PRI resources or a component string is found missing
-  Copy-Item (Join-Path $Out 'Microsoft.UI.Xaml.Controls.pri') (Join-Path $Out 'resources.pri')
+  # (XamlControlsResources) are looked up there: WinUI's index serves as-is, or merged with
+  # the app's own strings when it has some.
+  # The other component .pri files are not merged in, merge when a component string is found missing
+  if (Test-Path $AppPri) {
+    & (Join-Path $PSScriptRoot 'Make-Pri.ps1') -ProjectDir (Split-Path (Join-Path $RepoRoot $Project)) -OutDir $Out `
+      -Merge (Join-Path $Out 'Microsoft.UI.Xaml.Controls.pri')
+    if ($LASTEXITCODE -ne 0) { throw 'Building the merged resources.pri failed' }
+  } else {
+    Copy-Item (Join-Path $Out 'Microsoft.UI.Xaml.Controls.pri') (Join-Path $Out 'resources.pri')
+  }
 
   # Reg-free WinRT: the app manifest names every runtime class and the DLL that implements it,
   # generated from each component's package.appxfragment like GenerateAppManifestFromAppxFragments

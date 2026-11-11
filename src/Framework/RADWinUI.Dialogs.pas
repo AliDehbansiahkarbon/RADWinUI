@@ -163,6 +163,16 @@ resourcestring
 
 implementation
 
+uses
+  RADWinUI.Resources;
+
+// A built-in text in the app's language: the app's Resources.resw can hold RADWinUI_OK,
+// RADWinUI_Cancel... The resourcestring stays the default, so Delphi's translation tools work too
+function BuiltInText(const AName, ADefault: string): string;
+begin
+  Result := TWinUIResources.GetString('RADWinUI_' + AName, ADefault);
+end;
+
 type
   // A WinRT IVector<String> the pickers' FileTypeChoices take
   TStringVector = class(TWinRTDelegate, IInspectable, IVector_String, IIterable_String)
@@ -811,6 +821,8 @@ begin
   Result := TWinUIContentDialog.Create(nil);
   if ATitle <> '' then
     Result.Title := ATitle;
+  if TWinUIApp.RightToLeft then
+    Result.FlowDirection := TWinUIFlowDirection.RightToLeft;
 end;
 
 procedure ShowMessage(const AText: string; const AOnClose: TProc);
@@ -819,7 +831,7 @@ var
 begin
   Dialog := NewDialog('');
   Dialog.Content := AText;
-  Dialog.CloseButtonText := SMsgDlgOK;
+  Dialog.CloseButtonText := BuiltInText('OK', SMsgDlgOK);
   Dialog.DefaultButton := TWinUIContentDialogButton.Close;
   RunDialog(Dialog,
     procedure(AResult: TWinUIContentDialogResult)
@@ -832,18 +844,18 @@ end;
 function ButtonCaption(AButton: TMsgDlgBtn): string;
 begin
   case AButton of
-    TMsgDlgBtn.mbYes: Result := SMsgDlgYes;
-    TMsgDlgBtn.mbNo: Result := SMsgDlgNo;
-    TMsgDlgBtn.mbOK: Result := SMsgDlgOK;
-    TMsgDlgBtn.mbCancel: Result := SMsgDlgCancel;
-    TMsgDlgBtn.mbAbort: Result := SMsgDlgAbort;
-    TMsgDlgBtn.mbRetry: Result := SMsgDlgRetry;
-    TMsgDlgBtn.mbIgnore: Result := SMsgDlgIgnore;
-    TMsgDlgBtn.mbAll: Result := SMsgDlgAll;
-    TMsgDlgBtn.mbNoToAll: Result := SMsgDlgNoToAll;
-    TMsgDlgBtn.mbYesToAll: Result := SMsgDlgYesToAll;
-    TMsgDlgBtn.mbHelp: Result := SMsgDlgHelp;
-    TMsgDlgBtn.mbClose: Result := SMsgDlgClose;
+    TMsgDlgBtn.mbYes: Result := BuiltInText('Yes', SMsgDlgYes);
+    TMsgDlgBtn.mbNo: Result := BuiltInText('No', SMsgDlgNo);
+    TMsgDlgBtn.mbOK: Result := BuiltInText('OK', SMsgDlgOK);
+    TMsgDlgBtn.mbCancel: Result := BuiltInText('Cancel', SMsgDlgCancel);
+    TMsgDlgBtn.mbAbort: Result := BuiltInText('Abort', SMsgDlgAbort);
+    TMsgDlgBtn.mbRetry: Result := BuiltInText('Retry', SMsgDlgRetry);
+    TMsgDlgBtn.mbIgnore: Result := BuiltInText('Ignore', SMsgDlgIgnore);
+    TMsgDlgBtn.mbAll: Result := BuiltInText('All', SMsgDlgAll);
+    TMsgDlgBtn.mbNoToAll: Result := BuiltInText('NoToAll', SMsgDlgNoToAll);
+    TMsgDlgBtn.mbYesToAll: Result := BuiltInText('YesToAll', SMsgDlgYesToAll);
+    TMsgDlgBtn.mbHelp: Result := BuiltInText('Help', SMsgDlgHelp);
+    TMsgDlgBtn.mbClose: Result := BuiltInText('Close', SMsgDlgClose);
   else
     Result := '';
   end;
@@ -872,10 +884,10 @@ end;
 function DialogTitle(ADlgType: TMsgDlgType): string;
 begin
   case ADlgType of
-    TMsgDlgType.mtWarning: Result := SMsgDlgWarning;
-    TMsgDlgType.mtError: Result := SMsgDlgError;
-    TMsgDlgType.mtInformation: Result := SMsgDlgInformation;
-    TMsgDlgType.mtConfirmation: Result := SMsgDlgConfirm;
+    TMsgDlgType.mtWarning: Result := BuiltInText('Warning', SMsgDlgWarning);
+    TMsgDlgType.mtError: Result := BuiltInText('Error', SMsgDlgError);
+    TMsgDlgType.mtInformation: Result := BuiltInText('Information', SMsgDlgInformation);
+    TMsgDlgType.mtConfirmation: Result := BuiltInText('Confirm', SMsgDlgConfirm);
   else
     Result := '';
   end;
@@ -972,8 +984,8 @@ begin
   Edit.Text := ADefault;
   Panel.Children.Add(Edit);
   Dialog.Content := Panel;
-  Dialog.PrimaryButtonText := SMsgDlgOK;
-  Dialog.CloseButtonText := SMsgDlgCancel;
+  Dialog.PrimaryButtonText := BuiltInText('OK', SMsgDlgOK);
+  Dialog.CloseButtonText := BuiltInText('Cancel', SMsgDlgCancel);
   Dialog.DefaultButton := TWinUIContentDialogButton.Primary;
   Dialog.Opened.Add(
     procedure(Sender: TObject; E: TWinUIContentDialogOpenedEventArgs)

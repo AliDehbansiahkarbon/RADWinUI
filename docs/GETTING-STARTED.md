@@ -107,6 +107,8 @@ end;
 
 The rules XamlCodeGen enforces: [XAML reference](XAML.md). The Pascal API: [Framework API](FRAMEWORK-API.md).
 
+For an app in several languages, File > New > Other > Delphi Files > RADWinUI Resource File adds `Strings\en-US\Resources.resw`, and `x:Uid="Greeting"` on an element takes its texts from it. See [Languages](FRAMEWORK-API.md#languages-radwinuiresources).
+
 ## 4. Binding
 
 ```xml
@@ -186,6 +188,7 @@ builds Release and writes `build\deploy\MyApp` with the exe, the bootstrap DLL a
 | Symptom | Fix |
 | --- | --- |
 | `RADWinUI : error RW1001 : Windows App SDK files are missing`, or a post-build `copy` error in RADWinUIPreview | Run `powershell -ExecutionPolicy Bypass -File scripts\Get-WindowsAppSDK.ps1` once in the RADWinUI folder (step 0), then Build All again. |
+| `RADWinUI : warning RW1004 : makepri.exe was not found`, the app shows no translated texts | Run `scripts\Get-WindowsAppSDK.ps1` again: it also downloads the Windows SDK build tools that build `resources.pri`. |
 | `RADWinUI : error RW1002 : RADWinUI was not found` | The project is outside the RADWinUI folder. Set `RADWINUI_ROOT` to the RADWinUI folder (in Windows or in Tools > Options > IDE > Environment Variables), then build again. |
 | `RADWinUI : error RW1003 : ...XamlCodeGen.exe is missing` | Open the group of your IDE and use Build All once: it makes `bin\XamlCodeGen.exe`. |
 | `Microsoft.WindowsAppRuntime.Bootstrap.dll was not found in: ...` | build once (the post-build copies it), or set `RADWINUI_ROOT` |

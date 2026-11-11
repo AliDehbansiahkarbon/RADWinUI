@@ -69,10 +69,16 @@ procedure WriteWindow(const ADirectory, AUnitName: string);
 /// </summary>
 procedure AddWindowToProjectFiles(const ADProjPath, AUnitName: string);
 type
-  /// <summary>What File > New adds to a project: a window, a page or a user control.</summary>
-  TWizardFileKind = (fkWindow, fkPage, fkUserControl);
+  /// <summary>
+  ///   What File > New adds to a project: a window, a page, a user control, or
+  ///   the strings of one language (Strings\<language>\Resources.resw).
+  /// </summary>
+  TWizardFileKind = (fkWindow, fkPage, fkUserControl, fkResource);
 
-/// <summary>Checks a new unit name in ADirectory, returns '' or the reason it cannot be used.</summary>
+/// <summary>
+///   Checks a new unit name in ADirectory (a language such as de-DE for fkResource),
+///   returns '' or the reason it cannot be used.
+/// </summary>
 function ValidateNewFile(const ADirectory, AUnitName: string; AKind: TWizardFileKind): string;
 /// <summary>The XAML of a new page class AClassName.</summary>
 function PageXaml(const AClassName, ATitle: string): string;
@@ -85,8 +91,12 @@ function UserControlUnit(const AUnitName, AClassName: string): string;
 /// <summary>
 ///   Writes AUnitName.xaml and AUnitName.pas (class T + AUnitName) of a window,
 ///   page or user control in ADirectory, XamlCodeGen generates AUnitName.Xaml.pas.
+///   fkResource writes Strings\<AUnitName>\Resources.resw, a copy of the en-US one
+///   to translate when the project has it.
 /// </summary>
 procedure WriteNewFile(const ADirectory, AUnitName: string; AKind: TWizardFileKind);
+/// <summary>The path of the Resources.resw of ALanguage in a project folder.</summary>
+function ResourceFilePath(const ADirectory, ALanguage: string): string;
 
 /// <summary>Writes the project files, returns the .dproj path. MainWindow.Xaml.pas comes from XamlCodeGenCommand.</summary>
 function WriteProject(const AProject: TWizardProject): string;
@@ -97,6 +107,7 @@ function ReadSdkRelease(const ARoot: string): string;
 implementation
 
 uses
+  Winapi.Windows,
   System.IOUtils,
   System.JSON;
 
@@ -327,7 +338,7 @@ begin
   PreBuild := 'if not exist "$(RADWinUIRoot)\scripts\RADWinUI-PreBuild.cmd" (echo ' + MissingRootError +
     ' & exit 1) else call "$(RADWinUIRoot)\scripts\RADWinUI-PreBuild.cmd" "$(MSBuildProjectDirectory)"';
   // The DLL goes to the project's own exe folder, $(DCC_ExeOutput), created when missing
-  PostBuild := 'call "$(RADWinUIRoot)\scripts\RADWinUI-PostBuild.cmd" "$(MSBuildProjectDirectory)\$(DCC_ExeOutput)"';
+  PostBuild := 'call "$(RADWinUIRoot)\scripts\RADWinUI-PostBuild.cmd" "$(MSBuildProjectDirectory)\$(DCC_ExeOutput)" "$(MSBuildProjectDirectory)"';
   Result := Lines([
     '<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">',
     '    <PropertyGroup>',
@@ -512,8 +523,17 @@ end;
 
 function ValidateNewFile(const ADirectory, AUnitName: string; AKind: TWizardFileKind): string;
 const
-  Nouns: array[TWizardFileKind] of string = ('window', 'page', 'user control');
+  Nouns: array[TWizardFileKind] of string = ('window', 'page', 'user control', 'resource');
 begin
+  if AKind = fkResource then
+  begin
+    if (AUnitName = '') or not IsValidLocaleName(PChar(AUnitName)) then
+      Exit('Name a language such as en-US, de-DE or fa-IR.');
+    if FileExists(ResourceFilePath(ADirectory, AUnitName)) then
+      Exit('The project already has ' + ExtractRelativePath(IncludeTrailingPathDelimiter(ADirectory),
+        ResourceFilePath(ADirectory, AUnitName)) + '.');
+    Exit('');
+  end;
   if not IsIdentifier(AUnitName) then
     Exit('The ' + Nouns[AKind] + ' unit name must be a Pascal identifier (letters, digits, underscore).');
   if FileExists(TPath.Combine(ADirectory, AUnitName + '.pas')) or
@@ -632,6 +652,46 @@ begin
     'end.']);
 end;
 
+function ResourceFilePath(const ADirectory, ALanguage: string): string;
+begin
+  Result := TPath.Combine(ADirectory, 'Strings\' + ALanguage + '\Resources.resw');
+end;
+
+procedure WriteResourceFile(const ADirectory, ALanguage: string);
+var
+  Default, Path: string;
+  Utf8: TEncoding;
+begin
+  Path := ResourceFilePath(ADirectory, ALanguage);
+  ForceDirectories(ExtractFileDir(Path));
+  // Another language starts as a copy of the default one, its values to translate
+  Default := ResourceFilePath(ADirectory, 'en-US');
+  if FileExists(Default) then
+  begin
+    TFile.Copy(Default, Path);
+    Exit;
+  end;
+  Utf8 := TUTF8Encoding.Create(False);
+  try
+    TFile.WriteAllText(Path, Lines([
+      '<?xml version="1.0" encoding="utf-8"?>',
+      '<root>',
+      '  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>',
+      '  <resheader name="version"><value>2.0</value></resheader>',
+      '  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, ' +
+        'Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>',
+      '  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, ' +
+        'Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>',
+      '  <!-- <TextBlock x:Uid="Greeting"/> shows Greeting.Text, code reads plain keys:',
+      '       TWinUIResources.GetString(''AppName'') -->',
+      '  <data name="AppName" xml:space="preserve"><value>' + XmlEscape(ExtractFileName(ExcludeTrailingPathDelimiter(
+        ADirectory))) + '</value></data>',
+      '</root>']), Utf8);
+  finally
+    Utf8.Free;
+  end;
+end;
+
 procedure WriteNewFile(const ADirectory, AUnitName: string; AKind: TWizardFileKind);
 var
   Error, ClassName, Xaml, Code: string;
@@ -640,6 +700,11 @@ begin
   Error := ValidateNewFile(ADirectory, AUnitName, AKind);
   if Error <> '' then
     raise EArgumentException.Create(Error);
+  if AKind = fkResource then
+  begin
+    WriteResourceFile(ADirectory, AUnitName);
+    Exit;
+  end;
   ClassName := 'T' + AUnitName;
   case AKind of
     fkPage:

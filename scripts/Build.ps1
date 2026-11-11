@@ -151,6 +151,9 @@ $Bootstrap = Join-Path $RepoRoot "third_party\WindowsAppSDK\$Release\Microsoft.W
 if ((Test-Path $Bootstrap) -and -not (Test-Path (Join-Path $OutDir 'Microsoft.WindowsAppRuntime.Bootstrap.dll'))) {
   Copy-Item $Bootstrap $OutDir
 }
+# Strings\<language>\*.resw become resources.pri next to the exe
+& (Join-Path $PSScriptRoot 'Make-Pri.ps1') -ProjectDir $ProjectDir -OutDir $OutDir
+if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
 Write-Host "Build succeeded in $([int]$Elapsed.TotalSeconds) s: $OutDir\$ProjectName.exe" -ForegroundColor Green
 
 if ($Run) {

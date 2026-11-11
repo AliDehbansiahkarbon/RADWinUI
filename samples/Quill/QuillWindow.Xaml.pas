@@ -24,20 +24,22 @@ type
   {$M+}
   TQuillWindowBase = class(TWinUIWindow)
   protected
-    DragRegion: TWinUIGrid;              // QuillWindow.xaml(38) <Grid>
-    TitleNote: TWinUITextBlock;          // QuillWindow.xaml(43) <TextBlock>
-    NoteList: TWinUIListView;            // QuillWindow.xaml(54) <ListView>
-    NewButton: TWinUIButton;             // QuillWindow.xaml(71) <Button>
-    ImportButton: TWinUIButton;          // QuillWindow.xaml(74) <Button>
-    RemindSoon: TWinUIMenuFlyoutItem;    // QuillWindow.xaml(108) <MenuFlyoutItem>
-    RemindMinute: TWinUIMenuFlyoutItem;  // QuillWindow.xaml(109) <MenuFlyoutItem>
-    RemindTen: TWinUIMenuFlyoutItem;     // QuillWindow.xaml(110) <MenuFlyoutItem>
-    RemindCancel: TWinUIMenuFlyoutItem;  // QuillWindow.xaml(112) <MenuFlyoutItem>
-    Editor: TWinUITextBox;               // QuillWindow.xaml(129) <TextBox>
-    Status: TWinUITextBlock;             // QuillWindow.xaml(133) <TextBlock>
-    SettingsPanel: TWinUIBorder;         // QuillWindow.xaml(137) <Border>
-    LaunchInfo: TWinUITextBlock;         // QuillWindow.xaml(144) <TextBlock>
-    SettingsResult: TWinUITextBlock;     // QuillWindow.xaml(159) <TextBlock>
+    DragRegion: TWinUIGrid;              // QuillWindow.xaml(39) <Grid>
+    TitleRow: TWinUIStackPanel;          // QuillWindow.xaml(40) <StackPanel>
+    TitleNote: TWinUITextBlock;          // QuillWindow.xaml(44) <TextBlock>
+    NoteList: TWinUIListView;            // QuillWindow.xaml(55) <ListView>
+    NewButton: TWinUIButton;             // QuillWindow.xaml(72) <Button>
+    ImportButton: TWinUIButton;          // QuillWindow.xaml(75) <Button>
+    RemindSoon: TWinUIMenuFlyoutItem;    // QuillWindow.xaml(116) <MenuFlyoutItem>
+    RemindMinute: TWinUIMenuFlyoutItem;  // QuillWindow.xaml(117) <MenuFlyoutItem>
+    RemindTen: TWinUIMenuFlyoutItem;     // QuillWindow.xaml(118) <MenuFlyoutItem>
+    RemindCancel: TWinUIMenuFlyoutItem;  // QuillWindow.xaml(120) <MenuFlyoutItem>
+    Editor: TWinUITextBox;               // QuillWindow.xaml(141) <TextBox>
+    Status: TWinUITextBlock;             // QuillWindow.xaml(145) <TextBlock>
+    SettingsPanel: TWinUIBorder;         // QuillWindow.xaml(149) <Border>
+    LanguageBox: TWinUIComboBox;         // QuillWindow.xaml(156) <ComboBox>
+    LaunchInfo: TWinUITextBlock;         // QuillWindow.xaml(164) <TextBlock>
+    SettingsResult: TWinUITextBlock;     // QuillWindow.xaml(177) <TextBlock>
   public
     constructor Create; override;
   end;
@@ -46,7 +48,7 @@ type
 implementation
 
 const
-  // QuillWindow.xaml(11): the content element; event attributes became the
+  // QuillWindow.xaml(12): the content element; event attributes became the
   // wiring below, x:DataType and RADWinUI attributes are removed
   ContentXaml =
     '<Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">' + sLineBreak +
@@ -77,7 +79,7 @@ const
     '' + sLineBreak +
     '    ' + sLineBreak +
     '    <Grid x:Name="DragRegion" Grid.ColumnSpan="3" Background="Transparent" />' + sLineBreak +
-    '    <StackPanel Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10" Margin="16,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">' + sLineBreak +
+    '    <StackPanel x:Name="TitleRow" Grid.ColumnSpan="2" Orientation="Horizontal" Spacing="10" Margin="16,0,0,0" VerticalAlignment="Center" IsHitTestVisible="False">' + sLineBreak +
     '      <FontIcon Glyph="" FontSize="16" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />' + sLineBreak +
     '      <TextBlock Text="Quill" FontWeight="SemiBold" />' + sLineBreak +
     '      <TextBlock x:Name="TitleNote" Opacity="0.7" />' + sLineBreak +
@@ -90,8 +92,8 @@ const
     '        <RowDefinition Height="*" />' + sLineBreak +
     '        <RowDefinition Height="Auto" />' + sLineBreak +
     '      </Grid.RowDefinitions>' + sLineBreak +
-    '      <TextBlock Text="NOTES" Style="{StaticResource SectionTitle}" Margin="8,0,0,0" />' + sLineBreak +
-    '      <ListView x:Name="NoteList" Grid.Row="1" SelectionMode="Single" AutomationProperties.Name="Notes">' + sLineBreak +
+    '      <TextBlock x:Uid="NotesHeader" Style="{StaticResource SectionTitle}" Margin="8,0,0,0" />' + sLineBreak +
+    '      <ListView x:Name="NoteList" Grid.Row="1" SelectionMode="Single" x:Uid="NoteList">' + sLineBreak +
     '        ' + sLineBreak +
     '        <ListView.ItemTemplate>' + sLineBreak +
     '          <DataTemplate>' + sLineBreak +
@@ -103,11 +105,11 @@ const
     '        </ListView.ItemTemplate>' + sLineBreak +
     '      </ListView>' + sLineBreak +
     '      <StackPanel Grid.Row="2" Orientation="Horizontal" Spacing="6">' + sLineBreak +
-    '        <Button x:Name="NewButton" Style="{StaticResource AccentButtonStyle}" AutomationProperties.Name="New note">' + sLineBreak +
-    '          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock Text="New note" /></StackPanel>' + sLineBreak +
+    '        <Button x:Name="NewButton" x:Uid="NewButton" Style="{StaticResource AccentButtonStyle}">' + sLineBreak +
+    '          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock x:Uid="NewText" /></StackPanel>' + sLineBreak +
     '        </Button>' + sLineBreak +
-    '        <Button x:Name="ImportButton" AutomationProperties.Name="Import">' + sLineBreak +
-    '          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock Text="Import" /></StackPanel>' + sLineBreak +
+    '        <Button x:Name="ImportButton" x:Uid="ImportButton">' + sLineBreak +
+    '          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock x:Uid="ImportText" /></StackPanel>' + sLineBreak +
     '        </Button>' + sLineBreak +
     '      </StackPanel>' + sLineBreak +
     '    </Grid>' + sLineBreak +
@@ -119,49 +121,59 @@ const
     '        <RowDefinition Height="*" />' + sLineBreak +
     '        <RowDefinition Height="Auto" />' + sLineBreak +
     '      </Grid.RowDefinitions>' + sLineBreak +
-    '      <StackPanel Orientation="Horizontal" Spacing="2">' + sLineBreak +
-    '        <Button Style="{StaticResource ToolButton}" AutomationProperties.Name="Open" ToolTipService.ToolTip="Open" x:Name="_rw1">' + sLineBreak +
-    '          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock Text="Open" /></StackPanel>' + sLineBreak +
-    '        </Button>' + sLineBreak +
-    '        <Button Style="{StaticResource ToolButton}" AutomationProperties.Name="Save" ToolTipService.ToolTip="Save" x:Name="_rw2">' + sLineBreak +
-    '          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock Text="Save" /></StackPanel>' + sLineBreak +
-    '        </Button>' + sLineBreak +
-    '        <Button Style="{StaticResource ToolButton}" AutomationProperties.Name="Save as" ToolTipService.ToolTip="Save as" x:Name="_rw3">' + sLineBreak +
-    '          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock Text="Save as" /></StackPanel>' + sLineBreak +
-    '        </Button>' + sLineBreak +
-    '        <Button Style="{StaticResource ToolButton}" AutomationProperties.Name="Rename" ToolTipService.ToolTip="Rename" x:Name="_rw4">' + sLineBreak +
-    '          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock Text="Rename" /></StackPanel>' + sLineBreak +
-    '        </Button>' + sLineBreak +
-    '        <Button Style="{StaticResource ToolButton}" AutomationProperties.Name="Close note" ToolTipService.ToolTip="Close note" x:Name="_rw5">' + sLineBreak +
-    '          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock Text="Close" /></StackPanel>' + sLineBreak +
-    '        </Button>' + sLineBreak +
-    '        <AppBarSeparator />' + sLineBreak +
-    '        <Button Style="{StaticResource ToolButton}" AutomationProperties.Name="Remind me" ToolTipService.ToolTip="Remind me">' + sLineBreak +
-    '          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock Text="Remind me" /></StackPanel>' + sLineBreak +
-    '          <Button.Flyout>' + sLineBreak +
-    '            <MenuFlyout Placement="BottomEdgeAlignedLeft">' + sLineBreak +
-    '              <MenuFlyoutItem x:Name="RemindSoon" Text="In 10 seconds" />' + sLineBreak +
-    '              <MenuFlyoutItem x:Name="RemindMinute" Text="In 1 minute" />' + sLineBreak +
-    '              <MenuFlyoutItem x:Name="RemindTen" Text="In 10 minutes" />' + sLineBreak +
-    '              <MenuFlyoutSeparator />' + sLineBreak +
-    '              <MenuFlyoutItem x:Name="RemindCancel" Text="Cancel the reminder" />' + sLineBreak +
-    '            </MenuFlyout>' + sLineBreak +
-    '          </Button.Flyout>' + sLineBreak +
-    '        </Button>' + sLineBreak +
-    '        <Button Style="{StaticResource ToolButton}" AutomationProperties.Name="Export all" ToolTipService.ToolTip="Export all notes to a folder" x:Name="_rw6">' + sLineBreak +
-    '          <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock Text="Export all" /></StackPanel>' + sLineBreak +
-    '        </Button>' + sLineBreak +
-    '        <AppBarSeparator />' + sLineBreak +
-    '        <Button Style="{StaticResource ToolButton}" AutomationProperties.Name="Settings" ToolTipService.ToolTip="Settings" x:Name="_rw7">' + sLineBreak +
-    '          <FontIcon Glyph="" FontSize="14" />' + sLineBreak +
-    '        </Button>' + sLineBreak +
-    '        <Button Style="{StaticResource ToolButton}" AutomationProperties.Name="About" ToolTipService.ToolTip="About Quill" x:Name="_rw8">' + sLineBreak +
-    '          <FontIcon Glyph="" FontSize="14" />' + sLineBreak +
-    '        </Button>' + sLineBreak +
-    '      </StackPanel>' + sLineBreak +
+    '      <Grid ColumnSpacing="2">' + sLineBreak +
+    '        <Grid.ColumnDefinitions>' + sLineBreak +
+    '          <ColumnDefinition Width="*" />' + sLineBreak +
+    '          <ColumnDefinition Width="Auto" />' + sLineBreak +
+    '        </Grid.ColumnDefinitions>' + sLineBreak +
+    '        <ScrollViewer HorizontalScrollMode="Auto" HorizontalScrollBarVisibility="Hidden" VerticalScrollMode="Disabled" VerticalScrollBarVisibility="Disabled">' + sLineBreak +
+    '          <StackPanel Orientation="Horizontal" Spacing="2">' + sLineBreak +
+    '            <Button x:Uid="OpenButton" Style="{StaticResource ToolButton}" x:Name="_rw1">' + sLineBreak +
+    '              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock x:Uid="OpenText" /></StackPanel>' + sLineBreak +
+    '            </Button>' + sLineBreak +
+    '            <Button x:Uid="SaveButton" Style="{StaticResource ToolButton}" x:Name="_rw2">' + sLineBreak +
+    '              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock x:Uid="SaveText" /></StackPanel>' + sLineBreak +
+    '            </Button>' + sLineBreak +
+    '            <Button x:Uid="SaveAsButton" Style="{StaticResource ToolButton}" x:Name="_rw3">' + sLineBreak +
+    '              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock x:Uid="SaveAsText" /></StackPanel>' + sLineBreak +
+    '            </Button>' + sLineBreak +
+    '            <Button x:Uid="RenameButton" Style="{StaticResource ToolButton}" x:Name="_rw4">' + sLineBreak +
+    '              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock x:Uid="RenameText" /></StackPanel>' + sLineBreak +
+    '            </Button>' + sLineBreak +
+    '            <Button x:Uid="CloseNoteButton" Style="{StaticResource ToolButton}" x:Name="_rw5">' + sLineBreak +
+    '              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock x:Uid="CloseNoteText" /></StackPanel>' + sLineBreak +
+    '            </Button>' + sLineBreak +
+    '            <AppBarSeparator />' + sLineBreak +
+    '            <Button x:Uid="RemindButton" Style="{StaticResource ToolButton}">' + sLineBreak +
+    '              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock x:Uid="RemindText" /></StackPanel>' + sLineBreak +
+    '              <Button.Flyout>' + sLineBreak +
+    '                <MenuFlyout Placement="BottomEdgeAlignedLeft">' + sLineBreak +
+    '                  <MenuFlyoutItem x:Name="RemindSoon" x:Uid="RemindSoon" />' + sLineBreak +
+    '                  <MenuFlyoutItem x:Name="RemindMinute" x:Uid="RemindMinute" />' + sLineBreak +
+    '                  <MenuFlyoutItem x:Name="RemindTen" x:Uid="RemindTen" />' + sLineBreak +
+    '                  <MenuFlyoutSeparator />' + sLineBreak +
+    '                  <MenuFlyoutItem x:Name="RemindCancel" x:Uid="RemindCancel" />' + sLineBreak +
+    '                </MenuFlyout>' + sLineBreak +
+    '              </Button.Flyout>' + sLineBreak +
+    '            </Button>' + sLineBreak +
+    '            <Button x:Uid="ExportButton" Style="{StaticResource ToolButton}" x:Name="_rw6">' + sLineBreak +
+    '              <StackPanel Orientation="Horizontal" Spacing="8"><FontIcon Glyph="" FontSize="14" /><TextBlock x:Uid="ExportText" /></StackPanel>' + sLineBreak +
+    '            </Button>' + sLineBreak +
+    '          </StackPanel>' + sLineBreak +
+    '        </ScrollViewer>' + sLineBreak +
+    '        <StackPanel Grid.Column="1" Orientation="Horizontal" Spacing="2">' + sLineBreak +
+    '          <AppBarSeparator />' + sLineBreak +
+    '          <Button x:Uid="SettingsButton" Style="{StaticResource ToolButton}" x:Name="_rw7">' + sLineBreak +
+    '            <FontIcon Glyph="" FontSize="14" />' + sLineBreak +
+    '          </Button>' + sLineBreak +
+    '          <Button x:Uid="AboutButton" Style="{StaticResource ToolButton}" x:Name="_rw8">' + sLineBreak +
+    '            <FontIcon Glyph="" FontSize="14" />' + sLineBreak +
+    '          </Button>' + sLineBreak +
+    '        </StackPanel>' + sLineBreak +
+    '      </Grid>' + sLineBreak +
     '      <Border Grid.Row="1" CornerRadius="8" BorderThickness="1" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">' + sLineBreak +
-    '        <TextBox x:Name="Editor" AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent" Padding="24,20" FontSize="15" PlaceholderText="Start writing..." ScrollViewer.Ver' +
-    'ticalScrollBarVisibility="Auto" AutomationProperties.Name="Editor" />' + sLineBreak +
+    '        <TextBox x:Name="Editor" x:Uid="Editor" AcceptsReturn="True" TextWrapping="Wrap" BorderThickness="0" Background="Transparent" Padding="24,20" FontSize="15" ScrollViewer.VerticalScrollBarVisibi' +
+    'lity="Auto" />' + sLineBreak +
     '      </Border>' + sLineBreak +
     '      <TextBlock x:Name="Status" Grid.Row="2" Margin="4,0,0,0" FontSize="12" Opacity="0.7" />' + sLineBreak +
     '    </Grid>' + sLineBreak +
@@ -171,20 +183,28 @@ const
     'FillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">' + sLineBreak +
     '      <ScrollViewer VerticalScrollBarVisibility="Auto">' + sLineBreak +
     '        <StackPanel Spacing="10">' + sLineBreak +
-    '          <TextBlock Text="Settings" FontSize="20" FontWeight="SemiBold" />' + sLineBreak +
-    '          <TextBlock Text="HOW QUILL STARTED" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" />' + sLineBreak +
+    '          <TextBlock x:Uid="SettingsTitle" FontSize="20" FontWeight="SemiBold" />' + sLineBreak +
+    '          <TextBlock x:Uid="LanguageHeader" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" />' + sLineBreak +
+    '          <ComboBox x:Name="LanguageBox" x:Uid="LanguageBox" HorizontalAlignment="Stretch">' + sLineBreak +
+    '            <ComboBoxItem x:Uid="LanguageSystem" />' + sLineBreak +
+    '            <ComboBoxItem Content="English" />' + sLineBreak +
+    '            <ComboBoxItem Content="Deutsch" />' + sLineBreak +
+    '            <ComboBoxItem Content="فارسی" />' + sLineBreak +
+    '          </ComboBox>' + sLineBreak +
+    '          <TextBlock x:Uid="LanguageInfo" TextWrapping="Wrap" Opacity="0.8" />' + sLineBreak +
+    '          <TextBlock x:Uid="LaunchHeader" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" />' + sLineBreak +
     '          <TextBlock x:Name="LaunchInfo" TextWrapping="Wrap" IsTextSelectionEnabled="True" />' + sLineBreak +
-    '          <TextBlock Text="NOTE FILES" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" />' + sLineBreak +
-    '          <TextBlock TextWrapping="Wrap" Opacity="0.8" Text="Let Windows open .qnote files with Quill. A file opened while Quill runs goes to this window." />' + sLineBreak +
+    '          <TextBlock x:Uid="FilesHeader" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" />' + sLineBreak +
+    '          <TextBlock x:Uid="FilesInfo" TextWrapping="Wrap" Opacity="0.8" />' + sLineBreak +
     '          <StackPanel Orientation="Horizontal" Spacing="8">' + sLineBreak +
-    '            <Button Content="Register .qnote" x:Name="_rw9" />' + sLineBreak +
-    '            <Button Content="Unregister" AutomationProperties.Name="Unregister .qnote" x:Name="_rw10" />' + sLineBreak +
+    '            <Button x:Uid="RegisterFiles" x:Name="_rw9" />' + sLineBreak +
+    '            <Button x:Uid="UnregisterFiles" x:Name="_rw10" />' + sLineBreak +
     '          </StackPanel>' + sLineBreak +
-    '          <TextBlock Text="LINKS" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" />' + sLineBreak +
-    '          <TextBlock TextWrapping="Wrap" Opacity="0.8" Text="Let links like quill://new?text=hello create a note. Try one from Win+R after registering." />' + sLineBreak +
+    '          <TextBlock x:Uid="LinksHeader" Style="{StaticResource SectionTitle}" Margin="0,8,0,0" />' + sLineBreak +
+    '          <TextBlock x:Uid="LinksInfo" TextWrapping="Wrap" Opacity="0.8" />' + sLineBreak +
     '          <StackPanel Orientation="Horizontal" Spacing="8">' + sLineBreak +
-    '            <Button Content="Register quill:" x:Name="_rw11" />' + sLineBreak +
-    '            <Button Content="Unregister" AutomationProperties.Name="Unregister quill:" x:Name="_rw12" />' + sLineBreak +
+    '            <Button x:Uid="RegisterLinks" x:Name="_rw11" />' + sLineBreak +
+    '            <Button x:Uid="UnregisterLinks" x:Name="_rw12" />' + sLineBreak +
     '          </StackPanel>' + sLineBreak +
     '          <TextBlock x:Name="SettingsResult" TextWrapping="Wrap" Opacity="0.8" Margin="0,8,0,0" />' + sLineBreak +
     '        </StackPanel>' + sLineBreak +
@@ -207,6 +227,7 @@ begin
   LoadContent(ContentXaml);
   // x:Name elements
   DragRegion := FindElement<TWinUIGrid>('DragRegion');
+  TitleRow := FindElement<TWinUIStackPanel>('TitleRow');
   TitleNote := FindElement<TWinUITextBlock>('TitleNote');
   NoteList := FindElement<TWinUIListView>('NoteList');
   NewButton := FindElement<TWinUIButton>('NewButton');
@@ -218,48 +239,51 @@ begin
   Editor := FindElement<TWinUITextBox>('Editor');
   Status := FindElement<TWinUITextBlock>('Status');
   SettingsPanel := FindElement<TWinUIBorder>('SettingsPanel');
+  LanguageBox := FindElement<TWinUIComboBox>('LanguageBox');
   LaunchInfo := FindElement<TWinUITextBlock>('LaunchInfo');
   SettingsResult := FindElement<TWinUITextBlock>('SettingsResult');
   // Event wiring
-  // QuillWindow.xaml(54): SelectionChanged="NoteListSelectionChanged"
+  // QuillWindow.xaml(55): SelectionChanged="NoteListSelectionChanged"
   NoteList.OnSelectionChanged := TWinUISelectionChangedEventHandler(PublishedMethod('NoteListSelectionChanged'));
-  // QuillWindow.xaml(71): Click="NewClick"
+  // QuillWindow.xaml(72): Click="NewClick"
   NewButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('NewClick'));
-  // QuillWindow.xaml(74): Click="ImportClick"
+  // QuillWindow.xaml(75): Click="ImportClick"
   ImportButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ImportClick'));
-  // QuillWindow.xaml(88): Click="OpenClick"
+  // QuillWindow.xaml(96): Click="OpenClick"
   FindElement<TWinUIButton>('_rw1').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('OpenClick'));
-  // QuillWindow.xaml(91): Click="SaveClick"
+  // QuillWindow.xaml(99): Click="SaveClick"
   FindElement<TWinUIButton>('_rw2').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('SaveClick'));
-  // QuillWindow.xaml(94): Click="SaveAsClick"
+  // QuillWindow.xaml(102): Click="SaveAsClick"
   FindElement<TWinUIButton>('_rw3').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('SaveAsClick'));
-  // QuillWindow.xaml(97): Click="RenameClick"
+  // QuillWindow.xaml(105): Click="RenameClick"
   FindElement<TWinUIButton>('_rw4').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RenameClick'));
-  // QuillWindow.xaml(100): Click="CloseNoteClick"
+  // QuillWindow.xaml(108): Click="CloseNoteClick"
   FindElement<TWinUIButton>('_rw5').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CloseNoteClick'));
-  // QuillWindow.xaml(108): Click="RemindSoonClick"
+  // QuillWindow.xaml(116): Click="RemindSoonClick"
   RemindSoon.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RemindSoonClick'));
-  // QuillWindow.xaml(109): Click="RemindMinuteClick"
+  // QuillWindow.xaml(117): Click="RemindMinuteClick"
   RemindMinute.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RemindMinuteClick'));
-  // QuillWindow.xaml(110): Click="RemindTenClick"
+  // QuillWindow.xaml(118): Click="RemindTenClick"
   RemindTen.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RemindTenClick'));
-  // QuillWindow.xaml(112): Click="RemindCancelClick"
+  // QuillWindow.xaml(120): Click="RemindCancelClick"
   RemindCancel.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RemindCancelClick'));
-  // QuillWindow.xaml(116): Click="ExportClick"
+  // QuillWindow.xaml(124): Click="ExportClick"
   FindElement<TWinUIButton>('_rw6').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('ExportClick'));
-  // QuillWindow.xaml(120): Click="SettingsClick"
+  // QuillWindow.xaml(131): Click="SettingsClick"
   FindElement<TWinUIButton>('_rw7').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('SettingsClick'));
-  // QuillWindow.xaml(123): Click="AboutClick"
+  // QuillWindow.xaml(134): Click="AboutClick"
   FindElement<TWinUIButton>('_rw8').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('AboutClick'));
-  // QuillWindow.xaml(129): TextChanged="EditorChanged"
+  // QuillWindow.xaml(141): TextChanged="EditorChanged"
   Editor.OnTextChanged := TWinUITextChangedEventHandler(PublishedMethod('EditorChanged'));
-  // QuillWindow.xaml(149): Click="RegisterFilesClick"
+  // QuillWindow.xaml(156): SelectionChanged="LanguageChanged"
+  LanguageBox.OnSelectionChanged := TWinUISelectionChangedEventHandler(PublishedMethod('LanguageChanged'));
+  // QuillWindow.xaml(168): Click="RegisterFilesClick"
   FindElement<TWinUIButton>('_rw9').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RegisterFilesClick'));
-  // QuillWindow.xaml(150): Click="UnregisterFilesClick"
+  // QuillWindow.xaml(169): Click="UnregisterFilesClick"
   FindElement<TWinUIButton>('_rw10').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('UnregisterFilesClick'));
-  // QuillWindow.xaml(156): Click="RegisterLinksClick"
+  // QuillWindow.xaml(174): Click="RegisterLinksClick"
   FindElement<TWinUIButton>('_rw11').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RegisterLinksClick'));
-  // QuillWindow.xaml(157): Click="UnregisterLinksClick"
+  // QuillWindow.xaml(175): Click="UnregisterLinksClick"
   FindElement<TWinUIButton>('_rw12').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('UnregisterLinksClick'));
 end;
 

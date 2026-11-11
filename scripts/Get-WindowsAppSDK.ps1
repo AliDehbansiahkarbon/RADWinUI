@@ -11,6 +11,9 @@
     - WinUI: Microsoft.UI.Xaml.winmd (input for WinMDGen)
     - InteractiveExperiences: Microsoft.UI.winmd, Microsoft.Foundation.winmd
     - Runtime: version info and the Windows App Runtime MSIX packages
+  and the build tools ("tools"):
+    - Microsoft.Windows.SDK.BuildTools: makepri.exe, which builds an app's
+      resources.pri from its Strings folder when the Windows SDK is not installed
 
 .PARAMETER InstallRuntime
   Also installs the x64 Windows App Runtime MSIX packages for the current user.
@@ -30,7 +33,7 @@ $Config = Get-Content (Join-Path $RepoRoot 'build\WindowsAppSDK.json') -Raw | Co
 $TargetRoot = Join-Path $RepoRoot "third_party\WindowsAppSDK\$($Config.release)"
 New-Item -ItemType Directory -Force -Path $TargetRoot | Out-Null
 
-foreach ($Package in $Config.packages.PSObject.Properties) {
+foreach ($Package in @($Config.packages.PSObject.Properties) + @($Config.tools.PSObject.Properties)) {
   $Id = $Package.Name
   $Version = $Package.Value
   $Folder = Join-Path $TargetRoot $Id

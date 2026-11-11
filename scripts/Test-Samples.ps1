@@ -136,6 +136,10 @@ function Test-Sample([string]$Name, [scriptblock]$Scenario) {
 
 # Tempo remembers its window placement: keep the user's own, the offscreen run saves another
 $TempoPlacement = (Get-ItemProperty 'HKCU:\Software\Tempo\Placement' -ErrorAction SilentlyContinue).TMainWindow
+# Quill checks its English texts: run it in English, and give back the language picked in its Settings
+$QuillLanguage = (Get-ItemProperty 'HKCU:\Software\Quill' -ErrorAction SilentlyContinue).Language
+if (-not (Test-Path 'HKCU:\Software\Quill')) { New-Item 'HKCU:\Software\Quill' | Out-Null }
+Set-ItemProperty 'HKCU:\Software\Quill' -Name Language -Value 'en-US'
 $Results = @(
   Test-Sample 'Counter' {
     param($Win)
@@ -320,6 +324,8 @@ Write-Host 'Dialogs, notifications and activation'
 $Results += ($LASTEXITCODE -eq 0)
 if ($TempoPlacement) { Set-ItemProperty 'HKCU:\Software\Tempo\Placement' -Name TMainWindow -Value $TempoPlacement }
 else { Remove-Item 'HKCU:\Software\Tempo' -Recurse -ErrorAction SilentlyContinue }
+if ($null -ne $QuillLanguage) { Set-ItemProperty 'HKCU:\Software\Quill' -Name Language -Value $QuillLanguage }
+else { Remove-ItemProperty 'HKCU:\Software\Quill' -Name Language -ErrorAction SilentlyContinue }
 Write-Host 'Pages, navigation and user controls'
 & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Pages\PagesTest.dpr' | Out-Null
 & (Join-Path $RepoRoot 'tests\Pages\Win64\Debug\PagesTest.exe') | Select-Object -Skip 1
@@ -327,6 +333,10 @@ $Results += ($LASTEXITCODE -eq 0)
 Write-Host 'Windows and title bar'
 & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Windows\WindowsTest.dpr' | Out-Null
 & (Join-Path $RepoRoot 'tests\Windows\Win64\Debug\WindowsTest.exe') | Select-Object -Skip 1
+$Results += ($LASTEXITCODE -eq 0)
+Write-Host 'Localization'
+& (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Localization\LocalizationTest.dpr' | Out-Null
+& (Join-Path $RepoRoot 'tests\Localization\Win64\Debug\LocalizationTest.exe') | Select-Object -Skip 1
 $Results += ($LASTEXITCODE -eq 0)
 
 if ($Results -contains $false) {

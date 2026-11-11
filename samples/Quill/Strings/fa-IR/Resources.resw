@@ -1,0 +1,116 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="NotesHeader.Text" xml:space="preserve"><value>یادداشت‌ها</value></data>
+  <data name="NoteList.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>یادداشت‌ها</value></data>
+  <data name="NewButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>یادداشت تازه</value></data>
+  <data name="NewText.Text" xml:space="preserve"><value>یادداشت تازه</value></data>
+  <data name="ImportButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>وارد کردن</value></data>
+  <data name="ImportText.Text" xml:space="preserve"><value>وارد کردن</value></data>
+  <data name="OpenButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>باز کردن</value></data>
+  <data name="OpenButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>باز کردن</value></data>
+  <data name="OpenText.Text" xml:space="preserve"><value>باز کردن</value></data>
+  <data name="SaveButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>ذخیره</value></data>
+  <data name="SaveButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>ذخیره</value></data>
+  <data name="SaveText.Text" xml:space="preserve"><value>ذخیره</value></data>
+  <data name="SaveAsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>ذخیره با نام</value></data>
+  <data name="SaveAsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>ذخیره با نام</value></data>
+  <data name="SaveAsText.Text" xml:space="preserve"><value>ذخیره با نام</value></data>
+  <data name="RenameButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>تغییر نام</value></data>
+  <data name="RenameButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>تغییر نام</value></data>
+  <data name="RenameText.Text" xml:space="preserve"><value>تغییر نام</value></data>
+  <data name="CloseNoteButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>بستن یادداشت</value></data>
+  <data name="CloseNoteButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>بستن یادداشت</value></data>
+  <data name="CloseNoteText.Text" xml:space="preserve"><value>بستن</value></data>
+  <data name="RemindButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>یادآوری</value></data>
+  <data name="RemindButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>یادآوری</value></data>
+  <data name="RemindText.Text" xml:space="preserve"><value>یادآوری</value></data>
+  <data name="RemindSoon.Text" xml:space="preserve"><value>۱۰ ثانیه دیگر</value></data>
+  <data name="RemindMinute.Text" xml:space="preserve"><value>۱ دقیقه دیگر</value></data>
+  <data name="RemindTen.Text" xml:space="preserve"><value>۱۰ دقیقه دیگر</value></data>
+  <data name="RemindCancel.Text" xml:space="preserve"><value>لغو یادآوری</value></data>
+  <data name="ExportButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>خروجی همه</value></data>
+  <data name="ExportButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>خروجی همه یادداشت‌ها در یک پوشه</value></data>
+  <data name="ExportText.Text" xml:space="preserve"><value>خروجی همه</value></data>
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>تنظیمات</value></data>
+  <data name="SettingsButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>تنظیمات</value></data>
+  <data name="AboutButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>درباره</value></data>
+  <data name="AboutButton.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip" xml:space="preserve"><value>درباره Quill</value></data>
+  <data name="Editor.PlaceholderText" xml:space="preserve"><value>نوشتن را شروع کنید...</value></data>
+  <data name="Editor.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>ویرایشگر</value></data>
+  <data name="SettingsTitle.Text" xml:space="preserve"><value>تنظیمات</value></data>
+  <data name="LanguageHeader.Text" xml:space="preserve"><value>زبان</value></data>
+  <data name="LanguageBox.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>زبان</value></data>
+  <data name="LanguageSystem.Content" xml:space="preserve"><value>زبان ویندوز</value></data>
+  <data name="LanguageInfo.Text" xml:space="preserve"><value>Quill با زبانی که انتخاب می‌کنید دوباره باز می‌شود.</value></data>
+  <data name="LaunchHeader.Text" xml:space="preserve"><value>Quill چگونه باز شد</value></data>
+  <data name="FilesHeader.Text" xml:space="preserve"><value>فایل‌های یادداشت</value></data>
+  <data name="FilesInfo.Text" xml:space="preserve"><value>بگذارید ویندوز فایل‌های qnote را با Quill باز کند. فایلی که هنگام اجرای Quill باز شود به همین پنجره می‌آید.</value></data>
+  <data name="RegisterFiles.Content" xml:space="preserve"><value>ثبت qnote</value></data>
+  <data name="UnregisterFiles.Content" xml:space="preserve"><value>لغو ثبت</value></data>
+  <data name="UnregisterFiles.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>لغو ثبت qnote</value></data>
+  <data name="LinksHeader.Text" xml:space="preserve"><value>پیوندها</value></data>
+  <data name="LinksInfo.Text" xml:space="preserve"><value>بگذارید پیوندهایی مثل quill://new?text=hello یادداشت بسازند. پس از ثبت، یکی را از Win+R امتحان کنید.</value></data>
+  <data name="RegisterLinks.Content" xml:space="preserve"><value>ثبت quill:</value></data>
+  <data name="UnregisterLinks.Content" xml:space="preserve"><value>لغو ثبت</value></data>
+  <data name="UnregisterLinks.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name" xml:space="preserve"><value>لغو ثبت quill:</value></data>
+  <data name="NoteFilter" xml:space="preserve"><value>یادداشت‌ها (*.qnote)|*.qnote|فایل‌های متنی (*.txt)|*.txt|همه فایل‌ها (*.*)|*.*</value></data>
+  <data name="WelcomeTitle" xml:space="preserve"><value>خوش آمدید</value></data>
+  <data name="WelcomeText" xml:space="preserve"><value>به Quill خوش آمدید.
+
+اینجا بنویسید و یادداشت را به شکل فایل qnote ذخیره کنید. «باز کردن» و «وارد کردن» یادداشت‌ها را دوباره می‌خوانند و «خروجی همه» هر یادداشت را در یک پوشه کپی می‌کند.
+
+«یادآوری» بعداً یک اعلان ویندوز نشان می‌دهد: خطی در آن بنویسید تا به یادداشت اضافه شود، یا یادآوری را عقب بیندازید. حتی پس از بستن Quill هم کار می‌کند.
+
+در تنظیمات، بگذارید ویندوز فایل‌های qnote و پیوندهای quill:// را با Quill باز کند، یا زبان دیگری انتخاب کنید. Quill فقط یک بار اجرا می‌شود: اجرای دوم فایل یا پیوندش را به همین پنجره می‌دهد.</value></data>
+  <data name="KindLaunch" xml:space="preserve"><value>اجرا</value></data>
+  <data name="KindFile" xml:space="preserve"><value>فایل</value></data>
+  <data name="KindProtocol" xml:space="preserve"><value>پیوند</value></data>
+  <data name="KindNotification" xml:space="preserve"><value>اعلان</value></data>
+  <data name="KindOther" xml:space="preserve"><value>دیگر</value></data>
+  <data name="NotSavedYet" xml:space="preserve"><value>هنوز ذخیره نشده</value></data>
+  <data name="EditedFormat" xml:space="preserve"><value>ویرایش‌شده - %s</value></data>
+  <data name="ExportTitle" xml:space="preserve"><value>خروجی همه یادداشت‌ها در</value></data>
+  <data name="Untitled" xml:space="preserve"><value>بی‌نام</value></data>
+  <data name="UntitledFormat" xml:space="preserve"><value>بی‌نام %d</value></data>
+  <data name="StateEdited" xml:space="preserve"><value>ویرایش‌شده</value></data>
+  <data name="StateSaved" xml:space="preserve"><value>ذخیره‌شده</value></data>
+  <data name="StateNotSaved" xml:space="preserve"><value>ذخیره‌نشده</value></data>
+  <data name="StatusFormat" xml:space="preserve"><value>%d واژه - %s</value></data>
+  <data name="ReminderAtFormat" xml:space="preserve"><value> - یادآوری در %s</value></data>
+  <data name="NotFoundFormat" xml:space="preserve"><value>«%s» پیدا نشد.</value></data>
+  <data name="SaveTitleFormat" xml:space="preserve"><value>ذخیره «%s»</value></data>
+  <data name="SaveChangesFormat" xml:space="preserve"><value>تغییرات «%s» ذخیره شود؟</value></data>
+  <data name="OpenTitle" xml:space="preserve"><value>باز کردن یادداشت</value></data>
+  <data name="ImportTitle" xml:space="preserve"><value>وارد کردن یادداشت‌ها</value></data>
+  <data name="RenameTitle" xml:space="preserve"><value>تغییر نام یادداشت</value></data>
+  <data name="RenamePrompt" xml:space="preserve"><value>نام تازه:</value></data>
+  <data name="RenameFailedFormat" xml:space="preserve"><value>نام یادداشت به «%s» تغییر نکرد.</value></data>
+  <data name="ExportedFormat" xml:space="preserve"><value>%d یادداشت در %s ذخیره شد.</value></data>
+  <data name="SaveFirstFormat" xml:space="preserve"><value>اول «%s» ذخیره شود تا یادآوری بتواند بعداً آن را باز کند؟</value></data>
+  <data name="ReminderTitleFormat" xml:space="preserve"><value>یادآوری: %s</value></data>
+  <data name="ReminderLine" xml:space="preserve"><value>افزودن یک خط به یادداشت</value></data>
+  <data name="ReminderOpen" xml:space="preserve"><value>باز کردن یادداشت</value></data>
+  <data name="ReminderSnooze" xml:space="preserve"><value>۵ دقیقه بعد</value></data>
+  <data name="AboutText" xml:space="preserve"><value>Quill 1.0، نمونه‌ای از RADWinUI.
+
+یادداشت‌ها، انتخاب فایل، پیام‌ها، اعلان‌های ویندوز، اجرای تک‌نمونه و سه زبان، نوشته‌شده با دلفی و WinUI 3.</value></data>
+  <data name="FileTypeName" xml:space="preserve"><value>یادداشت Quill</value></data>
+  <data name="FilesRegistered" xml:space="preserve"><value>ویندوز اکنون فایل‌های qnote را با Quill باز می‌کند.</value></data>
+  <data name="FilesUnregistered" xml:space="preserve"><value>فایل‌های qnote دیگر ثبت نیستند.</value></data>
+  <data name="LinkName" xml:space="preserve"><value>پیوند Quill</value></data>
+  <data name="LinksRegistered" xml:space="preserve"><value>پیوندهای quill:// اکنون Quill را باز می‌کنند. quill://new?text=hello را امتحان کنید.</value></data>
+  <data name="LinksUnregistered" xml:space="preserve"><value>پیوندهای quill:// دیگر ثبت نیستند.</value></data>
+  <data name="RestartFormat" xml:space="preserve"><value>Quill با زبان %s دوباره باز می‌شود. اکنون دوباره باز شود؟</value></data>
+  <data name="RADWinUI_Yes" xml:space="preserve"><value>بله</value></data>
+  <data name="RADWinUI_No" xml:space="preserve"><value>خیر</value></data>
+  <data name="RADWinUI_OK" xml:space="preserve"><value>تأیید</value></data>
+  <data name="RADWinUI_Cancel" xml:space="preserve"><value>لغو</value></data>
+  <data name="RADWinUI_Confirm" xml:space="preserve"><value>تأیید</value></data>
+  <data name="RADWinUI_Error" xml:space="preserve"><value>خطا</value></data>
+  <data name="RADWinUI_Warning" xml:space="preserve"><value>هشدار</value></data>
+  <data name="RADWinUI_Information" xml:space="preserve"><value>اطلاعات</value></data>
+</root>

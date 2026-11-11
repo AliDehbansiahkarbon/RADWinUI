@@ -380,6 +380,10 @@ type
     class var FDispatcher: IDispatcherQueue;
     class var FMainWindow: TWinUIWindow;
     class var FShutdownMode: TWinUIShutdownMode;
+    class var FLanguage: string;
+    class var FStarted: Boolean;
+    class function GetLanguage: string; static;
+    class procedure SetLanguage(const AValue: string); static;
     procedure AddResource(const AName: string; const AValue: IInspectable);
     class function StartInstance: Boolean; static;
     class procedure CallActivated(const AActivation: TWinUIActivation; ABringToFront: Boolean); static;
@@ -458,6 +462,15 @@ type
     /// <summary>Every window of the app that is not freed yet, oldest first.</summary>
     class function Windows: TArray<TWinUIWindow>; static;
     class function WindowCount: Integer; static;
+    /// <summary>True when the app's language (Language) is written right to left: windows lay out their content from the right.</summary>
+    class function RightToLeft: Boolean; static;
+    /// <summary>
+    ///   The language of the app's strings ('de-DE', 'fa-IR'): x:Uid texts and
+    ///   TWinUIResources. By default the user's Windows language. Set it before Run
+    ///   (from a setting, say), or later: windows created after that use it, an open
+    ///   window shows it once its XAML loads again. '' goes back to the Windows language.
+    /// </summary>
+    class property Language: string read GetLanguage write SetLanguage;
   end;
 
 implementation
@@ -468,7 +481,8 @@ uses
   Winapi.MultiMon,
   System.Math,
   System.TypInfo,
-  RADWinUI.Binding;
+  RADWinUI.Binding,
+  RADWinUI.Resources;
 
 {$R RADWinUI.Icon.res}
 
@@ -1609,6 +1623,9 @@ begin
     CustomXamlLoadOwner := Previous;
   end;
   Result := TWinUIFrameworkElement(TWinUIObject.Wrap(Self, Loaded, TWinUIFrameworkElement));
+  // Arabic, Persian, Hebrew...: the content, the title bar's included, from the right
+  if TWinUIApp.RightToLeft then
+    Result.FlowDirection := TWinUIFlowDirection.RightToLeft;
   Content := Result;
 end;
 
@@ -2218,9 +2235,43 @@ end;
 class procedure TWinUIApp.Run(AMainWindow: TWinUIWindowClass);
 begin
   FMainWindowClass := AMainWindow;
+  // A language set before Run applies once the Windows App Runtime is there
+  OnApplicationStart(
+    procedure
+    begin
+      FStarted := True;
+      if FLanguage <> '' then
+        SetLanguage(FLanguage);
+    end);
   WinRTHandleException := RouteWinRTException;
   BeforeApplicationStart := StartInstance;
   inherited Run;
+end;
+
+class function TWinUIApp.GetLanguage: string;
+var
+  Name: array[0..LOCALE_NAME_MAX_LENGTH - 1] of Char;
+begin
+  Result := FLanguage;
+  // Else the language of the Windows display, which MRT picks the strings by
+  if (Result = '') and (LCIDToLocaleName(GetUserDefaultUILanguage, Name, Length(Name), 0) > 0) then
+    Result := Name;
+end;
+
+class procedure TWinUIApp.SetLanguage(const AValue: string);
+begin
+  FLanguage := AValue;
+  if FStarted then
+  begin
+    // The override cannot be emptied: '' sets the Windows language
+    ApplicationLanguages.PrimaryLanguageOverride := WinStr(GetLanguage);
+    TWinUIResources.Reset;
+  end;
+end;
+
+class function TWinUIApp.RightToLeft: Boolean;
+begin
+  Result := TWinUIResources.IsRightToLeft(Language);
 end;
 
 { Activation }

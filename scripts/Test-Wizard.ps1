@@ -85,6 +85,9 @@ $Exe = Join-Path $ProjectDir "Win64\$Config\$Name.exe"
 if (-not (Test-Path $Exe)) { Fail "no $Exe" }
 if (-not (Test-Path (Join-Path $ProjectDir "Win64\$Config\Microsoft.WindowsAppRuntime.Bootstrap.dll"))) { Fail 'post-build did not copy the bootstrap DLL' }
 Write-Host "  [ok] MSBuild built $Name.exe, post-build copied the bootstrap DLL"
+# WizardTest added Strings\en-US and de-DE (RADWinUI Resource File): the post-build step indexes them
+if (-not (Test-Path (Join-Path $ProjectDir "Win64\$Config\resources.pri"))) { Fail 'post-build did not build resources.pri from Strings' }
+Write-Host "  [ok] post-build built resources.pri from Strings\<language>\Resources.resw"
 if (-not (Test-Path $XamlUnit) -or -not (Select-String -Path $XamlUnit -Pattern 'DO NOT EDIT' -Quiet)) { Fail 'pre-build did not generate MainWindow.Xaml.pas' }
 Write-Host '  [ok] pre-build generated MainWindow.Xaml.pas with XamlCodeGen'
 # Like a VCL project: MSBuild writes <Name>.res from Icon_MainIcon, {$R *.res} links it

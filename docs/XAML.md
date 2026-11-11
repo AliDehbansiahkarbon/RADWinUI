@@ -52,6 +52,10 @@ Any `using:` namespace declared on the root refers to the project's user control
 ```
 
 The element gets a field of the user control's class, its unit is added to the uses clause, and its events take `(Sender: TObject; const E: TWinValue)` or `(Sender: TObject)`. The build stops on an element that is not a user control of the project (`<Nope> is not a user control of this project`), on an attribute that is neither one of its properties or events nor a `ContentControl` property, and on a user control that contains itself.
+## Texts in several languages
+
+`x:Uid="Name"` takes the element's texts from `Strings\<language>\Resources.resw`: `Name.Text`, `Name.Content`, `Name.PlaceholderText`, `Name.Header` and any other property, `Name.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name` for an attached one. The app shows the language of `TWinUIApp.Language`, the designer and the preview the en-US texts. See [Languages](FRAMEWORK-API.md#languages-radwinuiresources).
+
 ## Default window appearance
 
 Give a normal window's root panel a theme resource background:

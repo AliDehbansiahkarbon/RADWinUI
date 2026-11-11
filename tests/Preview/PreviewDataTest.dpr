@@ -137,6 +137,9 @@ begin
     Error := Load(Path, TFile.ReadAllText(Path, TEncoding.UTF8));
     // Templates are applied by layout: a control that fails there (TitleBar did) fails here
     FindElement<TWinUIBorder>('PreviewHost').UpdateLayout;
+    if Path.EndsWith('Quill\QuillWindow.xaml') then
+      Check(HasText(TWinUIObject.IntfOf(FindElement<TWinUIBorder>('PreviewHost').Child, IDependencyObject) as
+        IDependencyObject, 'New note'), 'Quill''s x:Uid texts show in the default language in the preview');
     if Path.EndsWith('Tempo\MainWindow.xaml') then
       Check(HasText(TWinUIObject.IntfOf(FindElement<TWinUIBorder>('PreviewHost').Child, IDependencyObject) as
         IDependencyObject, 'Radio'), 'Tempo''s TitleBar shows its title and subtitle in the preview');

@@ -29,6 +29,7 @@ Every project's pre-build event runs it on the project folder, `scripts\Build.ps
 - A `<Frame>` field is a `TWinUIPageFrame` (unit `RADWinUI.Pages`).
 - `<Window TitleBar="Name">` must name an element of the window: the generated constructor calls `UseTitleBar` with its field.
 - Design-time values (`d:` and `mc:` attributes and elements) never reach the app.
+- With a `Strings` folder beside the XAML, it warns about an `x:Uid` that has no key in `Strings\en-US\Resources.resw` (RW2001) and about a `Uid.Property` key that no `x:Uid` of the folder uses (RW2002). Warnings do not stop the build, plain keys (no dot) are for `TWinUIResources.GetString` and never warned about.
 - Errors (missing handler, wrong signature, an `x:Name` that hides a window member, an unknown binding path or converter) stop the build with the file, the line and the reason.
 
 The generated unit names its source XAML and the tool version, keeps XAML order and marks each field and wired event with its XAML line. Bump `CodeGenVersion` in `RADWinUI.CodeGen.pas` when the generated code changes shape.

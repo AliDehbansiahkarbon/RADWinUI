@@ -24,6 +24,10 @@ Packages `Microsoft.WindowsAppSDK.Foundation`, `.WinUI`, `.InteractiveExperience
 
 `Microsoft.Web.WebView2`, (c) Microsoft Corporation, BSD-style license (`LICENSE.txt` in the package): redistribution in source and binary form is allowed when the copyright notice, the conditions and the disclaimer are kept. WinMDGen reads its metadata. A self-contained app folder includes `Microsoft.Web.WebView2.Core.dll` (`runtimes\win-x64\native_uap`, the file the WebView2 package places next to an app, registered by WinUI's manifest fragment) with the license as `Microsoft.Web.WebView2.LICENSE.txt`, no WebView2 file is in the repository or a release.
 
+## Microsoft Windows SDK build tools 10.0.26100.4948
+
+`Microsoft.Windows.SDK.BuildTools` 10.0.26100.4948, (c) Microsoft Corporation, Microsoft Software License Terms for the Windows SDK (the package's license URL, https://aka.ms/WinSDKLicenseURL). `scripts\Get-WindowsAppSDK.ps1` downloads it from nuget.org into `third_party`, it is not in the repository or a release. RADWinUI uses only `makepri.exe` from it, at build time: `scripts\Make-Pri.ps1` runs it to build an app's `resources.pri` from the app's own `.resw` files (merged with WinUI's own `.pri` for a self-contained app). No file of the package ships with an app. An installed Windows SDK serves instead when the package is missing.
+
 ## Tools used at build time
 
 - **RAD Studio 13** (Embarcadero license) compiles everything, including RADWinUI's own tools (`bin\XamlCodeGen.exe`), apps contain the Delphi RTL under Embarcadero's redistribution terms.

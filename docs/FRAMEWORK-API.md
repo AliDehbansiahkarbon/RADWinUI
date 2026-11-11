@@ -541,6 +541,31 @@ end;
 - `TWinUIApp.Queue(Proc)` runs `Proc` on the UI thread from any thread, `TWinUIApp.Terminate` ends the app.
 - The [Quill](samples-Quill.md) sample uses the dialogs, the pickers, notifications and activation together. [AppServicesDemo](samples-AppServicesDemo.md) has one button for each of them.
 
+## Languages (RADWinUI.Resources)
+
+An app's texts live in `Strings\<language>\Resources.resw` in the project folder, the WinUI way: `Strings\en-US\Resources.resw`, `Strings\de-DE\Resources.resw` and so on. File > New > Other > Delphi Files > RADWinUI Resource File adds one, a new language starts as a copy of en-US to translate. The post-build step builds `resources.pri` next to the exe from all of them, the app needs no MSIX package.
+
+```xml
+<TextBlock x:Uid="Greeting"/>            <!-- Greeting.Text -->
+<Button x:Uid="SaveButton"/>             <!-- SaveButton.Content, SaveButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name -->
+```
+
+```pascal
+uses RADWinUI.Resources;
+
+Status.Text := Format(TWinUIResources.GetString('SavedFormat'), [FileName]);  // a plain key
+Caption := TWinUIResources.GetString('Greeting/Text');                        // the key of an x:Uid
+Hint := TWinUIResources.GetString('Missing', 'Default text');                 // a key that may be missing
+```
+
+- XAML applies an `x:Uid` by itself: the key `Uid.Property` sets `Property`, also attached ones such as `Uid.[using:Microsoft.UI.Xaml.Controls]ToolTipService.ToolTip`.
+- `GetString` reads a key in the current language, else in the default one (en-US), else returns its second argument. Code reads `Uid.Property` keys as `Uid/Property`.
+- `TWinUIApp.Language := 'de-DE'` before `Run` picks the language, from a setting for example. By default it is the language of Windows, `''` goes back to it. Set while the app runs, `GetString` follows at once and XAML loaded from then on, so new windows, pages and a window whose XAML loads again. The [Quill](samples-Quill.md) sample offers to start again.
+- Right-to-left languages (Arabic, Persian, Hebrew, Urdu): `TWinUIApp.RightToLeft` is True, and every window lays out its content from the right, title bar included, and so do the dialogs of `RADWinUI.Dialogs`. Windows keeps the caption buttons on the right: a title bar of your own leaves room for them (`AppWindow.TitleBar.RightInset`).
+- The texts of `RADWinUI.Dialogs` (OK, Cancel, Yes, No, Warning...) are resourcestrings, which Delphi's translation tools handle, and an app's resources can hold them too: `RADWinUI_OK`, `RADWinUI_Cancel`, `RADWinUI_Yes`, `RADWinUI_No`, `RADWinUI_Abort`, `RADWinUI_Retry`, `RADWinUI_Ignore`, `RADWinUI_All`, `RADWinUI_NoToAll`, `RADWinUI_YesToAll`, `RADWinUI_Help`, `RADWinUI_Close`, `RADWinUI_Warning`, `RADWinUI_Error`, `RADWinUI_Information`, `RADWinUI_Confirm`.
+- The designer and the live preview show the en-US texts of `x:Uid` elements. XamlCodeGen warns about an `x:Uid` with no key in `Strings\en-US\Resources.resw` (RW2001) and about a `Uid.Property` key no `x:Uid` uses (RW2002).
+- `resources.pri` is built by `scripts\Make-Pri.ps1` with makepri.exe from the Windows SDK BuildTools package that `scripts\Get-WindowsAppSDK.ps1` downloads, or from an installed Windows SDK. Without either the build warns (RW1004) and the app shows the texts written in its XAML.
+
 ## Animations (RADWinUI.Motion)
 
 `TWinUIMotion` animates any element through the Composition visual behind it. The animations run on the compositor thread, stay smooth while the UI thread works, and need no timer:

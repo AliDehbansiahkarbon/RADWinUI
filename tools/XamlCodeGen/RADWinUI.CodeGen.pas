@@ -148,6 +148,12 @@ function PublishedMethods(const APasText, AClassName: string): TDictionary<strin
 function GenerateFile(const AXamlPath: string; AIndex: TTypeIndex): string;
 /// <summary>The XamlCodeGen command line (also --ide-request), returns the exit code.</summary>
 function RunCodeGen(const AArgs: TArray<string>; const AExeFolder: string): Integer;
+/// <summary>
+///   Warnings for the x:Uid of the .xaml files in AFolder against its
+///   Strings\en-US\Resources.resw: RW2001 for an x:Uid without a key there, RW2002
+///   for a Uid.Property key no x:Uid uses. Nothing when the folder has no Strings.
+/// </summary>
+function CheckUids(const AFolder: string): TArray<string>;
 
 implementation
 
@@ -1672,6 +1678,71 @@ begin
   TFile.WriteAllBytes(Result, Bytes);
 end;
 
+
+function CheckUids(const AFolder: string): TArray<string>;
+const
+  DefaultResw = 'Strings\en-US\Resources.resw';
+var
+  Resw, Xaml, Text, XamlText, Key, Uid: string;
+  Found: Boolean;
+  Keys, Uids: TDictionary<string, Integer>; // key or x:Uid -> line
+  M: TMatch;
+  Dot: Integer;
+
+  function LineAt(const AText: string; AIndex: Integer): Integer;
+  var
+    I: Integer;
+  begin
+    Result := 1;
+    for I := 1 to AIndex - 1 do
+      if AText[I] = #10 then
+        Inc(Result);
+  end;
+
+begin
+  Result := [];
+  Resw := TPath.Combine(AFolder, DefaultResw);
+  if not TDirectory.Exists(TPath.Combine(AFolder, 'Strings')) then
+    Exit;
+  Keys := TDictionary<string, Integer>.Create;
+  Uids := TDictionary<string, Integer>.Create;
+  try
+    if FileExists(Resw) then
+    begin
+      Text := TFile.ReadAllText(Resw, TEncoding.UTF8);
+      for M in TRegEx.Matches(Text, '<data\s+name="([^"]+)"') do
+        Keys.AddOrSetValue(M.Groups[1].Value, LineAt(Text, M.Index));
+    end;
+    for Xaml in TDirectory.GetFiles(AFolder, '*.xaml') do
+    begin
+      XamlText := TFile.ReadAllText(Xaml, TEncoding.UTF8);
+      for M in TRegEx.Matches(XamlText, '\bx:Uid\s*=\s*"([^"]+)"') do
+      begin
+        Uid := M.Groups[1].Value;
+        Uids.AddOrSetValue(Uid, 0);
+        Found := False;
+        for Key in Keys.Keys do
+          Found := Found or Key.StartsWith(Uid + '.');
+        if not Found then
+          Result := Result + [Format('%s(%d): warning RW2001: x:Uid "%s" has no %s.<Property> key in %s',
+            [Xaml, LineAt(XamlText, M.Index), Uid, Uid, DefaultResw])];
+      end;
+    end;
+    // Uid.Property keys belong to an x:Uid, plain keys are for TWinUIResources.GetString
+    for Key in Keys.Keys do
+    begin
+      Dot := Pos('.', Key);
+      if (Dot > 1) and not Uids.ContainsKey(Copy(Key, 1, Dot - 1)) then
+        Result := Result + [Format('%s(%d): warning RW2002: "%s" belongs to no x:Uid of the XAML files in this folder',
+          [Resw, Keys[Key], Key])];
+    end;
+  finally
+    Uids.Free;
+    Keys.Free;
+  end;
+  TArray.Sort<string>(Result);
+end;
+
 function RunCodeGen(const AArgs: TArray<string>; const AExeFolder: string): Integer;
 var
   IndexPath, Request, Arg, Path, Text: string;
@@ -1680,6 +1751,8 @@ var
   Index: TTypeIndex;
   Json, Response: TJSONObject;
   Generator: TCodeGenerator;
+  Folders: TArray<string>;
+  Warning: string;
 begin
   IndexPath := '';
   Request := '';
@@ -1787,6 +1860,14 @@ begin
       finally
         Index.Free;
       end;
+      // Warnings only: the app builds, the text stays what the XAML says
+      Folders := [];
+      for Path in Paths do
+        if IndexText(ExtractFileDir(TPath.GetFullPath(Path)), Folders) < 0 then
+          Folders := Folders + [ExtractFileDir(TPath.GetFullPath(Path))];
+      for Text in Folders do
+        for Warning in CheckUids(Text) do
+          Writeln(Warning);
     except
       on E: Exception do
       begin

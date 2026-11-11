@@ -243,9 +243,10 @@ end;
 
 const
   FileWizardIds: array[TWizardFileKind] of string = ('RADWinUI.Wizard.Window', 'RADWinUI.Wizard.Page',
-    'RADWinUI.Wizard.UserControl');
-  FileWizardNames: array[TWizardFileKind] of string = ('RADWinUI Window', 'RADWinUI Page', 'RADWinUI User Control');
-  FileWizardDefaults: array[TWizardFileKind] of string = ('SecondWindow', 'DetailsPage', 'InfoCard');
+    'RADWinUI.Wizard.UserControl', 'RADWinUI.Wizard.Resource');
+  FileWizardNames: array[TWizardFileKind] of string = ('RADWinUI Window', 'RADWinUI Page', 'RADWinUI User Control',
+    'RADWinUI Resource File');
+  FileWizardDefaults: array[TWizardFileKind] of string = ('SecondWindow', 'DetailsPage', 'InfoCard', 'en-US');
 
 constructor TRADWinUIFileWizard.Create(AKind: TWizardFileKind);
 begin
@@ -278,7 +279,9 @@ const
   Comments: array[TWizardFileKind] of string = (
     'Another window for a RADWinUI application: <Name>.xaml with its code in <Name>.pas',
     'A page that a frame shows and navigates to: <Name>.xaml with its code in <Name>.pas',
-    'A user control to use in other XAML of the project: <Name>.xaml with its code in <Name>.pas');
+    'A user control to use in other XAML of the project: <Name>.xaml with its code in <Name>.pas',
+    'The texts of the application in one language: Strings\<language>\Resources.resw, for x:Uid and ' +
+    'TWinUIResources');
 begin
   Result := Comments[FKind];
 end;
@@ -315,7 +318,10 @@ const
     'A page for the active project: a .xaml file with a <Page> root and its code in a .pas unit. ' +
     'A frame shows it with Navigate.',
     'A user control for the active project: a .xaml file with a <UserControl> root and its code in a .pas unit. ' +
-    'Other XAML of the project uses it as <local:Name/>.');
+    'Other XAML of the project uses it as <local:Name/>.',
+    'The texts of the active project in one language (en-US, de-DE, fa-IR): Strings\<language>\Resources.resw. ' +
+    'XAML shows them through x:Uid, code reads them with TWinUIResources.GetString. A new language starts as a ' +
+    'copy of en-US to translate.');
 var
   Project: IOTAProject;
   Target: TWizardProject;
@@ -337,6 +343,8 @@ begin
     Exit;
   end;
   UnitName := FileWizardDefaults[FKind];
+  if (FKind = fkResource) and FileExists(ResourceFilePath(Target.Directory, UnitName)) then
+    UnitName := 'de-DE';
   if not AskNewUnit('New ' + GetName, Texts[FKind], UnitName,
     function(const AName, ALocation: string): string
     begin
@@ -344,6 +352,13 @@ begin
     end) then
     Exit;
   WriteNewFile(Target.Directory, UnitName, FKind);
+  if FKind = fkResource then
+  begin
+    // The post-build step builds resources.pri from every Strings\<language> folder
+    Project.AddFile(ResourceFilePath(Target.Directory, UnitName), False);
+    (BorlandIDEServices as IOTAActionServices).OpenFile(ResourceFilePath(Target.Directory, UnitName));
+    Exit;
+  end;
   if not RunHidden(XamlCodeGenCommand(Target)) then
     ShowWizardMessage(GetName, 'XamlCodeGen did not run', 'bin\XamlCodeGen.exe is missing or failed (Build All of ' +
       RADWinUIGroup + ' makes it). The next build will try again to generate ' + UnitName + '.Xaml.pas.', True);
@@ -398,6 +413,7 @@ begin
   RegisterPackageWizard(TRADWinUIFileWizard.Create(fkWindow));
   RegisterPackageWizard(TRADWinUIFileWizard.Create(fkPage));
   RegisterPackageWizard(TRADWinUIFileWizard.Create(fkUserControl));
+  RegisterPackageWizard(TRADWinUIFileWizard.Create(fkResource));
   AddPreviewCommand;
   try
     AddSplashBranding;

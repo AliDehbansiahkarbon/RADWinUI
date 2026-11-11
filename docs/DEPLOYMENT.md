@@ -23,7 +23,7 @@ Either way, nothing else is needed: no .NET, no Delphi packages (the RTL is link
    - `<App>.exe` from `Win64\Release`;
    - `Microsoft.WindowsAppRuntime.Bootstrap.dll`. Projects made with File > New > RADWinUI Application copy it next to the exe on every build. Otherwise take it from the RADWinUI folder: `third_party\WindowsAppSDK\2.6.5\Microsoft.WindowsAppSDK.Foundation\runtimes\win-x64\native\`.
 
-   Add the images, data files or other assets your own code loads, in the same relative places as during development.
+   Add the images, data files or other assets your own code loads, in the same relative places as during development. An app with texts in several languages (`Strings\<language>\Resources.resw`) also needs `resources.pri`, which the build writes next to the exe.
 3. **Add the license terms.** The bootstrap DLL is Microsoft's distributable code: ship Microsoft's license with it (`license.txt` in the same `Microsoft.WindowsAppSDK.Foundation` folder, for example as `Microsoft.WindowsAppSDK.LICENSE.txt`) and see [Licenses](#licenses).
 4. **Sign the exe** with your code-signing certificate:
 
@@ -48,7 +48,7 @@ A self-contained app, which carries the runtime itself, needs about 210 runtime 
 ```
 
 1. Builds the project in Release.
-2. Writes `build\deploy\Counter`: `Counter.exe`, `Microsoft.WindowsAppRuntime.Bootstrap.dll`, `README.txt` (requirements for the end user), `THIRD-PARTY-NOTICES.txt` and the full `Microsoft.WindowsAppSDK.LICENSE.txt` terms.
+2. Writes `build\deploy\Counter`: `Counter.exe`, `Microsoft.WindowsAppRuntime.Bootstrap.dll`, `README.txt` (requirements for the end user), `THIRD-PARTY-NOTICES.txt` and the full `Microsoft.WindowsAppSDK.LICENSE.txt` terms, and the app's `resources.pri` when it has texts in several languages. A self-contained app gets one `resources.pri` with its own texts and WinUI's.
 3. Copies that folder to a temporary folder outside the repository, clears `RADWINUI_ROOT`, starts the exe there (on a secondary monitor, without taking the focus), waits for its WinUI window, closes it and checks exit code 0.
 
 Pass `-Out <folder>` for another destination (new, empty, or an earlier output of the script: it refuses a folder holding other files), `-Verify $false` to skip the run.

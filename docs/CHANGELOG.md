@@ -4,6 +4,12 @@ All notable changes to RADWinUI.
 
 ## Unreleased
 
+- Apps in several languages, without MSIX: `Strings\<language>\Resources.resw` in the project folder, `x:Uid` in XAML, and `resources.pri` built next to the exe by the post-build step (`scripts\Make-Pri.ps1`, with makepri.exe from the Windows SDK build tools that `Get-WindowsAppSDK.ps1` now downloads). New unit `RADWinUI.Resources`: `TWinUIResources.GetString` with fallback to the default language and to a default value. `TWinUIApp.Language` picks the language before `Run` or while the app runs, `TWinUIApp.RightToLeft` lays windows and dialogs out from the right for Arabic, Persian, Hebrew and Urdu.
+- The texts of `RADWinUI.Dialogs` (OK, Cancel, Yes, No...) can come from the app's resources (`RADWinUI_OK` and so on), the resourcestrings stay the default.
+- File > New > Other > Delphi Files > RADWinUI Resource File adds the texts of one language. The designer and the preview show the en-US texts of `x:Uid` elements. XamlCodeGen warns about an `x:Uid` without a key (RW2001) and a key no `x:Uid` uses (RW2002).
+- `Deploy-App.ps1` ships `resources.pri`, merged with WinUI's own for a self-contained app. New projects pass their folder to the post-build step.
+- Quill in English, German and Persian, with a language picker in its Settings.
+
 - Several windows like VCL forms: `Close` with `OnCloseQuery` and `OnClose` (Free, Hide or None) also for the close button, `Hide`, `OwnerWindow` for tool windows, and `ShowModal` with a callback that gets `ModalResult`, without a message loop. `TWinUIApp.MainWindow`, `Windows`, `WindowCount` and `ShutdownMode` (MainWindow or LastWindow).
 - Window position and state: `Left`, `Top`, `MaxWidth`, `MaxHeight`, `WindowState` (Normal, Minimized, Maximized, FullScreen, CompactOverlay), `Resizable`, `Minimizable`, `Maximizable`, `CenterOnOwner`, `SetIcon`, and `Placement` with `SavePlacement` and `RestorePlacement`.
 - Title bar: `<Window TitleBar="Name">` and `UseTitleBar` make an element the title bar, WinUI's TitleBar control included. `SetTitleBarPassthrough` keeps elements of a title bar of your own clickable.

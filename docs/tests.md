@@ -13,5 +13,6 @@ Console and UI Automation test programs, Win64. The scripts in `scripts\` build 
 | `AppServices` | dialogs, filters, `TWinUIApp.Queue` and single instance (`AppServicesTest`) | `Test-Samples.ps1` |
 | `Pages` | navigation in a frame inside a NavigationView: parameters, back and forward, KeepAlive, a page that refuses to be left, and a user control used twice | `Test-Samples.ps1` |
 | `Windows` | several windows, Close with OnCloseQuery and OnClose, owned and modal windows, ShutdownMode, placement through text and the registry, title bar passthrough | `Test-Samples.ps1` |
+| `Localization` | `x:Uid` texts from `resources.pri`, `TWinUIResources.GetString` with its fallbacks, `TWinUIApp.Language` before and after `Run`, right to left, the dialog texts | `Test-Samples.ps1` |
 
 `Test-Samples.ps1` drives the samples through UI Automation and checks they close without crashing. UI tests open their windows on a secondary monitor (`RADWINUI_TEST_MONITOR=secondary`) and never take the focus. With `RADWINUI_TEST_MONITOR=offscreen` a window opens outside every monitor instead, for a PC with one screen. Tests that click by screen position need a real monitor.
