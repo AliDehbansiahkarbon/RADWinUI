@@ -8,6 +8,9 @@ interface
 uses
   System.Generics.Collections;
 
+const
+  DefaultShortcut = 'Ctrl+Alt+N';
+
 type
   TWidgetKind = (Apps, Agents, Remote, Calendar, Links, Notes, Music, Focus);
   // The screen edge the notch hangs from
@@ -42,8 +45,10 @@ type
     // How see-through the notch is with Transparency on, in percent
     TransparencyLevel: Integer;
     Pinned: Boolean;
-    // Ctrl+Alt+N gives the notch the keyboard
+    // The shortcut gives the notch the keyboard
     Keyboard: Boolean;
+    // The shortcut that opens the notch, as TWinUIHotKey.Keys reads it
+    Shortcut: string;
     // The notch opens when an agent finishes or needs an answer
     AgentAlerts: Boolean;
     // Ask the Claude account for the exact limits, with the login of Claude Code
@@ -134,6 +139,7 @@ begin
   Widgets := TObjectList<TNotchWidget>.Create;
   TransparencyLevel := 28;
   AgentAlerts := True;
+  Shortcut := DefaultShortcut;
   ResetPosition;
 end;
 
@@ -198,6 +204,7 @@ begin
       TransparencyLevel := EnsureRange(Root.GetValue<Integer>('transparencyLevel', 28), 0, 100);
       Pinned := Root.GetValue<Boolean>('pinned', False);
       Keyboard := Root.GetValue<Boolean>('keyboard', False);
+      Shortcut := Root.GetValue<string>('shortcut', DefaultShortcut);
       AgentAlerts := Root.GetValue<Boolean>('agentAlerts', True);
       ExactClaudeLimits := Root.GetValue<Boolean>('exactClaudeLimits', False);
       for E := Low(TNotchEdge) to High(TNotchEdge) do
@@ -254,6 +261,7 @@ begin
     Root.AddPair('transparencyLevel', TJSONNumber.Create(TransparencyLevel));
     Root.AddPair('pinned', TJSONBool.Create(Pinned));
     Root.AddPair('keyboard', TJSONBool.Create(Keyboard));
+    Root.AddPair('shortcut', Shortcut);
     Root.AddPair('agentAlerts', TJSONBool.Create(AgentAlerts));
     Root.AddPair('exactClaudeLimits', TJSONBool.Create(ExactClaudeLimits));
     Root.AddPair('edge', EdgeNames[Edge]);

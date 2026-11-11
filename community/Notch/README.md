@@ -51,7 +51,9 @@ The notch hangs from the top, the bottom, the left or the right edge of a screen
 
 ## Keyboard
 
-With "Keyboard" on in the settings, Ctrl+Alt+N opens the notch and gives it the keyboard, with the first tile focused. Tab and Shift+Tab go from tile to tile and through the buttons inside them, the arrow keys move in their direction, Enter and Space press the focused button. The panel stays open while it has the keyboard. Esc closes it and gives the keyboard back to the program you were in, and so does pressing Ctrl+Alt+N again. With the setting off, the notch never takes the keyboard from the program you use, except for the text boxes of the edit page and the note.
+With "Keyboard" on in the settings, the shortcut (Ctrl+Alt+N unless you changed it) opens the notch and gives it the keyboard, with the first tile focused. Tab and Shift+Tab go from tile to tile and through the buttons inside them, the arrow keys move in their direction, Enter and Space press the focused button. The panel stays open while it has the keyboard. Esc closes it and gives the keyboard back to the program you were in, and so does pressing the shortcut again. With the setting off, the notch never takes the keyboard from the program you use, except for the text boxes of the edit page and the note.
+
+Ctrl+Alt+N is the default shortcut. To change it, open Settings, click the shortcut button and press new keys: Ctrl, Alt, Shift or Win with a letter, a digit, F1 to F24 or Space. Esc cancels. Below the button, Notch lists suggested shortcuts that no other program holds, and Reset goes back to Ctrl+Alt+N. Windows gives a shortcut to one program only. If another program already holds the keys you press, Notch says so and keeps the shortcut that works. When the saved shortcut is taken at start, the header says so in place of the shortcut.
 
 ## AI agents
 

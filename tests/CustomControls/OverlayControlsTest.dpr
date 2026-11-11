@@ -13,6 +13,7 @@ program OverlayControlsTest;
 
 uses
   Winapi.Windows,
+  Winapi.Messages,
   System.SysUtils,
   System.IOUtils,
   RADWinUI.Abi,
@@ -43,6 +44,7 @@ type
     FPixels: TBytes;
     FPixelWidth: Integer;
     FRendered: Boolean;
+    FHotKeyPresses: Integer;
     procedure Check(AOk: Boolean; const AWhat: string);
     procedure BuildProbe;
     procedure RenderProbe;
@@ -51,6 +53,7 @@ type
     procedure NotchExpanded(Sender: TObject; const E: TWinValue);
     procedure NotchCollapsed(Sender: TObject; const E: TWinValue);
     procedure TileClick(Sender: TObject; const E: TWinValue);
+    procedure HotKeyPressed(Sender: TObject; const E: TWinValue);
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -67,7 +70,7 @@ const
     '<StackPanel Padding="16"><TextBlock Text="panel" Foreground="White" />' +
     '<rw:GlowTile x:Name="Tile" Width="120" Height="80" Background="#202020" CornerRadius="16" ' +
     'GlowBrush="Orange" Pulse="True" /></StackPanel>' +
-    '</rw:NotchPanel></Grid>';
+    '</rw:NotchPanel><rw:HotKey x:Name="XamlKey" Keys="Ctrl+Alt+Shift+F21"/></Grid>';
 
 /// src\Framework\RADWinUI.Controls.json of the checkout above the exe, '' when not found.
 function ControlsJsonPath: string;
@@ -94,7 +97,22 @@ const
     '<rw:NotchPanel><rw:GlowTile Width="80" Height="40" Background="#202020" GlowBrush="Orange" Pulse="True"/>' +
     '</rw:NotchPanel><rw:HotKey Keys="Ctrl+Alt+Shift+F22"/><rw:MediaSession/></StackPanel>';
 
+function PostHotKey(AWindow: HWND; AParam: LPARAM): BOOL; stdcall;
+var
+  Name: array[0..63] of Char;
+begin
+  GetClassName(AWindow, Name, Length(Name));
+  if string(Name) = 'TPUtilWindow' then
+    PostMessage(AWindow, WM_HOTKEY, 1, 0);
+  Result := True;
+end;
+
 { TTestWindow }
+
+procedure TTestWindow.HotKeyPressed(Sender: TObject; const E: TWinValue);
+begin
+  Inc(FHotKeyPresses);
+end;
 
 class procedure TTestWindow.Failed(Sender: TObject; E: Exception);
 begin
@@ -319,6 +337,12 @@ begin
           Check(FMedia.Connected, 'MediaSession connects to the Windows media sessions');
           Check(FMedia.HasSession = (FMedia.Session <> nil), Format('MediaSession HasSession follows the session (%s, "%s")',
             [BoolToStr(FMedia.HasSession, True), FMedia.SourceApp]));
+          // Keys set by XAML, as in Notch: the shortcut must be registered without code
+          HotKey := FindElement<TWinUIHotKey>('XamlKey');
+          Check((HotKey <> nil) and HotKey.Registered, 'a HotKey from XAML registers its Keys');
+          // What Windows sends when the shortcut is pressed, to the windows of this thread
+          HotKey.OnPressed := HotKeyPressed;
+          EnumThreadWindows(GetCurrentThreadId, @PostHotKey, 0);
           HotKey := TWinUIHotKey.Create(Self);
           HotKey.Keys := 'Ctrl+Alt+Shift+F23';
           Check(HotKey.Registered, 'HotKey registers a free shortcut');
@@ -327,8 +351,11 @@ begin
           BuildProbe;
         end;
       5:
-        // The glow fades in first
-        RenderProbe;
+        begin
+          Check(FHotKeyPresses = 1, Format('WM_HOTKEY raises Pressed once (%d)', [FHotKeyPresses]));
+          // The glow fades in first
+          RenderProbe;
+        end;
       7:
         begin
           Check(FRendered, 'the see-through tile renders');

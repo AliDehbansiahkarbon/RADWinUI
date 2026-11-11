@@ -168,7 +168,7 @@ Smaller samples (Counter, Greeter, ListDemo, Contacts, Profile) show one topic e
 
 Apps that people build with RADWinUI and share as source, with screenshots, are in [community](community/README.md). Build them with `community\Community.groupproj`.
 
-- **[Notch](community/Notch/README.md)** by Ali Dehbansiahkarbon: a desk companion that hangs from an edge of the screen as a black pill with the time and opens into a panel of widgets you pick: your apps, live Claude Code and Codex activity, remote desktops, the calendar, links, notes, the music playing on the PC and a focus timer. Ctrl+Alt+N opens it.
+- **[Notch](community/Notch/README.md)** by Ali Dehbansiahkarbon: a desk companion that hangs from an edge of the screen as a black pill with the time and opens into a panel of widgets you pick: your apps, live Claude Code and Codex activity, remote desktops, the calendar, links, notes, the music playing on the PC and a focus timer. Ctrl+Alt+N, or a shortcut you pick, opens it.
 
 Made something with RADWinUI? The [rules for sharing an app](community/README.md#share-your-app) explain how to send it in.
 

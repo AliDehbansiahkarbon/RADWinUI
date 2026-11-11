@@ -71,6 +71,9 @@ type
     FListFragment, FAddFragment, FItemsFragment, FResultsFragment, FSettingsFragment: TFragment;
     FResults: TArray<TShellApp>;
     FHookStatus: string;
+    // The shortcut button waits for keys
+    FRecording: Boolean;
+    FShortcutStatus: string;
     // Elements of the music and focus widgets, nil while they are not in the panel
     FMusicTile, FFocusTile: TWinUIGlowTile;
     FMusicTitle, FMusicArtist, FFocusClock: TWinUITextBlock;
@@ -132,6 +135,11 @@ type
     procedure OpenWithKeyboard;
     procedure CloseKeyboard(ARestoreFocus: Boolean);
     procedure NotchKeyDown(Sender: TObject; E: TWinUIKeyRoutedEventArgs);
+    // The shortcut
+    function SetShortcut(const AKeys: string): Boolean;
+    procedure UpdateShortcutHint;
+    procedure RecordShortcut(Sender: TObject; E: TWinUIKeyRoutedEventArgs);
+    procedure EndRecording(const AStatus: string);
     // AI agents
     function WatchedAgents: TAgentKinds;
     procedure RefreshAgents(ANow: TDateTime);
@@ -199,6 +207,9 @@ uses
   Notch.Tests;
 
 const
+  // Offered in the settings when no program holds them
+  SuggestedShortcuts: array[0..5] of string = ('Ctrl+Alt+N', 'Ctrl+Alt+Shift+N', 'Ctrl+Alt+M', 'Win+Alt+N',
+    'Ctrl+Alt+Space', 'Ctrl+Shift+F12');
   FocusSeconds = 25 * 60;
   TickMs = 250;
   PanelHeight = 276;
@@ -323,6 +334,10 @@ begin
   end;
   NormalizeAgentWidgets;
   FUsage.Exact := FSettings.ExactClaudeLimits;
+  if FSettings.Shortcut <> ToggleKey.Keys then
+    ToggleKey.Keys := FSettings.Shortcut;
+  UpdateShortcutHint;
+  Notch.PreviewKeyDown.Add(RecordShortcut);
 
   TransparencySlider.Value := FSettings.TransparencyLevel;
   TransparencySwitch.IsOn := FSettings.Transparency;
@@ -1262,6 +1277,133 @@ begin
     CloseKeyboard(True);
 end;
 
+{ Shortcut }
+
+/// The name TWinUIHotKey.ParseKeys reads for a virtual key, '' for a modifier or a key it does not know.
+function KeyName(AKey: Cardinal): string;
+begin
+  case AKey of
+    Ord('A')..Ord('Z'), Ord('0')..Ord('9'):
+      Result := Char(AKey);
+    VK_F1..VK_F24:
+      Result := 'F' + IntToStr(AKey - VK_F1 + 1);
+    VK_SPACE: Result := 'Space';
+    VK_RETURN: Result := 'Enter';
+    VK_TAB: Result := 'Tab';
+    VK_UP: Result := 'Up';
+    VK_DOWN: Result := 'Down';
+    VK_LEFT: Result := 'Left';
+    VK_RIGHT: Result := 'Right';
+    VK_HOME: Result := 'Home';
+    VK_END: Result := 'End';
+    VK_PRIOR: Result := 'PgUp';
+    VK_NEXT: Result := 'PgDn';
+    VK_INSERT: Result := 'Ins';
+    VK_DELETE: Result := 'Del';
+    VK_BACK: Result := 'Backspace';
+  else
+    Result := '';
+  end;
+end;
+
+/// "Ctrl+Alt+N" for AKey with these modifiers, '' without a modifier or for a key ParseKeys does not know.
+function ShortcutText(AKey: Cardinal; ACtrl, AAlt, AShift, AWin: Boolean): string;
+begin
+  Result := KeyName(AKey);
+  if (Result = '') or not (ACtrl or AAlt or AShift or AWin) then
+    Exit('');
+  if AWin then Result := 'Win+' + Result;
+  if AShift then Result := 'Shift+' + Result;
+  if AAlt then Result := 'Alt+' + Result;
+  if ACtrl then Result := 'Ctrl+' + Result;
+end;
+
+/// True when no program holds AKeys now, so Windows would give it to Notch.
+function ShortcutFree(const AKeys: string): Boolean;
+const
+  ProbeId = $BFFF;
+var
+  Modifiers, Key: Cardinal;
+begin
+  Result := TWinUIHotKey.ParseKeys(AKeys, Modifiers, Key) and RegisterHotKey(0, ProbeId, Modifiers or MOD_NOREPEAT, Key);
+  if Result then
+    UnregisterHotKey(0, ProbeId);
+end;
+
+/// Makes AKeys the shortcut. False when it is not a shortcut with a modifier or another program
+/// holds it: the shortcut that worked stays.
+function TMainWindow.SetShortcut(const AKeys: string): Boolean;
+var
+  Previous: string;
+  Modifiers, Key: Cardinal;
+begin
+  Previous := ToggleKey.Keys;
+  Result := TWinUIHotKey.ParseKeys(AKeys, Modifiers, Key) and (Modifiers <> 0);
+  if not Result then
+    FShortcutStatus := 'Not a shortcut: hold Ctrl, Alt, Shift or Win with a key'
+  else
+  begin
+    if AKeys = Previous then
+    begin
+      // The same keys: try to register them again
+      ToggleKey.IsActive := False;
+      ToggleKey.IsActive := True;
+    end
+    else
+      ToggleKey.Keys := AKeys;
+    Result := ToggleKey.Registered;
+    if Result then
+    begin
+      FSettings.Shortcut := AKeys;
+      Changed;
+      FShortcutStatus := '';
+    end
+    else
+    begin
+      FShortcutStatus := AKeys + ' is taken by another app';
+      if AKeys <> Previous then
+        ToggleKey.Keys := Previous;
+    end;
+  end;
+  UpdateShortcutHint;
+end;
+
+procedure TMainWindow.UpdateShortcutHint;
+begin
+  // Windows gives a shortcut to one program only: say so rather than ignore the key
+  if ToggleKey.Registered then
+    HotKeyHint.Text := ToggleKey.Keys
+  else
+    HotKeyHint.Text := ToggleKey.Keys + ' is taken, change it in Settings';
+end;
+
+procedure TMainWindow.RecordShortcut(Sender: TObject; E: TWinUIKeyRoutedEventArgs);
+var
+  Keys: string;
+begin
+  if not FRecording then
+    Exit;
+  E.Handled := True;
+  if E.Key = TWinUIVirtualKey.Escape then
+  begin
+    EndRecording('');
+    Exit;
+  end;
+  Keys := ShortcutText(Ord(E.Key), GetKeyState(VK_CONTROL) < 0, GetKeyState(VK_MENU) < 0,
+    GetKeyState(VK_SHIFT) < 0, (GetKeyState(VK_LWIN) < 0) or (GetKeyState(VK_RWIN) < 0));
+  if Keys = '' then
+    Exit; // a modifier alone, or a key without one: keep waiting
+  SetShortcut(Keys);
+  EndRecording(FShortcutStatus);
+end;
+
+procedure TMainWindow.EndRecording(const AStatus: string);
+begin
+  FRecording := False;
+  FShortcutStatus := AStatus;
+  Later(RebuildSettings);
+end;
+
 procedure TMainWindow.ToggleKeyPressed(Sender: TObject);
 begin
   if not FSettings.Keyboard then
@@ -1648,6 +1790,24 @@ begin
           SetExactClaudeLimits(not FSettings.ExactClaudeLimits);
         'I':
           Later(InstallHooks);
+        'H':
+          begin
+            // The next keys pressed become the shortcut
+            FRecording := True;
+            FShortcutStatus := '';
+            TakeKeyboard;
+            (FSettingsFragment.Find('ShortcutButton', TWinUIButton) as TWinUIButton).Content := 'Press the keys...';
+          end;
+        'J':
+          begin
+            SetShortcut(DefaultShortcut);
+            Later(RebuildSettings);
+          end;
+        'G':
+          begin
+            SetShortcut(SuggestedShortcuts[AIndex]);
+            Later(RebuildSettings);
+          end;
         'U':
           Later(RemoveHooks);
       end;
@@ -1804,7 +1964,8 @@ procedure TMainWindow.RebuildSettings;
 const
   EdgeTitles: array[TNotchEdge] of string = ('Top', 'Bottom', 'Left', 'Right');
 var
-  Xaml, Hooks: string;
+  Xaml, Hooks, Status, Shortcut, Free: string;
+  I: Integer;
   Edge: TNotchEdge;
   Level: TWinUISlider;
 begin
@@ -1815,13 +1976,39 @@ begin
       'that waits a few seconds.';
   if FHookStatus <> '' then
     Hooks := FHookStatus;
+  // The shortcut: the button records new keys, the free suggestions and the default one a click away
+  if FShortcutStatus <> '' then
+    Status := FShortcutStatus
+  else if ToggleKey.Registered then
+    Status := 'Works now'
+  else
+    Status := 'Taken by another app, pick another';
+  Shortcut := Format('<StackPanel Spacing="6"><TextBlock Text="Shortcut" FontSize="13" Foreground="%s"/>' +
+    '<StackPanel Orientation="Horizontal" Spacing="8">' +
+    '<Button x:Name="ShortcutButton" Content="%s" MinWidth="160" CornerRadius="8" ' +
+    'AutomationProperties.Name="Shortcut, click and press new keys"/>' +
+    '<Button x:Name="ResetShortcut" Content="Reset to %s" CornerRadius="8"/>' +
+    '<TextBlock x:Name="ShortcutStatus" Text="%s" FontSize="12" VerticalAlignment="Center" TextWrapping="Wrap" ' +
+    'MaxWidth="320"/></StackPanel>', [MutedColor, Esc(ToggleKey.Keys), DefaultShortcut, Esc(Status)]);
+  Free := '';
+  for I := 0 to High(SuggestedShortcuts) do
+    if (SuggestedShortcuts[I] <> ToggleKey.Keys) and ShortcutFree(SuggestedShortcuts[I]) then
+      Free := Free + Format('<Button x:Name="G%d" Content="%s" CornerRadius="8" FontSize="12"/>',
+        [I, SuggestedShortcuts[I]]);
+  if Free <> '' then
+    Shortcut := Shortcut + Format('<StackPanel Orientation="Horizontal" Spacing="4"><TextBlock Text="Free now:" ' +
+      'FontSize="12" Foreground="%s" VerticalAlignment="Center" Margin="0,0,4,0"/>%s</StackPanel>', [MutedColor, Free]);
+  Shortcut := Shortcut + Format('<TextBlock Text="Click the shortcut, then press Ctrl, Alt, Shift or Win with a ' +
+    'letter, a digit, F1 to F24 or Space. Esc cancels." FontSize="12" Foreground="%s" TextWrapping="Wrap"/>' +
+    '</StackPanel>', [MutedColor]);
   Xaml := Format('<StackPanel Spacing="16"%s>' +
     '<StackPanel Spacing="2"><TextBlock Text="Transparency" FontSize="13" Foreground="%1:s"/>' +
     '<Slider x:Name="Level" Minimum="10" Maximum="90" StepFrequency="1" Value="%2:d" Width="280" ' +
     'HorizontalAlignment="Left" AutomationProperties.Name="Transparency level"/>' +
     '<TextBlock Text="How see-through the notch is when Transparency is on." FontSize="12" Foreground="%1:s"/>' +
     '</StackPanel>' +
-    '<CheckBox x:Name="KeyboardBox" IsChecked="%3:s" Content="Keyboard: Ctrl+Alt+N gives the notch the keyboard, ' +
+    '%7:s' +
+    '<CheckBox x:Name="KeyboardBox" IsChecked="%3:s" Content="Keyboard: the shortcut gives the notch the keyboard, ' +
     'Tab and the arrow keys move between tiles, Esc gives the keyboard back"/>' +
     '<CheckBox x:Name="AlertsBox" IsChecked="%4:s" Content="Open the notch when an AI agent finishes or needs me"/>' +
     '<CheckBox x:Name="StartBox" IsChecked="%5:s" Content="Start with Windows"/>' +
@@ -1831,7 +2018,7 @@ begin
     '<StackPanel Orientation="Horizontal" Spacing="4">', [XamlNs, MutedColor, FSettings.TransparencyLevel,
     BoolToStr(FSettings.Keyboard, True), BoolToStr(FSettings.AgentAlerts, True),
     // What the registry says, also when the entry was removed somewhere else
-    BoolToStr(AutoStartEnabled(FRunKey), True), BoolToStr(FSettings.ExactClaudeLimits, True)]);
+    BoolToStr(AutoStartEnabled(FRunKey), True), BoolToStr(FSettings.ExactClaudeLimits, True), Shortcut]);
   for Edge := Low(TNotchEdge) to High(TNotchEdge) do
     Xaml := Xaml + Format('<RadioButton x:Name="E%d" GroupName="Edge" Content="%s" IsChecked="%s" MinWidth="80"/>',
       [Ord(Edge), EdgeTitles[Edge], BoolToStr(Edge = FSettings.Edge, True)]);
@@ -1853,6 +2040,11 @@ begin
       SetTransparencyLevel(Round(Level.Value));
     end);
   FSettingsFragment.OnClick('KeyboardBox', Action('B', 0));
+  FSettingsFragment.OnClick('ShortcutButton', Action('H', 0));
+  FSettingsFragment.OnClick('ResetShortcut', Action('J', 0));
+  for I := 0 to High(SuggestedShortcuts) do
+    if FSettingsFragment.Find('G' + I.ToString, TWinUIButton) <> nil then
+      FSettingsFragment.OnClick('G' + I.ToString, Action('G', I));
   FSettingsFragment.OnClick('AlertsBox', Action('N', 0));
   FSettingsFragment.OnClick('StartBox', Action('W', 0));
   FSettingsFragment.OnClick('ExactBox', Action('C', 0));
@@ -2234,6 +2426,26 @@ begin
           CloseKeyboard(True);
           Check(not FKeyboardOpen and not ShowActivated and Notch.ExpandOnHover, 'Esc did not end the keyboard visit');
           FSettings.Keyboard := False;
+          // The shortcut: a free one is taken and saved, one another program holds is refused
+          Check(ShortcutText(Ord('M'), True, True, False, False) = 'Ctrl+Alt+M', 'Recorded keys do not read Ctrl+Alt+M');
+          Check(ShortcutText(Ord('M'), False, False, False, False) = '', 'A key without a modifier was recorded');
+          Check(SetShortcut('Ctrl+Alt+Shift+F20') and ToggleKey.Registered and
+            (HotKeyHint.Text = 'Ctrl+Alt+Shift+F20') and (FSettings.Shortcut = 'Ctrl+Alt+Shift+F20'),
+            'A free shortcut was not taken: ' + HotKeyHint.Text);
+          RegisterHotKey(0, $BFFE, MOD_CONTROL or MOD_ALT or MOD_SHIFT, VK_F19); // the other program
+          Check(not SetShortcut('Ctrl+Alt+Shift+F19') and (ToggleKey.Keys = 'Ctrl+Alt+Shift+F20') and
+            ToggleKey.Registered and FShortcutStatus.Contains('taken') and
+            (FSettings.Shortcut = 'Ctrl+Alt+Shift+F20'), 'A taken shortcut was not refused: ' + FShortcutStatus);
+          UnregisterHotKey(0, $BFFE);
+          Check(not SetShortcut('N') and (ToggleKey.Keys = 'Ctrl+Alt+Shift+F20'), 'A key without a modifier was taken');
+          FSettings.Save;
+          Reloaded := TNotchSettings.Create(FSettings.FileName);
+          try
+            Check(Reloaded.Load and (Reloaded.Shortcut = 'Ctrl+Alt+Shift+F20'), 'The shortcut did not survive a reload');
+          finally
+            Reloaded.Free;
+          end;
+          SetShortcut(DefaultShortcut);
           // The left edge: the panel stands upright, one tile wide
           SetEdge(TNotchEdge.Left);
           Check((Notch.AttachedEdge = TWinUINotchEdge.Left) and (PillSide.Visibility = TWinUIVisibility.Visible) and
@@ -2397,7 +2609,7 @@ begin
             'widgets, %d installed apps, hotkey, panel size, agents tile (working, needs you, --agent-event), ' +
             'edit mode (add, move, remove widgets and items, agents to watch, app picker, icons, settings page), ' +
             'tile drag, settings save and reload, broken settings, focus timer, media session, pin, transparency ' +
-            'level, keyboard, upright panel on the left (sizes, drag, edit page), right, bottom and back to top, ' +
+            'level, keyboard, shortcut (free, taken, saved), upright panel on the left (sizes, drag, edit page), right, bottom and back to top, ' +
             'start with Windows, taskbar clock, usage limits, details window light and dark, see-through tiles',
             [Length(InstalledApps)]));
           Close;
