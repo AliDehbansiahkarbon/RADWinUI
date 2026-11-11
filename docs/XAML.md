@@ -56,6 +56,10 @@ The element gets a field of the user control's class, its unit is added to the u
 
 `x:Uid="Name"` takes the element's texts from `Strings\<language>\Resources.resw`: `Name.Text`, `Name.Content`, `Name.PlaceholderText`, `Name.Header` and any other property, `Name.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name` for an attached one. The app shows the language of `TWinUIApp.Language`, the designer and the preview the en-US texts. See [Languages](FRAMEWORK-API.md#languages-radwinuiresources).
 
+## Names for screen readers
+
+A control that shows text needs nothing more. An icon-only button needs `AutomationProperties.Name` (a ToolTip or an `x:Uid` with a name works too), a list or a tab bar is clearer with one. XamlCodeGen warns about a button that has none (RW2003). See [Accessibility](FRAMEWORK-API.md#accessibility).
+
 ## Default window appearance
 
 Give a normal window's root panel a theme resource background:

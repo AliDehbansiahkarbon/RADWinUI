@@ -101,6 +101,10 @@ type
   ///   publish one property per AddProperty (index = order) over the typed
   ///   accessors below, and one OnName event per AddEvent.
   /// </summary>
+  /// <summary>What a custom control offers UI Automation (screen readers), see AutomationPatterns.</summary>
+  TWinUIAutomationPattern = (Invoke, Toggle, ExpandCollapse, Selection);
+  TWinUIAutomationPatterns = set of TWinUIAutomationPattern;
+
   TWinUICustomControl = class(TWinUIContentControl)
   strict private
     FHost: TObject;
@@ -141,6 +145,32 @@ type
     procedure UseTemplate(const AXaml: string);
     /// <summary>A named element of the template (x:Name), nil before the template is applied.</summary>
     function TemplatePart(const AName: string): IDependencyObject;
+    { Accessibility: what screen readers and UI Automation see. A control with a role
+      other than Custom, or with patterns, gets an automation peer of its own. }
+    /// <summary>The role: Button, Tab, Group... Custom (the default) gives the control no peer of its own.</summary>
+    function AutomationRole: AutomationControlType; virtual;
+    function AutomationPatterns: TWinUIAutomationPatterns; virtual;
+    /// <summary>The name when AutomationProperties.Name is not set, such as the control's text.</summary>
+    function AutomationName: string; virtual;
+    /// <summary>Invoke: what a click does.</summary>
+    procedure AutomationInvoke; virtual;
+    /// <summary>Toggle: the state and the toggle.</summary>
+    function AutomationToggleState: ToggleState; virtual;
+    procedure AutomationToggle; virtual;
+    /// <summary>ExpandCollapse: whether the control is expanded, and expanding or collapsing it.</summary>
+    function AutomationExpanded: Boolean; virtual;
+    procedure AutomationExpand(AExpand: Boolean); virtual;
+    /// <summary>Selection: the items (tabs), their names, where they are and the selected one.</summary>
+    function AutomationItemCount: Integer; virtual;
+    function AutomationItemName(AIndex: Integer): string; virtual;
+    /// <summary>The item's horizontal place in the control, in DIPs. False: the whole control.</summary>
+    function AutomationItemSpan(AIndex: Integer; out ALeft, AWidth: Double): Boolean; virtual;
+    function AutomationSelectedIndex: Integer; virtual;
+    procedure AutomationSelect(AIndex: Integer); virtual;
+    /// <summary>Tells screen readers the state of APattern changed: call it after a toggle, an expand or a selection.</summary>
+    procedure AutomationChanged(APattern: TWinUIAutomationPattern);
+    /// <summary>Tells screen readers the name changed.</summary>
+    procedure AutomationNameChanged;
   public
     /// <summary>Creates the control from Pascal. XAML creates it through its registered type.</summary>
     constructor Create(AOwner: TWinUIObject);
@@ -200,12 +230,21 @@ type
     class function TypeIndexJson: string; static;
   end;
 
+/// <summary>
+///   True while Windows shows a contrast theme (Settings > Accessibility >
+///   Contrast themes): RADWinUI's own controls then paint with its colours.
+/// </summary>
+function HighContrastOn: Boolean;
+/// <summary>A colour of the contrast theme: COLOR_WINDOW, COLOR_WINDOWTEXT, COLOR_HIGHLIGHT, COLOR_BTNFACE...</summary>
+function SystemColor(AIndex: Integer): Color;
+
 implementation
 
 {$WARN SYMBOL_PLATFORM OFF} // RegisterExpectedMemoryLeak, RADWinUI is Windows only
 
 uses
   Winapi.Windows,
+  Winapi.ActiveX,
   RADWinUI.Runtime.Application;
 
 type
@@ -214,9 +253,11 @@ type
   ///   answers IWinUIPascalObject itself and forwards every other interface
   ///   to the inner ContentControl.
   /// </summary>
-  TWinUIControlHost = class(TInterfacedObject, IInterface, IInspectable, IWinUIPascalObject)
+  TWinUIControlHost = class(TInterfacedObject, IInterface, IInspectable, IWinUIPascalObject, IUIElementOverrides)
   private
     FInner: IInspectable;
+    // The automation peer XAML asked for, not counted (the element keeps it)
+    FPeer: TObject;
     FType: TWinUICustomType;
     FControl: TWinUICustomControl;
     FOwnsControl: Boolean;
@@ -229,6 +270,16 @@ type
     function GetRuntimeClassName: HSTRING; safecall;
     function GetTrustLevel: TrustLevel; safecall;
     function PascalObject: TWinUIObject;
+    { IUIElementOverrides: the base's, apart from the automation peer }
+    function OnCreateAutomationPeer: IAutomationPeer; safecall;
+    procedure OnDisconnectVisualChildren; safecall;
+    function FindSubElementsForTouchTargeting(APoint: RADWinUI.Abi.Point;
+      ABoundingRect: RADWinUI.Abi.Rect): IIterable_IIterable_Point; safecall;
+    function GetChildrenInTabFocusOrder: IIterable_DependencyObject; safecall;
+    procedure OnKeyboardAcceleratorInvoked(AArgs: IKeyboardAcceleratorInvokedEventArgs); safecall;
+    procedure OnProcessKeyboardAccelerators(AArgs: IProcessKeyboardAcceleratorEventArgs); safecall;
+    procedure OnBringIntoViewRequested(AE: IBringIntoViewRequestedEventArgs); safecall;
+    procedure PopulatePropertyInfoOverride(APropertyName: HSTRING; AAnimationPropertyInfo: IAnimationPropertyInfo); safecall;
   public
     constructor Create(AType: TWinUICustomType);
     destructor Destroy; override;
@@ -384,6 +435,26 @@ var
   ControlsProvider: IXamlMetadataProvider;
   Templates: TArray<IInspectable>;
   TemplateClasses: TArray<TClass>;
+
+function HighContrastOn: Boolean;
+var
+  Info: THighContrast;
+begin
+  Info.cbSize := SizeOf(Info);
+  Result := SystemParametersInfo(SPI_GETHIGHCONTRAST, SizeOf(Info), @Info, 0) and
+    (Info.dwFlags and HCF_HIGHCONTRASTON <> 0);
+end;
+
+function SystemColor(AIndex: Integer): Color;
+var
+  Value: COLORREF;
+begin
+  Value := GetSysColor(AIndex);
+  Result.A := $FF;
+  Result.R := GetRValue(Value);
+  Result.G := GetGValue(Value);
+  Result.B := GetBValue(Value);
+end;
 
 function SameObject(const A, B: IInterface): Boolean;
 var
@@ -693,6 +764,802 @@ begin
       end;
 end;
 
+{ Automation peers }
+
+type
+  /// <summary>
+  ///   Delphi's half of an automation peer composed over WinUI's
+  ///   FrameworkElementAutomationPeer (the aggregation the controls themselves
+  ///   use): every IAutomationPeerOverrides method goes to the base, unless a
+  ///   descendant overrides it.
+  /// </summary>
+  TComposedPeer = class(TInterfacedObject, IInspectable, IAutomationPeerOverrides)
+  protected
+    FInner: IInspectable;
+    function QueryInterface(const IID: TGUID; out Obj): HRESULT; stdcall;
+    procedure GetIids(out AIidCount: Cardinal; out AIids: PGUID); safecall;
+    function GetRuntimeClassName: HSTRING; safecall;
+    function GetTrustLevel: TrustLevel; safecall;
+    /// <summary>The base class's own implementation (the inner object's).</summary>
+    function Base: IAutomationPeerOverrides;
+    function Provider(const APeer: IAutomationPeer): IIRawElementProviderSimple;
+    { IAutomationPeerOverrides }
+    function GetPatternCore(APatternInterface: PatternInterface): IInspectable; virtual; safecall;
+    function GetAcceleratorKeyCore: HSTRING; safecall;
+    function GetAccessKeyCore: HSTRING; safecall;
+    function GetAutomationControlTypeCore: AutomationControlType; virtual; safecall;
+    function GetAutomationIdCore: HSTRING; virtual; safecall;
+    function GetBoundingRectangleCore: RADWinUI.Abi.Rect; virtual; safecall;
+    function GetChildrenCore: IVector_AutomationPeer; virtual; safecall;
+    function NavigateCore(ADirection: AutomationNavigationDirection): IInspectable; safecall;
+    function GetClassNameCore: HSTRING; virtual; safecall;
+    function GetClickablePointCore: RADWinUI.Abi.Point; safecall;
+    function GetHelpTextCore: HSTRING; safecall;
+    function GetItemStatusCore: HSTRING; safecall;
+    function GetItemTypeCore: HSTRING; safecall;
+    function GetLabeledByCore: IAutomationPeer; safecall;
+    function GetLocalizedControlTypeCore: HSTRING; safecall;
+    function GetNameCore: HSTRING; virtual; safecall;
+    function GetOrientationCore: AutomationOrientation; safecall;
+    function HasKeyboardFocusCore: Boolean; safecall;
+    function IsContentElementCore: Boolean; safecall;
+    function IsControlElementCore: Boolean; virtual; safecall;
+    function IsEnabledCore: Boolean; safecall;
+    function IsKeyboardFocusableCore: Boolean; virtual; safecall;
+    function IsOffscreenCore: Boolean; safecall;
+    function IsPasswordCore: Boolean; safecall;
+    function IsRequiredForFormCore: Boolean; safecall;
+    procedure SetFocusCore; safecall;
+    function GetPeerFromPointCore(APoint: RADWinUI.Abi.Point): IAutomationPeer; safecall;
+    function GetElementFromPointCore(APointInWindowCoordinates: RADWinUI.Abi.Point): IInspectable; safecall;
+    function GetFocusedElementCore: IInspectable; safecall;
+    function GetLiveSettingCore: AutomationLiveSetting; safecall;
+    procedure ShowContextMenuCore; safecall;
+    function GetControlledPeersCore: IVectorView_AutomationPeer; safecall;
+    function GetAnnotationsCore: IVector_AutomationPeerAnnotation; safecall;
+    function GetPositionInSetCore: Integer; virtual; safecall;
+    function GetSizeOfSetCore: Integer; virtual; safecall;
+    function GetLevelCore: Integer; safecall;
+    function GetLandmarkTypeCore: AutomationLandmarkType; safecall;
+    function GetLocalizedLandmarkTypeCore: HSTRING; safecall;
+    function IsPeripheralCore: Boolean; safecall;
+    function IsDataValidForFormCore: Boolean; safecall;
+    function GetFullDescriptionCore: HSTRING; safecall;
+    function GetDescribedByCore: IIterable_AutomationPeer; safecall;
+    function GetFlowsToCore: IIterable_AutomationPeer; safecall;
+    function GetFlowsFromCore: IIterable_AutomationPeer; safecall;
+    function GetCultureCore: Integer; safecall;
+    function GetHeadingLevelCore: AutomationHeadingLevel; safecall;
+    function IsDialogCore: Boolean; safecall;
+  public
+    constructor Create(const AOwner: IFrameworkElement);
+    function Peer: IAutomationPeer;
+  end;
+
+  TItemPeer = class;
+
+  /// <summary>The peer of a TWinUICustomControl: its role, name and patterns come from the control's hooks.</summary>
+  TControlPeer = class(TComposedPeer, IInvokeProvider, IToggleProvider, IExpandCollapseProvider, ISelectionProvider)
+  private
+    FHost: TWinUIControlHost; // not counted: checked with HostAlive
+    FItems: TArray<TItemPeer>;
+    FItemRefs: TArray<IInspectable>;
+    function Control: TWinUICustomControl;
+    procedure UpdateItems;
+  protected
+    function GetPatternCore(APatternInterface: PatternInterface): IInspectable; override;
+    function GetAutomationControlTypeCore: AutomationControlType; override;
+    function GetClassNameCore: HSTRING; override;
+    function GetNameCore: HSTRING; override;
+    function GetChildrenCore: IVector_AutomationPeer; override;
+    function IsControlElementCore: Boolean; override;
+    { IInvokeProvider }
+    procedure Invoke; safecall;
+    { IToggleProvider }
+    function get_ToggleState: ToggleState; safecall;
+    procedure Toggle; safecall;
+    { IExpandCollapseProvider }
+    function get_ExpandCollapseState: ExpandCollapseState; safecall;
+    procedure Collapse; safecall;
+    procedure Expand; safecall;
+    { ISelectionProvider }
+    function get_CanSelectMultiple: Boolean; safecall;
+    function get_IsSelectionRequired: Boolean; safecall;
+    procedure GetSelection(out AResultSize: Cardinal; out AResult: Pointer); safecall;
+  public
+    constructor Create(AHost: TWinUIControlHost; const AOwner: IFrameworkElement);
+    destructor Destroy; override;
+    procedure SelectionChanged;
+  end;
+
+  /// <summary>One item of a control with the Selection pattern, such as a tab of a tab bar.</summary>
+  TItemPeer = class(TComposedPeer, ISelectionItemProvider)
+  private
+    FParent: TControlPeer; // cleared when the parent goes
+    FIndex: Integer;
+  protected
+    function GetPatternCore(APatternInterface: PatternInterface): IInspectable; override;
+    function GetAutomationControlTypeCore: AutomationControlType; override;
+    function GetClassNameCore: HSTRING; override;
+    function GetNameCore: HSTRING; override;
+    function GetAutomationIdCore: HSTRING; override;
+    function GetChildrenCore: IVector_AutomationPeer; override;
+    function IsKeyboardFocusableCore: Boolean; override;
+    function GetPositionInSetCore: Integer; override;
+    function GetSizeOfSetCore: Integer; override;
+    function GetBoundingRectangleCore: RADWinUI.Abi.Rect; override;
+    { ISelectionItemProvider }
+    function get_IsSelected: Boolean; safecall;
+    function get_SelectionContainer: IIRawElementProviderSimple; safecall;
+    procedure AddToSelection; safecall;
+    procedure RemoveFromSelection; safecall;
+    procedure Select; safecall;
+  end;
+
+var
+  FrameworkElementPeerFactoryCache: IInspectable;
+
+function HostAlive(AHost: TWinUIControlHost): Boolean;
+var
+  Host: TWinUIControlHost;
+begin
+  for Host in Hosts do
+    if Host = AHost then
+      Exit(True);
+  Result := False;
+end;
+
+{ TComposedPeer }
+
+constructor TComposedPeer.Create(const AOwner: IFrameworkElement);
+var
+  Outer: IInspectable;
+  Delegating: IFrameworkElementAutomationPeer;
+begin
+  inherited Create;
+  // As TWinUIControlHost.Create: the count stays above zero while the inner object is made
+  Outer := Self as IInspectable;
+  Delegating := IFrameworkElementAutomationPeerFactory(GetFactory(
+    'Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer', IFrameworkElementAutomationPeerFactory,
+    FrameworkElementPeerFactoryCache)).CreateInstanceWithOwner(AOwner, Outer, FInner);
+  Delegating := nil;
+end;
+
+function TComposedPeer.QueryInterface(const IID: TGUID; out Obj): HRESULT;
+begin
+  if GetInterface(IID, Obj) then
+    Exit(S_OK);
+  if FInner <> nil then
+    Exit(FInner.QueryInterface(IID, Obj));
+  Pointer(Obj) := nil;
+  Result := E_NOINTERFACE;
+end;
+
+procedure TComposedPeer.GetIids(out AIidCount: Cardinal; out AIids: PGUID);
+begin
+  FInner.GetIids(AIidCount, AIids);
+end;
+
+function TComposedPeer.GetRuntimeClassName: HSTRING;
+begin
+  Result := NewHString('Microsoft.UI.Xaml.Automation.Peers.FrameworkElementAutomationPeer');
+end;
+
+function TComposedPeer.GetTrustLevel: TrustLevel;
+begin
+  Result := FInner.GetTrustLevel;
+end;
+
+function TComposedPeer.Base: IAutomationPeerOverrides;
+begin
+  // Asked each time: a kept reference would count on this outer object, a cycle
+  Result := FInner as IAutomationPeerOverrides;
+end;
+
+function TComposedPeer.Provider(const APeer: IAutomationPeer): IIRawElementProviderSimple;
+begin
+  Result := (FInner as IAutomationPeerProtected).ProviderFromPeer(APeer);
+end;
+
+function TComposedPeer.Peer: IAutomationPeer;
+begin
+  Result := (Self as IInspectable) as IAutomationPeer;
+end;
+
+function TComposedPeer.GetPatternCore(APatternInterface: PatternInterface): IInspectable;
+begin
+  Result := Base.GetPatternCore(APatternInterface);
+end;
+
+function TComposedPeer.GetAcceleratorKeyCore: HSTRING;
+begin
+  Result := Base.GetAcceleratorKeyCore;
+end;
+
+function TComposedPeer.GetAccessKeyCore: HSTRING;
+begin
+  Result := Base.GetAccessKeyCore;
+end;
+
+function TComposedPeer.GetAutomationControlTypeCore: AutomationControlType;
+begin
+  Result := Base.GetAutomationControlTypeCore;
+end;
+
+function TComposedPeer.GetAutomationIdCore: HSTRING;
+begin
+  Result := Base.GetAutomationIdCore;
+end;
+
+function TComposedPeer.GetBoundingRectangleCore: RADWinUI.Abi.Rect;
+begin
+  Result := Base.GetBoundingRectangleCore;
+end;
+
+function TComposedPeer.GetChildrenCore: IVector_AutomationPeer;
+begin
+  Result := Base.GetChildrenCore;
+end;
+
+function TComposedPeer.NavigateCore(ADirection: AutomationNavigationDirection): IInspectable;
+begin
+  Result := Base.NavigateCore(ADirection);
+end;
+
+function TComposedPeer.GetClassNameCore: HSTRING;
+begin
+  Result := Base.GetClassNameCore;
+end;
+
+function TComposedPeer.GetClickablePointCore: RADWinUI.Abi.Point;
+begin
+  Result := Base.GetClickablePointCore;
+end;
+
+function TComposedPeer.GetHelpTextCore: HSTRING;
+begin
+  Result := Base.GetHelpTextCore;
+end;
+
+function TComposedPeer.GetItemStatusCore: HSTRING;
+begin
+  Result := Base.GetItemStatusCore;
+end;
+
+function TComposedPeer.GetItemTypeCore: HSTRING;
+begin
+  Result := Base.GetItemTypeCore;
+end;
+
+function TComposedPeer.GetLabeledByCore: IAutomationPeer;
+begin
+  Result := Base.GetLabeledByCore;
+end;
+
+function TComposedPeer.GetLocalizedControlTypeCore: HSTRING;
+begin
+  Result := Base.GetLocalizedControlTypeCore;
+end;
+
+function TComposedPeer.GetNameCore: HSTRING;
+begin
+  Result := Base.GetNameCore;
+end;
+
+function TComposedPeer.GetOrientationCore: AutomationOrientation;
+begin
+  Result := Base.GetOrientationCore;
+end;
+
+function TComposedPeer.HasKeyboardFocusCore: Boolean;
+begin
+  Result := Base.HasKeyboardFocusCore;
+end;
+
+function TComposedPeer.IsContentElementCore: Boolean;
+begin
+  Result := Base.IsContentElementCore;
+end;
+
+function TComposedPeer.IsControlElementCore: Boolean;
+begin
+  Result := Base.IsControlElementCore;
+end;
+
+function TComposedPeer.IsEnabledCore: Boolean;
+begin
+  Result := Base.IsEnabledCore;
+end;
+
+function TComposedPeer.IsKeyboardFocusableCore: Boolean;
+begin
+  Result := Base.IsKeyboardFocusableCore;
+end;
+
+function TComposedPeer.IsOffscreenCore: Boolean;
+begin
+  Result := Base.IsOffscreenCore;
+end;
+
+function TComposedPeer.IsPasswordCore: Boolean;
+begin
+  Result := Base.IsPasswordCore;
+end;
+
+function TComposedPeer.IsRequiredForFormCore: Boolean;
+begin
+  Result := Base.IsRequiredForFormCore;
+end;
+
+procedure TComposedPeer.SetFocusCore;
+begin
+  Base.SetFocusCore;
+end;
+
+function TComposedPeer.GetPeerFromPointCore(APoint: RADWinUI.Abi.Point): IAutomationPeer;
+begin
+  Result := Base.GetPeerFromPointCore(APoint);
+end;
+
+function TComposedPeer.GetElementFromPointCore(APointInWindowCoordinates: RADWinUI.Abi.Point): IInspectable;
+begin
+  Result := Base.GetElementFromPointCore(APointInWindowCoordinates);
+end;
+
+function TComposedPeer.GetFocusedElementCore: IInspectable;
+begin
+  Result := Base.GetFocusedElementCore;
+end;
+
+function TComposedPeer.GetLiveSettingCore: AutomationLiveSetting;
+begin
+  Result := Base.GetLiveSettingCore;
+end;
+
+procedure TComposedPeer.ShowContextMenuCore;
+begin
+  Base.ShowContextMenuCore;
+end;
+
+function TComposedPeer.GetControlledPeersCore: IVectorView_AutomationPeer;
+begin
+  Result := Base.GetControlledPeersCore;
+end;
+
+function TComposedPeer.GetAnnotationsCore: IVector_AutomationPeerAnnotation;
+begin
+  Result := Base.GetAnnotationsCore;
+end;
+
+function TComposedPeer.GetPositionInSetCore: Integer;
+begin
+  Result := Base.GetPositionInSetCore;
+end;
+
+function TComposedPeer.GetSizeOfSetCore: Integer;
+begin
+  Result := Base.GetSizeOfSetCore;
+end;
+
+function TComposedPeer.GetLevelCore: Integer;
+begin
+  Result := Base.GetLevelCore;
+end;
+
+function TComposedPeer.GetLandmarkTypeCore: AutomationLandmarkType;
+begin
+  Result := Base.GetLandmarkTypeCore;
+end;
+
+function TComposedPeer.GetLocalizedLandmarkTypeCore: HSTRING;
+begin
+  Result := Base.GetLocalizedLandmarkTypeCore;
+end;
+
+function TComposedPeer.IsPeripheralCore: Boolean;
+begin
+  Result := Base.IsPeripheralCore;
+end;
+
+function TComposedPeer.IsDataValidForFormCore: Boolean;
+begin
+  Result := Base.IsDataValidForFormCore;
+end;
+
+function TComposedPeer.GetFullDescriptionCore: HSTRING;
+begin
+  Result := Base.GetFullDescriptionCore;
+end;
+
+function TComposedPeer.GetDescribedByCore: IIterable_AutomationPeer;
+begin
+  Result := Base.GetDescribedByCore;
+end;
+
+function TComposedPeer.GetFlowsToCore: IIterable_AutomationPeer;
+begin
+  Result := Base.GetFlowsToCore;
+end;
+
+function TComposedPeer.GetFlowsFromCore: IIterable_AutomationPeer;
+begin
+  Result := Base.GetFlowsFromCore;
+end;
+
+function TComposedPeer.GetCultureCore: Integer;
+begin
+  Result := Base.GetCultureCore;
+end;
+
+function TComposedPeer.GetHeadingLevelCore: AutomationHeadingLevel;
+begin
+  Result := Base.GetHeadingLevelCore;
+end;
+
+function TComposedPeer.IsDialogCore: Boolean;
+begin
+  Result := Base.IsDialogCore;
+end;
+
+
+{ TControlPeer }
+
+constructor TControlPeer.Create(AHost: TWinUIControlHost; const AOwner: IFrameworkElement);
+begin
+  inherited Create(AOwner);
+  FHost := AHost;
+end;
+
+destructor TControlPeer.Destroy;
+var
+  Item: TItemPeer;
+begin
+  for Item in FItems do
+    Item.FParent := nil;
+  FItemRefs := nil;
+  if HostAlive(FHost) and (FHost.FPeer = Self) then
+    FHost.FPeer := nil;
+  inherited;
+end;
+
+function TControlPeer.Control: TWinUICustomControl;
+begin
+  if HostAlive(FHost) then
+    Result := FHost.FControl
+  else
+    Result := nil;
+end;
+
+function TControlPeer.GetPatternCore(APatternInterface: PatternInterface): IInspectable;
+const
+  Patterns: array[TWinUIAutomationPattern] of PatternInterface = (PatternInterface.Invoke,
+    PatternInterface.Toggle, PatternInterface.ExpandCollapse, PatternInterface.Selection);
+var
+  Pattern: TWinUIAutomationPattern;
+begin
+  if Control <> nil then
+    for Pattern := Low(Pattern) to High(Pattern) do
+      if (Patterns[Pattern] = APatternInterface) and (Pattern in Control.AutomationPatterns) then
+        Exit(Self as IInspectable);
+  Result := inherited;
+end;
+
+function TControlPeer.GetAutomationControlTypeCore: AutomationControlType;
+begin
+  if Control <> nil then
+    Result := Control.AutomationRole
+  else
+    Result := inherited;
+end;
+
+function TControlPeer.GetClassNameCore: HSTRING;
+begin
+  if Control <> nil then
+    Result := NewHString(Control.CustomType.XamlName)
+  else
+    Result := inherited;
+end;
+
+function TControlPeer.GetNameCore: HSTRING;
+var
+  Name: string;
+begin
+  // AutomationProperties.Name wins, then what the control says
+  Name := TakeHString(inherited);
+  if (Name = '') and (Control <> nil) then
+    Name := Control.AutomationName;
+  Result := NewHString(Name);
+end;
+
+function TControlPeer.IsControlElementCore: Boolean;
+begin
+  Result := True;
+end;
+
+procedure TControlPeer.UpdateItems;
+var
+  I, Count: Integer;
+  Item: TItemPeer;
+begin
+  if Control = nil then
+    Count := 0
+  else
+    Count := Control.AutomationItemCount;
+  if Count = Length(FItems) then
+    Exit;
+  for Item in FItems do
+    Item.FParent := nil;
+  FItemRefs := nil;
+  SetLength(FItems, Count);
+  SetLength(FItemRefs, Count);
+  for I := 0 to Count - 1 do
+  begin
+    // Owned by the control's element: an item has no element of its own to point at
+    FItems[I] := TItemPeer.Create(TWinUIObject.IntfOf(Control, IFrameworkElement) as IFrameworkElement);
+    FItems[I].FParent := Self;
+    FItems[I].FIndex := I;
+    FItemRefs[I] := FItems[I] as IInspectable;
+  end;
+end;
+
+function TControlPeer.GetChildrenCore: IVector_AutomationPeer;
+var
+  Item: TItemPeer;
+begin
+  Result := inherited;
+  if (Control = nil) or not (TWinUIAutomationPattern.Selection in Control.AutomationPatterns) then
+    Exit;
+  // The items are the children: the drawn parts under them say nothing on their own
+  UpdateItems;
+  if Result <> nil then
+  begin
+    Result.Clear;
+    for Item in FItems do
+      Result.Append(Item.Peer);
+  end;
+end;
+
+procedure TControlPeer.SelectionChanged;
+var
+  Index: Integer;
+begin
+  if Control = nil then
+    Exit;
+  UpdateItems;
+  Index := Control.AutomationSelectedIndex;
+  if (Index >= 0) and (Index < Length(FItems)) then
+    FItems[Index].Peer.RaiseAutomationEvent(AutomationEvents.SelectionItemPatternOnElementSelected);
+end;
+
+procedure TControlPeer.Invoke;
+begin
+  if Control <> nil then
+    Control.AutomationInvoke;
+end;
+
+function TControlPeer.get_ToggleState: ToggleState;
+begin
+  if Control <> nil then
+    Result := Control.AutomationToggleState
+  else
+    Result := ToggleState.Off;
+end;
+
+procedure TControlPeer.Toggle;
+begin
+  if Control <> nil then
+    Control.AutomationToggle;
+end;
+
+function TControlPeer.get_ExpandCollapseState: ExpandCollapseState;
+begin
+  if (Control <> nil) and Control.AutomationExpanded then
+    Result := ExpandCollapseState.Expanded
+  else
+    Result := ExpandCollapseState.Collapsed;
+end;
+
+procedure TControlPeer.Collapse;
+begin
+  if Control <> nil then
+    Control.AutomationExpand(False);
+end;
+
+procedure TControlPeer.Expand;
+begin
+  if Control <> nil then
+    Control.AutomationExpand(True);
+end;
+
+function TControlPeer.get_CanSelectMultiple: Boolean;
+begin
+  Result := False;
+end;
+
+function TControlPeer.get_IsSelectionRequired: Boolean;
+begin
+  Result := True;
+end;
+
+procedure TControlPeer.GetSelection(out AResultSize: Cardinal; out AResult: Pointer);
+var
+  Index: Integer;
+  Item: IIRawElementProviderSimple;
+begin
+  AResultSize := 0;
+  AResult := nil;
+  if Control = nil then
+    Exit;
+  UpdateItems;
+  Index := Control.AutomationSelectedIndex;
+  if (Index < 0) or (Index >= Length(FItems)) then
+    Exit;
+  // A COM array the caller frees: one counted reference
+  Item := Provider(FItems[Index].Peer);
+  AResult := CoTaskMemAlloc(SizeOf(Pointer));
+  PPointer(AResult)^ := Pointer(Item);
+  Pointer(Item) := nil;
+  AResultSize := 1;
+end;
+
+{ TItemPeer }
+
+function TItemPeer.GetPatternCore(APatternInterface: PatternInterface): IInspectable;
+begin
+  if APatternInterface = PatternInterface.SelectionItem then
+    Result := Self as IInspectable
+  else
+    Result := nil;
+end;
+
+function TItemPeer.GetAutomationControlTypeCore: AutomationControlType;
+begin
+  Result := AutomationControlType.TabItem;
+end;
+
+function TItemPeer.GetClassNameCore: HSTRING;
+begin
+  Result := NewHString('TabItem');
+end;
+
+function TItemPeer.GetNameCore: HSTRING;
+begin
+  if (FParent <> nil) and (FParent.Control <> nil) then
+    Result := NewHString(FParent.Control.AutomationItemName(FIndex))
+  else
+    Result := NewHString('');
+end;
+
+function TItemPeer.GetAutomationIdCore: HSTRING;
+var
+  Id: string;
+begin
+  // The control's id and the item's index: Tabs.0, Tabs.1...
+  Id := TakeHString(inherited);
+  if Id <> '' then
+    Id := Id + '.' + IntToStr(FIndex);
+  Result := NewHString(Id);
+end;
+
+function TItemPeer.GetChildrenCore: IVector_AutomationPeer;
+begin
+  // The control's own children belong to the control, not to each item
+  Result := nil;
+end;
+
+function TItemPeer.IsKeyboardFocusableCore: Boolean;
+begin
+  // The control takes the focus, the arrow keys move the selection between items
+  Result := False;
+end;
+
+function TItemPeer.GetPositionInSetCore: Integer;
+begin
+  Result := FIndex + 1;
+end;
+
+function TItemPeer.GetSizeOfSetCore: Integer;
+begin
+  if FParent <> nil then
+    Result := Length(FParent.FItems)
+  else
+    Result := 0;
+end;
+
+function TItemPeer.GetBoundingRectangleCore: RADWinUI.Abi.Rect;
+var
+  Left, Width, Full: Double;
+begin
+  Result := inherited;
+  if (FParent = nil) or (FParent.Control = nil) or not FParent.Control.AutomationItemSpan(FIndex, Left, Width) then
+    Exit;
+  Full := (TWinUIObject.IntfOf(FParent.Control, IFrameworkElement) as IFrameworkElement).ActualWidth;
+  if Full <= 0 then
+    Exit;
+  Result.X := Result.X + Result.Width * Left / Full;
+  Result.Width := Result.Width * Width / Full;
+end;
+
+function TItemPeer.get_IsSelected: Boolean;
+begin
+  Result := (FParent <> nil) and (FParent.Control <> nil) and (FParent.Control.AutomationSelectedIndex = FIndex);
+end;
+
+function TItemPeer.get_SelectionContainer: IIRawElementProviderSimple;
+begin
+  if FParent <> nil then
+    Result := Provider(FParent.Peer)
+  else
+    Result := nil;
+end;
+
+procedure TItemPeer.AddToSelection;
+begin
+  Select;
+end;
+
+procedure TItemPeer.RemoveFromSelection;
+begin
+  // One tab is always selected
+end;
+
+procedure TItemPeer.Select;
+begin
+  if (FParent <> nil) and (FParent.Control <> nil) then
+    FParent.Control.AutomationSelect(FIndex);
+end;
+
+{ TWinUIControlHost: IUIElementOverrides }
+
+function TWinUIControlHost.OnCreateAutomationPeer: IAutomationPeer;
+var
+  Peer: TControlPeer;
+begin
+  if (FControl = nil) or ((FControl.AutomationRole = AutomationControlType.Custom) and
+    (FControl.AutomationPatterns = [])) then
+    Exit((FInner as IUIElementOverrides).OnCreateAutomationPeer);
+  Peer := TControlPeer.Create(Self, Self as IFrameworkElement);
+  FPeer := Peer;
+  Result := Peer.Peer;
+end;
+
+procedure TWinUIControlHost.OnDisconnectVisualChildren;
+begin
+  (FInner as IUIElementOverrides).OnDisconnectVisualChildren;
+end;
+
+function TWinUIControlHost.FindSubElementsForTouchTargeting(APoint: RADWinUI.Abi.Point;
+  ABoundingRect: RADWinUI.Abi.Rect): IIterable_IIterable_Point;
+begin
+  Result := (FInner as IUIElementOverrides).FindSubElementsForTouchTargeting(APoint, ABoundingRect);
+end;
+
+function TWinUIControlHost.GetChildrenInTabFocusOrder: IIterable_DependencyObject;
+begin
+  Result := (FInner as IUIElementOverrides).GetChildrenInTabFocusOrder;
+end;
+
+procedure TWinUIControlHost.OnKeyboardAcceleratorInvoked(AArgs: IKeyboardAcceleratorInvokedEventArgs);
+begin
+  (FInner as IUIElementOverrides).OnKeyboardAcceleratorInvoked(AArgs);
+end;
+
+procedure TWinUIControlHost.OnProcessKeyboardAccelerators(AArgs: IProcessKeyboardAcceleratorEventArgs);
+begin
+  (FInner as IUIElementOverrides).OnProcessKeyboardAccelerators(AArgs);
+end;
+
+procedure TWinUIControlHost.OnBringIntoViewRequested(AE: IBringIntoViewRequestedEventArgs);
+begin
+  (FInner as IUIElementOverrides).OnBringIntoViewRequested(AE);
+end;
+
+procedure TWinUIControlHost.PopulatePropertyInfoOverride(APropertyName: HSTRING;
+  AAnimationPropertyInfo: IAnimationPropertyInfo);
+begin
+  (FInner as IUIElementOverrides).PopulatePropertyInfoOverride(APropertyName, AAnimationPropertyInfo);
+end;
+
 function TWinUIControlHost.QueryInterface(const IID: TGUID; out Obj): HRESULT;
 begin
   if GetInterface(IID, Obj) then
@@ -876,6 +1743,107 @@ begin
     if SameText(CustomType.Events[I], AName) then
       Exit(GetEvent(I));
   raise EArgumentException.CreateFmt('%s has no event %s', [ClassName, AName]);
+end;
+
+{ TWinUICustomControl: accessibility }
+
+function TWinUICustomControl.AutomationRole: AutomationControlType;
+begin
+  Result := AutomationControlType.Custom;
+end;
+
+function TWinUICustomControl.AutomationPatterns: TWinUIAutomationPatterns;
+begin
+  Result := [];
+end;
+
+function TWinUICustomControl.AutomationName: string;
+begin
+  Result := '';
+end;
+
+procedure TWinUICustomControl.AutomationInvoke;
+begin
+end;
+
+function TWinUICustomControl.AutomationToggleState: ToggleState;
+begin
+  Result := ToggleState.Off;
+end;
+
+procedure TWinUICustomControl.AutomationToggle;
+begin
+end;
+
+function TWinUICustomControl.AutomationExpanded: Boolean;
+begin
+  Result := False;
+end;
+
+procedure TWinUICustomControl.AutomationExpand(AExpand: Boolean);
+begin
+end;
+
+function TWinUICustomControl.AutomationItemCount: Integer;
+begin
+  Result := 0;
+end;
+
+function TWinUICustomControl.AutomationItemName(AIndex: Integer): string;
+begin
+  Result := '';
+end;
+
+function TWinUICustomControl.AutomationItemSpan(AIndex: Integer; out ALeft, AWidth: Double): Boolean;
+begin
+  ALeft := 0;
+  AWidth := 0;
+  Result := False;
+end;
+
+function TWinUICustomControl.AutomationSelectedIndex: Integer;
+begin
+  Result := -1;
+end;
+
+procedure TWinUICustomControl.AutomationSelect(AIndex: Integer);
+begin
+end;
+
+procedure TWinUICustomControl.AutomationChanged(APattern: TWinUIAutomationPattern);
+var
+  Peer: IAutomationPeer;
+  Value: IInspectable;
+begin
+  // Only when a screen reader or another client asked for the peer
+  if (FHost = nil) or (TWinUIControlHost(FHost).FPeer = nil) then
+    Exit;
+  Peer := TControlPeer(TWinUIControlHost(FHost).FPeer).Peer;
+  case APattern of
+    TWinUIAutomationPattern.Toggle:
+      begin
+        Value := PropertyValue.CreateInt32(Ord(AutomationToggleState));
+        Peer.RaisePropertyChangedEvent(TogglePatternIdentifiers.ToggleStateProperty, Value, Value);
+      end;
+    TWinUIAutomationPattern.ExpandCollapse:
+      begin
+        Value := PropertyValue.CreateInt32(Ord(AutomationExpanded));
+        Peer.RaisePropertyChangedEvent(ExpandCollapsePatternIdentifiers.ExpandCollapseStateProperty, Value, Value);
+      end;
+    TWinUIAutomationPattern.Selection:
+      TControlPeer(TWinUIControlHost(FHost).FPeer).SelectionChanged;
+  end;
+end;
+
+procedure TWinUICustomControl.AutomationNameChanged;
+var
+  Value: IInspectable;
+begin
+  if (FHost = nil) or (TWinUIControlHost(FHost).FPeer = nil) then
+    Exit;
+  Value := PropertyValue.CreateString(WinStr(AutomationName));
+  TControlPeer(TWinUIControlHost(FHost).FPeer).Peer.RaisePropertyChangedEvent(AutomationElementIdentifiers.NameProperty,
+    Value, Value);
 end;
 
 function TWinUICustomControl.OwnerWindow: TObject;

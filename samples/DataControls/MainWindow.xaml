@@ -167,9 +167,9 @@
                   <TextBlock Style="{StaticResource CardTitle}" Text="Customers"/>
                   <TextBlock Style="{StaticResource CardClass}" Text="TWinUIDBGrid  &#x00B7;  TWinUIDBNavigator"/>
                 </StackPanel>
-                <rw:DBNavigator x:Name="CustomersNavigator" Grid.Column="1" DataSource="CustomersSource"/>
+                <rw:DBNavigator x:Name="CustomersNavigator" AutomationProperties.Name="Customers navigator" Grid.Column="1" DataSource="CustomersSource"/>
               </Grid>
-              <rw:DBGrid x:Name="CustomersGrid" Grid.Row="1" DataSource="CustomersSource" ReadOnly="True" Width="Auto" Height="452"
+              <rw:DBGrid x:Name="CustomersGrid" AutomationProperties.Name="Customers" Grid.Row="1" DataSource="CustomersSource" ReadOnly="True" Width="Auto" Height="452"
                          Columns="Name:180, City:120, Tier:80, Balance:110, Joined:150"/>
             </Grid>
           </Border>
@@ -236,11 +236,11 @@
                 <StackPanel Orientation="Horizontal" Spacing="10">
                   <TextBlock Style="{StaticResource CardTitle}" Text="Orders of this customer"/>
                 </StackPanel>
-                <rw:DBNavigator x:Name="OrdersNavigator" Grid.Column="1" DataSource="OrdersSource"
+                <rw:DBNavigator x:Name="OrdersNavigator" AutomationProperties.Name="Orders navigator" Grid.Column="1" DataSource="OrdersSource"
                                 VisibleButtons="First, Prior, Next, Last, Insert, Delete, Post, Cancel"/>
               </Grid>
               <!-- The cells can be edited here. Sorting is off, the detail keeps its master's order -->
-              <rw:DBGrid x:Name="OrdersGrid" Grid.Row="1" DataSource="OrdersSource" SortOnHeaderClick="False" Width="Auto" Height="180"
+              <rw:DBGrid x:Name="OrdersGrid" AutomationProperties.Name="Orders" Grid.Row="1" DataSource="OrdersSource" SortOnHeaderClick="False" Width="Auto" Height="180"
                          Columns="OrderNo:80, OrderDate:110, Product:200, Quantity:60, Total:100, Shipped:80"/>
             </Grid>
           </Border>
@@ -255,7 +255,7 @@
                 <TextBlock Style="{StaticResource CardTitle}" Text="All customers"/>
                 <TextBlock Style="{StaticResource CardClass}" Text="TWinUIDBCtrlGrid"/>
               </StackPanel>
-              <rw:DBCtrlGrid x:Name="CustomerTiles" Grid.Row="1" DataSource="CustomersSource" Tiles="True" ReadOnly="True"
+              <rw:DBCtrlGrid x:Name="CustomerTiles" AutomationProperties.Name="Customer tiles" Grid.Row="1" DataSource="CustomersSource" Tiles="True" ReadOnly="True"
                              ItemTemplate="{StaticResource CustomerTile}" Width="Auto" Height="158"/>
             </Grid>
           </Border>

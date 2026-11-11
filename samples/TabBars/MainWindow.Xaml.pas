@@ -346,8 +346,8 @@ const
     '                  <TextBlock Style="{StaticResource PageText}" Text="Edit your name and photo" />' + sLineBreak +
     '                </StackPanel>' + sLineBreak +
     '              </Grid>' + sLineBreak +
-    '              <ns2:SlidingPillTabBar x:Name="PillBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch" Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foregroun' +
-    'd="{ThemeResource BarIconBrush}" Items="Home:Home, Search:Search, Likes:Heart, Profile:Contact" Pages="PillHome, PillSearch, PillLikes, PillProfile" />' + sLineBreak +
+    '              <ns2:SlidingPillTabBar x:Name="PillBar" AutomationProperties.Name="Social sections" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch" Background="{ThemeResource BarBrush}" BorderBr' +
+    'ush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}" Items="Home:Home, Search:Search, Likes:Heart, Profile:Contact" Pages="PillHome, PillSearch, PillLikes, PillProfile" />' + sLineBreak +
     '            </Grid>' + sLineBreak +
     '          </Border>' + sLineBreak +
     '' + sLineBreak +
@@ -390,8 +390,9 @@ const
     '                  <TextBlock Style="{StaticResource PageText}" Text="Listening stats and settings" />' + sLineBreak +
     '                </StackPanel>' + sLineBreak +
     '              </Grid>' + sLineBreak +
-    '              <ns2:LiquidBulgeTabBar x:Name="BulgeBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch" Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foregrou' +
-    'nd="{ThemeResource BarIconBrush}" Items="Listen:Music, Explore:Globe, Library:Library, Me:Contact" Pages="BulgeListen, BulgeExplore, BulgeLibrary, BulgeMe" />' + sLineBreak +
+    '              <ns2:LiquidBulgeTabBar x:Name="BulgeBar" AutomationProperties.Name="Music sections" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch" Background="{ThemeResource BarBrush}" BorderBr' +
+    'ush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}" Items="Listen:Music, Explore:Globe, Library:Library, Me:Contact" Pages="BulgeListen, BulgeExplore, BulgeLibrary, BulgeMe" /' +
+    '>' + sLineBreak +
     '            </Grid>' + sLineBreak +
     '          </Border>' + sLineBreak +
     '' + sLineBreak +
@@ -434,8 +435,8 @@ const
     '                  <TextBlock Style="{StaticResource PageText}" Text="Orders, addresses and payment" />' + sLineBreak +
     '                </StackPanel>' + sLineBreak +
     '              </Grid>' + sLineBreak +
-    '              <ns2:FloatingNotchTabBar x:Name="NotchBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch" Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foregr' +
-    'ound="{ThemeResource BarIconBrush}" Items="Shop:Shop, Cart:Cart, Saved:Heart, Account:Contact" Pages="NotchShop, NotchCart, NotchSaved, NotchAccount" />' + sLineBreak +
+    '              <ns2:FloatingNotchTabBar x:Name="NotchBar" AutomationProperties.Name="Shop sections" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch" Background="{ThemeResource BarBrush}" BorderB' +
+    'rush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}" Items="Shop:Shop, Cart:Cart, Saved:Heart, Account:Contact" Pages="NotchShop, NotchCart, NotchSaved, NotchAccount" />' + sLineBreak +
     '            </Grid>' + sLineBreak +
     '          </Border>' + sLineBreak +
     '' + sLineBreak +
@@ -478,8 +479,8 @@ const
     '                  <TextBlock Style="{StaticResource PageText}" Text="1.2k followers" />' + sLineBreak +
     '                </StackPanel>' + sLineBreak +
     '              </Grid>' + sLineBreak +
-    '              <ns2:IconFillTabBar x:Name="FillBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch" Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreground="' +
-    '{ThemeResource BarIconBrush}" Items="Feed:Home, Chat:Chat, Likes:Heart, Profile:Contact" Pages="FillFeed, FillChat, FillLikes, FillProfile" />' + sLineBreak +
+    '              <ns2:IconFillTabBar x:Name="FillBar" AutomationProperties.Name="Chat sections" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch" Background="{ThemeResource BarBrush}" BorderBrush="' +
+    '{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}" Items="Feed:Home, Chat:Chat, Likes:Heart, Profile:Contact" Pages="FillFeed, FillChat, FillLikes, FillProfile" />' + sLineBreak +
     '            </Grid>' + sLineBreak +
     '          </Border>' + sLineBreak +
     '' + sLineBreak +
@@ -522,8 +523,9 @@ const
     '                  <TextBlock Style="{StaticResource PageText}" Text="Passport and preferences" />' + sLineBreak +
     '                </StackPanel>' + sLineBreak +
     '              </Grid>' + sLineBreak +
-    '              <ns2:ExpandingLabelTabBar x:Name="LabelBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch" Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreg' +
-    'round="{ThemeResource BarIconBrush}" Items="Explore:Globe, Trips:Airplane, Saved:Star, Profile:Contact" Pages="LabelExplore, LabelTrips, LabelSaved, LabelProfile" />' + sLineBreak +
+    '              <ns2:ExpandingLabelTabBar x:Name="LabelBar" AutomationProperties.Name="Travel sections" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch" Background="{ThemeResource BarBrush}" Bord' +
+    'erBrush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}" Items="Explore:Globe, Trips:Airplane, Saved:Star, Profile:Contact" Pages="LabelExplore, LabelTrips, LabelSaved, LabelPr' +
+    'ofile" />' + sLineBreak +
     '            </Grid>' + sLineBreak +
     '          </Border>' + sLineBreak +
     '' + sLineBreak +
@@ -566,8 +568,9 @@ const
     '                  <TextBlock Style="{StaticResource PageText}" Text="Backup is on" />' + sLineBreak +
     '                </StackPanel>' + sLineBreak +
     '              </Grid>' + sLineBreak +
-    '              <ns2:BubbleFloatTabBar x:Name="BubbleBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch" Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foregro' +
-    'und="{ThemeResource BarIconBrush}" BubbleCount="9" Items="Photos:Photo, Albums:Folder, Camera:Camera, Settings:Settings" Pages="BubblePhotos, BubbleAlbums, BubbleCamera, BubbleSettings" />' + sLineBreak +
+    '              <ns2:BubbleFloatTabBar x:Name="BubbleBar" AutomationProperties.Name="Photo sections" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch" Background="{ThemeResource BarBrush}" BorderB' +
+    'rush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}" BubbleCount="9" Items="Photos:Photo, Albums:Folder, Camera:Camera, Settings:Settings" Pages="BubblePhotos, BubbleAlbums, B' +
+    'ubbleCamera, BubbleSettings" />' + sLineBreak +
     '            </Grid>' + sLineBreak +
     '          </Border>' + sLineBreak +
     '        </Grid>' + sLineBreak +

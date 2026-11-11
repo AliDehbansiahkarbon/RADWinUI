@@ -17,7 +17,7 @@
       <SolidColorBrush x:Key="FaintBrush" Color="#2C2C2E"/>
     </Grid.Resources>
 
-    <rw:NotchPanel x:Name="Notch" CollapsedWidth="220" CollapsedHeight="36" ExpandedWidth="680" ExpandedHeight="276"
+    <rw:NotchPanel x:Name="Notch" AutomationProperties.Name="Notch" CollapsedWidth="220" CollapsedHeight="36" ExpandedWidth="680" ExpandedHeight="276"
                    ExpandedCornerRadius="30" Padding="22,14,22,18"
                    IsExpanded="False">
       <rw:NotchPanel.Pill>

@@ -74,7 +74,7 @@ const
     '          <RowDefinition Height="Auto" />' + sLineBreak +
     '        </Grid.RowDefinitions>' + sLineBreak +
     '        <TextBlock x:Name="CountText" Style="{StaticResource BodyStrongTextBlockStyle}" />' + sLineBreak +
-    '        <ListView x:Name="StationList" Grid.Row="1" IsItemClickEnabled="True" SelectionMode="None">' + sLineBreak +
+    '        <ListView x:Name="StationList" Grid.Row="1" AutomationProperties.Name="Stations" IsItemClickEnabled="True" SelectionMode="None">' + sLineBreak +
     '          ' + sLineBreak +
     '          <ListView.ItemTemplate>' + sLineBreak +
     '            <DataTemplate>' + sLineBreak +

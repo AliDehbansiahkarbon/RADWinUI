@@ -16,6 +16,7 @@ uses
   Winapi.Messages,
   System.SysUtils,
   System.IOUtils,
+  RADWinUI.Interop.Core,
   RADWinUI.Abi,
   RADWinUI.Framework,
   RADWinUI.Xaml,
@@ -272,6 +273,8 @@ var
   HotKey: TWinUIHotKey;
   Modifiers, Key: Cardinal;
   Center, Rim: TWinUIColor;
+  Peer: IAutomationPeer;
+  Expander: IExpandCollapseProvider;
 begin
   Inc(FStep);
   try
@@ -348,6 +351,25 @@ begin
           Check(HotKey.Registered, 'HotKey registers a free shortcut');
           HotKey.IsActive := False;
           Check(not HotKey.Registered, 'IsActive False releases it');
+          // What a screen reader sees: an expandable group, and a group around the tile's content
+          Peer := FrameworkElementAutomationPeer.CreatePeerForElement(TWinUIObject.IntfOf(Notch, IUIElement) as IUIElement);
+          Check((Peer <> nil) and (Peer.GetAutomationControlType = AutomationControlType.Group) and
+            (TakeHString(Peer.GetClassName) = 'NotchPanel'), 'UI Automation sees the NotchPanel as a Group');
+          Check(Supports(Peer.GetPattern(PatternInterface.ExpandCollapse), IExpandCollapseProvider, Expander) and
+            (Expander.ExpandCollapseState = ExpandCollapseState.Collapsed), 'NotchPanel offers ExpandCollapse, collapsed');
+          if Expander <> nil then
+          begin
+            Expander.Expand;
+            Check(Notch.IsExpanded and (Expander.ExpandCollapseState = ExpandCollapseState.Expanded),
+              'ExpandCollapse.Expand expands the NotchPanel');
+            Expander.Collapse;
+            Check(not Notch.IsExpanded, 'ExpandCollapse.Collapse collapses it');
+          end;
+          Peer := FrameworkElementAutomationPeer.CreatePeerForElement(TWinUIObject.IntfOf(Tile, IUIElement) as IUIElement);
+          Check((Peer <> nil) and (Peer.GetAutomationControlType = AutomationControlType.Group),
+            'UI Automation sees the GlowTile as a Group');
+          Expander := nil;
+          Peer := nil;
           BuildProbe;
         end;
       5:

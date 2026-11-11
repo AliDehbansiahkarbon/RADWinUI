@@ -146,6 +146,11 @@ type
     function FontSize: Double;
     /// <summary>A new solid brush as the Foreground of the FontIcon or TextBlock AName.</summary>
     function Tint(const AName: string; const AColor: TWinUIColor): ISolidColorBrush;
+    { Accessibility: a button that Invoke runs, named by its Text }
+    function AutomationRole: AutomationControlType; override;
+    function AutomationPatterns: TWinUIAutomationPatterns; override;
+    function AutomationName: string; override;
+    procedure AutomationInvoke; override;
   public
     destructor Destroy; override;
     /// <summary>Runs the button's effect, as if the user clicked, held or slid it.</summary>
@@ -294,6 +299,8 @@ type
     FTipSize: RADWinUI.Abi.Size;
     function GetIsDone: Boolean;
   protected
+    /// <summary>Its Text is what it copies: the name says what a click does.</summary>
+    function AutomationName: string; override;
     class procedure DefineType(AType: TWinUICustomType); override;
     class function DefaultText: string; override;
     class function DefaultWidth: Double; override;
@@ -909,6 +916,8 @@ begin
   Control.CornerRadius := Corners;
   Control.FontSize := 15;
   (Control as IUIElement).IsTabStop := True;
+  // The focus ring Windows draws around WinUI's own controls
+  (Control as IUIElement).UseSystemFocusVisuals := True;
   Element := IntfOf(Self, IFrameworkElement) as IFrameworkElement;
   Element.Width := DefaultWidth;
   Element.Height := DefaultHeight;
@@ -1274,33 +1283,73 @@ procedure TWinUIActionButton.PropertyChanged(AIndex: Integer);
 begin
   case AIndex of
     ButtonTextIndex, ButtonAccentFromIndex, ButtonAccentToIndex:
-      Rebuild;
+      begin
+        Rebuild;
+        if AIndex = ButtonTextIndex then
+          AutomationNameChanged;
+      end;
   end;
 end;
 
+// In a contrast theme every colour comes from the theme: its button colours, and its
+// highlight colour for the accent
+
 function TWinUIActionButton.AccentFromColor: TWinUIColor;
 begin
+  if HighContrastOn then
+    Exit(SystemColor(COLOR_HIGHLIGHT));
   Result := BrushColor(GetPropValue(ButtonAccentFromIndex), DefaultAccentFrom);
 end;
 
 function TWinUIActionButton.AccentToColor: TWinUIColor;
 begin
+  if HighContrastOn then
+    Exit(SystemColor(COLOR_HIGHLIGHT));
   Result := BrushColor(GetPropValue(ButtonAccentToIndex), DefaultAccentTo);
 end;
 
 function TWinUIActionButton.ForegroundColor: TWinUIColor;
 begin
+  if HighContrastOn then
+    Exit(SystemColor(COLOR_BTNTEXT));
   Result := BrushColor(ControlIntf.Foreground, Rgb($FF, $FF, $FF));
 end;
 
 function TWinUIActionButton.BackgroundColor: TWinUIColor;
 begin
+  if HighContrastOn then
+    Exit(SystemColor(COLOR_BTNFACE));
   Result := BrushColor(ControlIntf.Background, Rgb($1B, $18, $29));
 end;
 
 function TWinUIActionButton.BorderColor: TWinUIColor;
 begin
+  if HighContrastOn then
+    Exit(SystemColor(COLOR_BTNTEXT));
   Result := BrushColor(ControlIntf.BorderBrush, Rgb($2E, $2A, $40));
+end;
+
+{ Accessibility }
+
+function TWinUIActionButton.AutomationRole: AutomationControlType;
+begin
+  Result := AutomationControlType.Button;
+end;
+
+function TWinUIActionButton.AutomationPatterns: TWinUIAutomationPatterns;
+begin
+  Result := [TWinUIAutomationPattern.Invoke];
+end;
+
+function TWinUIActionButton.AutomationName: string;
+begin
+  Result := Text;
+end;
+
+procedure TWinUIActionButton.AutomationInvoke;
+begin
+  // What a click, a hold or a slide to the end does
+  Play;
 end;
 
 function TWinUIActionButton.ForSurface(const AOnDark, AOnLight: TWinUIColor): TWinUIColor;
@@ -2042,6 +2091,11 @@ begin
 end;
 
 { TWinUICopyButton }
+
+function TWinUICopyButton.AutomationName: string;
+begin
+  Result := 'Copy ' + Text;
+end;
 
 const
   CopyDoneTextIndex = OwnIndex;

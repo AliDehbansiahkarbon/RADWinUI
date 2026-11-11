@@ -566,6 +566,22 @@ Hint := TWinUIResources.GetString('Missing', 'Default text');                 //
 - The designer and the live preview show the en-US texts of `x:Uid` elements. XamlCodeGen warns about an `x:Uid` with no key in `Strings\en-US\Resources.resw` (RW2001) and about a `Uid.Property` key no `x:Uid` uses (RW2002).
 - `resources.pri` is built by `scripts\Make-Pri.ps1` with makepri.exe from the Windows SDK BuildTools package that `scripts\Get-WindowsAppSDK.ps1` downloads, or from an installed Windows SDK. Without either the build warns (RW1004) and the app shows the texts written in its XAML.
 
+## Accessibility
+
+WinUI's controls work with Narrator, NVDA, the keyboard and UI Automation as they are. RADWinUI's own controls do too: the tab bars, action buttons, Overlay and data controls have the roles, names and patterns of their WinUI counterparts, a focus ring, Enter and Space, arrow keys in the tab bars, and the colours of a Windows contrast theme.
+
+What an app adds is names, where a control shows no text:
+
+```xml
+<Button AutomationProperties.Name="Settings" ToolTipService.ToolTip="Settings"><FontIcon Glyph="&#xE713;"/></Button>
+<rw:SlidingPillTabBar AutomationProperties.Name="Sections" Items="Home:Home, Search:Search"/>
+```
+
+- XamlCodeGen warns (RW2003) about a button that shows no text and has no `AutomationProperties.Name`, ToolTip or `x:Uid`.
+- A name in code: `AutomationProperties.SetName(TWinUIObject.IntfOf(Button, IDependencyObject) as IDependencyObject, WinStr('Settings'))`.
+- With [several languages](#languages-radwinuiresources), the names come from the `.resw` files too: `SaveButton.[using:Microsoft.UI.Xaml.Automation]AutomationProperties.Name`.
+- Controls of your own: [screen readers and the keyboard](CUSTOM-CONTROLS.md#screen-readers-and-the-keyboard).
+
 ## Animations (RADWinUI.Motion)
 
 `TWinUIMotion` animates any element through the Composition visual behind it. The animations run on the compositor thread, stay smooth while the UI thread works, and need no timer:

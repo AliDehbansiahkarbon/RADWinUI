@@ -215,8 +215,29 @@ end.
 
 The type index XamlCodeGen and the designer read is `src\Framework\RADWinUI.Controls.json`. `scripts\Generate-Projection.ps1` writes it with `tools\ControlsIndex`, and `tests\CustomControls\OverlayControlsTest` fails when it is out of date. Controls of your own units written this way work in XAML that you load yourself (`LoadContent`). Window `.xaml` files, which XamlCodeGen checks, and the Tool Palette know RADWinUI's own controls only for now. A control of your own made from XAML is a [user control](FRAMEWORK-API.md#user-controls): XamlCodeGen knows those, in every window, page and user control of the project.
 
+### Screen readers and the keyboard
+
+WinUI's own controls tell UI Automation, and with it Narrator, NVDA and test tools, what they are. A control written in Delphi does the same through a few virtual methods of `TWinUICustomControl`:
+
+```pascal
+protected
+  function AutomationRole: AutomationControlType; override;       // Button, Tab, Group...
+  function AutomationPatterns: TWinUIAutomationPatterns; override; // [Invoke], [Toggle], [ExpandCollapse], [Selection]
+  function AutomationName: string; override;                       // when AutomationProperties.Name is not set
+  procedure AutomationInvoke; override;                            // what a click does
+```
+
+- A control whose role is not `Custom` (the default), or that has patterns, gets an automation peer of its own: RADWinUI composes a Delphi object over WinUI's `FrameworkElementAutomationPeer`, the way C# and C++/WinRT derive one.
+- `AutomationProperties.Name` in XAML always wins over `AutomationName`.
+- Toggle: `AutomationToggleState` and `AutomationToggle`. ExpandCollapse: `AutomationExpanded` and `AutomationExpand`. Selection: `AutomationItemCount`, `AutomationItemName`, `AutomationItemSpan` (where the item is, so a screen reader can show it), `AutomationSelectedIndex` and `AutomationSelect`. Each item becomes a `TabItem` with the SelectionItem pattern.
+- Call `AutomationChanged(Pattern)` after the state changes, and `AutomationNameChanged` after the name does, so a screen reader hears about it.
+- For the keyboard, make an interactive control a tab stop with `IsTabStop := True` and `UseSystemFocusVisuals := True` (the focus ring of WinUI's controls), and handle Enter and Space like a click.
+- In a contrast theme (Settings > Accessibility > Contrast themes), `HighContrastOn` is True: paint with `SystemColor(COLOR_WINDOW)`, `COLOR_WINDOWTEXT`, `COLOR_HIGHLIGHT` and the other colours of the theme instead of your own.
+
+RADWinUI's own controls do all of this: the tab bars are a `Tab` with one `TabItem` per tab, the action buttons are buttons named by their text, the NotchPanel is a group that expands and collapses, the GlowTile and the data grids are groups, the DBNavigator is a toolbar of named buttons.
+
 ## How it works
 
 Each element is a COM aggregate, the way C# and C++/WinRT build one: a Delphi outer object around WinUI's `ContentControl`. The application's `IXamlMetadataProvider` answers XAML's questions about `RADWinUI.Controls.*` types with the registered descriptions, and the dependency properties are registered with `DependencyProperty.Register` the first time a type is used.
 
-Tests: `tests\CustomControls\CustomControlTest` (every property kind, bindings both ways, template, events, creation from Pascal), `tests\CustomControls\OverlayControlsTest` (the Overlay controls), `tests\CustomControls\TabBarsTest` (the tab bars), `tests\CustomControls\ActionButtonsTest` (the action buttons) and `tests\CustomControls\DBControlsTest` (the data controls).
+Tests: `tests\CustomControls\CustomControlTest` (every property kind, bindings both ways, template, events, creation from Pascal), `tests\CustomControls\OverlayControlsTest` (the Overlay controls and their automation peers, run by `Test-Samples.ps1`), `tests\CustomControls\TabBarsTest` (the tab bars), `tests\CustomControls\ActionButtonsTest` (the action buttons) and `tests\CustomControls\DBControlsTest` (the data controls).

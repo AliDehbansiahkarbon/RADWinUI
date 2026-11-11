@@ -165,6 +165,14 @@ type
     procedure PaintBarBorder;
     /// <summary>A new solid brush as the Foreground of the FontIcon or TextBlock AName.</summary>
     function Tint(const AName: string; const AColor: TWinUIColor): ISolidColorBrush;
+    { Accessibility: a tab control, each tab a selectable item }
+    function AutomationRole: AutomationControlType; override;
+    function AutomationPatterns: TWinUIAutomationPatterns; override;
+    function AutomationItemCount: Integer; override;
+    function AutomationItemName(AIndex: Integer): string; override;
+    function AutomationItemSpan(AIndex: Integer; out ALeft, AWidth: Double): Boolean; override;
+    function AutomationSelectedIndex: Integer; override;
+    procedure AutomationSelect(AIndex: Integer); override;
   public
     destructor Destroy; override;
     procedure SelectNext;
@@ -670,6 +678,9 @@ begin
   FTo := 0;
   // A dark bar with grey icons unless the XAML says otherwise
   Control := ControlIntf;
+  // A tab stop with the focus ring of WinUI's controls: the arrow keys, Home and End move the selection
+  (Control as IUIElement).IsTabStop := True;
+  (Control as IUIElement).UseSystemFocusVisuals := True;
   Control.Background := RADWinUI.Abi.SolidColorBrush.New(Rgb($1B, $18, $29)) as IBrush;
   Control.BorderBrush := RADWinUI.Abi.SolidColorBrush.New(Rgb($2E, $2A, $40)) as IBrush;
   Control.Foreground := RADWinUI.Abi.SolidColorBrush.New(Rgb($A7, $A3, $BC)) as IBrush;
@@ -1094,6 +1105,7 @@ begin
       begin
         SelectionMoved;
         ShowPages;
+        AutomationChanged(TWinUIAutomationPattern.Selection);
         Fire(TabSelectionChangedIndex);
       end;
     TabAccentFromIndex, TabAccentToIndex, TabActiveForegroundIndex, TabShowLabelsIndex, TabIconSizeIndex:
@@ -1101,6 +1113,49 @@ begin
     TabPagesIndex:
       ShowPages;
   end;
+end;
+
+{ Accessibility }
+
+function TWinUITabBar.AutomationRole: AutomationControlType;
+begin
+  Result := AutomationControlType.Tab;
+end;
+
+function TWinUITabBar.AutomationPatterns: TWinUIAutomationPatterns;
+begin
+  Result := [TWinUIAutomationPattern.Selection];
+end;
+
+function TWinUITabBar.AutomationItemCount: Integer;
+begin
+  Result := Length(FItems);
+end;
+
+function TWinUITabBar.AutomationItemName(AIndex: Integer): string;
+begin
+  if (AIndex >= 0) and (AIndex < Length(FItems)) then
+    Result := FItems[AIndex].Text
+  else
+    Result := '';
+end;
+
+function TWinUITabBar.AutomationItemSpan(AIndex: Integer; out ALeft, AWidth: Double): Boolean;
+begin
+  AWidth := SlotWidth;
+  ALeft := SlotLeft + AIndex * AWidth;
+  Result := AWidth > 0;
+end;
+
+function TWinUITabBar.AutomationSelectedIndex: Integer;
+begin
+  Result := SelectedIndex;
+end;
+
+procedure TWinUITabBar.AutomationSelect(AIndex: Integer);
+begin
+  if (AIndex >= 0) and (AIndex < Length(FItems)) then
+    SelectedIndex := AIndex;
 end;
 
 { Geometry and colours for the styles }
@@ -1150,28 +1205,41 @@ begin
   Result := Max(40, IconSize + 16);
 end;
 
+// In a contrast theme every colour comes from the theme: the selection in its
+// highlight colour, the tabs in its text colour on its window colour
+
 function TWinUITabBar.AccentFromColor: TWinUIColor;
 begin
+  if HighContrastOn then
+    Exit(SystemColor(COLOR_HIGHLIGHT));
   Result := BrushColor(GetPropValue(TabAccentFromIndex), Rgb($6C, $55, $FF));
 end;
 
 function TWinUITabBar.AccentToColor: TWinUIColor;
 begin
+  if HighContrastOn then
+    Exit(SystemColor(COLOR_HIGHLIGHT));
   Result := BrushColor(GetPropValue(TabAccentToIndex), Rgb($3C, $C8, $FF));
 end;
 
 function TWinUITabBar.ActiveColor(const ADefault: TWinUIColor): TWinUIColor;
 begin
+  if HighContrastOn then
+    Exit(SystemColor(COLOR_HIGHLIGHTTEXT));
   Result := BrushColor(GetPropValue(TabActiveForegroundIndex), ADefault);
 end;
 
 function TWinUITabBar.InactiveColor: TWinUIColor;
 begin
+  if HighContrastOn then
+    Exit(SystemColor(COLOR_WINDOWTEXT));
   Result := BrushColor(ControlIntf.Foreground, Rgb($A7, $A3, $BC));
 end;
 
 function TWinUITabBar.BarColor: TWinUIColor;
 begin
+  if HighContrastOn then
+    Exit(SystemColor(COLOR_WINDOW));
   Result := BrushColor(ControlIntf.Background, Rgb($1B, $18, $29));
 end;
 

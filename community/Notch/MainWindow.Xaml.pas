@@ -86,7 +86,8 @@ const
     '      <SolidColorBrush x:Key="FaintBrush" Color="#2C2C2E" />' + sLineBreak +
     '    </Grid.Resources>' + sLineBreak +
     '' + sLineBreak +
-    '    <ns2:NotchPanel x:Name="Notch" CollapsedWidth="220" CollapsedHeight="36" ExpandedWidth="680" ExpandedHeight="276" ExpandedCornerRadius="30" Padding="22,14,22,18" IsExpanded="False">' + sLineBreak +
+    '    <ns2:NotchPanel x:Name="Notch" AutomationProperties.Name="Notch" CollapsedWidth="220" CollapsedHeight="36" ExpandedWidth="680" ExpandedHeight="276" ExpandedCornerRadius="30" Padding="22,14,22,18" ' +
+    'IsExpanded="False">' + sLineBreak +
     '      <ns2:NotchPanel.Pill>' + sLineBreak +
     '        ' + sLineBreak +
     '        <Grid x:Name="PillHost" Background="Transparent">' + sLineBreak +

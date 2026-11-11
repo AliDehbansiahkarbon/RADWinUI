@@ -67,6 +67,11 @@ type
     procedure Initialize; override;
     procedure PropertyChanged(AIndex: Integer); override;
     procedure DetachEvents; override;
+    { Accessibility: a group that expands and collapses }
+    function AutomationRole: AutomationControlType; override;
+    function AutomationPatterns: TWinUIAutomationPatterns; override;
+    function AutomationExpanded: Boolean; override;
+    procedure AutomationExpand(AExpand: Boolean); override;
   public
     destructor Destroy; override;
     procedure Expand;
@@ -128,6 +133,8 @@ type
     procedure Initialize; override;
     procedure PropertyChanged(AIndex: Integer); override;
     procedure DetachEvents; override;
+    /// <summary>A group: the tile holds content, whose own controls carry the actions.</summary>
+    function AutomationRole: AutomationControlType; override;
   public
     destructor Destroy; override;
   published
@@ -454,6 +461,26 @@ begin
   IsExpanded := not IsExpanded;
 end;
 
+function TWinUINotchPanel.AutomationRole: AutomationControlType;
+begin
+  Result := AutomationControlType.Group;
+end;
+
+function TWinUINotchPanel.AutomationPatterns: TWinUIAutomationPatterns;
+begin
+  Result := [TWinUIAutomationPattern.ExpandCollapse];
+end;
+
+function TWinUINotchPanel.AutomationExpanded: Boolean;
+begin
+  Result := IsExpanded;
+end;
+
+procedure TWinUINotchPanel.AutomationExpand(AExpand: Boolean);
+begin
+  IsExpanded := AExpand;
+end;
+
 procedure TWinUINotchPanel.PropertyChanged(AIndex: Integer);
 begin
   case AIndex of
@@ -469,6 +496,7 @@ begin
           AnimateTo(0);
           Fire(NCollapsed);
         end;
+        AutomationChanged(TWinUIAutomationPattern.ExpandCollapse);
       end;
     NCollapsedWidth, NCollapsedHeight, NExpandedWidth, NExpandedHeight, NExpandedCornerRadius, NSquareTop:
       ApplyProgress(FProgress);
@@ -666,6 +694,11 @@ begin
     begin
       Fire(0);
     end);
+end;
+
+function TWinUIGlowTile.AutomationRole: AutomationControlType;
+begin
+  Result := AutomationControlType.Group;
 end;
 
 destructor TWinUIGlowTile.Destroy;

@@ -217,9 +217,10 @@ const
     '                  <TextBlock Style="{StaticResource CardTitle}" Text="Customers" />' + sLineBreak +
     '                  <TextBlock Style="{StaticResource CardClass}" Text="TWinUIDBGrid  ·  TWinUIDBNavigator" />' + sLineBreak +
     '                </StackPanel>' + sLineBreak +
-    '                <ns2:DBNavigator x:Name="CustomersNavigator" Grid.Column="1" DataSource="CustomersSource" />' + sLineBreak +
+    '                <ns2:DBNavigator x:Name="CustomersNavigator" AutomationProperties.Name="Customers navigator" Grid.Column="1" DataSource="CustomersSource" />' + sLineBreak +
     '              </Grid>' + sLineBreak +
-    '              <ns2:DBGrid x:Name="CustomersGrid" Grid.Row="1" DataSource="CustomersSource" ReadOnly="True" Width="Auto" Height="452" Columns="Name:180, City:120, Tier:80, Balance:110, Joined:150" />' + sLineBreak +
+    '              <ns2:DBGrid x:Name="CustomersGrid" AutomationProperties.Name="Customers" Grid.Row="1" DataSource="CustomersSource" ReadOnly="True" Width="Auto" Height="452" Columns="Name:180, City:120, ' +
+    'Tier:80, Balance:110, Joined:150" />' + sLineBreak +
     '            </Grid>' + sLineBreak +
     '          </Border>' + sLineBreak +
     '' + sLineBreak +
@@ -284,11 +285,12 @@ const
     '                <StackPanel Orientation="Horizontal" Spacing="10">' + sLineBreak +
     '                  <TextBlock Style="{StaticResource CardTitle}" Text="Orders of this customer" />' + sLineBreak +
     '                </StackPanel>' + sLineBreak +
-    '                <ns2:DBNavigator x:Name="OrdersNavigator" Grid.Column="1" DataSource="OrdersSource" VisibleButtons="First, Prior, Next, Last, Insert, Delete, Post, Cancel" />' + sLineBreak +
+    '                <ns2:DBNavigator x:Name="OrdersNavigator" AutomationProperties.Name="Orders navigator" Grid.Column="1" DataSource="OrdersSource" VisibleButtons="First, Prior, Next, Last, Insert, Delet' +
+    'e, Post, Cancel" />' + sLineBreak +
     '              </Grid>' + sLineBreak +
     '              ' + sLineBreak +
-    '              <ns2:DBGrid x:Name="OrdersGrid" Grid.Row="1" DataSource="OrdersSource" SortOnHeaderClick="False" Width="Auto" Height="180" Columns="OrderNo:80, OrderDate:110, Product:200, Quantity:60, T' +
-    'otal:100, Shipped:80" />' + sLineBreak +
+    '              <ns2:DBGrid x:Name="OrdersGrid" AutomationProperties.Name="Orders" Grid.Row="1" DataSource="OrdersSource" SortOnHeaderClick="False" Width="Auto" Height="180" Columns="OrderNo:80, OrderDa' +
+    'te:110, Product:200, Quantity:60, Total:100, Shipped:80" />' + sLineBreak +
     '            </Grid>' + sLineBreak +
     '          </Border>' + sLineBreak +
     '' + sLineBreak +
@@ -302,7 +304,8 @@ const
     '                <TextBlock Style="{StaticResource CardTitle}" Text="All customers" />' + sLineBreak +
     '                <TextBlock Style="{StaticResource CardClass}" Text="TWinUIDBCtrlGrid" />' + sLineBreak +
     '              </StackPanel>' + sLineBreak +
-    '              <ns2:DBCtrlGrid x:Name="CustomerTiles" Grid.Row="1" DataSource="CustomersSource" Tiles="True" ReadOnly="True" ItemTemplate="{StaticResource CustomerTile}" Width="Auto" Height="158" />' + sLineBreak +
+    '              <ns2:DBCtrlGrid x:Name="CustomerTiles" AutomationProperties.Name="Customer tiles" Grid.Row="1" DataSource="CustomersSource" Tiles="True" ReadOnly="True" ItemTemplate="{StaticResource Cus' +
+    'tomerTile}" Width="Auto" Height="158" />' + sLineBreak +
     '            </Grid>' + sLineBreak +
     '          </Border>' + sLineBreak +
     '        </Grid>' + sLineBreak +

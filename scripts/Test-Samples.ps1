@@ -97,6 +97,17 @@ function Expect-Value($Win, [string]$Id, [string]$Expected) {
   Write-Host "  [ok] $Id value = '$Expected'"
 }
 
+# Accessibility: RADWinUI's own controls as a screen reader sees them
+function Expect-Control($Element, $Type, [string]$Name) {
+  if ($Element.Current.ControlType -ne $Type -or $Element.Current.Name -ne $Name) {
+    throw "$($Element.Current.AutomationId) is $($Element.Current.ControlType.ProgrammaticName) '$($Element.Current.Name)', not $($Type.ProgrammaticName) '$Name'"
+  }
+}
+function Get-Children($Element, $Type) {
+  @($Element.FindAll([Windows.Automation.TreeScope]::Children,
+    (New-Object Windows.Automation.PropertyCondition($AE::ControlTypeProperty, $Type))))
+}
+
 function Test-Sample([string]$Name, [scriptblock]$Scenario) {
   if ($Only -and $Name -notin $Only) { return $true }
   Write-Host $Name
@@ -275,6 +286,47 @@ $Results = @(
     Expect-Value $Win 'SearchBox' 'grace'
     Write-Host "  [ok] NavigationView items navigate, the KeepAlive page keeps its search"
   }
+  Test-Sample 'TabBars' {
+    param($Win)
+    # A tab bar is a Tab control with one TabItem per tab, each tab selectable through UI Automation
+    $CT = [Windows.Automation.ControlType]
+    $Bar = Get-Id $Win 'PillBar'
+    Expect-Control $Bar $CT::Tab 'Social sections'
+    if (-not $Bar.Current.IsKeyboardFocusable) { throw 'the tab bar is not a tab stop' }
+    $Tabs = Get-Children $Bar $CT::TabItem
+    $Names = ($Tabs | ForEach-Object { $_.Current.Name }) -join ','
+    if ($Names -ne 'Home,Search,Likes,Profile') { throw "tabs: $Names" }
+    if ($Tabs[1].Current.BoundingRectangle.Left -le $Tabs[0].Current.BoundingRectangle.Left -or
+        $Tabs[0].Current.BoundingRectangle.Width -le 0) { throw 'the tabs have no place of their own in the bar' }
+    $Tabs[2].GetCurrentPattern([Windows.Automation.SelectionItemPattern]::Pattern).Select()
+    $null = Wait-For { $Tabs[2].GetCurrentPattern([Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected } 'Likes selected'
+    $Selected = $Bar.GetCurrentPattern([Windows.Automation.SelectionPattern]::Pattern).Current.GetSelection()
+    if ($Selected.Count -ne 1 -or $Selected[0].Current.Name -ne 'Likes') { throw 'the Selection pattern does not report Likes' }
+    Write-Host "  [ok] PillBar: Tab 'Social sections', TabItems $Names, Likes selected through UI Automation"
+  }
+  Test-Sample 'ActionButtons' {
+    param($Win)
+    # The action buttons are buttons: named by their text, a tab stop, Invoke does what a click does
+    $CT = [Windows.Automation.ControlType]
+    $Send = Get-Id $Win 'SendButton1'
+    Expect-Control $Send $CT::Button 'Send'
+    if (-not $Send.Current.IsKeyboardFocusable) { throw 'Send is not a tab stop' }
+    Expect-Control (Get-Id $Win 'CopyButton1') $CT::Button 'Copy join.app/x7Kq2'
+    $Send.GetCurrentPattern([Windows.Automation.InvokePattern]::Pattern).Invoke()
+    $null = Wait-For { (Get-Id $Win 'StatusText').Current.Name -like 'Paper Plane: Click*' } 'the Send click through Invoke'
+    Write-Host "  [ok] Send and Copy are named buttons, Invoke sends"
+  }
+  Test-Sample 'DataControls' {
+    param($Win)
+    # The navigator is a toolbar of named buttons, a grid is a named group around its rows
+    $CT = [Windows.Automation.ControlType]
+    $Navigator = Get-Id $Win 'CustomersNavigator'
+    Expect-Control $Navigator $CT::ToolBar 'Customers navigator'
+    $Names = (Get-Children $Navigator $CT::Button | ForEach-Object { $_.Current.Name }) -join ','
+    if ($Names -notlike 'First record,Prior record,Next record,Last record*') { throw "navigator buttons: $Names" }
+    Expect-Control (Get-Id $Win 'CustomersGrid') $CT::Group 'Customers'
+    Write-Host "  [ok] Customers navigator: $Names"
+  }
   Test-Sample 'Tempo' {
     param($Win)
     # Owned windows appear under their owner. No compact overlay or full screen: they would leave the test area.
@@ -333,6 +385,10 @@ $Results += ($LASTEXITCODE -eq 0)
 Write-Host 'Windows and title bar'
 & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Windows\WindowsTest.dpr' | Out-Null
 & (Join-Path $RepoRoot 'tests\Windows\Win64\Debug\WindowsTest.exe') | Select-Object -Skip 1
+$Results += ($LASTEXITCODE -eq 0)
+Write-Host 'Overlay controls and their automation peers'
+& (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\CustomControls\OverlayControlsTest.dpr' | Out-Null
+& (Join-Path $RepoRoot 'tests\CustomControls\Win64\Debug\OverlayControlsTest.exe')
 $Results += ($LASTEXITCODE -eq 0)
 Write-Host 'Localization'
 & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Localization\LocalizationTest.dpr' | Out-Null

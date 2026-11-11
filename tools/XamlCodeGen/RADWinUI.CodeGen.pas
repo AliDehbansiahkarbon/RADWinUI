@@ -154,6 +154,11 @@ function RunCodeGen(const AArgs: TArray<string>; const AExeFolder: string): Inte
 ///   for a Uid.Property key no x:Uid uses. Nothing when the folder has no Strings.
 /// </summary>
 function CheckUids(const AFolder: string): TArray<string>;
+/// <summary>
+///   RW2003 for each button of AXamlPath that a screen reader cannot name: no
+///   text in it, no AutomationProperties.Name, no ToolTip and no x:Uid.
+/// </summary>
+function CheckAccessibleNames(const AXamlPath: string): TArray<string>;
 
 implementation
 
@@ -1679,6 +1684,53 @@ begin
 end;
 
 
+function CheckAccessibleNames(const AXamlPath: string): TArray<string>;
+const
+  Buttons: array[0..8] of string = ('Button', 'AppBarButton', 'AppBarToggleButton', 'ToggleButton', 'RepeatButton',
+    'HyperlinkButton', 'DropDownButton', 'SplitButton', 'ToggleSplitButton');
+  // Attributes and property elements that give a button its name
+  Naming: array[0..6] of string = ('Content', 'Label', 'AutomationProperties.Name', 'AutomationProperties.LabeledBy',
+    'ToolTipService.ToolTip', 'Text', '{' + XamlNs + '}Uid');
+var
+  Root, Element, Inner: TXmlElement;
+  Name, Local: string;
+  Named: Boolean;
+  I: Integer;
+begin
+  Result := [];
+  Root := ParseXml(ReadXmlFile(AXamlPath));
+  try
+    for Element in Root.Iter do
+    begin
+      Local := Element.Tag;
+      if not Local.StartsWith('{' + Presentation + '}') then
+        Continue;
+      Local := Local.Substring(Length(Presentation) + 2);
+      if IndexStr(Local, Buttons) < 0 then
+        Continue;
+      Named := Trim(Element.Text) <> '';
+      for Inner in Element.Iter do
+      begin
+        for I := 0 to Inner.AttrCount - 1 do
+        begin
+          Name := Inner.AttrName[I];
+          if (IndexStr(Name, Naming) >= 0) and (Trim(Inner.AttrValue[I]) <> '') then
+            Named := True;
+        end;
+        // <ToolTipService.ToolTip>, and text inside the button: a TextBlock is text, also one the code fills
+        Named := Named or Inner.Tag.EndsWith('ToolTipService.ToolTip') or Inner.Tag.EndsWith('}TextBlock') or
+          Inner.Tag.EndsWith('}Run') or
+          ((Inner <> Element) and (Trim(Inner.Text) <> ''));
+      end;
+      if not Named then
+        Result := Result + [Format('%s(%d): warning RW2003: this %s shows no text and has no AutomationProperties.Name, ' +
+          'ToolTip or x:Uid: a screen reader cannot say what it does', [AXamlPath, Element.Line, Local])];
+    end;
+  finally
+    Root.Free;
+  end;
+end;
+
 function CheckUids(const AFolder: string): TArray<string>;
 const
   DefaultResw = 'Strings\en-US\Resources.resw';
@@ -1867,6 +1919,9 @@ begin
           Folders := Folders + [ExtractFileDir(TPath.GetFullPath(Path))];
       for Text in Folders do
         for Warning in CheckUids(Text) do
+          Writeln(Warning);
+      for Path in Paths do
+        for Warning in CheckAccessibleNames(Path) do
           Writeln(Warning);
     except
       on E: Exception do

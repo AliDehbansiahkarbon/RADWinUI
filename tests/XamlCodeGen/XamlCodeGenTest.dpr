@@ -531,6 +531,37 @@ begin
   TDirectory.Delete(Folder, True);
 end;
 
+procedure TestAccessibleNames;
+const
+  Xaml =
+    '<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"' + #10 +
+    '    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TMainWindow">' + #10 +
+    '  <StackPanel>' + #10 +
+    '    <Button><FontIcon Glyph="&#xE713;"/></Button>' + #10 +
+    '    <Button AutomationProperties.Name="Settings"><FontIcon Glyph="&#xE713;"/></Button>' + #10 +
+    '    <Button ToolTipService.ToolTip="Settings"><FontIcon Glyph="&#xE713;"/></Button>' + #10 +
+    '    <Button x:Uid="SettingsButton"><FontIcon Glyph="&#xE713;"/></Button>' + #10 +
+    '    <Button Content="Save"/>' + #10 +
+    '    <Button><StackPanel><FontIcon Glyph="&#xE74E;"/><TextBlock x:Name="Caption"/></StackPanel></Button>' + #10 +
+    '    <AppBarButton Icon="Add"/>' + #10 +
+    '  </StackPanel>' + #10 +
+    '</Window>';
+var
+  Folder: string;
+  Warnings: TArray<string>;
+begin
+  Writeln('Accessible names');
+  Folder := NewFolder;
+  Save(Folder, 'MainWindow.xaml', Xaml);
+  Warnings := CheckAccessibleNames(TPath.Combine(Folder, 'MainWindow.xaml'));
+  Check(Length(Warnings) = 2, Format('two buttons without a name (%d)', [Length(Warnings)]));
+  Check((Length(Warnings) > 0) and Warnings[0].Contains('MainWindow.xaml(4): warning RW2003: this Button shows no text'),
+    'RW2003 for an icon-only Button, with its line');
+  Check((Length(Warnings) > 1) and Warnings[1].Contains('(10): warning RW2003: this AppBarButton'),
+    'RW2003 for an AppBarButton without Label');
+  TDirectory.Delete(Folder, True);
+end;
+
 procedure TestSamples(const ARoot: string);
 var
   Sample, Copy, Committed: string;
@@ -565,6 +596,7 @@ begin
     TestPagesAndUserControls;
     TestWindowAttributes;
     TestUids;
+    TestAccessibleNames;
     TestSamples(ParamStr(1));
   finally
     Index.Free;

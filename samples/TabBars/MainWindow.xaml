@@ -273,7 +273,7 @@
                   <TextBlock Style="{StaticResource PageText}" Text="Edit your name and photo"/>
                 </StackPanel>
               </Grid>
-              <rw:SlidingPillTabBar x:Name="PillBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
+              <rw:SlidingPillTabBar x:Name="PillBar" AutomationProperties.Name="Social sections" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
                   Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}"
                   Items="Home:Home, Search:Search, Likes:Heart, Profile:Contact"
                   Pages="PillHome, PillSearch, PillLikes, PillProfile" SelectionChanged="TabChanged"/>
@@ -319,7 +319,7 @@
                   <TextBlock Style="{StaticResource PageText}" Text="Listening stats and settings"/>
                 </StackPanel>
               </Grid>
-              <rw:LiquidBulgeTabBar x:Name="BulgeBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
+              <rw:LiquidBulgeTabBar x:Name="BulgeBar" AutomationProperties.Name="Music sections" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
                   Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}"
                   Items="Listen:Music, Explore:Globe, Library:Library, Me:Contact"
                   Pages="BulgeListen, BulgeExplore, BulgeLibrary, BulgeMe" SelectionChanged="TabChanged"/>
@@ -365,7 +365,7 @@
                   <TextBlock Style="{StaticResource PageText}" Text="Orders, addresses and payment"/>
                 </StackPanel>
               </Grid>
-              <rw:FloatingNotchTabBar x:Name="NotchBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
+              <rw:FloatingNotchTabBar x:Name="NotchBar" AutomationProperties.Name="Shop sections" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
                   Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}"
                   Items="Shop:Shop, Cart:Cart, Saved:Heart, Account:Contact"
                   Pages="NotchShop, NotchCart, NotchSaved, NotchAccount" SelectionChanged="TabChanged"/>
@@ -411,7 +411,7 @@
                   <TextBlock Style="{StaticResource PageText}" Text="1.2k followers"/>
                 </StackPanel>
               </Grid>
-              <rw:IconFillTabBar x:Name="FillBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
+              <rw:IconFillTabBar x:Name="FillBar" AutomationProperties.Name="Chat sections" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
                   Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}"
                   Items="Feed:Home, Chat:Chat, Likes:Heart, Profile:Contact"
                   Pages="FillFeed, FillChat, FillLikes, FillProfile" SelectionChanged="TabChanged"/>
@@ -457,7 +457,7 @@
                   <TextBlock Style="{StaticResource PageText}" Text="Passport and preferences"/>
                 </StackPanel>
               </Grid>
-              <rw:ExpandingLabelTabBar x:Name="LabelBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
+              <rw:ExpandingLabelTabBar x:Name="LabelBar" AutomationProperties.Name="Travel sections" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
                   Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}"
                   Items="Explore:Globe, Trips:Airplane, Saved:Star, Profile:Contact"
                   Pages="LabelExplore, LabelTrips, LabelSaved, LabelProfile" SelectionChanged="TabChanged"/>
@@ -503,7 +503,7 @@
                   <TextBlock Style="{StaticResource PageText}" Text="Backup is on"/>
                 </StackPanel>
               </Grid>
-              <rw:BubbleFloatTabBar x:Name="BubbleBar" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
+              <rw:BubbleFloatTabBar x:Name="BubbleBar" AutomationProperties.Name="Photo sections" Grid.Row="2" Width="Auto" HorizontalAlignment="Stretch"
                   Background="{ThemeResource BarBrush}" BorderBrush="{ThemeResource BarEdgeBrush}" Foreground="{ThemeResource BarIconBrush}" BubbleCount="9"
                   Items="Photos:Photo, Albums:Folder, Camera:Camera, Settings:Settings"
                   Pages="BubblePhotos, BubbleAlbums, BubbleCamera, BubbleSettings" SelectionChanged="TabChanged"/>

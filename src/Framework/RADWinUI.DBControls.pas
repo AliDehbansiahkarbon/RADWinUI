@@ -541,6 +541,8 @@ type
   private
     procedure UpdateButtons;
   protected
+    /// <summary>A toolbar of named buttons for screen readers.</summary>
+    function AutomationRole: AutomationControlType; override;
     class procedure DefineType(AType: TWinUICustomType); override;
     procedure Initialize; override;
     procedure PropertyChanged(AIndex: Integer); override;
@@ -633,6 +635,8 @@ type
     function ColumnWidth(AIndex: Integer): Double;
     procedure BuildTemplate;
   protected
+    /// <summary>A group that AutomationProperties.Name names, around its list.</summary>
+    function AutomationRole: AutomationControlType; override;
     class procedure DefineType(AType: TWinUICustomType); override;
     procedure Initialize; override;
     procedure PropertyChanged(AIndex: Integer); override;
@@ -659,6 +663,8 @@ type
     procedure BuildList;
     procedure ApplyTemplate;
   protected
+    /// <summary>A group that AutomationProperties.Name names, around its tiles.</summary>
+    function AutomationRole: AutomationControlType; override;
     class procedure DefineType(AType: TWinUICustomType); override;
     procedure Initialize; override;
     procedure PropertyChanged(AIndex: Integer); override;
@@ -2812,6 +2818,11 @@ end;
 
 { TWinUIDBNavigator }
 
+function TWinUIDBNavigator.AutomationRole: AutomationControlType;
+begin
+  Result := AutomationControlType.ToolBar;
+end;
+
 class procedure TWinUIDBNavigator.DefineType(AType: TWinUICustomType);
 begin
   inherited;
@@ -2845,6 +2856,8 @@ begin
     Button.Padding := Thickness(0);
     ToolTipService.SetToolTip(IntfOf(Button, IDependencyObject) as IDependencyObject,
       PropertyValue.CreateString(WinStr(NavigatorHints[Kind])));
+    // An icon says nothing to a screen reader: the hint is the button's name
+    AutomationProperties.SetName(IntfOf(Button, IDependencyObject) as IDependencyObject, WinStr(NavigatorHints[Kind]));
     HookButton(Button, Kind);
     FButtons[Kind] := Button;
     FPanel.Children.Add(Button);
@@ -3728,6 +3741,11 @@ end;
 
 { TWinUIDBGrid }
 
+function TWinUIDBGrid.AutomationRole: AutomationControlType;
+begin
+  Result := AutomationControlType.Group;
+end;
+
 class procedure TWinUIDBGrid.DefineType(AType: TWinUICustomType);
 begin
   inherited;
@@ -3986,6 +4004,11 @@ begin
 end;
 
 { TWinUIDBCtrlGrid }
+
+function TWinUIDBCtrlGrid.AutomationRole: AutomationControlType;
+begin
+  Result := AutomationControlType.Group;
+end;
 
 class procedure TWinUIDBCtrlGrid.DefineType(AType: TWinUICustomType);
 begin

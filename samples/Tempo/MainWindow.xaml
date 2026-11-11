@@ -36,7 +36,7 @@
           <RowDefinition Height="Auto"/>
         </Grid.RowDefinitions>
         <TextBlock x:Name="CountText" Style="{StaticResource BodyStrongTextBlockStyle}" d:Text="6 stations"/>
-        <ListView x:Name="StationList" Grid.Row="1" IsItemClickEnabled="True" SelectionMode="None" ItemClick="StationClick">
+        <ListView x:Name="StationList" Grid.Row="1" AutomationProperties.Name="Stations" IsItemClickEnabled="True" SelectionMode="None" ItemClick="StationClick">
           <d:ListView.Items>
             <x:String>Lo-fi Study</x:String>
             <x:String>Morning Jazz</x:String>

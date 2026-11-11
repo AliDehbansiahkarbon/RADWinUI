@@ -4,6 +4,10 @@ All notable changes to RADWinUI.
 
 ## Unreleased
 
+- Accessibility: RADWinUI's own controls work with Narrator, NVDA and UI Automation like WinUI's. The tab bars are a `Tab` with selectable `TabItem`s, the action buttons are buttons named by their text that Invoke clicks, the NotchPanel is a group that expands and collapses, the data grids are named groups and the DBNavigator a toolbar of named buttons. A focus ring on every interactive own control, and the colours of a Windows contrast theme.
+- Controls written in Delphi get an automation peer through virtual methods of `TWinUICustomControl`: `AutomationRole`, `AutomationPatterns`, `AutomationName` and the Invoke, Toggle, ExpandCollapse and Selection callbacks. `HighContrastOn` and `SystemColor` for contrast themes.
+- XamlCodeGen warns about a button that shows no text and has no name for a screen reader (RW2003).
+
 - Apps in several languages, without MSIX: `Strings\<language>\Resources.resw` in the project folder, `x:Uid` in XAML, and `resources.pri` built next to the exe by the post-build step (`scripts\Make-Pri.ps1`, with makepri.exe from the Windows SDK build tools that `Get-WindowsAppSDK.ps1` now downloads). New unit `RADWinUI.Resources`: `TWinUIResources.GetString` with fallback to the default language and to a default value. `TWinUIApp.Language` picks the language before `Run` or while the app runs, `TWinUIApp.RightToLeft` lays windows and dialogs out from the right for Arabic, Persian, Hebrew and Urdu.
 - The texts of `RADWinUI.Dialogs` (OK, Cancel, Yes, No...) can come from the app's resources (`RADWinUI_OK` and so on), the resourcestrings stay the default.
 - File > New > Other > Delphi Files > RADWinUI Resource File adds the texts of one language. The designer and the preview show the en-US texts of `x:Uid` elements. XamlCodeGen warns about an `x:Uid` without a key (RW2001) and a key no `x:Uid` uses (RW2002).
