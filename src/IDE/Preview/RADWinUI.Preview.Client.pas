@@ -106,6 +106,7 @@ const
   ClosingTimeout = 5000;  // ms a host may take to exit after its pipe broke
   ConnectTimeout = 20000; // ms from starting the host to its pipe
   MaxCrashes = 3;         // in a row, before giving up
+  StableTime = 10000;     // ms a host must run before an answer clears its crashes
 
 function ReadEventMessage(APipe, AStop: THandle; out AMessage: string): Boolean;
 var
@@ -591,7 +592,8 @@ begin
     FWriteBytes := nil;
     FReadBytes := nil;
     FReplyBytes := nil;
-    if Request.StartsWith('LOAD ') and not Reply.StartsWith('ERROR') then
+    // A host that answers and then crashes on the first layout must not restart forever
+    if Request.StartsWith('LOAD ') and not Reply.StartsWith('ERROR') and (GetTickCount - FStarted >= StableTime) then
       FCrashes := 0;
     if Request = 'HELLO' then
     begin
@@ -660,7 +662,10 @@ begin
   end;
   Result := (FPipe <> INVALID_HANDLE_VALUE) and Transact(ARequest, AReply);
   if Result then
-    FCrashes := 0
+  begin
+    if GetTickCount - FStarted >= StableTime then
+      FCrashes := 0;
+  end
   else if FPipe <> INVALID_HANDLE_VALUE then
   begin
     if not FTimedOut then

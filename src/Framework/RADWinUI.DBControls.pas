@@ -3335,7 +3335,12 @@ begin
   if FLink <> nil then
     FLink.DataSource := nil;
   if FListView <> nil then
+  try
     FListView.ItemsSource := IInspectable(nil);
+  except
+    // A control without an owner window (XamlReader.Load in the preview) goes after XAML shut down
+    on EWinRTError do ;
+  end;
   inherited;
   FreeAndNil(FRows);
   FreeAndNil(FLink);

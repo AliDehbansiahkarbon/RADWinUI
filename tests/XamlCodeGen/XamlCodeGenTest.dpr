@@ -347,6 +347,40 @@ begin
   Check(Error.Contains('MainWindow.xaml(8): <rw:Nope> is not a RADWinUI control'), 'an unknown rw: element is refused');
 end;
 
+/// Window attributes for placement, state and the title bar.
+procedure TestWindowAttributes;
+const
+  TitledXaml =
+    '<Window xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"' + #10 +
+    '    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Class="TMainWindow" TitleBar="AppTitleBar"' + #10 +
+    '    WindowState="Maximized" MaxWidth="1600" MaxHeight="900" Resizable="False" Minimizable="false"' + #10 +
+    '    Maximizable="False" AlwaysOnTop="True" WindowStartupLocation="CenterOwner">' + #10 +
+    '  <Grid>' + #10 +
+    '    <TitleBar x:Name="AppTitleBar" Title="App"/>' + #10 +
+    '  </Grid>' + #10 +
+    '</Window>';
+var
+  Text: string;
+begin
+  Writeln('Window attributes');
+  Text := SimpleError(TitledXaml);
+  if Text <> '' then
+    Writeln('    unexpected error: ', Text);
+  Text := GenerateWindow(TitledXaml, 'TWinUIRoutedEventArgs', Text);
+  Check(Text.Contains('WindowState := TWinUIWindowState.Maximized;') and Text.Contains('MaxWidth := 1600;') and
+    Text.Contains('MaxHeight := 900;') and Text.Contains('Resizable := False;') and Text.Contains('Minimizable := False;') and
+    Text.Contains('Maximizable := False;') and Text.Contains('AlwaysOnTop := True;') and Text.Contains('CenterOnOwner;'),
+    'placement and state attributes become settings');
+  Check(Text.Contains('AppTitleBar: TWinUITitleBar;') and Text.Contains('UseTitleBar(AppTitleBar);') and
+    (Text.IndexOf('UseTitleBar(AppTitleBar);') > Text.IndexOf('AppTitleBar := FindElement')),
+    'TitleBar names the title bar element, used once its field is set');
+  Check(SimpleError(TitledXaml.Replace('TitleBar="AppTitleBar"', 'TitleBar="Nope"')).Contains(
+    '<Window TitleBar="Nope">: no element has x:Name="Nope"'), 'TitleBar must name an element of the window');
+  Check(SimpleError(TitledXaml.Replace('WindowState="Maximized"', 'WindowState="Huge"')).Contains(
+    '<Window WindowState> must be one of Normal, Minimized, Maximized, FullScreen, CompactOverlay'),
+    'an unknown WindowState is refused');
+end;
+
 /// <Page> and <UserControl> roots, user controls used from other XAML, and <Frame>.
 procedure TestPagesAndUserControls;
 const
@@ -494,6 +528,7 @@ begin
     TestBindings;
     TestCustomControls;
     TestPagesAndUserControls;
+    TestWindowAttributes;
     TestSamples(ParamStr(1));
   finally
     Index.Free;

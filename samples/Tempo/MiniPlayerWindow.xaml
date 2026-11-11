@@ -1,0 +1,22 @@
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    x:Class="TMiniPlayerWindow"
+    Title="Tempo mini player" Width="320" Height="180" Backdrop="Acrylic" WindowState="CompactOverlay">
+  <!-- CompactOverlay: a small window that stays above every other window, like picture-in-picture -->
+  <Grid Padding="16" RowSpacing="8">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="*"/>
+      <RowDefinition Height="Auto"/>
+    </Grid.RowDefinitions>
+    <StackPanel VerticalAlignment="Center">
+      <TextBlock x:Name="StationName" Style="{StaticResource SubtitleTextBlockStyle}" TextTrimming="CharacterEllipsis"
+                 d:Text="Lo-fi Study"/>
+      <TextBlock x:Name="GenreText" Opacity="0.7" d:Text="Chill"/>
+    </StackPanel>
+    <Button x:Name="PlayButton" Grid.Row="1" Content="Play" Click="PlayClick" HorizontalAlignment="Stretch"/>
+  </Grid>
+</Window>

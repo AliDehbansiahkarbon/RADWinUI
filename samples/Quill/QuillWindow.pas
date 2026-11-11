@@ -55,7 +55,7 @@ type
     procedure ConfirmSave(ANote: TQuillNote; const AThen: TProc);
     procedure RemoveNote(ANote: TQuillNote);
     procedure ConfirmClose(AFrom: Integer);
-    procedure WindowClosing(Sender: TObject; E: TWinUIAppWindowClosingEventArgs);
+    procedure WindowCloseQuery(Sender: TObject; var CanClose: Boolean);
     procedure Remind(ASeconds: Integer);
     procedure ScheduleReminder(const APath: string; ASeconds: Integer);
     procedure ReminderTick(Sender: TObject);
@@ -177,7 +177,7 @@ begin
   Quill := Self;
   SetTitleBar(DragRegion);
   AppWindow.TitleBar.PreferredTheme := TWinUITitleBarTheme.UseDefaultAppMode;
-  AppWindow.OnClosing := WindowClosing;
+  OnCloseQuery := WindowCloseQuery;
   FNotes := TWinUIBindableList<TQuillNote>.Create;
   NoteList.ItemsSource := FNotes;
   FOpenDialog := TWinUIOpenDialog.Create;
@@ -520,7 +520,7 @@ end;
 
 { Closing }
 
-procedure TQuillWindow.WindowClosing(Sender: TObject; E: TWinUIAppWindowClosingEventArgs);
+procedure TQuillWindow.WindowCloseQuery(Sender: TObject; var CanClose: Boolean);
 var
   I: Integer;
 begin
@@ -530,7 +530,7 @@ begin
     if FNotes[I].Modified then
     begin
       // The window stays open while Quill asks about each edited note
-      E.Cancel := True;
+      CanClose := False;
       ConfirmClose(0);
       Exit;
     end;

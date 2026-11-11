@@ -211,6 +211,7 @@ public
   class function SystemTransparency: Boolean; // False while Energy saver is on or Transparency effects is off
   procedure BindTransparencySwitch(ASwitch: TWinUIToggleSwitch); // a ready-made on/off switch with an honest tooltip
   property OnClosed: TWinUIWindowEventHandler;
+  // and more below: several windows, position and state, title bar
 end;
 
 begin
@@ -220,6 +221,80 @@ end.
 
 Mica and Acrylic show a solid colour whenever Windows turns transparency off (Energy saver, or Transparency effects off in Settings > Personalization > Colors) and while the window is inactive. An app cannot override that, `SystemTransparency` tells whether Windows allows it right now.
 
+### Several windows
+
+Create and show any number of windows at any time, from XAML or built in code, like VCL forms:
+
+```pascal
+TAboutWindow.Create.Show;
+```
+
+| Member | |
+| --- | --- |
+| `Close` | Closes the window like the VCL. `OnCloseQuery(Sender; var CanClose)` may refuse, then `OnClose(Sender; var Action)` picks what happens: `TWinUICloseAction.Free` (the default) frees the window after it closed, `Hide` only hides it, `None` keeps it. The close button and Alt+F4 go through the same steps. |
+| `Show`, `Hide` | Shows the window, hides it. A hidden window keeps its state and shows again with `Show`. |
+| `OwnerWindow` | The window this one belongs to, set before `Show`: it stays above its owner, is minimized with it and closes with it. For tool windows. |
+| `ShowModal(Callback)` | Shows the window modally: its owner (the window in use when `OwnerWindow` is not set) is disabled until it closes, it is centred on it, and the callback receives `ModalResult`. The call returns at once, there is no message loop to wait in. |
+| `ModalResult` | Setting it to anything but `mrNone` closes a modal window, as in the VCL. Closing it otherwise gives `mrCancel`. |
+| `TWinUIApp.MainWindow`, `Windows`, `WindowCount` | The window `Run` created, and every window of the app that is not freed yet. |
+| `TWinUIApp.ShutdownMode` | `MainWindow` (the default): closing the main window ends the app and closes the others. `LastWindow`: the app ends when its last window has closed. |
+
+```pascal
+procedure TMainWindow.AddClick(Sender: TObject);
+var
+  Dialog: TAddStationWindow;
+begin
+  Dialog := TAddStationWindow.Create;
+  Dialog.OwnerWindow := Self;
+  Dialog.ShowModal(
+    procedure(AResult: TModalResult)
+    begin
+      if AResult = mrOk then
+        AddStation(Dialog.StationName);  // the window still exists here
+    end);
+end;
+
+procedure TAddStationWindow.AddClick(Sender: TObject);
+begin
+  ModalResult := mrOk;  // closes the window
+end;
+```
+
+### Position, size and state
+
+| Member | |
+| --- | --- |
+| `Left`, `Top`, `Width`, `Height` | Position of the frame and size of the client area, in effective pixels of the window's display. |
+| `MinWidth`, `MinHeight`, `MaxWidth`, `MaxHeight` | The sizes the user can drag the window to, 0 for no maximum. |
+| `WindowState` | `Normal`, `Minimized`, `Maximized`, `FullScreen` (the whole display, no frame) or `CompactOverlay` (a small always-on-top picture-in-picture window). Maximized before `Show` waits for `Show`. |
+| `Resizable`, `Minimizable`, `Maximizable`, `AlwaysOnTop` | The frame and its buttons. |
+| `Center`, `CenterOnOwner` | Centres the window on its display, or on its owner. |
+| `Placement`, `SavePlacement`, `RestorePlacement` | Position, size and maximized state as text, to keep anywhere. `SavePlacement` and `RestorePlacement` keep it in `HKEY_CURRENT_USER\Software\<exe name>\Placement`. A position on a display that is gone puts the window on the nearest one. |
+| `SetIcon(FileName)` | The window's icon in its title bar, the taskbar and Alt+Tab. Without it every window shows the program's `MAINICON`. `Title` is the text of the taskbar and Alt+Tab. |
+
+### Title bar
+
+`TitleBar="AppTitleBar"` on `<Window>` puts the content into the title bar area and makes the named element the title bar. WinUI's `TitleBar` control is made for it: a title, a subtitle, an icon, a back button and room for a search box, with the dragging and the clickable parts handled by the control.
+
+```xml
+<Window ... TitleBar="AppTitleBar">
+    <Grid>
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+        </Grid.RowDefinitions>
+        <TitleBar x:Name="AppTitleBar" Title="Tempo" Subtitle="Radio" IsBackButtonVisible="True"
+                  BackRequested="TitleBarBackRequested">
+            <TitleBar.Content>
+                <AutoSuggestBox PlaceholderText="Search" Width="320"/>
+            </TitleBar.Content>
+        </TitleBar>
+        ...
+    </Grid>
+</Window>
+```
+
+In Pascal, `UseTitleBar(Element)` does the same. A title bar made of other elements drags the window from every point of it. `SetTitleBarPassthrough([SearchBox, MenuButton])` keeps those elements clickable, and follows them when the window is resized. The caption buttons follow the light or dark theme.
 `TWinUITimer` is a repeating UI-thread timer like the VCL `TTimer` (`Interval` in milliseconds, `Enabled`, `OnTimer`).
 
 ### Overlay windows

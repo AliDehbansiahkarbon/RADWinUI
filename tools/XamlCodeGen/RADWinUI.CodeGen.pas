@@ -99,7 +99,7 @@ type
     FUserControls: TDictionary<string, TUserControlInfo>;
     FOwnProperties: TArray<string>;
     FStem, FUnitName, FClassName, FBaseName, FPasName: string;
-    FDataContextType, FViewModelUnit: string;
+    FDataContextType, FViewModelUnit, FTitleBar: string;
     FWindowLine, FContentLine, FAutoNames: Integer;
     FFields: TList<TField>;
     FBindings: TList<TBindingInfo>;
@@ -167,8 +167,9 @@ const
     '{http://schemas.openxmlformats.org/markup-compatibility/2006}');
   // <Window> attributes: Title is WinUI's, the rest are RADWinUI properties of TWinUIWindow
   // (WinUI's Window cannot set them in XAML). Applied in this order.
-  WindowAttributes: array[0..11] of string = ('Title', 'WindowStyle', 'Width', 'Height', 'MinWidth', 'MinHeight',
-    'Backdrop', 'ExtendsContentIntoTitleBar', 'WindowStartupLocation', 'Dock', 'ClickThrough', 'ShowActivated');
+  WindowAttributes: array[0..19] of string = ('Title', 'WindowStyle', 'Width', 'Height', 'MinWidth', 'MinHeight',
+    'MaxWidth', 'MaxHeight', 'Backdrop', 'ExtendsContentIntoTitleBar', 'WindowStartupLocation', 'Dock', 'ClickThrough',
+    'ShowActivated', 'AlwaysOnTop', 'Resizable', 'Minimizable', 'Maximizable', 'WindowState', 'TitleBar');
   // Members of TWinUIWindow and its ancestors that an x:Name field would hide
   ReservedNames =
     ',title,content,width,height,minwidth,minheight,backdrop,show,close,center,activate,findelement,' +
@@ -835,6 +836,15 @@ begin
               Bind(Named.Name, Info.Name, Named.Name + Info.Name, Info.Handler, Info.Args, False, Named.Line,
                 FIndex.IsCustom(Named.ClassName));
           end;
+    if FTitleBar <> '' then
+    begin
+      Exists := False;
+      for Named in FNamed do
+        Exists := Exists or (Named.Name = FTitleBar);
+      if not Exists then
+        raise ECodeGenError.CreateFmt('%s: <Window TitleBar="%s">: no element has x:Name="%s"',
+          [FXamlPath, FTitleBar, FTitleBar]);
+    end;
     if FRootKind = 'Page' then
       Result := EmitPage(ToXml(Content, Registered))
     else if FRootKind = 'UserControl' then
@@ -854,13 +864,22 @@ begin
   Value := PyStrip(AValue);
   if AName = 'Title' then
     Exit(AName + ' := ' + PascalString(AValue) + ';');
-  if (AName = 'Width') or (AName = 'Height') or (AName = 'MinWidth') or (AName = 'MinHeight') then
+  if AName = 'TitleBar' then
+  begin
+    if not TRegEx.IsMatch(Value, '^[A-Za-z_]\w*$') then
+      raise ECodeGenError.CreateFmt('%s: <Window TitleBar="%s"> must name an element (its x:Name)', [FXamlPath, AValue]);
+    FTitleBar := Value;
+    Exit('');
+  end;
+  if (AName = 'Width') or (AName = 'Height') or (AName = 'MinWidth') or (AName = 'MinHeight') or (AName = 'MaxWidth') or
+    (AName = 'MaxHeight') then
   begin
     if not TRegEx.IsMatch(Value, '^\d{1,5}$') then
       raise ECodeGenError.CreateFmt('%s: <Window %s="%s"> is not valid', [FXamlPath, AName, AValue]);
     Exit(Format('%s := %d;', [AName, StrToInt(Value)]));
   end;
-  if (AName = 'ExtendsContentIntoTitleBar') or (AName = 'ShowActivated') then
+  if (AName = 'ExtendsContentIntoTitleBar') or (AName = 'ShowActivated') or (AName = 'AlwaysOnTop') or
+    (AName = 'Resizable') or (AName = 'Minimizable') or (AName = 'Maximizable') then
   begin
     if (Value.ToLower <> 'true') and (Value.ToLower <> 'false') then
       raise ECodeGenError.CreateFmt('%s: <Window %s="%s"> is not valid', [FXamlPath, AName, AValue]);
@@ -874,8 +893,10 @@ begin
     Choices := TArray<string>.Create('None', 'TopCenter', 'TopLeft', 'TopRight', 'BottomCenter')
   else if AName = 'ClickThrough' then
     Choices := TArray<string>.Create('None', 'Background')
+  else if AName = 'WindowState' then
+    Choices := TArray<string>.Create('Normal', 'Minimized', 'Maximized', 'FullScreen', 'CompactOverlay')
   else
-    Choices := TArray<string>.Create('Manual', 'CenterScreen');
+    Choices := TArray<string>.Create('Manual', 'CenterScreen', 'CenterOwner');
   Match := '';
   for Choice in Choices do
     if Choice.ToLower = Value.ToLower then
@@ -893,8 +914,12 @@ begin
     Exit('Dock := TWinUIDock.' + Match + ';');
   if AName = 'ClickThrough' then
     Exit('ClickThrough := TWinUIClickThrough.' + Match + ';');
+  if AName = 'WindowState' then
+    Exit('WindowState := TWinUIWindowState.' + Match + ';');
   if Match = 'CenterScreen' then
     Result := 'Center;'
+  else if Match = 'CenterOwner' then
+    Result := 'CenterOnOwner;'
   else
     Result := '';
 end;
@@ -1605,6 +1630,11 @@ begin
     end;
     W('  LoadContent(ContentXaml);');
     Lines.Append(WiringLines);
+    if FTitleBar <> '' then
+    begin
+      W('  // ' + Src + '(' + IntToStr(FWindowLine) + '): TitleBar="' + FTitleBar + '"');
+      W('  UseTitleBar(' + FTitleBar + ');');
+    end;
     W('end;');
     W('');
     if VM <> '' then

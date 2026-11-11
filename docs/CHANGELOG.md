@@ -4,6 +4,12 @@ All notable changes to RADWinUI.
 
 ## Unreleased
 
+- Several windows like VCL forms: `Close` with `OnCloseQuery` and `OnClose` (Free, Hide or None) also for the close button, `Hide`, `OwnerWindow` for tool windows, and `ShowModal` with a callback that gets `ModalResult`, without a message loop. `TWinUIApp.MainWindow`, `Windows`, `WindowCount` and `ShutdownMode` (MainWindow or LastWindow).
+- Window position and state: `Left`, `Top`, `MaxWidth`, `MaxHeight`, `WindowState` (Normal, Minimized, Maximized, FullScreen, CompactOverlay), `Resizable`, `Minimizable`, `Maximizable`, `CenterOnOwner`, `SetIcon`, and `Placement` with `SavePlacement` and `RestorePlacement`.
+- Title bar: `<Window TitleBar="Name">` and `UseTitleBar` make an element the title bar, WinUI's TitleBar control included. `SetTitleBarPassthrough` keeps elements of a title bar of your own clickable.
+- `<Window>` also takes `MaxWidth`, `MaxHeight`, `WindowState`, `Resizable`, `Minimizable`, `Maximizable`, `AlwaysOnTop` and `WindowStartupLocation="CenterOwner"`.
+- The designer shows WinUI's TitleBar as a look-alike with its icon, title, subtitle, back button and content. The real control crashed the docked renderer, and the IDE restarted the renderer without end (a blinking black Design view and a busy IDE). The IDE now stops after three renderer crashes in a row, even when each one answered first, and shows why in the Design view.
+- New sample: Tempo, a radio player with WinUI's TitleBar, a tool window, a modal window, a compact overlay mini player, full screen and a remembered window placement.
 - Pages: a `.xaml` file with a `<Page>` root and its `.pas` unit, like a window. A `<Frame>` is a `TWinUIPageFrame` (unit `RADWinUI.Pages`) that navigates between them: `Navigate(TPageClass, Parameter)` with any object, string, number or Boolean, `GoBack`, `GoForward`, `BackStack`, WinUI's page transitions, and `NavigatedTo`, `NavigatedFrom` and `NavigatingFrom` on the page, which can cancel and finish the navigation later with `Proceed`. A page with `KeepAlive` keeps its state.
 - `AttachNavigationView` lets a NavigationView drive a frame: menu items name their page class in `Tag`, the selection follows navigation and the back button goes back.
 - User controls: a `.xaml` file with a `<UserControl>` root and its `.pas` unit. Other XAML of the project uses it as `<local:Name/>` with any `using:` namespace, with its properties and events checked at build time and a typed field in the generated unit.

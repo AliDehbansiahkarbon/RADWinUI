@@ -2134,6 +2134,8 @@ begin
       Xaml := FClient.Status;
       Log('preview failed: ' + Xaml);
       Stop;
+      if FDesignViewActive and (FDesignSurface <> nil) then
+        FDesignSurface.Caption := 'RADWinUI renderer stopped: ' + Xaml + '. Switch to Code and back to retry.';
       ThemedMessageDlg('RADWinUI Preview: ' + Xaml, mtWarning, [mbOK]);
     end;
   except

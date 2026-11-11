@@ -58,16 +58,22 @@ foreach ($U in $Units) {
   $Interface = ($Text -split '(?im)^\s*implementation\s*$')[0]
   if ($Interface -match '(?im)^\s*procedure\s+Register\s*;') { $RegisteringUnits += $U.Name }
   foreach ($M in [regex]::Matches($Text, "(?is)function\s+(\w+)\.GetIDString\s*:\s*string\s*;\s*begin\s*Result\s*:=\s*'([^']+)'")) {
-    $Ids[$M.Groups[1].Value] = $M.Groups[2].Value
+    $Ids[$M.Groups[1].Value] = @($M.Groups[2].Value)
+  }
+  # A class registered once per kind returns its ID from a constant array: Result := Ids[FKind]
+  foreach ($M in [regex]::Matches($Text, "(?is)function\s+(\w+)\.GetIDString\s*:\s*string\s*;\s*begin\s*Result\s*:=\s*(\w+)\s*\[")) {
+    $Array = [regex]::Match($Text, "(?is)\b$($M.Groups[2].Value)\s*:\s*array\s*\[[^\]]*\]\s*of\s*string\s*=\s*\((.*?)\)\s*;").Groups[1].Value
+    $Ids[$M.Groups[1].Value] = @([regex]::Matches($Array, "'([^']+)'") | ForEach-Object { $_.Groups[1].Value })
   }
   $Body = [regex]::Match($Text, '(?is)procedure\s+Register\s*;\s*begin(.*?)\bend\s*;').Groups[1].Value
   $Registered += [regex]::Matches($Body, 'RegisterPackageWizard\s*\(\s*(\w+)\.Create') | ForEach-Object { $_.Groups[1].Value }
 }
 Check ($RegisteringUnits.Count -eq 1) "exactly one unit declares Register ($($RegisteringUnits -join ', '))"
-$IdValues = @($Ids.Values)
-Check ($IdValues.Count -eq @($IdValues | Sort-Object -Unique).Count) "wizard IDs are unique ($(($Ids.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value)" }) -join ', '))"
-Check ($Registered.Count -eq @($Registered | Sort-Object -Unique).Count) "Register registers each wizard class once ($($Registered -join ', '))"
-Check (-not ($Registered | Where-Object { -not $Ids.ContainsKey($_) })) 'every registered wizard has a GetIDString'
+$IdValues = @($Ids.Values | ForEach-Object { $_ })
+Check ($IdValues.Count -eq @($IdValues | Sort-Object -Unique).Count) "wizard IDs are unique ($(($Ids.GetEnumerator() | ForEach-Object { "$($_.Key)=$($_.Value -join '/')" }) -join ', '))"
+# The IDE refuses a second wizard with the same ID: a class registered N times needs N IDs
+$Short = @($Registered | Group-Object | Where-Object { -not $Ids.ContainsKey($_.Name) -or $_.Count -gt $Ids[$_.Name].Count } | ForEach-Object Name)
+Check ($Short.Count -eq 0) "every registration has a wizard ID of its own ($($Registered -join ', '))$(if ($Short) { ': not ' + ($Short -join ', ') })"
 $AllUnits[$Package] = ($Units | ForEach-Object { "$($_.Name)=$($_.File)" }) -join ';'
 
 # Built packages: one Register export each

@@ -1,0 +1,24 @@
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    x:Class="TQueueWindow"
+    Title="Queue" Width="320" Height="440" MinWidth="260" MinHeight="300" Backdrop="MicaAlt"
+    Minimizable="False" Maximizable="False" WindowStartupLocation="CenterOwner">
+  <!-- A tool window: it stays above Tempo's main window, closing it only hides it -->
+  <Grid Padding="16" RowSpacing="8">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <TextBlock Text="Up next" Style="{StaticResource SubtitleTextBlockStyle}"/>
+    <ListView x:Name="UpNext" Grid.Row="1" SelectionMode="None">
+      <d:ListView.Items>
+        <x:String>Morning Jazz</x:String>
+        <x:String>Synthwave Drive</x:String>
+      </d:ListView.Items>
+    </ListView>
+  </Grid>
+</Window>

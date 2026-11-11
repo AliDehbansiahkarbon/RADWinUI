@@ -1,0 +1,78 @@
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    x:Class="TMainWindow"
+    Title="Tempo" Width="1000" Height="660" MinWidth="720" MinHeight="460"
+    WindowStartupLocation="CenterScreen" Backdrop="Mica" TitleBar="AppTitleBar">
+  <!-- TitleBar="AppTitleBar": the content goes up into the title bar and AppTitleBar is where the window is dragged -->
+  <Grid>
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+    <TitleBar x:Name="AppTitleBar" Title="Tempo" Subtitle="Radio" IsBackButtonVisible="True" IsBackButtonEnabled="False"
+              BackRequested="TitleBarBackRequested">
+      <TitleBar.IconSource>
+        <FontIconSource Glyph="&#xE8D6;"/>
+      </TitleBar.IconSource>
+      <TitleBar.Content>
+        <AutoSuggestBox x:Name="SearchBox" PlaceholderText="Search stations" QueryIcon="Find" Width="320"
+                        TextChanged="SearchChanged" AutomationProperties.Name="Search stations"/>
+      </TitleBar.Content>
+    </TitleBar>
+
+    <Grid Grid.Row="1" Padding="24,8,24,24" ColumnSpacing="24">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="320"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+      <Grid RowSpacing="8">
+        <Grid.RowDefinitions>
+          <RowDefinition Height="Auto"/>
+          <RowDefinition Height="*"/>
+          <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+        <TextBlock x:Name="CountText" Style="{StaticResource BodyStrongTextBlockStyle}" d:Text="6 stations"/>
+        <ListView x:Name="StationList" Grid.Row="1" IsItemClickEnabled="True" SelectionMode="None" ItemClick="StationClick">
+          <d:ListView.Items>
+            <x:String>Lo-fi Study</x:String>
+            <x:String>Morning Jazz</x:String>
+          </d:ListView.Items>
+          <ListView.ItemTemplate>
+            <DataTemplate x:DataType="TStation">
+              <StackPanel Padding="0,8">
+                <TextBlock Text="{Binding Name}" d:Text="{Binding}" FontWeight="SemiBold"/>
+                <TextBlock Text="{Binding Genre}" d:Text="Chill" FontSize="12" Opacity="0.7"/>
+              </StackPanel>
+            </DataTemplate>
+          </ListView.ItemTemplate>
+        </ListView>
+        <Button x:Name="AddButton" Grid.Row="2" Content="Add station..." Click="AddClick" HorizontalAlignment="Stretch"/>
+      </Grid>
+
+      <Border Grid.Column="1" CornerRadius="12" Padding="32" BorderThickness="1"
+              Background="{ThemeResource CardBackgroundFillColorDefaultBrush}"
+              BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}">
+        <StackPanel Spacing="16" VerticalAlignment="Center">
+          <FontIcon Glyph="&#xE93C;" FontSize="64" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+          <TextBlock Text="NOW PLAYING" HorizontalAlignment="Center" FontSize="12" Opacity="0.6"/>
+          <TextBlock x:Name="StationName" HorizontalAlignment="Center" Style="{StaticResource TitleTextBlockStyle}"
+                     d:Text="Lo-fi Study"/>
+          <TextBlock x:Name="GenreText" HorizontalAlignment="Center" Opacity="0.7" d:Text="Chill"/>
+          <ProgressBar x:Name="Progress" Maximum="100" Width="360"/>
+          <StackPanel Orientation="Horizontal" Spacing="8" HorizontalAlignment="Center">
+            <Button x:Name="PlayButton" Content="Play" Style="{StaticResource AccentButtonStyle}" MinWidth="96"
+                    Click="PlayClick"/>
+            <Button x:Name="QueueButton" Content="Queue" Click="QueueClick"/>
+            <Button x:Name="MiniButton" Content="Mini player" Click="MiniClick"/>
+            <Button x:Name="FullScreenButton" Content="Full screen" Click="FullScreenClick"/>
+          </StackPanel>
+          <TextBlock x:Name="Status" HorizontalAlignment="Center" FontSize="12" Opacity="0.6" d:Text="Added Night Owl"/>
+        </StackPanel>
+      </Border>
+    </Grid>
+  </Grid>
+</Window>

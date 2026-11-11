@@ -19,7 +19,7 @@ Open `samples\Quill\Quill.dproj` in RAD Studio 13 and run Win64. Or, from the re
 ## How it is made
 
 - `Quill.dpr` sets `SingleInstance` and `OnActivated` before `Run`. Every way in, the first launch with a file on the command line, a file or link from Windows, a notification click or a second start, arrives in `OnActivated` on the UI thread, and `TQuillWindow.HandleActivation` deals with it in one place.
-- Dialogs return their result in a callback. `ConfirmSave` asks about one note and runs the next step only after Yes (once the note is saved) or No, and closing the window walks through the edited notes the same way. `AppWindow.OnClosing` cancels the first close while it asks.
+- Dialogs return their result in a callback. `ConfirmSave` asks about one note and runs the next step only after Yes (once the note is saved) or No, and closing the window walks through the edited notes the same way. `OnCloseQuery` keeps the window open while it asks.
 - Notes are a `TWinUIBindableList<TQuillNote>` shown by a `ListView` with an item template that binds `Title` and `Subtitle`.
 - A notification button reports its argument, here `open|<file>` or `snooze|<file>`, and `TWinUIActivation.Input('line')` reads what was typed into the text box.
 - The WinUI `TextBox` reports line breaks as a lone CR, so Quill passes the editor text through `AdjustLineBreaks` and keeps CRLF in notes and files.

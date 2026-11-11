@@ -5,12 +5,15 @@ program PreviewClientTest;
   host outside the IDE:
 
     PreviewClientTest <RADWinUIPreview.exe> <window .xaml> [cycles]
+    PreviewClientTest <RADWinUIPreview.exe> <repository folder> --docked-samples
 
   Crash, hang (suspended host), closed by the user, large and malformed XAML,
   memory over many edits on one host, and [cycles] start/edit/close cycles.
   Every host window must stay off the primary monitor and never become the
   foreground window, the test stops at once when one does.
   scripts\Test-Preview.ps1 runs it with RADWINUI_TEST_MONITOR=secondary.
+  --docked-samples shows every .xaml of samples\ and community\ in one host
+  docked into an offscreen window, as the IDE's Design view does.
 }
 
 {$APPTYPE CONSOLE}
@@ -332,6 +335,61 @@ begin
   end;
 end;
 
+/// Every sample .xaml in one host docked into an offscreen parent: each one loads, survives
+/// its first layouts and leaves the host able to load the next (WinUI's TitleBar crashed it).
+procedure TestDockedSamples(const AExe, ARoot: string);
+var
+  Parent: HWND;
+  Client: TPreviewClient;
+  Path, Xaml, Reply: string;
+  Started: Cardinal;
+  Count: Integer;
+  Host: THandle;
+begin
+  Writeln('Docked samples');
+  Parent := CreateWindowEx(WS_EX_NOACTIVATE or WS_EX_TOOLWINDOW, 'STATIC', 'RADWinUI docked samples',
+    WS_POPUP or WS_VISIBLE, -20000, -20000, 1000, 700, 0, 0, HInstance, nil);
+  Client := TPreviewClient.Create(AExe, Parent);
+  Host := 0;
+  Count := 0;
+  try
+    for Path in TDirectory.GetFiles(ARoot + 'samples', '*.xaml', TSearchOption.soAllDirectories) +
+      TDirectory.GetFiles(ARoot + 'community', '*.xaml', TSearchOption.soAllDirectories) do
+    begin
+      if Path.Contains('\Win64\') then
+        Continue;
+      Xaml := TFile.ReadAllText(Path, TEncoding.UTF8);
+      Started := GetTickCount;
+      repeat
+        PumpWindowMessages(Parent);
+        Client.Tick(Path, Xaml);
+        if (Client.Status = 'OK') or Client.Status.StartsWith('ERROR') or Client.Closed or Client.Failed then
+          Break;
+        Sleep(50);
+      until GetTickCount - Started >= 20000;
+      if (Host = 0) and (Client.HostProcess <> 0) then
+        DuplicateHandle(GetCurrentProcess, Client.HostProcess, GetCurrentProcess, @Host, 0, False,
+          DUPLICATE_SAME_ACCESS);
+      // A few layouts, then the same host must still answer
+      Started := GetTickCount;
+      repeat
+        PumpWindowMessages(Parent);
+        Sleep(20);
+      until GetTickCount - Started >= 400;
+      Check((Client.Status = 'OK') and Client.Request('HELLO', Reply) and (Reply = 'RADWINUI-DESIGNER 6') and
+        (Host <> 0) and (WaitForSingleObject(Host, 0) = WAIT_TIMEOUT),
+        'docked: ' + ExtractRelativePath(ARoot, Path) + ' (' + Client.Status + ')');
+      Inc(Count);
+    end;
+    Check(Count > 20, Format('%d sample files in one docked host', [Count]));
+  finally
+    Client.Free;
+    if Host <> 0 then
+      CloseHandle(Host);
+    DestroyWindow(Parent);
+  end;
+end;
+
 var
   Exe, Path, Good, Broken, Large, Xmlns: string;
   Client: TPreviewClient;
@@ -347,10 +405,19 @@ begin
   if not (ParamCount in [2, 3]) then
   begin
     Writeln('usage: PreviewClientTest <RADWinUIPreview.exe> <window .xaml> [cycles|--docked-only]');
+    Writeln('       PreviewClientTest <RADWinUIPreview.exe> <repository folder> --docked-samples');
     Halt(2);
   end;
   Exe := ExpandFileName(ParamStr(1));
   Path := ExpandFileName(ParamStr(2));
+  if SameText(ParamStr(3), '--docked-samples') then
+  begin
+    TestDockedSamples(Exe, IncludeTrailingPathDelimiter(Path));
+    if Failures > 0 then
+      Halt(1);
+    Writeln('Docked samples test PASSED');
+    Halt(0);
+  end;
   Cycles := StrToIntDef(ParamStr(3), 0);
   Good := TFile.ReadAllText(Path, TEncoding.UTF8);
   Broken := Good.Replace('</StackPanel>', '</StackPanl>');
@@ -438,6 +505,20 @@ begin
     WaitForSingleObject(Client.HostProcess, 5000);
     Check(TickUntil(Client, Path, Good, function: Boolean begin Result := Client.Closed end),
       'a host that exits with 0 means closed by the user (' + Client.Status + ')');
+  finally
+    Client.Free;
+  end;
+
+  // A host that answers LOAD and then crashes every time (WinUI's TitleBar did in the IDE dock)
+  // must not be restarted forever: its OK answers do not clear the crash count
+  Client := TPreviewClient.Create(Exe);
+  try
+    for I := 1 to 3 do
+      if TickUntil(Client, Path, Good + StringOfChar(' ', I),
+        function: Boolean begin Result := (Client.Status = 'OK') or Client.Failed end) and not Client.Failed then
+        TerminateProcess(Client.HostProcess, 3);
+    Check(TickUntil(Client, Path, Good, function: Boolean begin Result := Client.Failed end),
+      'a host that crashes after every load stops after 3 tries (' + Client.Status + ')');
   finally
     Client.Free;
   end;

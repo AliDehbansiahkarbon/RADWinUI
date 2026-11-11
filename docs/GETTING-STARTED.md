@@ -37,7 +37,7 @@ In RAD Studio, started **without** administrator rights (WinUI 3 does not run el
 3. Right-click the project group > **Build All**.
 4. Right-click the package > **Install**.
 
-The demos are another group: `samples\RADWinUISamples.groupproj` (Gallery, Luma, Haven, Lucent, Tab Bars, Action Buttons, Data Controls, Quill, AppServicesDemo, Crew and the smaller Counter, Greeter, ListDemo, Contacts and Profile). Apps that people made with RADWinUI, such as Notch, are in `community\Community.groupproj` (see [Made with RADWinUI](../community/README.md)). Their build events call `scripts\RADWinUI-PreBuild.cmd` (XamlCodeGen) and `scripts\RADWinUI-PostBuild.cmd` (copies the bootstrap DLL). A sample copied out of the repository finds RADWinUI through the `RADWINUI_ROOT` environment variable, set it in Windows or in Tools > Options > IDE > Environment Variables.
+The demos are another group: `samples\RADWinUISamples.groupproj` (Gallery, Luma, Haven, Lucent, Tab Bars, Action Buttons, Data Controls, Quill, AppServicesDemo, Crew, Tempo and the smaller Counter, Greeter, ListDemo, Contacts and Profile). Apps that people made with RADWinUI, such as Notch, are in `community\Community.groupproj` (see [Made with RADWinUI](../community/README.md)). Their build events call `scripts\RADWinUI-PreBuild.cmd` (XamlCodeGen) and `scripts\RADWinUI-PostBuild.cmd` (copies the bootstrap DLL). A sample copied out of the repository finds RADWinUI through the `RADWINUI_ROOT` environment variable, set it in Windows or in Tools > Options > IDE > Environment Variables.
 
 ## Scripts do the same from a command line: `scripts\Build-Wizard.ps1`.
 
@@ -57,7 +57,7 @@ File > New > Other > Delphi Projects > **RADWinUI Application**. Give it a name 
 
 Press F9. A WinUI window opens with a counter, Increment shows "Count: 1".
 
-Another window: File > New > Other > Delphi Files > **RADWinUI Window**. A page that a frame navigates to: **RADWinUI Page**. A control of your own to use in other XAML of the project: **RADWinUI User Control**. The [Crew](samples-Crew.md) sample shows pages and a user control together.
+Another window: File > New > Other > Delphi Files > **RADWinUI Window**. A page that a frame navigates to: **RADWinUI Page**. A control of your own to use in other XAML of the project: **RADWinUI User Control**. The [Crew](samples-Crew.md) sample shows pages and a user control together. Several windows, modal ones and a title bar of your own: see the [Tempo](samples-Tempo.md) sample.
 
 New application and window templates use `RequestedTheme="Default"` and
 `Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" on the root

@@ -134,6 +134,8 @@ function Test-Sample([string]$Name, [scriptblock]$Scenario) {
   }
 }
 
+# Tempo remembers its window placement: keep the user's own, the offscreen run saves another
+$TempoPlacement = (Get-ItemProperty 'HKCU:\Software\Tempo\Placement' -ErrorAction SilentlyContinue).TMainWindow
 $Results = @(
   Test-Sample 'Counter' {
     param($Win)
@@ -269,6 +271,31 @@ $Results = @(
     Expect-Value $Win 'SearchBox' 'grace'
     Write-Host "  [ok] NavigationView items navigate, the KeepAlive page keeps its search"
   }
+  Test-Sample 'Tempo' {
+    param($Win)
+    # Owned windows appear under their owner. No compact overlay or full screen: they would leave the test area.
+    function Owned([string]$Name) {
+      $Cond = New-Object Windows.Automation.AndCondition(
+        (New-Object Windows.Automation.PropertyCondition($AE::NameProperty, $Name)),
+        (New-Object Windows.Automation.PropertyCondition($AE::ControlTypeProperty, [Windows.Automation.ControlType]::Window)))
+      Wait-For { $Win.FindFirst([Windows.Automation.TreeScope]::Children, $Cond) } "the $Name window"
+    }
+    Expect-Name $Win 'StationName' 'Lo-fi Study'
+    Invoke-Named $Win 'Queue'
+    $Queue = Owned 'Queue'
+    $Queue.GetCurrentPattern([Windows.Automation.WindowPattern]::Pattern).Close()
+    Write-Host "  [ok] the Queue tool window opens as an owned window and hides when closed"
+    Invoke-Named $Win 'Add station...'
+    $Dialog = Owned 'Add station'
+    Set-Text (Get-Id $Dialog 'NameBox') 'Night Owl'
+    Invoke-Named $Dialog 'Add'
+    Expect-Name $Win 'Status' 'Added Night Owl'
+    Expect-Name $Win 'StationName' 'Night Owl'
+    Write-Host "  [ok] the modal Add station window returns its result"
+    Invoke-Named $Win 'Back'
+    Expect-Name $Win 'StationName' 'Lo-fi Study'
+    Write-Host "  [ok] the title bar's back button goes back"
+  }
 )
 
 # Closing a window must not crash the app afterwards (the WinUI DLLs stay
@@ -291,9 +318,15 @@ Write-Host 'Dialogs, notifications and activation'
 & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\AppServices\AppServicesTest.dpr' | Out-Null
 & (Join-Path $RepoRoot 'tests\AppServices\Win64\Debug\AppServicesTest.exe') | Select-Object -Skip 1
 $Results += ($LASTEXITCODE -eq 0)
+if ($TempoPlacement) { Set-ItemProperty 'HKCU:\Software\Tempo\Placement' -Name TMainWindow -Value $TempoPlacement }
+else { Remove-Item 'HKCU:\Software\Tempo' -Recurse -ErrorAction SilentlyContinue }
 Write-Host 'Pages, navigation and user controls'
 & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Pages\PagesTest.dpr' | Out-Null
 & (Join-Path $RepoRoot 'tests\Pages\Win64\Debug\PagesTest.exe') | Select-Object -Skip 1
+$Results += ($LASTEXITCODE -eq 0)
+Write-Host 'Windows and title bar'
+& (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Windows\WindowsTest.dpr' | Out-Null
+& (Join-Path $RepoRoot 'tests\Windows\Win64\Debug\WindowsTest.exe') | Select-Object -Skip 1
 $Results += ($LASTEXITCODE -eq 0)
 
 if ($Results -contains $false) {

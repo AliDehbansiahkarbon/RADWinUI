@@ -23,6 +23,7 @@ interface
 
 uses
   System.SysUtils,
+  System.UITypes,
   RADWinUI.Interop.Core,
   RADWinUI.Abi,
   RADWinUI.Framework,
@@ -55,6 +56,21 @@ type
   TWinUIWindow = class;
   TWinUIWindowClass = class of TWinUIWindow;
 
+  /// <summary>What closing does to a window, like the VCL caNone, caHide and caFree.</summary>
+  TWinUICloseAction = (None, Hide, Free);
+  TWinUICloseEvent = procedure(Sender: TObject; var Action: TWinUICloseAction) of object;
+  TWinUICloseQueryEvent = procedure(Sender: TObject; var CanClose: Boolean) of object;
+
+  /// <summary>
+  ///   Normal, Minimized and Maximized are the usual window states, FullScreen
+  ///   fills the display without a frame, CompactOverlay is a small always-on-top
+  ///   picture-in-picture window.
+  /// </summary>
+  TWinUIWindowState = (Normal, Minimized, Maximized, FullScreen, CompactOverlay);
+
+  /// <summary>MainWindow: the app ends when its main window closes. LastWindow: when its last window closes.</summary>
+  TWinUIShutdownMode = (MainWindow, LastWindow);
+
   /// <summary>A XAML event names a handler the window class does not publish.</summary>
   EWinUIBindError = class(Exception);
 
@@ -86,7 +102,41 @@ type
     FClassBrushSet: Boolean;
     FSubclassed: Boolean;
     FDockListener: Integer;
+    FOnClose: TWinUICloseEvent;
+    FOnCloseQuery: TWinUICloseQueryEvent;
+    FOwnerWindow: TWinUIWindow;
+    FModal: Boolean;
+    FModalResult: TModalResult;
+    FModalDone: TProc<TModalResult>;
+    FClosing: Boolean;
+    FMaxWidth: Integer;
+    FMaxHeight: Integer;
+    FOverlapped: TWinUIAppWindowPresenter;
+    FMaximizeOnShow: Boolean;
+    FPassthrough: TArray<TWinUIFrameworkElement>;
+    FPassthroughListeners: TArray<Integer>;
     class var FWindows: TArray<TWinUIWindow>;
+    function CloseAction: TWinUICloseAction;
+    procedure EndModal;
+    procedure SetOwnerWindow(AValue: TWinUIWindow);
+    procedure SetModalResult(AValue: TModalResult);
+    function GetLeft: Integer;
+    function GetTop: Integer;
+    procedure SetLeft(AValue: Integer);
+    procedure SetTop(AValue: Integer);
+    procedure SetMaxWidth(AValue: Integer);
+    procedure SetMaxHeight(AValue: Integer);
+    function GetWindowState: TWinUIWindowState;
+    procedure SetWindowState(AValue: TWinUIWindowState);
+    function GetResizable: Boolean;
+    procedure SetResizable(AValue: Boolean);
+    function GetMinimizable: Boolean;
+    procedure SetMinimizable(AValue: Boolean);
+    function GetMaximizable: Boolean;
+    procedure SetMaximizable(AValue: Boolean);
+    function GetPlacement: string;
+    procedure SetPlacement(const AValue: string);
+    procedure UpdatePassthrough;
     class function IsAlive(AWindow: TWinUIWindow): Boolean; static;
     function Handle: THandle;
     function Scale: Double;
@@ -139,6 +189,43 @@ type
     procedure Center;
     /// <summary>Restores the window when it is minimized and brings it to the front.</summary>
     procedure BringToFront;
+    /// <summary>
+    ///   Closes the window like the VCL: OnCloseQuery may refuse, OnClose picks
+    ///   the action (Free by default, Hide or None). The close button and Alt+F4 do the same.
+    /// </summary>
+    procedure Close; reintroduce;
+    /// <summary>Hides the window, Show brings it back.</summary>
+    procedure Hide;
+    /// <summary>
+    ///   Shows the window as a modal one: its OwnerWindow (the active window when
+    ///   none is set) is disabled until it closes, it is centred on it, and
+    ///   AOnClose gets ModalResult. The call returns at once, there is no message loop.
+    /// </summary>
+    procedure ShowModal(const AOnClose: TProc<TModalResult> = nil);
+    /// <summary>Centers the window on its OwnerWindow, or on its display when it has none.</summary>
+    procedure CenterOnOwner;
+    /// <summary>Changes the window's icon in its title bar, the taskbar and Alt+Tab (an .ico file).</summary>
+    procedure SetIcon(const AFileName: string);
+    /// <summary>
+    ///   Makes AElement the title bar: the content goes up into the title bar area
+    ///   and AElement is where the window is dragged. Works with WinUI's TitleBar control.
+    /// </summary>
+    procedure UseTitleBar(AElement: TWinUIUIElement);
+    /// <summary>
+    ///   Elements in a title bar of your own that take clicks and typing, such as a
+    ///   search box: the rest of the title bar keeps dragging the window. Followed
+    ///   through layout changes. WinUI's TitleBar control does this by itself.
+    /// </summary>
+    procedure SetTitleBarPassthrough(const AElements: array of TWinUIFrameworkElement);
+    /// <summary>
+    ///   Stores Placement under HKEY_CURRENT_USER\Software\&lt;exe name&gt;\Placement,
+    ///   in the value AName (the class name when empty).
+    /// </summary>
+    procedure SavePlacement(const AName: string = '');
+    /// <summary>Restores what SavePlacement stored, False when there is nothing.</summary>
+    function RestorePlacement(const AName: string = ''): Boolean;
+    /// <summary>Every window of the app that is not freed yet, oldest first.</summary>
+    class function Windows: TArray<TWinUIWindow>; static;
     /// <summary>
     ///   The window of this app that has the focus, else the one created last,
     ///   nil when no window is open. Dialogs and pickers belong to it.
@@ -204,6 +291,36 @@ type
     /// </summary>
     property ShowActivated: Boolean read FShowActivated write SetShowActivated;
     property AlwaysOnTop: Boolean read GetAlwaysOnTop write SetAlwaysOnTop;
+    /// <summary>Position of the window's outer frame, in device-independent pixels of its display.</summary>
+    property Left: Integer read GetLeft write SetLeft;
+    property Top: Integer read GetTop write SetTop;
+    /// <summary>The largest client size the user can drag the window to, 0 for no limit.</summary>
+    property MaxWidth: Integer read FMaxWidth write SetMaxWidth;
+    property MaxHeight: Integer read FMaxHeight write SetMaxHeight;
+    property WindowState: TWinUIWindowState read GetWindowState write SetWindowState;
+    /// <summary>The user can resize the window, minimize it, maximize it.</summary>
+    property Resizable: Boolean read GetResizable write SetResizable;
+    property Minimizable: Boolean read GetMinimizable write SetMinimizable;
+    property Maximizable: Boolean read GetMaximizable write SetMaximizable;
+    /// <summary>
+    ///   The window this one belongs to: it stays above it, is minimized with it
+    ///   and closes with it. Set before Show.
+    /// </summary>
+    property OwnerWindow: TWinUIWindow read FOwnerWindow write SetOwnerWindow;
+    /// <summary>
+    ///   The result of a modal window. Setting it to anything but mrNone closes
+    ///   the window, as in the VCL. Closing it otherwise gives mrCancel.
+    /// </summary>
+    property ModalResult: TModalResult read FModalResult write SetModalResult;
+    /// <summary>
+    ///   Position, size and state as text, to keep anywhere and set again in a
+    ///   later run. A position on a display that is gone puts the window on the nearest one.
+    /// </summary>
+    property Placement: string read GetPlacement write SetPlacement;
+    /// <summary>Before the window closes, set CanClose to False to keep it open.</summary>
+    property OnCloseQuery: TWinUICloseQueryEvent read FOnCloseQuery write FOnCloseQuery;
+    /// <summary>When the window closes: Action is Free unless the handler picks Hide or None.</summary>
+    property OnClose: TWinUICloseEvent read FOnClose write FOnClose;
   end;
 
   /// <summary>Repeating timer on the UI thread, like the VCL TTimer. Interval in milliseconds.</summary>
@@ -261,9 +378,15 @@ type
     class var FMainInstance: IAppInstance;
     class var FActivatedToken: EventRegistrationToken;
     class var FDispatcher: IDispatcherQueue;
+    class var FMainWindow: TWinUIWindow;
+    class var FShutdownMode: TWinUIShutdownMode;
     procedure AddResource(const AName: string; const AValue: IInspectable);
     class function StartInstance: Boolean; static;
     class procedure CallActivated(const AActivation: TWinUIActivation; ABringToFront: Boolean); static;
+  private
+    // TWinUIWindow reports its windows: closed (ShutdownMode) and freed (MainWindow)
+    class procedure WindowClosed(AWindow: TWinUIWindow); static;
+    class procedure WindowGone(AWindow: TWinUIWindow); static;
   protected
     procedure OnLaunched(const AArgs: ILaunchActivatedEventArgs); override;
   public
@@ -328,6 +451,13 @@ type
     class property OnActivated: TWinUIActivatedEvent read FOnActivated write FOnActivated;
     /// <summary>How the app was started, readable from the main window's constructor on.</summary>
     class property LaunchActivation: TWinUIActivation read FLaunchActivation;
+    /// <summary>The window Run created, nil once it is freed.</summary>
+    class property MainWindow: TWinUIWindow read FMainWindow;
+    /// <summary>MainWindow (the default, as in the VCL) or LastWindow, see TWinUIShutdownMode.</summary>
+    class property ShutdownMode: TWinUIShutdownMode read FShutdownMode write FShutdownMode;
+    /// <summary>Every window of the app that is not freed yet, oldest first.</summary>
+    class function Windows: TArray<TWinUIWindow>; static;
+    class function WindowCount: Integer; static;
   end;
 
 implementation
@@ -603,6 +733,11 @@ begin
       Me: TWinUIWindow;
     begin
       Me := Self;
+      // Closed some other way than Close (the app ends, the owner went): a modal caller still gets its answer
+      if Me.FModal and (Me.FModalResult = mrNone) then
+        Me.FModalResult := mrCancel;
+      Me.EndModal;
+      TWinUIApp.WindowClosed(Me);
       DispatcherQueue.TryEnqueue(TDispatcherQueueHandler.Create(
         procedure
         begin
@@ -610,15 +745,40 @@ begin
             Me.Free;
         end));
     end));
+  // Its overlapped presenter, to come back to after FullScreen or CompactOverlay
+  FOverlapped := AppWindow.Presenter;
+  // The close button and Alt+F4 follow the rules of Close
+  AppWindow.Closing.Add(
+    procedure(Sender: TObject; E: TWinUIAppWindowClosingEventArgs)
+    begin
+      if FClosing then
+        Exit;
+      case CloseAction of
+        TWinUICloseAction.Free:
+          FClosing := True; // WinUI goes on closing it
+        TWinUICloseAction.Hide:
+          begin
+            E.Cancel := True;
+            Hide;
+          end;
+      else
+        E.Cancel := True;
+      end;
+    end);
 end;
 
 destructor TWinUIWindow.Destroy;
 var
   I: Integer;
+  W: TWinUIWindow;
 begin
   for I := High(FWindows) downto 0 do
     if FWindows[I] = Self then
       Delete(FWindows, I, 1);
+  for W in FWindows do
+    if W.FOwnerWindow = Self then
+      W.FOwnerWindow := nil;
+  TWinUIApp.WindowGone(Self);
   if Assigned(CustomXamlOwnerGone) then
     CustomXamlOwnerGone(Self);
   inherited;
@@ -689,7 +849,10 @@ end;
 
 function TWinUIWindow.Presenter: TWinUIOverlappedPresenter;
 begin
-  Result := AppWindow.Presenter as TWinUIOverlappedPresenter;
+  // The window's own one, also while FullScreen or CompactOverlay shows: its settings wait for it there
+  if FOverlapped = nil then
+    FOverlapped := AppWindow.Presenter;
+  Result := FOverlapped as TWinUIOverlappedPresenter;
 end;
 
 function TWinUIWindow.GetClientWidth: Integer;
@@ -1362,6 +1525,8 @@ begin
   Pos.X := Area.Left + (Area.Width - Size.Width) div 2;
   Pos.Y := Area.Top + (Area.Height - Size.Height) div 2;
   AppWindow.Move(Pos);
+  // A maximized window would fill a real display: test windows stay where they are put
+  FMaximizeOnShow := False;
   if TestForeground = 0 then
   begin
     TestForeground := GetForegroundWindow;
@@ -1376,6 +1541,11 @@ end;
 // when it was set (an overlay sets it before Show), so showing confirms it.
 procedure TWinUIWindow.KeepOnTop;
 begin
+  if FMaximizeOnShow then
+  begin
+    FMaximizeOnShow := False;
+    Presenter.Maximize;
+  end;
   if (FWindowStyle = TWinUIWindowStyle.Overlay) or Presenter.IsAlwaysOnTop then
     SetWindowPos(Handle, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOMOVE or SWP_NOSIZE or SWP_NOACTIVATE or SWP_NOOWNERZORDER);
 end;
@@ -1440,6 +1610,432 @@ begin
   end;
   Result := TWinUIFrameworkElement(TWinUIObject.Wrap(Self, Loaded, TWinUIFrameworkElement));
   Content := Result;
+end;
+
+{ TWinUIWindow: closing, modal windows and owners }
+
+class function TWinUIWindow.Windows: TArray<TWinUIWindow>;
+begin
+  Result := Copy(FWindows);
+end;
+
+// OnCloseQuery, then OnClose: None when the window stays
+function TWinUIWindow.CloseAction: TWinUICloseAction;
+var
+  CanClose: Boolean;
+begin
+  CanClose := True;
+  if Assigned(FOnCloseQuery) then
+    FOnCloseQuery(Self, CanClose);
+  if not CanClose then
+  begin
+    FModalResult := mrNone; // as in the VCL, the modal window stays open with no result
+    Exit(TWinUICloseAction.None);
+  end;
+  Result := TWinUICloseAction.Free;
+  if Assigned(FOnClose) then
+    FOnClose(Self, Result);
+  if Result <> TWinUICloseAction.None then
+  begin
+    if FModal and (FModalResult = mrNone) then
+      FModalResult := mrCancel;
+    EndModal;
+  end;
+end;
+
+procedure TWinUIWindow.Close;
+begin
+  if FClosing then
+    Exit;
+  case CloseAction of
+    TWinUICloseAction.Free:
+      begin
+        FClosing := True;
+        inherited Close;
+      end;
+    TWinUICloseAction.Hide:
+      Hide;
+  end;
+end;
+
+procedure TWinUIWindow.Hide;
+begin
+  AppWindow.Hide;
+end;
+
+procedure TWinUIWindow.ShowModal(const AOnClose: TProc<TModalResult>);
+var
+  W, Owner: TWinUIWindow;
+  Foreground: HWND;
+begin
+  if FOwnerWindow = nil then
+  begin
+    // The window in use: the foreground one, else the main window, else the newest other visible one
+    Owner := nil;
+    Foreground := GetForegroundWindow;
+    for W in FWindows do
+      if (W <> Self) and W.AppWindow.IsVisible and (W.Handle = Foreground) then
+        Owner := W;
+    if (Owner = nil) and (TWinUIApp.MainWindow <> nil) and (TWinUIApp.MainWindow <> Self) and
+      TWinUIApp.MainWindow.AppWindow.IsVisible then
+      Owner := TWinUIApp.MainWindow;
+    if Owner = nil then
+      for W in FWindows do
+        if (W <> Self) and W.AppWindow.IsVisible then
+          Owner := W;
+    if Owner <> nil then
+      OwnerWindow := Owner;
+  end;
+  FModal := True;
+  FModalResult := mrNone;
+  FModalDone := AOnClose;
+  if FOwnerWindow <> nil then
+    EnableWindow(FOwnerWindow.Handle, False);
+  CenterOnOwner;
+  Show;
+end;
+
+procedure TWinUIWindow.EndModal;
+var
+  Done: TProc<TModalResult>;
+  Owner: TWinUIWindow;
+begin
+  if not FModal then
+    Exit;
+  FModal := False;
+  Owner := FOwnerWindow;
+  if (Owner <> nil) and IsAlive(Owner) then
+  begin
+    EnableWindow(Owner.Handle, True);
+    // A window disabled meanwhile does not get the focus back by itself, test runs leave the focus alone
+    if GetEnvironmentVariable('RADWINUI_TEST_MONITOR') = '' then
+      SetForegroundWindow(Owner.Handle);
+  end;
+  Done := FModalDone;
+  FModalDone := nil;
+  if Assigned(Done) then
+    Done(FModalResult);
+end;
+
+procedure TWinUIWindow.SetModalResult(AValue: TModalResult);
+begin
+  FModalResult := AValue;
+  if FModal and (AValue <> mrNone) then
+    Close;
+end;
+
+procedure TWinUIWindow.SetOwnerWindow(AValue: TWinUIWindow);
+begin
+  if AValue = Self then
+    raise EArgumentException.Create('A window cannot own itself');
+  FOwnerWindow := AValue;
+  // A Windows owner: the window stays above it, is minimized with it and goes with it
+  if AValue = nil then
+    SetWindowLongPtr(Handle, GWLP_HWNDPARENT, 0)
+  else
+    SetWindowLongPtr(Handle, GWLP_HWNDPARENT, LONG_PTR(AValue.Handle));
+end;
+
+procedure TWinUIWindow.CenterOnOwner;
+var
+  Outer: RectInt32;
+  Size: SizeInt32;
+  Pos: PointInt32;
+begin
+  if (FOwnerWindow = nil) or not IsAlive(FOwnerWindow) then
+  begin
+    Center;
+    Exit;
+  end;
+  Outer.X := FOwnerWindow.AppWindow.Position.X;
+  Outer.Y := FOwnerWindow.AppWindow.Position.Y;
+  Outer.Width := FOwnerWindow.AppWindow.Size.Width;
+  Outer.Height := FOwnerWindow.AppWindow.Size.Height;
+  Size := AppWindow.Size;
+  Pos.X := Outer.X + (Outer.Width - Size.Width) div 2;
+  Pos.Y := Outer.Y + (Outer.Height - Size.Height) div 2;
+  AppWindow.Move(Pos);
+end;
+
+{ TWinUIWindow: position, size and state }
+
+function TWinUIWindow.GetLeft: Integer;
+begin
+  Result := Round(AppWindow.Position.X / Scale);
+end;
+
+function TWinUIWindow.GetTop: Integer;
+begin
+  Result := Round(AppWindow.Position.Y / Scale);
+end;
+
+procedure TWinUIWindow.SetLeft(AValue: Integer);
+var
+  Pos: PointInt32;
+begin
+  Pos := AppWindow.Position;
+  Pos.X := Round(AValue * Scale);
+  AppWindow.Move(Pos);
+end;
+
+procedure TWinUIWindow.SetTop(AValue: Integer);
+var
+  Pos: PointInt32;
+begin
+  Pos := AppWindow.Position;
+  Pos.Y := Round(AValue * Scale);
+  AppWindow.Move(Pos);
+end;
+
+procedure TWinUIWindow.SetMaxWidth(AValue: Integer);
+begin
+  FMaxWidth := AValue;
+  if AValue <= 0 then
+    Presenter.PreferredMaximumWidth := nil
+  else
+    Presenter.PreferredMaximumWidth := PropertyValue.CreateInt32(Round(AValue * Scale)) as IReference_Int32;
+end;
+
+procedure TWinUIWindow.SetMaxHeight(AValue: Integer);
+begin
+  FMaxHeight := AValue;
+  if AValue <= 0 then
+    Presenter.PreferredMaximumHeight := nil
+  else
+    Presenter.PreferredMaximumHeight := PropertyValue.CreateInt32(Round(AValue * Scale)) as IReference_Int32;
+end;
+
+function TWinUIWindow.GetWindowState: TWinUIWindowState;
+begin
+  case AppWindow.Presenter.Kind of
+    TWinUIAppWindowPresenterKind.FullScreen:
+      Result := TWinUIWindowState.FullScreen;
+    TWinUIAppWindowPresenterKind.CompactOverlay:
+      Result := TWinUIWindowState.CompactOverlay;
+  else
+    case Presenter.State of
+      TWinUIOverlappedPresenterState.Minimized:
+        Result := TWinUIWindowState.Minimized;
+      TWinUIOverlappedPresenterState.Maximized:
+        Result := TWinUIWindowState.Maximized;
+    else
+      Result := TWinUIWindowState.Normal;
+    end;
+  end;
+end;
+
+procedure TWinUIWindow.SetWindowState(AValue: TWinUIWindowState);
+begin
+  // Maximize would show the window at once: before Show, Show maximizes it
+  FMaximizeOnShow := (AValue = TWinUIWindowState.Maximized) and not AppWindow.IsVisible;
+  if FMaximizeOnShow then
+    Exit;
+  case AValue of
+    TWinUIWindowState.FullScreen:
+      AppWindow.SetPresenter(TWinUIAppWindowPresenterKind.FullScreen);
+    TWinUIWindowState.CompactOverlay:
+      AppWindow.SetPresenter(TWinUIAppWindowPresenterKind.CompactOverlay);
+  else
+    if AppWindow.Presenter.Kind <> TWinUIAppWindowPresenterKind.Overlapped then
+      AppWindow.SetPresenter(Presenter);
+    case AValue of
+      TWinUIWindowState.Minimized:
+        Presenter.Minimize;
+      TWinUIWindowState.Maximized:
+        Presenter.Maximize;
+    else
+      Presenter.Restore;
+    end;
+  end;
+end;
+
+function TWinUIWindow.GetResizable: Boolean;
+begin
+  Result := Presenter.IsResizable;
+end;
+
+procedure TWinUIWindow.SetResizable(AValue: Boolean);
+begin
+  Presenter.IsResizable := AValue;
+end;
+
+function TWinUIWindow.GetMinimizable: Boolean;
+begin
+  Result := Presenter.IsMinimizable;
+end;
+
+procedure TWinUIWindow.SetMinimizable(AValue: Boolean);
+begin
+  Presenter.IsMinimizable := AValue;
+end;
+
+function TWinUIWindow.GetMaximizable: Boolean;
+begin
+  Result := Presenter.IsMaximizable;
+end;
+
+procedure TWinUIWindow.SetMaximizable(AValue: Boolean);
+begin
+  Presenter.IsMaximizable := AValue;
+end;
+
+// "Normal,left,top,right,bottom" or "Maximized,...": the restored frame in Windows' workspace pixels
+function TWinUIWindow.GetPlacement: string;
+var
+  P: TWindowPlacement;
+  State: string;
+begin
+  P.length := SizeOf(P);
+  if not GetWindowPlacement(Handle, @P) then
+    Exit('');
+  if (P.showCmd = SW_SHOWMAXIMIZED) or FMaximizeOnShow or (WindowState = TWinUIWindowState.Maximized) then
+    State := 'Maximized'
+  else
+    State := 'Normal';
+  Result := Format('%s,%d,%d,%d,%d', [State, P.rcNormalPosition.Left, P.rcNormalPosition.Top,
+    P.rcNormalPosition.Right, P.rcNormalPosition.Bottom]);
+end;
+
+procedure TWinUIWindow.SetPlacement(const AValue: string);
+var
+  Parts: TArray<string>;
+  P: TWindowPlacement;
+  R: TRect;
+  Maximized: Boolean;
+begin
+  Parts := AValue.Split([',']);
+  if Length(Parts) <> 5 then
+    Exit;
+  Maximized := SameText(Parts[0], 'Maximized');
+  R := TRect.Create(StrToIntDef(Parts[1], 0), StrToIntDef(Parts[2], 0), StrToIntDef(Parts[3], 0),
+    StrToIntDef(Parts[4], 0));
+  if (R.Width <= 0) or (R.Height <= 0) then
+    Exit;
+  P.length := SizeOf(P);
+  GetWindowPlacement(Handle, @P);
+  P.rcNormalPosition := R;
+  P.flags := 0;
+  // A hidden window stays hidden, Show maximizes it later
+  if not AppWindow.IsVisible then
+    P.showCmd := SW_HIDE
+  else if Maximized then
+    P.showCmd := SW_SHOWMAXIMIZED
+  else
+    P.showCmd := SW_SHOWNORMAL;
+  SetWindowPlacement(Handle, @P);
+  FMaximizeOnShow := Maximized and not AppWindow.IsVisible;
+  // A display that is gone: the window comes back on the nearest one
+  if MonitorFromRect(@R, MONITOR_DEFAULTTONULL) = 0 then
+    CenterOnOwner;
+end;
+
+function RegSetKeyValue(AKey: HKEY; ASubKey, AValueName: PChar; AType: DWORD; AData: Pointer;
+  ASize: DWORD): Longint; stdcall; external advapi32 name 'RegSetKeyValueW';
+function RegGetValue(AKey: HKEY; ASubKey, AValueName: PChar; AFlags: DWORD; AType: PDWORD; AData: Pointer;
+  ASize: PDWORD): Longint; stdcall; external advapi32 name 'RegGetValueW';
+
+function PlacementKey: string;
+begin
+  Result := 'Software\' + ChangeFileExt(ExtractFileName(ParamStr(0)), '') + '\Placement';
+end;
+
+procedure TWinUIWindow.SavePlacement(const AName: string);
+var
+  Name, Value: string;
+begin
+  Name := AName;
+  if Name = '' then
+    Name := ClassName;
+  Value := Placement;
+  if Value <> '' then
+    RegSetKeyValue(HKEY_CURRENT_USER, PChar(PlacementKey), PChar(Name), REG_SZ, PChar(Value),
+      (Length(Value) + 1) * SizeOf(Char));
+end;
+
+function TWinUIWindow.RestorePlacement(const AName: string): Boolean;
+const
+  RRF_RT_REG_SZ = $00000002;
+var
+  Name: string;
+  Buffer: array[0..255] of Char;
+  Size: DWORD;
+begin
+  Name := AName;
+  if Name = '' then
+    Name := ClassName;
+  Size := SizeOf(Buffer);
+  Result := RegGetValue(HKEY_CURRENT_USER, PChar(PlacementKey), PChar(Name), RRF_RT_REG_SZ, nil, @Buffer,
+    @Size) = ERROR_SUCCESS;
+  if Result then
+    Placement := Buffer;
+end;
+
+{ TWinUIWindow: icon and title bar }
+
+procedure TWinUIWindow.SetIcon(const AFileName: string);
+begin
+  AppWindow.SetIcon(AFileName);
+end;
+
+procedure TWinUIWindow.UseTitleBar(AElement: TWinUIUIElement);
+begin
+  ExtendsContentIntoTitleBar := True;
+  SetTitleBar(AElement);
+  // The caption buttons follow the app's light or dark theme
+  AppWindow.TitleBar.PreferredTheme := TWinUITitleBarTheme.UseDefaultAppMode;
+end;
+
+procedure TWinUIWindow.SetTitleBarPassthrough(const AElements: array of TWinUIFrameworkElement);
+var
+  I: Integer;
+begin
+  for I := 0 to High(FPassthrough) do
+    if FPassthroughListeners[I] <> 0 then
+      FPassthrough[I].LayoutUpdated.Remove(FPassthroughListeners[I] - 1);
+  SetLength(FPassthrough, Length(AElements));
+  SetLength(FPassthroughListeners, Length(AElements));
+  for I := 0 to High(AElements) do
+  begin
+    FPassthrough[I] := AElements[I];
+    // Every layout pass: the rectangles follow the element when the window is resized
+    FPassthroughListeners[I] := 1 + AElements[I].LayoutUpdated.Add(
+      procedure(Sender: TObject; E: TWinValue)
+      begin
+        UpdatePassthrough;
+      end);
+  end;
+  UpdatePassthrough;
+end;
+
+procedure TWinUIWindow.UpdatePassthrough;
+var
+  Source: IInputNonClientPointerSource;
+  Rects: TArray<RectInt32>;
+  Element: IFrameworkElement;
+  Bounds: RADWinUI.Abi.Rect;
+  S: Double;
+  I: Integer;
+begin
+  Source := InputNonClientPointerSource.GetForWindowId(AppWindow.Id);
+  S := Scale;
+  SetLength(Rects, Length(FPassthrough));
+  for I := 0 to High(FPassthrough) do
+  begin
+    Element := TWinUIObject.IntfOf(FPassthrough[I], IFrameworkElement) as IFrameworkElement;
+    Bounds.X := 0;
+    Bounds.Y := 0;
+    Bounds.Width := Element.ActualWidth;
+    Bounds.Height := Element.ActualHeight;
+    Bounds := (Element as IUIElement).TransformToVisual(nil).TransformBounds(Bounds);
+    Rects[I].X := Floor(Bounds.X * S);
+    Rects[I].Y := Floor(Bounds.Y * S);
+    Rects[I].Width := Ceil(Bounds.Width * S);
+    Rects[I].Height := Ceil(Bounds.Height * S);
+  end;
+  if Length(Rects) = 0 then
+    Source.ClearRegionRects(NonClientRegionKind.Passthrough)
+  else
+    Source.SetRegionRects(NonClientRegionKind.Passthrough, Length(Rects), @Rects[0]);
 end;
 
 { TWinUITimer }
@@ -1557,7 +2153,8 @@ begin
     AddResource(FConverterNames[I], FConverters[I]);
   FDispatcher := DispatcherQueue.GetForCurrentThread;
   try
-    FMainWindowClass.Create.Show;
+    FMainWindow := FMainWindowClass.Create;
+    FMainWindow.Show;
   except
     on E: Exception do
     begin
@@ -1841,6 +2438,29 @@ class procedure TWinUIApp.Terminate;
 begin
   if FInstance <> nil then
     FInstance.Instance.Exit;
+end;
+
+class procedure TWinUIApp.WindowClosed(AWindow: TWinUIWindow);
+begin
+  // LastWindow is WinUI's own rule: the app ends when its last window has closed
+  if (AWindow = FMainWindow) and (FShutdownMode = TWinUIShutdownMode.MainWindow) then
+    Terminate;
+end;
+
+class procedure TWinUIApp.WindowGone(AWindow: TWinUIWindow);
+begin
+  if AWindow = FMainWindow then
+    FMainWindow := nil;
+end;
+
+class function TWinUIApp.Windows: TArray<TWinUIWindow>;
+begin
+  Result := TWinUIWindow.Windows;
+end;
+
+class function TWinUIApp.WindowCount: Integer;
+begin
+  Result := Length(TWinUIWindow.Windows);
 end;
 
 class procedure TWinUIApp.CallActivated(const AActivation: TWinUIActivation; ABringToFront: Boolean);

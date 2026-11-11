@@ -13,7 +13,10 @@
     and the host exits with code 0 when the client disconnects;
   - the IDE client (RADWinUI.Preview.Client): starts the host, restarts it
     after a crash or a hang, stops when the user closes it, ends it when freed;
-    large and malformed XAML, memory over 300 edits, and -Cycles cycles.
+    large and malformed XAML, memory over 300 edits, and -Cycles cycles;
+    a host that crashes after every load stops after 3 tries;
+  - every .xaml of samples and community in one host docked into an offscreen
+    window, as the IDE's Design view shows them.
   Design-time values (d:Text and the like) must show in the preview and be
   absent from a sample's generated unit. Exit code 0 when every check passes.
 
@@ -334,6 +337,9 @@ if (-not $NoBuild) {
 }
 & (Join-Path $RepoRoot 'tests\Preview\Win64\Debug\PreviewClientTest.exe') $Exe (Join-Path $RepoRoot 'samples\Counter\MainWindow.xaml') $Cycles
 if ($LASTEXITCODE -ne 0) { throw 'PreviewClientTest failed' }
+Write-Host 'Preview: every sample docked'
+& (Join-Path $RepoRoot 'tests\Preview\Win64\Debug\PreviewClientTest.exe') $Exe $RepoRoot --docked-samples
+if ($LASTEXITCODE -ne 0) { throw 'PreviewClientTest --docked-samples failed' }
 Write-Host 'Preview: native design-time sample collections'
 if (-not $NoBuild) {
   & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Preview\PreviewDataTest.dpr' -Config $Config -Dcc64 $Dcc64 | Out-Null

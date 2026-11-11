@@ -65,6 +65,10 @@ unit RADWinUI.Preview.Host;
   Inline d:ListView.Items (also GridView, ListBox and ComboBox) supplies preview-only
   rows and overrides the parent's ItemsSource attribute. Their source positions
   remain unchanged, clicking a sample row selects the actual owning list.
+  A <TitleBar> becomes a Grid that holds its Content, LeftHeader and
+  RightHeader: WinUI's TitleBar takes over the drag area of its window and
+  crashes in a window docked as a child (its OnApplyTemplate reads a null
+  InputActivationListener), the preview's own title bar must stay the preview's.
 }
 
 interface
@@ -104,6 +108,7 @@ type
     FAdornerTimer: TWinUITimer;
     FRoot: IFrameworkElement;
     FElements: TDictionary<string, string>; // x:Name or marker -> 'line column type x:Name'
+    FTitleBars: TDictionary<string, string>; // key of a TitleBar's placeholder Grid -> its layout XAML
     FSelected: string;
     FSelectedElement: IFrameworkElement;
     FInserts: TArray<Integer>;
@@ -165,6 +170,7 @@ type
     procedure AttachToParent(AParent: HWND);
     procedure PlaceAdorner(Sender: TObject);
     function NameElements(const AXaml, AText: string): string;
+    procedure DecorateTitleBars;
     function SelectFrom(AObject: IDependencyObject): string;
     function SelectAt(const APoint: RADWinUI.Abi.Point): string;
     procedure Select(const AName: string);
@@ -527,6 +533,76 @@ begin
   end;
 end;
 
+/// The look of the TitleBar whose start tag is at AStart in AXaml: a Grid with the back
+/// button glyph, the icon, Title and Subtitle, then Border slots TitleBarLeftHeader,
+/// TitleBarContent and TitleBarRightHeader for the children, in the control's columns.
+function TitleBarLayout(const AXaml: string; AStart: Integer): string;
+var
+  Tag: TXamlTag;
+  P, Stop, I: Integer;
+  Body, Icon, Title, Subtitle, Name, Value: string;
+  Back: Boolean;
+  M: TMatch;
+begin
+  P := AStart;
+  Result := '';
+  if not NextTag(AXaml, P, Tag) then
+    Exit;
+  Back := False;
+  for I := 0 to Tag.Count - 1 do
+  begin
+    Name := Tag.AttrName(AXaml, I);
+    Value := Tag.AttrValue(AXaml, I);
+    if Value.StartsWith('{') then
+      Value := '{}' + Value; // a binding shows as its text
+    if Name = 'Title' then Title := Value;
+    if Name = 'Subtitle' then Subtitle := Value;
+    if Name = 'IsBackButtonVisible' then Back := SameText(Value, 'True');
+  end;
+  Body := '';
+  if not Tag.SelfClosing then
+  begin
+    Stop := Pos('</TitleBar>', AXaml, Tag.Stop);
+    if Stop > 0 then
+      Body := Copy(AXaml, Tag.Stop + 1, Stop - Tag.Stop - 1);
+  end;
+  // A font or symbol icon as it is, any other icon source as a generic glyph
+  Icon := TRegEx.Match(Body, '<TitleBar\.IconSource>\s*<FontIconSource\s[^>]*?\bGlyph="([^"]*)"').Groups[1].Value;
+  if Icon <> '' then
+    Icon := '<FontIcon Glyph="' + Icon + '" FontSize="16"/>'
+  else
+  begin
+    Icon := TRegEx.Match(Body, '<TitleBar\.IconSource>\s*<SymbolIconSource\s[^>]*?\bSymbol="([^"]*)"').Groups[1].Value;
+    if Icon <> '' then
+      Icon := '<SymbolIcon Symbol="' + Icon + '"/>'
+    else if Body.Contains('<TitleBar.IconSource>') then
+      Icon := '<FontIcon Glyph="&#xE737;" FontSize="16"/>';
+  end;
+  Result := '<Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" ColumnSpacing="16" ' +
+    'Padding="4,0,16,0"><Grid.ColumnDefinitions><ColumnDefinition Width="Auto"/><ColumnDefinition Width="Auto"/>' +
+    '<ColumnDefinition Width="*"/><ColumnDefinition Width="Auto"/></Grid.ColumnDefinitions>' +
+    '<StackPanel Orientation="Horizontal" Spacing="12" VerticalAlignment="Center">';
+  if Back then
+    Result := Result + '<FontIcon Glyph="&#xE72B;" FontSize="12" Margin="10,0,4,0"/>';
+  Result := Result + Icon;
+  if Title <> '' then
+    Result := Result + '<TextBlock Text="' + Title + '" FontSize="12" VerticalAlignment="Center"/>';
+  if Subtitle <> '' then
+    Result := Result + '<TextBlock Text="' + Subtitle + '" FontSize="12" Opacity="0.7" VerticalAlignment="Center"/>';
+  Result := Result + '</StackPanel>' +
+    '<Border x:Name="TitleBarLeftHeader" Grid.Column="1" VerticalAlignment="Center" ' +
+    'xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"/>' +
+    '<Border x:Name="TitleBarContent" Grid.Column="2" VerticalAlignment="Center" ' +
+    'xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"/>' +
+    '<Border x:Name="TitleBarRightHeader" Grid.Column="3" VerticalAlignment="Center" ' +
+    'xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"/></Grid>';
+  // The slot names in the order of the children in the placeholder Grid, then the layout
+  Name := '';
+  for M in TRegEx.Matches(Body, '<TitleBar\.(Content|LeftHeader|RightHeader)\s*>') do
+    Name := Name + 'TitleBar' + M.Groups[1].Value + ',';
+  Result := Name + '|' + Result;
+end;
+
 function PreviewXaml(const AXaml: string; out AWindow: string): string;
 var
   Root: TMatch;
@@ -567,6 +643,46 @@ begin
   end;  P := 1;
   while NextTag(Result, P, Tag) do
   begin
+    if Tag.Name.StartsWith('TitleBar.') then
+    begin
+      // The headers and the content become children of the placeholder Grid, other parts go
+      Name := Tag.Name.Substring(9);
+      if MatchStr(Name, ['Content', 'LeftHeader', 'RightHeader']) then
+        Overwrite(Result, Tag.Start, Blank(Copy(Result, Tag.Start, Tag.Stop - Tag.Start + 1)))
+      else if not Tag.IsEnd and not Tag.SelfClosing then
+      begin
+        Close := Pos('</' + Tag.Name, Result, Tag.Stop);
+        if Close = 0 then
+          Continue; // WinUI reports the missing end tag
+        Close := Pos('>', Result, Close);
+        Overwrite(Result, Tag.Start, Blank(Copy(Result, Tag.Start, Close - Tag.Start + 1)));
+        P := Close + 1;
+      end
+      else
+        Overwrite(Result, Tag.Start, Blank(Copy(Result, Tag.Start, Tag.Stop - Tag.Start + 1)));
+      Continue;
+    end;
+    if Tag.Name = 'TitleBar' then
+    begin
+      Overwrite(Result, Tag.Start + 1 + Ord(Tag.IsEnd), 'Grid    ');
+      if not Tag.IsEnd then
+      begin
+        PreviewTag(Result, Tag);
+        for I := 0 to Tag.Count - 1 do
+        begin
+          Name := Tag.AttrName(Result, I);
+          if not Name.Contains('.') and not Name.Contains(':') and not MatchStr(Name, ['', 'Name', 'Tag',
+            'Margin', 'Padding', 'Width', 'Height', 'MinWidth', 'MinHeight', 'MaxWidth', 'MaxHeight',
+            'HorizontalAlignment', 'VerticalAlignment', 'Visibility', 'Background', 'Opacity']) then
+            Overwrite(Result, Tag.Attributes[I].Start,
+              Blank(Copy(Result, Tag.Attributes[I].Start, Tag.Attributes[I].Length)));
+        end;
+        if not Tag.SelfClosing then Stack := Stack + [Tag.Start];
+      end
+      else if Length(Stack) > 0 then
+        SetLength(Stack, Length(Stack) - 1);
+      Continue;
+    end;
     if Tag.Name.StartsWith('d:') and Tag.Name.EndsWith('.Items') then
     begin
       // Move the d: prefix into trailing whitespace, preserving every offset.
@@ -685,6 +801,7 @@ begin
   FSelectionBox := FindElement<TWinUIRectangle>('SelectionBox');
   FSelectionText := FindElement<TWinUITextBlock>('SelectionText');
   FElements := TDictionary<string, string>.Create;
+  FTitleBars := TDictionary<string, string>.Create;
   FAdornerTimer := TWinUITimer.Create;
   FAdornerTimer.Interval := 200; // follows layout changes of the selected element
   FAdornerTimer.OnTimer := PlaceAdorner;
@@ -1159,6 +1276,7 @@ begin
   if FPaletteDeferral <> nil then
     FPaletteDeferral.Complete;
   FElements.Free;
+  FTitleBars.Free;
   inherited;
 end;
 
@@ -1176,6 +1294,7 @@ begin
       raise Exception.Create('The root must be a UI element (a panel or a control)');
     (TWinUIObject.IntfOf(FHost, IBorder) as IBorder).Child := Element;
     Supports(Element, IFrameworkElement, FRoot);
+    DecorateTitleBars;
     Select(FSelected); // the same element after an edit, when it still exists
     FErrorBar.Visibility := TWinUIVisibility.Collapsed;
     Parts := Window.Split(['|']);
@@ -1217,6 +1336,7 @@ var
   Builder: TStringBuilder;
 begin
   FElements.Clear;
+  FTitleBars.Clear;
   Line := 1;
   Column := 1;
   Position := 1;
@@ -1282,6 +1402,12 @@ begin
         FInserts := FInserts + [I];
         FMarkers := FMarkers + [Marker];
       end;
+      // The Grid that stands in for a TitleBar is the TitleBar for the IDE
+      if (Tag.Name = 'Grid') and (Copy(AXaml, Tag.Start + 1, 8) = 'TitleBar') then
+      begin
+        Tag.Name := 'TitleBar';
+        FTitleBars.AddOrSetValue(Key, TitleBarLayout(AXaml, Tag.Start));
+      end;
       FElements.AddOrSetValue(Key, Format('%d %d %s %s', [Line, Column, Tag.Name, UserName]));
     end;
     // One pass: inserting into the text one marker at a time copies it once per marker
@@ -1297,6 +1423,44 @@ begin
     Builder.Free;
     FInserts := nil;
     FMarkers := nil;
+  end;
+end;
+
+/// Gives the Grid that stands in for each TitleBar the control's look (TitleBarLayout),
+/// with its headers and content in their columns. Hits on the look select the TitleBar.
+procedure TPreviewWindow.DecorateTitleBars;
+var
+  Pair: TPair<string, string>;
+  Bar, Layout: IFrameworkElement;
+  Children: IVector_UIElement;
+  Kids: TArray<IUIElement>;
+  Slots: TArray<string>;
+  Slot: string;
+  I, Split: Integer;
+begin
+  for Pair in FTitleBars do
+  begin
+    Bar := FindByKey(FRoot as IDependencyObject, Pair.Key);
+    Split := Pair.Value.IndexOf('|');
+    if (Bar = nil) or not Supports(Bar, IPanel) or not Supports(RADWinUI.Abi.XamlReader.Load(
+      WinStr(Pair.Value.Substring(Split + 1))), IFrameworkElement, Layout) then
+      Continue;
+    Slots := Pair.Value.Substring(0, Split).Split([','], TStringSplitOptions.ExcludeEmpty);
+    Children := (Bar as IPanel).Children;
+    SetLength(Kids, Children.Size);
+    for I := 0 to High(Kids) do
+      Kids[I] := Children.GetAt(I);
+    Children.Clear;
+    for I := 0 to High(Kids) do
+    begin
+      Slot := 'TitleBarContent'; // a child without a property element is the Content
+      if I < Length(Slots) then
+        Slot := Slots[I];
+      (Layout.FindName(WinStr(Slot)) as IBorder).Child := Kids[I];
+    end;
+    Children.Append(Layout as IUIElement);
+    if Bar.MinHeight = 0 then
+      Bar.MinHeight := IfThen(Length(Kids) > 0, 48, 32); // the control's tall and normal heights
   end;
 end;
 

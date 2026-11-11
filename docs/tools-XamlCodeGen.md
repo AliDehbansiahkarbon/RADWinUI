@@ -27,6 +27,7 @@ Every project's pre-build event runs it on the project folder, `scripts\Build.ps
 - `DataContextType` also gives the base a typed `ViewModel` property.
 - An element of a `using:` namespace other than `RADWinUI.Controls` is a user control of the project: its field has the user control's class and its unit goes into the uses clause. Unknown user controls, unknown attributes on them and a user control that contains itself stop the build.
 - A `<Frame>` field is a `TWinUIPageFrame` (unit `RADWinUI.Pages`).
+- `<Window TitleBar="Name">` must name an element of the window: the generated constructor calls `UseTitleBar` with its field.
 - Design-time values (`d:` and `mc:` attributes and elements) never reach the app.
 - Errors (missing handler, wrong signature, an `x:Name` that hides a window member, an unknown binding path or converter) stop the build with the file, the line and the reason.
 

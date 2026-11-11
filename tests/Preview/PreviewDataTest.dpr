@@ -3,9 +3,11 @@ program PreviewDataTest;
 {$APPTYPE CONSOLE}
 
 uses
-  Winapi.Windows, System.SysUtils,
+  Winapi.Windows, System.SysUtils, System.IOUtils,
   RADWinUI.Forms, RADWinUI.Framework, RADWinUI.Xaml, RADWinUI.Abi,
   RADWinUI.Interop.Core, RADWinUI.CustomControls, RADWinUI.Runtime.Application,
+  // the controls the preview host links (src\IDE\Preview\RADWinUIPreview.dpr)
+  RADWinUI.Controls, RADWinUI.TabBars, RADWinUI.ActionButtons, RADWinUI.DBControls,
   RADWinUI.Designer.XamlEdit in '..\..\src\IDE\Designer\RADWinUI.Designer.XamlEdit.pas',
   RADWinUI.Designer.Palette in '..\..\src\IDE\Designer\RADWinUI.Designer.Palette.pas',
   RADWinUI.Designer.Snap in '..\..\src\IDE\Designer\RADWinUI.Designer.Snap.pas',
@@ -36,6 +38,11 @@ const
     '  <local:PersonCard x:Name="AdaCard" PersonName="Ada" Margin="4" Opened="CardOpened"/>' + #13#10 +
     '  <TextBlock x:Name="Caption" Text="Home" Foreground="{StaticResource Accent}"/>' + #13#10 +
     '</StackPanel></Page>';
+  TitleBarXaml = '<Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation">' + #13#10 +
+    '<TitleBar Title="App" Subtitle="Preview" IsBackButtonVisible="True" Foreground="Red" Margin="4">' + #13#10 +
+    '  <TitleBar.IconSource><FontIconSource Glyph="&#xE8D6;"/></TitleBar.IconSource>' + #13#10 +
+    '  <TitleBar.Content><TextBox Width="200"/></TitleBar.Content>' + #13#10 +
+    '</TitleBar></Grid>';
 
 type
   TDataWindow = class(TPreviewWindow)
@@ -43,6 +50,7 @@ type
     FCheck: TWinUITimer;
     FStep: Integer;
     procedure CheckData(Sender: TObject);
+    procedure PreviewEverySample;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -93,6 +101,10 @@ begin
   Text := PreviewXaml(PageXaml, Window);
   Check((Length(Text) = Length(PageXaml)) and Text.Contains('<Grid.Resources>') and not Text.Contains('<Page'),
     'a <Page> previews as a Grid, its resources too, without moving any text');
+  Text := PreviewXaml(TitleBarXaml, Window);
+  Check((Length(Text) = Length(TitleBarXaml)) and not Text.Contains('TitleBar') and not Text.Contains('Foreground') and
+    Text.Contains('Margin="4"') and Text.Contains('<TextBox'),
+    'a <TitleBar> previews as a Grid around its content, without moving any text');
   Check(Load('', DataXaml) = '', 'the actual preview host loads all four sample collections');
   FCheck := TWinUITimer.Create;
   FCheck.Interval := 300;
@@ -104,6 +116,41 @@ destructor TDataWindow.Destroy;
 begin
   FCheck.Free;
   inherited;
+end;
+
+// Every .xaml of the samples and community apps loads in the preview host, as the designer shows it
+procedure TDataWindow.PreviewEverySample;
+var
+  Root, Path, Error: string;
+  Started: Cardinal;
+  Count, Failed: Integer;
+begin
+  Failed := 0;
+  Root := ExpandFileName(ExtractFilePath(ParamStr(0)) + '..\..\..\..\');
+  Count := 0;
+  for Path in TDirectory.GetFiles(Root + 'samples', '*.xaml', TSearchOption.soAllDirectories) +
+    TDirectory.GetFiles(Root + 'community', '*.xaml', TSearchOption.soAllDirectories) do
+  begin
+    if Path.Contains('\Win64\') then
+      Continue;
+    Started := GetTickCount;
+    Error := Load(Path, TFile.ReadAllText(Path, TEncoding.UTF8));
+    // Templates are applied by layout: a control that fails there (TitleBar did) fails here
+    FindElement<TWinUIBorder>('PreviewHost').UpdateLayout;
+    if Path.EndsWith('Tempo\MainWindow.xaml') then
+      Check(HasText(TWinUIObject.IntfOf(FindElement<TWinUIBorder>('PreviewHost').Child, IDependencyObject) as
+        IDependencyObject, 'Radio'), 'Tempo''s TitleBar shows its title and subtitle in the preview');
+    if Error = '' then
+      Writeln(Format('[ok] previews %s in %d ms', [ExtractRelativePath(Root, Path), GetTickCount - Started]))
+    else
+    begin
+      Writeln('[failed] ', Error);
+      Inc(Failed);
+    end;
+    Flush(Output);
+    Inc(Count);
+  end;
+  Check((Count > 20) and (Failed = 0), Format('%d sample files previewed, %d failed', [Count, Failed]));
 end;
 
 procedure TDataWindow.CheckData(Sender: TObject);
@@ -122,6 +169,7 @@ begin
     Check(HasText(TWinUIObject.IntfOf(Root, IDependencyObject) as IDependencyObject, 'PersonCard') and
       HasText(TWinUIObject.IntfOf(Root, IDependencyObject) as IDependencyObject, 'Home'),
       'the user control shows as a labelled placeholder, the rest of the page as written');
+    PreviewEverySample;
     Writeln('Preview data test PASSED');
     Flush(Output);
     Close;
