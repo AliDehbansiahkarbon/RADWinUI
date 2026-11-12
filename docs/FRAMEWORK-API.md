@@ -404,7 +404,7 @@ ContentFrame.AttachNavigationView(Nav, [THomePage, TPeoplePage], TSettingsPage);
 ContentFrame.Navigate(THomePage);
 ```
 
-A click on an item whose `Tag` is the name of one of the page classes shows that page, the settings item shows the settings page, and the back button goes back. After every navigation, also from code and back, the selected item follows the current page and the back button is enabled when `CanGoBack`. One click asks a page that refuses to be left only once.
+A click on an item whose `Tag` is the name of one of the page classes shows that page, the settings item shows the settings page, and the back button goes back. After every navigation, also from code and back, the selected item follows the current page and the back button is enabled when `CanGoBack`. One click asks a page that refuses to be left only once. When the page refuses, no menu item stays highlighted. Items nested in another item's `MenuItems` work the same way, and their parent opens to show the selected one.
 
 ## User controls
 

@@ -276,6 +276,20 @@ $Results = @(
     Invoke-Named $Win 'No'
     Expect-Name $Win 'PageTitle' 'Home'
     Write-Host "  [ok] card -> profile with the person, Save changes? Cancel stays, No leaves"
+    # A menu click the profile refuses: the profile stays and People must not stay highlighted
+    Invoke-Named $Win 'Open Ada Lovelace'
+    Set-Text (Get-Id $Win 'RoleBox') 'Chief engineer'
+    Select-Named $Win 'People'
+    $null = Get-Named $Win 'Save changes to Ada Lovelace?'
+    Invoke-Named $Win 'Cancel'
+    Expect-Name $Win 'PageTitle' 'Ada Lovelace'
+    $People = Get-Named $Win 'People'
+    $null = Wait-For { -not $People.GetCurrentPattern([Windows.Automation.SelectionItemPattern]::Pattern).Current.IsSelected } 'People not selected'
+    Invoke-Named $Win 'Back'
+    $null = Get-Named $Win 'Save changes to Ada Lovelace?'
+    Invoke-Named $Win 'No'
+    Expect-Name $Win 'PageTitle' 'Home'
+    Write-Host "  [ok] a menu click the profile refuses leaves no menu item selected"
     Select-Named $Win 'People'
     Expect-Name $Win 'PageTitle' 'People'
     Set-Text (Get-Id $Win 'SearchBox') 'grace'

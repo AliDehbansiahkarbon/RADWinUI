@@ -710,10 +710,42 @@ begin
 end;
 procedure TWinUIPageFrame.SyncView;
 var
-  I: Integer;
-  Items: TArray<TWinUIValueList>;
-  List: TWinUIValueList;
   Name: string;
+  Found: IInspectable;
+  View: INavigationView;
+
+  // Finds the item of the current page in AItems and the items nested in them,
+  // expanding its parents, and unselects every other item: after a refused click
+  // NavigationView can leave the clicked item looking selected (IsSelected)
+  // although SelectedItem went back
+  function Walk(const AItems: IVector_Object): Boolean;
+  var
+    I: Integer;
+    Item: IInspectable;
+    Parent: INavigationViewItem2;
+    Base: INavigationViewItemBase2;
+  begin
+    Result := False;
+    if AItems = nil then
+      Exit;
+    for I := 0 to Integer(AItems.Size) - 1 do
+    begin
+      Item := AItems.GetAt(I);
+      if (Found = nil) and (Name <> '') and SameText(TagOf(Item), Name) then
+      begin
+        Found := Item;
+        Result := True;
+      end
+      else if Supports(Item, INavigationViewItemBase2, Base) and Base.IsSelected then
+        Base.IsSelected := False;
+      if Supports(Item, INavigationViewItem2, Parent) and Walk(Parent.MenuItems) then
+      begin
+        Parent.IsExpanded := True;
+        Result := True;
+      end;
+    end;
+  end;
+
 begin
   if FView = nil then
     Exit;
@@ -726,17 +758,15 @@ begin
     Exit;
   end;
   Name := FCurrent.ClassName;
-  // shortcut: top-level menu and footer items only, nested items are not searched
-  Items := [FView.MenuItems, FView.FooterMenuItems];
-  for List in Items do
-    for I := 0 to List.Count - 1 do
-      if SameText(TagOf(List[I].Obj), Name) then
-      begin
-        FView.SelectedItem := List[I];
-        Exit;
-      end;
-  // A page without a menu item, such as a details page: no item is selected
-  FView.SelectedItem := Default(TWinValue);
+  Found := nil;
+  View := IntfOf(FView, INavigationView) as INavigationView;
+  Walk(View.MenuItems);
+  Walk(View.FooterMenuItems);
+  if Found <> nil then
+    FView.SelectedItem := Found
+  else
+    // A page without a menu item, such as a details page: no item is selected
+    FView.SelectedItem := Default(TWinValue);
 end;
 
 procedure TWinUIPageFrame.SyncViewLater;

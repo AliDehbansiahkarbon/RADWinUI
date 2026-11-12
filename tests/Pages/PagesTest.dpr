@@ -103,12 +103,15 @@ begin
     '<NavigationView.MenuItems>' +
     '<NavigationViewItem Content="First" Tag="TFirstPage"/>' +
     '<NavigationViewItem Content="Second" Tag="TSecondPage"/>' +
+    '<NavigationViewItem x:Name="MoreItem" Content="More">' +
+    '<NavigationViewItem.MenuItems><NavigationViewItem Content="Cached" Tag="TCachedPage"/></NavigationViewItem.MenuItems>' +
+    '</NavigationViewItem>' +
     '</NavigationView.MenuItems>' +
     '<Frame x:Name="PageFrame"/>' +
     '</NavigationView>');
   FNav := FindElement<TWinUINavigationView>('Nav');
   FFrame := FindElement<TWinUIPageFrame>('PageFrame');
-  FFrame.AttachNavigationView(FNav, [TFirstPage, TSecondPage]);
+  FFrame.AttachNavigationView(FNav, [TFirstPage, TSecondPage, TCachedPage]);
   FTimer := TWinUITimer.Create;
   FTimer.Interval := 250;
   FTimer.OnTimer := Step;
@@ -173,6 +176,8 @@ begin
         Check(LastEvent = 'Second:Forward:hello', 'GoForward keeps the parameter');
         FFrame.Navigate(TCachedPage);
         FCached := FFrame.CurrentPage as TCachedPage;
+        Check(SelectedTag = 'TCachedPage', 'the selection finds a nested menu item: ' + SelectedTag);
+        Check(FindElement<TWinUINavigationViewItem>('MoreItem').IsExpanded, 'its parent item is expanded');
         FCached.Count := 5;
         FFrame.Navigate(TFirstPage);
         Check(not FFrame.CanGoForward, 'Navigate clears the forward stack');
@@ -200,6 +205,20 @@ begin
         Check(LivePages = 1, 'only the KeepAlive page is alive: ' + IntToStr(LivePages));
         FFrame.ClearBackStack;
         Check(not FFrame.CanGoBack and not FNav.IsBackEnabled, 'ClearBackStack');
+        // A click on a menu item that the current page refuses: NavigationView selects the item
+        // first, the page stays, and no item may stay highlighted for a page that has none
+        FFrame.Navigate(TGuardPage);
+        (FFrame.CurrentPage as TGuardPage).Dirty := True;
+        (TWinUIObject.Wrap(Self, FNav.MenuItems[0].Obj, TWinUINavigationViewItem) as TWinUINavigationViewItem).IsSelected := True;
+        FFrame.Navigate(TFirstPage);
+      end;
+    7:
+      begin
+        Check(FFrame.CurrentPage is TGuardPage, 'the guard page stays');
+        Check(SelectedTag = '', 'the refused item is not left selected: ' + SelectedTag);
+        Check(not (TWinUIObject.Wrap(Self, FNav.MenuItems[0].Obj, TWinUINavigationViewItem) as TWinUINavigationViewItem).IsSelected,
+          'the refused item does not look selected either');
+        (FFrame.CurrentPage as TGuardPage).Dirty := False;
         FTimer.Enabled := False;
         Close;
       end;
