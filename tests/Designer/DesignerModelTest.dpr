@@ -191,6 +191,18 @@ begin
     'TMainWindow', 'OkClick', 'TWinUIRoutedEventArgs', Line);
   Check(Text.Contains('  published' + sLineBreak + '    procedure OkClick(Sender: TObject; E: TWinUIRoutedEventArgs);' +
     sLineBreak + '  end;'), 'adds a published section when there is none');
+  // RADWinUI's own controls: their handler type has const E: TWinValue
+  Text := AddHandler(Pas, 'TMainWindow', 'SendButton1Click', 'TWinValue', Line);
+  Check(Text.Contains('    procedure SendButton1Click(Sender: TObject; const E: TWinValue);') and
+    Text.Contains('procedure TMainWindow.SendButton1Click(Sender: TObject; const E: TWinValue);'),
+    'an rw: control''s handler takes const E: TWinValue');
+  // An unnamed prefixed element gets a name without its prefix, so its handler name is a method name
+  Check(NewElementName('<Grid><rw:SendButton/></Grid>', 'rw:SendButton') = 'SendButton1', 'rw:SendButton is named SendButton1');
+  Check(NewElementName('<Grid><rw:SendButton x:Name="SendButton1"/><rw:SendButton/></Grid>', 'rw:SendButton') = 'SendButton2',
+    'the next free number');
+  Check(NewElementName('<Grid><local:PersonCard/></Grid>', 'local:PersonCard') = 'PersonCard1',
+    'a user control of the project is named PersonCard1');
+  Check(IsValidIdent(NewElementName('<Grid/>', 'rw:ConfettiButton') + 'Click'), 'its handler name is a method name');
   Old := TFile.ReadAllText(TPath.Combine(ParamStr(1), 'samples\Gallery\MainWindow.pas'));
   New := Old;
   Text := AddHandler(Old, 'TMainWindow', 'GalleryRegressionClick', 'TWinUIRoutedEventArgs', Line);

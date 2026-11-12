@@ -128,13 +128,17 @@ begin
     '<StackPanel x:Name="Panel1"><Button x:Name="Button1" Click="SharedClick"/></StackPanel>');
   Check(Value.Contains('x:Name="Button2" Click="SharedClick"') and Value.Contains('x:Name="Panel2"'),
     'paste renames descendants, keeps handlers, and permits a Grid root');
+  // A copied multi-selection: several elements, pasted in their order
+  Value := PasteElement('<Grid><Button x:Name="Button1"/></Grid>', 1, 1, '<TextBox x:Name="A"/>'#13#10'<CheckBox x:Name="B"/>');
+  Check(Value.Contains('<TextBox x:Name="A1"/>') and Value.Contains('<CheckBox x:Name="B1"/>') and
+    (Value.IndexOf('TextBox') < Value.IndexOf('CheckBox')), 'paste takes several elements, in their order');
   Raised := False;
   try
-    PasteElement(Xaml, 1, 1, '<Button/><Button/>');
+    PasteElement(Xaml, 1, 1, '<Button/>text');
   except
     on EXamlEdit do Raised := True;
   end;
-  Check(Raised, 'paste rejects multiple clipboard roots before changing the source');
+  Check(Raised, 'paste rejects text after the elements before changing the source');
   Same(DeleteElement(Xaml, 4, 5), Xaml.Replace('    <Button x:Name="IncrementButton"' + NL + '            Content="Increment"/>' + NL, ''),
     'deletes a multi-line element with its lines');
   Same(DeleteElement(Xaml, 6, 5), Xaml.Replace('    <Button>Plain</Button>' + NL, ''), 'deletes an element with content');

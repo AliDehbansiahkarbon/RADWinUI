@@ -34,6 +34,8 @@ uses
   System.StrUtils,
   System.IniFiles,
   System.JSON,
+  System.Win.Registry,
+  System.Rtti,
   Vcl.ActnList,
   Vcl.AppEvnts,
   Vcl.Graphics,
@@ -41,12 +43,15 @@ uses
   Vcl.ExtCtrls,
   Vcl.Dialogs,
   Vcl.Controls,
+  Vcl.StdCtrls,
   Vcl.Forms,
   Vcl.ComCtrls,
   Vcl.ImgList,
   Vcl.Themes,
   Vcl.Clipbrd,
   ToolsAPI,
+  ToolsAPI.AI,
+  ToolsAPI.Editor,
   PaletteAPI,
   DesignIntf,
   StructureViewAPI,
@@ -61,7 +66,10 @@ uses
   RADWinUI.Designer.Structure,
   RADWinUI.Designer.ObjectInspector,
   RADWinUI.Designer.TabItemsEditor,
-  RADWinUI.Designer.Dialogs;
+  RADWinUI.Designer.Dialogs,
+  RADWinUI.Designer.AICompletion,
+  RADWinUI.Designer.Settings,
+  RADWinUI.Preview.PromptBox;
 
 type
   TPreviewCommand = class;
@@ -175,12 +183,117 @@ type
     FCommand: TPreviewCommand;
     procedure KeyPressed(const Context: IOTAKeyContext; KeyCode: TShortcut;
       var BindingResult: TKeyBindingResult);
+    procedure CompleteKeyPressed(const Context: IOTAKeyContext; KeyCode: TShortcut;
+      var BindingResult: TKeyBindingResult);
   public
     constructor Create(ACommand: TPreviewCommand);
     function GetBindingType: TBindingType;
     function GetDisplayName: string;
     function GetName: string;
     procedure BindKeyboard(const BindingServices: IOTAKeyBindingServices);
+  end;
+
+  /// <summary>One Complete XAML with AI request to the IDE's AI engine (ToolsAPI.AI).
+  /// The answer goes in at the cursor as one undoable edit, unless the XAML changed meanwhile.</summary>
+  TXamlAIRequest = class(TNotifierObject, IOTAAIServicesNotifier)
+  private
+    FPlugin: IOTAAIPlugin;
+    FNotifier: Integer;
+    FRequest: TGUID;
+    FFile, FXaml: string;
+    FCursor, FSelEnd: Integer;
+    FOnDone: procedure(const AAnswer, AError: string) of object; // set: the prompt bar takes the answer
+    procedure Done(const AAnswer, AError: string; const ARequestID: TGUID);
+    procedure Detach;
+  public
+    procedure Answer(const AMessage: string; const ARequestID: TGUID);
+    procedure Error(const AMessage: string; const ARequestID: TGUID);
+    procedure ModelsLoaded(const AModels: TArray<string>; const ARequestID: TGUID);
+    procedure ImageLoaded(const AImage: TStream; const ARequestID: TGUID); overload;
+    procedure ImageLoaded(const A64BitImages: TArray<string>; const ARequestID: TGUID); overload;
+    procedure ImageURlLoaded(const AImageURls: TArray<string>; const ARequestID: TGUID);
+    procedure SpeechLoaded(const ASpeech: TStream; const ARequestID: TGUID);
+  end;
+
+  /// <summary>Gets the AI plugin's answers for the suggestions while typing.</summary>
+  TXamlSuggestionNotifier = class(TNotifierObject, IOTAAIServicesNotifier)
+  public
+    procedure Answer(const AMessage: string; const ARequestID: TGUID);
+    procedure Error(const AMessage: string; const ARequestID: TGUID);
+    procedure ModelsLoaded(const AModels: TArray<string>; const ARequestID: TGUID);
+    procedure ImageLoaded(const AImage: TStream; const ARequestID: TGUID); overload;
+    procedure ImageLoaded(const A64BitImages: TArray<string>; const ARequestID: TGUID); overload;
+    procedure ImageURlLoaded(const AImageURls: TArray<string>; const ARequestID: TGUID);
+    procedure SpeechLoaded(const ASpeech: TStream; const ARequestID: TGUID);
+  end;
+
+  /// <summary>The code editor's paint and key events the ghost text needs.</summary>
+  TXamlEditorEvents = class(TNTACodeEditorNotifier)
+  protected
+    function AllowedEvents: TCodeEditorEvents; override;
+    function AllowedLineStages: TPaintLineStages; override;
+  end;
+
+  /// <summary>AI suggestions while typing in .xaml code editors: watches the editor
+  /// every 50 ms (reading its text only after a key or a cursor move), asks the AI
+  /// plugin after a pause, paints the answer as ghost text, Tab inserts it.
+  /// TXamlSuggestions decides; this class talks to the IDE.</summary>
+  TXamlSuggestionController = class
+  strict private
+    FState: TXamlSuggestions;
+    FTimer: TTimer;
+    FFile: string;
+    FKeyed: Boolean;
+    FLastPos: TOTAEditPos;
+    FGhostPos: TOTAEditPos;
+    FEvents: INTACodeEditorEvents;
+    FEventsIndex: Integer;
+    FPlugin: IOTAAIPlugin;
+    FPluginNotifier: Integer;
+    FPluginCheckedAt: UInt64;
+    FRequestedAt, FKeyAt: UInt64;
+    FEnabled: Boolean;
+    FStopped: Boolean;
+    procedure Tick(Sender: TObject);
+    procedure Invalidate;
+    procedure ReleasePlugin;
+    function Plugin: IOTAAIPlugin;
+    procedure AcceptGhost;
+    procedure PaintLine(const Rect: TRect; const Stage: TPaintLineStage; const BeforeEvent: Boolean;
+      var AllowDefaultPainting: Boolean; const Context: INTACodeEditorPaintContext);
+    procedure KeyDown(const Editor: TWinControl; Key: Word; Shift: TShiftState; var Handled: Boolean);
+  public
+    constructor Create;
+    destructor Destroy; override;
+    /// <summary>An answer or error of the AI plugin, on the main thread.</summary>
+    procedure Answer(const AID: TGUID; const AText, AError: string);
+    /// <summary>Reads on/off and the delay from the RADWinUI registry key.</summary>
+    procedure LoadSettings;
+  end;
+
+  /// <summary>Tools > Options > Third Party > RADWinUI: RADWinUI's IDE settings
+  /// (RADWinUI.Designer.Settings), each change saved at once.</summary>
+  TRADWinUIOptions = class(TInterfacedObject, INTAAddInOptions)
+  strict private
+    FSuggestions: TCheckBox;
+    FDelay: TEdit;
+    FCodeCompletion: TCheckBox;
+    FPromptSelection: TCheckBox;
+    FError: TLabel;
+    FLoading: Boolean;
+    FLastDelay: Integer; // the pause last saved: an invalid one goes back to it
+    procedure Changed(Sender: TObject);
+    procedure DelayExit(Sender: TObject);
+    function DelayValid: Boolean;
+  public
+    function GetArea: string;
+    function GetCaption: string;
+    function GetFrameClass: TCustomFrameClass;
+    procedure FrameCreated(AFrame: TCustomFrame);
+    procedure DialogClosed(Accepted: Boolean);
+    function ValidateContents: Boolean;
+    function GetHelpContext: Integer;
+    function IncludeInIDEInsight: Boolean;
   end;
 
   TWindowSaveNotifier = class(TNotifierObject, IOTAModuleNotifier)
@@ -213,6 +326,19 @@ type
     FItem: TMenuItem;
     FDockedAction: TAction;
     FDockedItem: TMenuItem;
+    FCompleteAction: TAction;
+    FCompleteItem: TMenuItem;
+    FSettingsAction: TAction;
+    FSettingsItem: TMenuItem;
+    FRootItem: TMenuItem; // Tools > RADWinUI
+    FPromptBox: TXamlPromptBox;
+    FPromptFile: string;
+    FPromptRequest: TXamlAIRequest; // the prompt's request, nil when none is pending
+    FOptionsTimer: TTimer;          // selects our page once the Options dialog shows
+    FOptionsAskedAt: Cardinal;
+    FSuggestions: TXamlSuggestionController;
+    FEditorOptions: INTAAddInOptions;
+    FEditorActions: TActionList; // the code editor's context menu, .xaml files only
     FPreviewDock: INTACustomDockableForm;
     FPreviewDockForm: TCustomForm;
     FPreviewSurface: TPanel;
@@ -261,6 +387,7 @@ type
     FPreviewFocused: Boolean; // the Split View designer had the keyboard focus at the last tick
     FNudgeBase, FNudgeText: string; // the XAML before and after the current burst of keyboard moves
     FNudgeLine, FNudgeColumn: Integer;
+    FMulti: TArray<TDesignerSelection>; // a multi-selection (Ctrl+click, marquee, Ctrl+A), FSelection is its first
     FNudgeAt: Cardinal;
     procedure WatchWindow(const APath: string);
     procedure SyncStructure;
@@ -290,6 +417,8 @@ type
     procedure EndSplitStructure;
     function XamlBuffer: IOTAEditBuffer;
     procedure NudgeSelection(const AEvent: string);
+    procedure NudgeMulti(const AEvent: string);
+    function MultiPositions: TArray<TXamlPosition>;
     function AddContextItem(AParent: TMenuItem; const ACaption: string; ACommand: Integer; AEnabled: Boolean;
       AShortCut: TShortCut = 0): TMenuItem;
     procedure AddControlItems(const AXaml: string; const AElements: TArray<TXamlElement>; AIndex: Integer);
@@ -307,6 +436,16 @@ type
     function FindXaml: string;
     procedure Execute(Sender: TObject);
     procedure ExecuteDocked(Sender: TObject);
+    procedure ExecuteComplete(Sender: TObject);
+    procedure EditorActionUpdate(Sender: TObject);
+    procedure ExecuteComment(Sender: TObject);
+    procedure PromptSubmit(const APrompt: string);
+    procedure PromptCancel(Sender: TObject);
+    procedure PromptAnswer(const AAnswer, AError: string);
+    procedure ClosePrompt;
+    procedure ExecuteSettings(Sender: TObject);
+    procedure SelectOptionsPage(Sender: TObject);
+    function IsCommentKey(AKey: Word): Boolean;
     procedure RunPreview(ADocked: Boolean);
     procedure Update(Sender: TObject);
     procedure AddToMenu(Sender: TObject);
@@ -337,12 +476,21 @@ type
     /// <summary>A .xaml window the IDE just opened shows Design first, like a VCL form.</summary>
     procedure OpenInDesign(const AFile: string);
     function ToggleCodeDesignForFile(const AFile: string): Boolean;
+    /// <summary>Complete XAML with AI at the cursor of AFile, when it is a .xaml file.</summary>
+    function CompleteXaml(const AFile: string): Boolean;
+    /// <summary>Ctrl+/: comments the selected lines of a .xaml buffer out, or back in.</summary>
+    function ToggleComment(const ABuffer: IOTAEditBuffer): Boolean;
+    /// <summary>Ctrl+Alt+Space: the Create XAML with AI bar over the IDE, for a .xaml file.</summary>
+    function ShowXamlPrompt(const AFile: string): Boolean;
     /// <summary>The IDE freed the dockable form or the inspector.</summary>
     procedure Freed(AComponent: TComponent);
   end;
 
 var
   Command: TPreviewCommand;
+  PendingCompletion: TXamlAIRequest; // the request whose answer is still awaited
+  PendingCompletionRef: IOTAAIServicesNotifier;
+  Suggestions: TXamlSuggestionController; // nil once the package unloads: queued answers check it
 
 const
   // Commands of the designer's context menu (TMenuItem.Tag)
@@ -902,6 +1050,249 @@ end;
 procedure TDesignerKeyBinding.BindKeyboard(const BindingServices: IOTAKeyBindingServices);
 begin
   BindingServices.AddKeyBinding([VK_F12], KeyPressed, nil, 0);
+  BindingServices.AddKeyBinding([ShortCut(VK_SPACE, [ssCtrl, ssAlt])], CompleteKeyPressed, nil, 0);
+  // Ctrl+/ is taken in TPreviewCommand.ApplicationMessage: a keyboard binding never received it,
+  // the IDE's own Ctrl+/ comes first
+end;
+
+procedure TDesignerKeyBinding.CompleteKeyPressed(const Context: IOTAKeyContext; KeyCode: TShortcut;
+  var BindingResult: TKeyBindingResult);
+begin
+  BindingResult := krUnhandled;
+  if (FCommand <> nil) and (Context <> nil) and (Context.EditBuffer <> nil) and
+    FCommand.ShowXamlPrompt(Context.EditBuffer.FileName) then
+    BindingResult := krHandled;
+end;
+
+{ TXamlAIRequest }
+
+/// A line in the Messages view and in ide.log.
+procedure EditorNote(const AText: string);
+var
+  Messages: IOTAMessageServices;
+begin
+  Log(AText);
+  if Supports(BorlandIDEServices, IOTAMessageServices, Messages) then
+  begin
+    Messages.AddTitleMessage('RADWinUI ' + AText);
+    Messages.ShowMessageView(nil);
+  end;
+end;
+
+procedure CompletionNote(const AText: string);
+begin
+  EditorNote('Complete XAML with AI: ' + AText);
+end;
+
+var
+  VocabularyIndex: TDesignerTypeIndex; // RADWinUI.Xaml.json for the AI answers, loaded on first use
+
+/// The names AI answers may use in AXaml (AFile): every type, RADWinUI's own controls and
+/// the project's user controls, as XAML spells them.
+function XamlVocabulary(const AFile, AXaml: string): IXamlVocabulary;
+begin
+  if VocabularyIndex = nil then
+    VocabularyIndex := TDesignerTypeIndex.Create(TPath.Combine(RootFolder, 'src\Generated\RADWinUI.Xaml.json'));
+  Result := TIndexVocabulary.Create(VocabularyIndex, ProjectUserControls(AXaml, ExtractFilePath(AFile)));
+end;
+
+/// An answer on one line of ide.log.
+function LogText(const AText: string): string;
+begin
+  Result := AText.Replace(#13, '').Replace(#10, '\n');
+end;
+
+/// The 0-based UTF-16 index in AText (the buffer's text) of an editor position.
+function ViewOffset(const AView: IOTAEditView; const AText: string; AEditPos: TOTAEditPos): Integer;
+var
+  CharPos: TOTACharPos;
+  Bytes: UTF8String;
+  Position: Integer;
+begin
+  AView.ConvertPos(True, AEditPos, CharPos);
+  Position := AView.CharPosToPos(CharPos); // a UTF-8 offset in the buffer
+  Bytes := UTF8String(AText);
+  if Position > Length(Bytes) then
+    Position := Length(Bytes);
+  if Position < 0 then
+    Position := 0;
+  Result := Length(UTF8ToString(Copy(Bytes, 1, Position)));
+end;
+
+/// The 1-based line and column (characters) of a 0-based UTF-16 index.
+procedure LineColumnOf(const AText: string; AIndex: Integer; out ALine, AColumn: Integer);
+var
+  Before: string;
+begin
+  Before := AText.Substring(0, AIndex);
+  ALine := Length(Before) - Length(Before.Replace(#10, '')) + 1;
+  AColumn := Length(Before) - Before.LastIndexOf(#10);
+end;
+
+function IsXamlFile(const AFile: string): Boolean;
+begin
+  Result := SameText(ExtractFileExt(AFile), '.xaml');
+end;
+
+function RADWinUIRegistryKey: string;
+begin
+  Result := (BorlandIDEServices as IOTAServices).GetBaseRegistryKey + '\RADWinUI';
+end;
+
+/// The AI plugin for the editor: the one chosen in the IDE's AI options
+/// (DefaultAIForEditor), else the first enabled plugin that can chat.
+function EditorAIPlugin(out AProblem: string): IOTAAIPlugin;
+var
+  Registry: TRegistry;
+  Name: string;
+  I: Integer;
+  Plugin: IOTAAIPlugin;
+
+  function Usable(const APlugin: IOTAAIPlugin): Boolean;
+  begin
+    Result := (APlugin <> nil) and APlugin.Enabled and (afChat in APlugin.AvailableFeatures);
+  end;
+
+begin
+  Result := nil;
+  AProblem := 'No AI engine is enabled. Set up Claude, OpenAI, Gemini or Ollama in the IDE''s AI options ' +
+    '(Tools > Options), then press Ctrl+Alt+Space again. Kai does not offer its engine to other packages.';
+  if AIEngineService = nil then
+    Exit;
+  Name := '';
+  Registry := TRegistry.Create(KEY_READ);
+  try
+    Registry.RootKey := HKEY_CURRENT_USER;
+    if Registry.OpenKeyReadOnly((BorlandIDEServices as IOTAServices).GetBaseRegistryKey + '\AI Engine') and
+      Registry.ValueExists('DefaultAIForEditor') and (Registry.GetDataType('DefaultAIForEditor') = rdString) then
+      Name := Registry.ReadString('DefaultAIForEditor');
+  finally
+    Registry.Free;
+  end;
+  if Name <> '' then
+  begin
+    Plugin := AIEngineService.GetPluginByName(Name);
+    if Usable(Plugin) then
+      Exit(Plugin);
+  end;
+  for I := 0 to AIEngineService.PluginCount - 1 do
+  begin
+    Plugin := AIEngineService.GetPluginByIndex(I);
+    if Usable(Plugin) then
+      Exit(Plugin);
+  end;
+end;
+
+/// Forgets the pending request: its answer, if one still comes, is not inserted.
+procedure CancelXamlCompletion;
+begin
+  if PendingCompletion <> nil then
+    PendingCompletion.Detach;
+  PendingCompletion := nil;
+  PendingCompletionRef := nil;
+end;
+
+procedure TXamlAIRequest.Detach;
+begin
+  if (FPlugin <> nil) and (FNotifier >= 0) and (AIEngineService <> nil) then
+    FPlugin.RemoveNotifier(FNotifier);
+  FNotifier := -1;
+  FPlugin := nil;
+end;
+
+procedure TXamlAIRequest.Done(const AAnswer, AError: string; const ARequestID: TGUID);
+var
+  Keep: IOTAAIServicesNotifier;
+  Answered, Problem: string;
+  ID: TGUID;
+begin
+  Keep := Self; // alive until the queued call has run
+  Answered := AAnswer;
+  Problem := AError;
+  ID := ARequestID;
+  // Plugins may answer on a worker thread, and removing a notifier while the plugin
+  // calls them is not safe: the work runs on the main thread, after this call
+  TThread.ForceQueue(nil,
+    procedure
+    var
+      Text, Before, Suggestion: string;
+      Ghost: TXamlGhost;
+    begin
+      if (Keep = nil) or (PendingCompletion <> Self) or not IsEqualGUID(ID, FRequest) then
+        Exit;
+      CancelXamlCompletion;
+      if Assigned(FOnDone) then
+      begin
+        FOnDone(Answered, Problem);
+        Exit;
+      end;
+      try
+        if Problem <> '' then
+        begin
+          CompletionNote(Problem);
+          Exit;
+        end;
+        Log('Complete XAML with AI answer: ' + LogText(Answered));
+        Suggestion := FitXamlSuggestion(FXaml, FCursor, Answered, MaxInt);
+        if Suggestion = '' then
+        begin
+          CompletionNote('no suggestion for this place.');
+          Exit;
+        end;
+        if not CorrectXamlSuggestion(FXaml, FCursor, Suggestion, XamlVocabulary(FFile, FXaml), Ghost) then
+        begin
+          CompletionNote('the answer was not inserted, it uses names XAML does not know: ' + LogText(Suggestion));
+          Exit;
+        end;
+        if SourceText(FFile) <> FXaml then
+        begin
+          CompletionNote('the XAML changed while the AI engine answered, press Ctrl+Alt+Space again.');
+          Exit;
+        end;
+        Text := ApplyXamlGhost(FXaml, FCursor, Ghost);
+        ApplyText(FFile, FXaml, Text);
+        // The cursor goes after the suggestion
+        Before := Text.Substring(0, FCursor + Length(Ghost.Text));
+        GotoSource(FFile, Length(Before) - Length(Before.Replace(#10, '')) + 1,
+          Length(Before) - Before.LastIndexOf(#10));
+      except
+        on E: Exception do
+          CompletionNote(E.Message);
+      end;
+    end);
+end;
+
+procedure TXamlAIRequest.Answer(const AMessage: string; const ARequestID: TGUID);
+begin
+  Done(AMessage, '', ARequestID);
+end;
+
+procedure TXamlAIRequest.Error(const AMessage: string; const ARequestID: TGUID);
+begin
+  if AMessage = '' then
+    Done('', 'the AI engine failed.', ARequestID)
+  else
+    Done('', AMessage, ARequestID);
+end;
+
+procedure TXamlAIRequest.ModelsLoaded(const AModels: TArray<string>; const ARequestID: TGUID);
+begin
+end;
+
+procedure TXamlAIRequest.ImageLoaded(const AImage: TStream; const ARequestID: TGUID);
+begin
+end;
+
+procedure TXamlAIRequest.ImageLoaded(const A64BitImages: TArray<string>; const ARequestID: TGUID);
+begin
+end;
+
+procedure TXamlAIRequest.ImageURlLoaded(const AImageURls: TArray<string>; const ARequestID: TGUID);
+begin
+end;
+
+procedure TXamlAIRequest.SpeechLoaded(const ASpeech: TStream; const ARequestID: TGUID);
+begin
 end;
 
 procedure TDesignerKeyBinding.KeyPressed(const Context: IOTAKeyContext; KeyCode: TShortcut;
@@ -1316,11 +1707,585 @@ begin
   end;
 end;
 
+{ TXamlSuggestionNotifier }
+
+procedure QueueSuggestionAnswer(const AID: TGUID; const AText, AError: string);
+var
+  ID: TGUID;
+  Text, Error: string;
+begin
+  ID := AID;
+  Text := AText;
+  Error := AError;
+  // Plugins may answer on a worker thread: the state lives on the main thread
+  TThread.ForceQueue(nil,
+    procedure
+    begin
+      if Suggestions <> nil then
+        Suggestions.Answer(ID, Text, Error);
+    end);
+end;
+
+procedure TXamlSuggestionNotifier.Answer(const AMessage: string; const ARequestID: TGUID);
+begin
+  QueueSuggestionAnswer(ARequestID, AMessage, '');
+end;
+
+procedure TXamlSuggestionNotifier.Error(const AMessage: string; const ARequestID: TGUID);
+begin
+  QueueSuggestionAnswer(ARequestID, '', AMessage + ' ');
+end;
+
+procedure TXamlSuggestionNotifier.ModelsLoaded(const AModels: TArray<string>; const ARequestID: TGUID);
+begin
+end;
+
+procedure TXamlSuggestionNotifier.ImageLoaded(const AImage: TStream; const ARequestID: TGUID);
+begin
+end;
+
+procedure TXamlSuggestionNotifier.ImageLoaded(const A64BitImages: TArray<string>; const ARequestID: TGUID);
+begin
+end;
+
+procedure TXamlSuggestionNotifier.ImageURlLoaded(const AImageURls: TArray<string>; const ARequestID: TGUID);
+begin
+end;
+
+procedure TXamlSuggestionNotifier.SpeechLoaded(const ASpeech: TStream; const ARequestID: TGUID);
+begin
+end;
+
+{ TXamlEditorEvents }
+
+function TXamlEditorEvents.AllowedEvents: TCodeEditorEvents;
+begin
+  Result := [cevPaintLineEvents, cevKeyboardEvents];
+end;
+
+function TXamlEditorEvents.AllowedLineStages: TPaintLineStages;
+begin
+  Result := [plsEndPaint];
+end;
+
+{ TXamlSuggestionController }
+
+constructor TXamlSuggestionController.Create;
+var
+  Editors: INTACodeEditorServices;
+  Events: TXamlEditorEvents;
+begin
+  inherited Create;
+  FEventsIndex := -1;
+  FPluginNotifier := -1;
+  FState := TXamlSuggestions.Create(TRADWinUISettings.DefaultDelay);
+  LoadSettings;
+  if Supports(BorlandIDEServices, INTACodeEditorServices, Editors) then
+  begin
+    Events := TXamlEditorEvents.Create;
+    Events.OnEditorPaintLine := PaintLine;
+    Events.OnEditorKeyDown := KeyDown;
+    FEvents := Events;
+    FEventsIndex := Editors.AddEditorEventsNotifier(FEvents);
+  end;
+  FTimer := TTimer.Create(nil);
+  FTimer.Interval := 50;
+  FTimer.OnTimer := Tick;
+  Suggestions := Self;
+end;
+
+destructor TXamlSuggestionController.Destroy;
+var
+  Editors: INTACodeEditorServices;
+begin
+  Suggestions := nil;
+  FreeAndNil(FTimer);
+  if (FEventsIndex >= 0) and Supports(BorlandIDEServices, INTACodeEditorServices, Editors) then
+    Editors.RemoveEditorEventsNotifier(FEventsIndex);
+  FEventsIndex := -1;
+  if FEvents <> nil then
+  begin
+    (FEvents as TXamlEditorEvents).OnEditorPaintLine := nil;
+    (FEvents as TXamlEditorEvents).OnEditorKeyDown := nil;
+  end;
+  FEvents := nil;
+  ReleasePlugin;
+  FState.Free;
+  inherited;
+end;
+
+procedure TXamlSuggestionController.LoadSettings;
+var
+  Settings: TRADWinUISettings;
+begin
+  Settings := TRADWinUISettings.Load(RADWinUIRegistryKey);
+  FEnabled := Settings.AISuggestions;
+  FState.Delay := Settings.SuggestionDelay;
+  if not FEnabled and (FState.Ghost <> '') then
+  begin
+    FState.Dismiss;
+    Invalidate;
+  end;
+end;
+
+procedure TXamlSuggestionController.ReleasePlugin;
+begin
+  if (FPlugin <> nil) and (FPluginNotifier >= 0) and (AIEngineService <> nil) then
+    FPlugin.RemoveNotifier(FPluginNotifier);
+  FPluginNotifier := -1;
+  FPlugin := nil;
+end;
+
+function TXamlSuggestionController.Plugin: IOTAAIPlugin;
+var
+  Current: IOTAAIPlugin;
+  Problem: string;
+begin
+  // The IDE's AI options may change: look again every 5 seconds at most
+  if GetTickCount64 - FPluginCheckedAt > 5000 then
+  begin
+    FPluginCheckedAt := GetTickCount64;
+    Current := EditorAIPlugin(Problem);
+    if Current <> FPlugin then
+    begin
+      ReleasePlugin;
+      FPlugin := Current;
+      if FPlugin <> nil then
+        FPluginNotifier := FPlugin.AddNotifier(TXamlSuggestionNotifier.Create);
+    end;
+  end;
+  Result := FPlugin;
+end;
+
+procedure TXamlSuggestionController.Invalidate;
+var
+  Editors: INTACodeEditorServices;
+begin
+  if Supports(BorlandIDEServices, INTACodeEditorServices, Editors) then
+    Editors.InvalidateTopEditor;
+end;
+
+procedure TXamlSuggestionController.Tick(Sender: TObject);
+var
+  Editors: INTACodeEditorServices;
+  Buffer: IOTAEditBuffer;
+  View: IOTAEditView;
+  Position: TOTAEditPos;
+  Engine: IOTAAIPlugin;
+  Text, Prompt: string;
+  Started, Took: UInt64;
+  ID: TGUID;
+  Delay: Cardinal;
+begin
+  if not FEnabled or FStopped then
+    Exit;
+  try
+    // Only while the IDE's code editor has the keyboard: not in Design, not in other windows
+    if not Supports(BorlandIDEServices, INTACodeEditorServices, Editors) or (Screen.ActiveControl = nil) or
+      not Editors.IsIDEEditor(Screen.ActiveControl) then
+      Exit;
+    Buffer := (BorlandIDEServices as IOTAEditorServices).TopBuffer;
+    if (Buffer = nil) or not IsXamlFile(Buffer.FileName) or (Buffer.TopView = nil) then
+    begin
+      if FState.Ghost <> '' then
+      begin
+        FState.Dismiss;
+        Invalidate;
+      end;
+      Exit;
+    end;
+    View := Buffer.TopView;
+    if not SameText(Buffer.FileName, FFile) then
+    begin
+      // Another .xaml file: a fresh state, the old ghost text goes
+      FFile := Buffer.FileName;
+      Delay := FState.Delay;
+      FState.Free;
+      FState := TXamlSuggestions.Create(Delay);
+      FKeyed := True;
+      Invalidate;
+    end;
+    Position := View.CursorPos;
+    if FKeyed or (Position.Line <> FLastPos.Line) or (Position.Col <> FLastPos.Col) then
+    begin
+      FKeyed := False;
+      FLastPos := Position;
+      Text := SourceText(FFile);
+      if FState.Observe(Text, ViewOffset(View, Text, Position), GetTickCount64) then
+      begin
+        FGhostPos := Position;
+        Invalidate;
+      end;
+    end;
+    if not FState.Due(GetTickCount64) then
+    begin
+      if FState.Ghost <> '' then
+        FGhostPos := FLastPos; // a cached answer
+      Exit;
+    end;
+    Engine := Plugin;
+    if Engine = nil then
+      Exit;
+    Prompt := BuildXamlSuggestion(FState.RequestText, FState.RequestCursor,
+      ProjectUserControls(FState.RequestText, ExtractFilePath(FFile)));
+    FState.Vocabulary := XamlVocabulary(FFile, FState.RequestText);
+    Started := GetTickCount64;
+    ID := Engine.Chat(Prompt);
+    FState.Sent(ID, GetTickCount64);
+    Took := GetTickCount64 - Started;
+    FRequestedAt := Started;
+    Log(Format('AI suggestion asked: %d characters, %d ms after the last key', [Length(Prompt),
+      Started - FKeyAt]));
+    // Chat is asynchronous by contract (a request ID, the answer through the notifier).
+    // A plugin that blocks would make typing slow: then the suggestions stop.
+    if Took > 300 then
+    begin
+      FStopped := True;
+      EditorNote(Format('AI suggestions while typing are off until the IDE restarts: %s took %d ms ' +
+        'to take a request, which would slow typing down. Ctrl+Alt+Space still works.', [Engine.Name, Took]));
+    end;
+  except
+    on E: Exception do
+    begin
+      FStopped := True;
+      EditorNote('AI suggestions while typing stopped: ' + E.Message);
+    end;
+  end;
+end;
+
+procedure TXamlSuggestionController.Answer(const AID: TGUID; const AText, AError: string);
+var
+  Buffer: IOTAEditBuffer;
+begin
+  if AError <> '' then
+  begin
+    FState.Failed(AID);
+    Exit;
+  end;
+  if not FState.Answered(AID, AText) then
+  begin
+    if FState.LastAnswer = AText then // this request's answer, not shown: say why in the log
+      Log(Format('AI suggestion in %d ms, not shown (stale, or names XAML does not know): ',
+        [GetTickCount64 - FRequestedAt]) + LogText(AText));
+    Exit;
+  end;
+  Log(Format('AI suggestion in %d ms: ', [GetTickCount64 - FRequestedAt]) + LogText(AText) + ' -> ' +
+    LogText(FState.Ghost));
+  Buffer := (BorlandIDEServices as IOTAEditorServices).TopBuffer;
+  if (Buffer <> nil) and SameText(Buffer.FileName, FFile) and (Buffer.TopView <> nil) then
+    FGhostPos := Buffer.TopView.CursorPos
+  else
+    FState.Dismiss;
+  Invalidate;
+end;
+
+procedure TXamlSuggestionController.AcceptGhost;
+var
+  OldText, NewText: string;
+  NewCursor, Line, Column: Integer;
+begin
+  OldText := FState.Text;
+  if not FState.Accept(NewText, NewCursor) then
+    Exit;
+  try
+    ApplyText(FFile, OldText, NewText); // one undoable edit, refused when the text changed
+    LineColumnOf(NewText, NewCursor, Line, Column);
+    GotoSource(FFile, Line, Column);
+  except
+    on E: Exception do
+      EditorNote('AI suggestion: ' + E.Message);
+  end;
+  Invalidate;
+end;
+
+procedure TXamlSuggestionController.KeyDown(const Editor: TWinControl; Key: Word; Shift: TShiftState;
+  var Handled: Boolean);
+var
+  Editors: INTACodeEditorServices;
+  View: IOTAEditView;
+begin
+  FKeyed := True;
+  FKeyAt := GetTickCount64;
+  if (FState.Ghost = '') or not Supports(BorlandIDEServices, INTACodeEditorServices, Editors) then
+    Exit;
+  View := Editors.GetViewForEditor(Editor);
+  if (View = nil) or (View.Buffer = nil) or not SameText(View.Buffer.FileName, FFile) then
+    Exit;
+  if (Key = VK_TAB) and (Shift = []) then
+  begin
+    Handled := True;
+    AcceptGhost;
+  end
+  else if (Key = VK_ESCAPE) and (Shift = []) then
+  begin
+    Handled := True;
+    FState.Dismiss;
+    Invalidate;
+  end;
+end;
+
+/// The ghost text's colour: halfway between the editor's text and background.
+function GhostColor(AText, ABackground: TColor): TColor;
+var
+  Text, Background: TColor;
+begin
+  Text := ColorToRGB(AText);
+  Background := ColorToRGB(ABackground);
+  Result := RGB((GetRValue(Text) + GetRValue(Background)) div 2, (GetGValue(Text) + GetGValue(Background)) div 2,
+    (GetBValue(Text) + GetBValue(Background)) div 2);
+end;
+
+procedure TXamlSuggestionController.PaintLine(const Rect: TRect; const Stage: TPaintLineStage;
+  const BeforeEvent: Boolean; var AllowDefaultPainting: Boolean; const Context: INTACodeEditorPaintContext);
+var
+  Editors: INTACodeEditorServices;
+  Lines: TArray<string>;
+  Index: Integer;
+  Line: string;
+  Cell, Code: TRect;
+  Background, Foreground: TColor;
+  Canvas: TCanvas;
+  Font: TFont;
+begin
+  // Every line of every editor comes here: leave at once when there is nothing to draw
+  if (FState.Ghost = '') or BeforeEvent or (Stage <> plsEndPaint) or (Context = nil) then
+    Exit;
+  Index := Context.LogicalLineNum - FGhostPos.Line;
+  if (Index < 0) or not SameText(Context.FileName, FFile) then
+    Exit;
+  Lines := FState.Ghost.Replace(#13, '').Split([#10]);
+  if Index > High(Lines) then
+    Exit;
+  try
+    if not Supports(BorlandIDEServices, INTACodeEditorServices, Editors) then
+      Exit;
+    Line := Lines[Index].Replace(#9, StringOfChar(' ', 4));
+    Background := Editors.Options.BackgroundColor[atWhiteSpace];
+    Foreground := Editors.Options.FontColor[atWhiteSpace];
+    if (Background = clDefault) or (Background = clNone) then
+      Background := clWindow;
+    if (Foreground = clDefault) or (Foreground = clNone) then
+      Foreground := clWindowText;
+    Canvas := Context.Canvas;
+    Font := TFont.Create;
+    try
+      Editors.Options.GetEditorFont(Font);
+      Canvas.Font.Assign(Font);
+    finally
+      Font.Free;
+    end;
+    Canvas.Font.Style := [fsItalic];
+    Canvas.Font.Color := GhostColor(Foreground, Background);
+    if Index = 0 then
+    begin
+      // After the cursor, on its line
+      Cell := Context.EditorState.GetCharacterPosPx(FGhostPos.Col, Context.EditorLineNum);
+      Canvas.Brush.Style := bsClear;
+      Canvas.TextOut(Cell.Left, Cell.Top, Line);
+    end
+    else
+    begin
+      // The next lines of the suggestion cover the lines below until Tab or Esc
+      Code := Context.LineState.CodeRect;
+      Canvas.Brush.Style := bsSolid;
+      Canvas.Brush.Color := Background;
+      Canvas.FillRect(Code);
+      Cell := Context.EditorState.GetCharacterPosPx(1, Context.EditorLineNum);
+      Canvas.Brush.Style := bsClear;
+      Canvas.TextOut(Cell.Left, Cell.Top, Line);
+    end;
+  except
+    // Painting never fails the editor
+  end;
+end;
+
+{ TRADWinUIOptions }
+
+function TRADWinUIOptions.GetArea: string;
+begin
+  Result := ''; // Third Party
+end;
+
+function TRADWinUIOptions.GetCaption: string;
+begin
+  Result := 'RADWinUI';
+end;
+
+function TRADWinUIOptions.GetFrameClass: TCustomFrameClass;
+begin
+  Result := TFrame; // a plain frame, FrameCreated adds the controls
+end;
+
+procedure TRADWinUIOptions.FrameCreated(AFrame: TCustomFrame);
+var
+  Settings: TRADWinUISettings;
+  Heading, Caption, Note: TLabel;
+  Theming: IOTAIDEThemingServices;
+begin
+  Settings := TRADWinUISettings.Load(RADWinUIRegistryKey);
+  FLoading := True;
+  try
+    Heading := TLabel.Create(AFrame);
+    Heading.Parent := AFrame;
+    Heading.SetBounds(16, 12, 300, 16);
+    Heading.Caption := 'XAML editor';
+    Heading.Font.Style := [fsBold];
+    FSuggestions := TCheckBox.Create(AFrame);
+    FSuggestions.Parent := AFrame;
+    FSuggestions.SetBounds(24, 38, 460, 20);
+    FSuggestions.Caption := 'AI suggestions while typing (ghost text, Tab inserts it)';
+    FSuggestions.Checked := Settings.AISuggestions;
+    FSuggestions.OnClick := Changed;
+    Caption := TLabel.Create(AFrame);
+    Caption.Parent := AFrame;
+    Caption.SetBounds(44, 68, 200, 16);
+    Caption.Caption := 'Ask after a pause of (ms):';
+    FDelay := TEdit.Create(AFrame);
+    FDelay.Parent := AFrame;
+    FDelay.SetBounds(250, 64, 70, 22);
+    FDelay.NumbersOnly := True;
+    FDelay.Text := IntToStr(Settings.SuggestionDelay);
+    FDelay.OnChange := Changed;
+    FDelay.OnExit := DelayExit;
+    FLastDelay := Settings.SuggestionDelay;
+    FError := TLabel.Create(AFrame);
+    FError.Parent := AFrame;
+    FError.SetBounds(330, 68, 300, 16);
+    FError.Caption := Format('Between %d and %d ms', [TRADWinUISettings.MinDelay, TRADWinUISettings.MaxDelay]);
+    FError.StyleElements := [];
+    FError.Font.Color := RGB(232, 72, 72);
+    FError.Transparent := True;
+    FError.Visible := False;
+    FCodeCompletion := TCheckBox.Create(AFrame);
+    FCodeCompletion.Parent := AFrame;
+    FCodeCompletion.SetBounds(24, 98, 460, 20);
+    FCodeCompletion.Caption := 'Code completion (offline, coming soon)';
+    FCodeCompletion.Checked := Settings.CodeCompletion;
+    FCodeCompletion.OnClick := Changed;
+    FPromptSelection := TCheckBox.Create(AFrame);
+    FPromptSelection.Parent := AFrame;
+    FPromptSelection.SetBounds(24, 124, 520, 20);
+    FPromptSelection.Caption := 'Copy the selected XAML into the prompt (Ctrl+Alt+Space)';
+    FPromptSelection.Checked := Settings.PromptWithSelection;
+    FPromptSelection.OnClick := Changed;
+    Note := TLabel.Create(AFrame);
+    Note.Parent := AFrame;
+    // The width of the page, and with it when the dialog is resized
+    Note.AutoSize := False;
+    Note.WordWrap := True;
+    if AFrame.ClientWidth - 48 > 300 then
+      Note.SetBounds(24, 158, AFrame.ClientWidth - 48, 80)
+    else
+      Note.SetBounds(24, 158, 300, 80);
+    Note.Anchors := [akLeft, akTop, akRight];
+    Note.Caption := 'Changes are saved at once. The suggestions appear on a line still being typed, such as "<Butt", ' +
+      'and come from the AI plugin set up for the editor in the IDE''s AI options. To write a whole UI from a ' +
+      'description, right-click and choose Create XAML with AI (Ctrl+Alt+Space).';
+  finally
+    FLoading := False;
+  end;
+  if Supports(BorlandIDEServices, IOTAIDEThemingServices, Theming) then
+    Theming.ApplyTheme(AFrame);
+end;
+
+procedure TRADWinUIOptions.Changed(Sender: TObject);
+var
+  Settings: TRADWinUISettings;
+  Delay: Integer;
+begin
+  if FLoading or (FSuggestions = nil) or (FDelay = nil) or (FCodeCompletion = nil) then
+    Exit;
+  FError.Visible := not DelayValid;
+  Settings := TRADWinUISettings.Load(RADWinUIRegistryKey);
+  Settings.AISuggestions := FSuggestions.Checked;
+  Settings.CodeCompletion := FCodeCompletion.Checked;
+  if FPromptSelection <> nil then
+    Settings.PromptWithSelection := FPromptSelection.Checked;
+  // A pause still being typed is saved once it is in range
+  if TryStrToInt(FDelay.Text, Delay) and (Delay >= TRADWinUISettings.MinDelay) and
+    (Delay <= TRADWinUISettings.MaxDelay) then
+  begin
+    Settings.SuggestionDelay := Delay;
+    FLastDelay := Delay;
+  end;
+  try
+    Settings.Save(RADWinUIRegistryKey);
+  except
+    on E: Exception do
+      Log('settings: ' + E.Message);
+  end;
+  if Suggestions <> nil then
+    Suggestions.LoadSettings;
+end;
+
+procedure TRADWinUIOptions.DelayExit(Sender: TObject);
+begin
+  // The IDE closes Options on Save even when ValidateContents is False: the pause is
+  // checked when the field is left, and an invalid one goes back to the last saved value
+  if DelayValid then
+    Exit;
+  ShowMessage(Format('The pause is between %d and %d milliseconds.',
+    [TRADWinUISettings.MinDelay, TRADWinUISettings.MaxDelay]));
+  FDelay.Text := IntToStr(FLastDelay);
+  FError.Visible := False;
+  if FDelay.CanFocus then
+  begin
+    FDelay.SetFocus;
+    FDelay.SelectAll;
+  end;
+end;
+
+function TRADWinUIOptions.DelayValid: Boolean;
+var
+  Delay: Integer;
+begin
+  Result := (FDelay = nil) or (TryStrToInt(FDelay.Text, Delay) and (Delay >= TRADWinUISettings.MinDelay) and
+    (Delay <= TRADWinUISettings.MaxDelay));
+end;
+
+function TRADWinUIOptions.ValidateContents: Boolean;
+begin
+  // False keeps the Options dialog open: the error shows next to the field, no message box
+  Result := DelayValid;
+  if not Result then
+  begin
+    FError.Visible := True;
+    if FDelay.CanFocus then
+    begin
+      FDelay.SetFocus;
+      FDelay.SelectAll;
+    end;
+  end;
+end;
+
+procedure TRADWinUIOptions.DialogClosed(Accepted: Boolean);
+begin
+  // Every change was saved when it was made
+  FSuggestions := nil; // the IDE frees the frame and its controls
+  FDelay := nil;
+  FCodeCompletion := nil;
+  FPromptSelection := nil;
+  FError := nil;
+end;
+
+function TRADWinUIOptions.GetHelpContext: Integer;
+begin
+  Result := 0;
+end;
+
+function TRADWinUIOptions.IncludeInIDEInsight: Boolean;
+begin
+  Result := True;
+end;
+
 { TPreviewCommand }
 
 constructor TPreviewCommand.Create;
 var
   Keys: IOTAKeyboardServices;
+  Options: INTAEnvironmentOptionsServices;
+  EditorAction: TAction;
+  I: Integer;
 begin
   inherited;
   FSaveNotifiers := TInterfaceList.Create;
@@ -1346,6 +2311,28 @@ begin
   FDockedAction.ActionList := (BorlandIDEServices as INTAServices).ActionList;
   FDockedItem := TMenuItem.Create(nil);
   FDockedItem.Action := FDockedAction;
+  FCompleteAction := TAction.Create(nil);
+  FCompleteAction.Caption := 'Create XAML with AI...';
+  FCompleteAction.Hint := 'Describe a UI and the IDE''s AI engine writes its XAML at the cursor of a .xaml file';
+  FCompleteAction.Category := 'Tools';
+  FCompleteAction.ShortCut := ShortCut(VK_SPACE, [ssCtrl, ssAlt]);
+  FCompleteAction.OnExecute := ExecuteComplete;
+  FCompleteAction.OnUpdate := Update;
+  FCompleteAction.ActionList := (BorlandIDEServices as INTAServices).ActionList;
+  FCompleteItem := TMenuItem.Create(nil);
+  FCompleteItem.Action := FCompleteAction;
+  FSettingsAction := TAction.Create(nil);
+  FSettingsAction.Caption := 'Settings...';
+  FSettingsAction.Hint := 'Tools > Options > Third Party > RADWinUI';
+  FSettingsAction.Category := 'Tools';
+  FSettingsAction.OnExecute := ExecuteSettings;
+  FSettingsAction.ActionList := (BorlandIDEServices as INTAServices).ActionList;
+  FSettingsItem := TMenuItem.Create(nil);
+  FSettingsItem.Action := FSettingsAction;
+  // Tools > RADWinUI > Preview, Docked Preview, Create XAML with AI..., Settings...
+  FRootItem := TMenuItem.Create(nil);
+  FRootItem.Caption := 'RADWinUI';
+  FRootItem.Name := 'RADWinUIToolsMenu';
   FInspector := TNativeObjectInspector.Create(PropertyChange, EventHandler, EventCleared, SelectStructureElement,
     procedure(AError: string)
     begin
@@ -1372,13 +2359,43 @@ begin
   RegisterXamlEditOptions;
   if Supports(BorlandIDEServices, IOTAKeyboardServices, Keys) then
     FKeyBinding := Keys.AddKeyboardBinding(TDesignerKeyBinding.Create(Self));
+  FSuggestions := TXamlSuggestionController.Create;
+  // Toggle XAML Comment and Create XAML with AI in the code editor's context menu
+  FEditorActions := TActionList.Create(nil);
+  EditorAction := TAction.Create(FEditorActions);
+  EditorAction.Caption := 'Toggle XAML Comment (Ctrl+/)';
+  EditorAction.OnExecute := ExecuteComment;
+  EditorAction := TAction.Create(FEditorActions);
+  EditorAction.Caption := 'Create XAML with AI... (Ctrl+Alt+Space)';
+  EditorAction.OnExecute := ExecuteComplete;
+  for I := 0 to FEditorActions.ComponentCount - 1 do
+  begin
+    EditorAction := FEditorActions.Components[I] as TAction;
+    EditorAction.Category := 'RADWinUIXaml';
+    EditorAction.OnUpdate := EditorActionUpdate;
+    EditorAction.ActionList := FEditorActions;
+  end;
+  (BorlandIDEServices as IOTAEditorServices).GetEditorLocalMenu.RegisterActionList(FEditorActions, 'RADWinUIXaml',
+    cEdMenuCatClipboard);
+  if Supports(BorlandIDEServices, INTAEnvironmentOptionsServices, Options) then
+  begin
+    FEditorOptions := TRADWinUIOptions.Create;
+    Options.RegisterAddInOptions(FEditorOptions);
+  end;
 end;
 
 procedure TPreviewCommand.AddToMenu(Sender: TObject);
 begin
   Inc(FMenuTries);
-  FMenuTimer.Enabled := not (InsertIntoToolsMenu((BorlandIDEServices as INTAServices).MainMenu, FDockedItem) and
-    InsertIntoToolsMenu((BorlandIDEServices as INTAServices).MainMenu, FItem)) and (FMenuTries < 60);
+  if FRootItem.Count = 0 then
+  begin
+    FRootItem.Add(FItem);
+    FRootItem.Add(FDockedItem);
+    FRootItem.Add(FCompleteItem);
+    FRootItem.Add(FSettingsItem);
+  end;
+  FMenuTimer.Enabled := not InsertIntoToolsMenu((BorlandIDEServices as INTAServices).MainMenu, FRootItem) and
+    (FMenuTries < 60);
 end;
 
 const
@@ -1588,11 +2605,472 @@ begin
   Buffer := (BorlandIDEServices as IOTAEditorServices).TopBuffer;
   FAction.Enabled := (FClient <> nil) or (FXamlPath <> '') or ((Buffer <> nil) and (XamlOf(Buffer.FileName) <> ''));
   FDockedAction.Enabled := FAction.Enabled;
+  FCompleteAction.Enabled := (Buffer <> nil) and SameText(ExtractFileExt(Buffer.FileName), '.xaml');
+end;
+
+procedure TPreviewCommand.ExecuteComplete(Sender: TObject);
+var
+  Buffer: IOTAEditBuffer;
+begin
+  Buffer := (BorlandIDEServices as IOTAEditorServices).TopBuffer;
+  if Buffer <> nil then
+    ShowXamlPrompt(Buffer.FileName);
+end;
+
+function TPreviewCommand.ShowXamlPrompt(const AFile: string): Boolean;
+var
+  Theming: IOTAIDEThemingServices;
+  Background, Text, Border: TColor;
+  Buffer: IOTAEditBuffer;
+begin
+  Result := IsXamlFile(AFile);
+  if not Result then
+    Exit;
+  if FPromptBox <> nil then
+  begin
+    FPromptBox.Show;
+    FPromptBox.Memo.SetFocus;
+    Exit;
+  end;
+  Background := clWindow;
+  Text := clWindowText;
+  Border := clBtnShadow;
+  if Supports(BorlandIDEServices, IOTAIDEThemingServices, Theming) and Theming.IDEThemingEnabled then
+  begin
+    Background := Theming.StyleServices.GetStyleColor(scEdit);
+    Text := Theming.StyleServices.GetStyleFontColor(sfEditBoxTextNormal);
+    Border := Theming.StyleServices.GetStyleColor(scBorder);
+  end;
+  FPromptFile := AFile;
+  // The accent of a quick prompt bar: a warm orange spark
+  FPromptBox := TXamlPromptBox.CreateBox(nil, Background, Text, Border, RGB(217, 119, 87));
+  FPromptBox.OnSubmit := PromptSubmit;
+  FPromptBox.OnCancel := PromptCancel;
+  FPromptBox.ShowOver(Application.MainForm);
+  // Lines selected in the editor go into the bar, to describe what to make of them; the answer replaces them
+  Buffer := (BorlandIDEServices as IOTAEditorServices).TopBuffer;
+  if TRADWinUISettings.Load(RADWinUIRegistryKey).PromptWithSelection and (Buffer <> nil) and
+    SameText(Buffer.FileName, AFile) and (Buffer.TopView <> nil) and (Buffer.TopView.Block <> nil) and
+    Buffer.TopView.Block.IsValid and (Buffer.TopView.Block.Size > 0) then
+  begin
+    FPromptBox.Memo.Text := Buffer.TopView.Block.Text.Trim;
+    FPromptBox.Memo.SelStart := Length(FPromptBox.Memo.Text);
+  end;
+end;
+
+procedure TPreviewCommand.ClosePrompt;
+begin
+  FPromptRequest := nil;
+  if FPromptBox <> nil then
+  begin
+    FPromptBox.OnCancel := nil;
+    FPromptBox.Release;
+    FPromptBox := nil;
+  end;
+end;
+
+procedure TPreviewCommand.PromptCancel(Sender: TObject);
+begin
+  if FPromptRequest <> nil then
+    CancelXamlCompletion; // its answer is not inserted
+  ClosePrompt;
+end;
+
+procedure TPreviewCommand.PromptSubmit(const APrompt: string);
+var
+  Buffer: IOTAEditBuffer;
+  View: IOTAEditView;
+  Block: IOTAEditBlock;
+  Plugin: IOTAAIPlugin;
+  Request: TXamlAIRequest;
+  Text, Problem: string;
+  Start, Stop: TOTAEditPos;
+begin
+  Buffer := (BorlandIDEServices as IOTAEditorServices).TopBuffer;
+  if (Buffer = nil) or not SameText(Buffer.FileName, FPromptFile) or (Buffer.TopView = nil) then
+  begin
+    FPromptBox.ShowError('Open ' + ExtractFileName(FPromptFile) + ' in the code editor first.');
+    Exit;
+  end;
+  if APrompt = '' then
+  begin
+    // An empty bar: complete at the cursor, as before
+    ClosePrompt;
+    CompleteXaml(Buffer.FileName);
+    Exit;
+  end;
+  Plugin := EditorAIPlugin(Problem);
+  if Plugin = nil then
+  begin
+    FPromptBox.ShowError(Problem);
+    Exit;
+  end;
+  View := Buffer.TopView;
+  Text := SourceText(FPromptFile);
+  Start := View.CursorPos;
+  Stop := Start;
+  Block := View.Block;
+  if (Block <> nil) and Block.IsValid and (Block.Size > 0) then
+  begin
+    Start.Line := Block.StartingRow;
+    Start.Col := Block.StartingColumn;
+    Stop.Line := Block.EndingRow;
+    Stop.Col := Block.EndingColumn;
+  end;
+  CancelXamlCompletion;
+  Request := TXamlAIRequest.Create;
+  PendingCompletionRef := Request;
+  PendingCompletion := Request;
+  Request.FFile := FPromptFile;
+  Request.FXaml := Text;
+  Request.FCursor := ViewOffset(View, Text, Start);
+  Request.FSelEnd := ViewOffset(View, Text, Stop);
+  Request.FOnDone := PromptAnswer;
+  Request.FPlugin := Plugin;
+  Request.FNotifier := Plugin.AddNotifier(Request);
+  FPromptRequest := Request;
+  FPromptBox.SetBusy(True, 'Writing the XAML with ' + Plugin.Name + '... (Esc cancels)');
+  Log('Create XAML with AI: ' + LogText(APrompt));
+  Request.FRequest := Plugin.Chat(BuildXamlFromDescription(Text, Request.FCursor, APrompt,
+    ProjectUserControls(Text, ExtractFilePath(FPromptFile))));
+end;
+
+procedure TPreviewCommand.PromptAnswer(const AAnswer, AError: string);
+var
+  Request: TXamlAIRequest;
+  Block, NewText: string;
+  Ghost: TXamlGhost;
+  Cursor, Line, Column: Integer;
+begin
+  Request := FPromptRequest;
+  FPromptRequest := nil;
+  if (Request = nil) or (FPromptBox = nil) then
+    Exit; // cancelled
+  if AError <> '' then
+  begin
+    FPromptBox.ShowError(AError);
+    Exit;
+  end;
+  Log('Create XAML with AI answer: ' + LogText(AAnswer));
+  Block := CleanXamlCompletion(AAnswer);
+  if Block = '' then
+  begin
+    FPromptBox.ShowError('The AI engine sent no XAML. Describe it differently and press Enter.');
+    Exit;
+  end;
+  // The same checks as the suggestions: known elements, their case corrected
+  if not CorrectXamlSuggestion('', 0, Block, XamlVocabulary(Request.FFile, Request.FXaml), Ghost) then
+  begin
+    FPromptBox.ShowError('The answer uses names XAML does not know. Press Enter to ask again.');
+    Exit;
+  end;
+  try
+    if SourceText(Request.FFile) <> Request.FXaml then
+    begin
+      FPromptBox.ShowError('The file changed meanwhile. Press Enter to ask again.');
+      Exit;
+    end;
+    NewText := PlaceXamlBlock(Request.FXaml, Request.FCursor, Request.FSelEnd, Ghost.Text, Cursor);
+    ApplyText(Request.FFile, Request.FXaml, NewText); // one undoable edit
+    ClosePrompt;
+    LineColumnOf(NewText, Cursor, Line, Column);
+    GotoSource(Request.FFile, Line, Column);
+    EditorNote('Create XAML with AI: inserted ' + IntToStr(Length(Ghost.Text.Split([#10]))) + ' lines.');
+  except
+    on E: Exception do
+      if FPromptBox <> nil then
+        FPromptBox.ShowError(E.Message);
+  end;
+end;
+
+procedure TPreviewCommand.ExecuteSettings(Sender: TObject);
+var
+  I: Integer;
+  Actions: TCustomActionList;
+begin
+  // ToolsAPI has no call to open Options at a page, and the IDE keeps no last page: once the
+  // dialog shows (a modal loop, so a timer), SelectOptionsPage selects our node in its tree
+  if FOptionsTimer = nil then
+  begin
+    FOptionsTimer := TTimer.Create(nil);
+    FOptionsTimer.Interval := 50;
+    FOptionsTimer.OnTimer := SelectOptionsPage;
+  end;
+  FOptionsAskedAt := GetTickCount;
+  FOptionsTimer.Enabled := True;
+  Actions := (BorlandIDEServices as INTAServices).ActionList;
+  for I := 0 to Actions.ActionCount - 1 do
+    if SameText(Actions.Actions[I].Name, 'ToolsOptionsCommand') then
+    begin
+      Actions.Actions[I].Execute;
+      Exit;
+    end;
+  FOptionsTimer.Enabled := False;
+end;
+
+/// The Options dialog's page tree is a VirtualTree (a type no package can name): its public
+/// methods and properties are reached through RTTI. Selects Third Party > RADWinUI; anything
+/// missing leaves the dialog as it opened.
+procedure TPreviewCommand.SelectOptionsPage(Sender: TObject);
+
+  function FindTree(AControl: TWinControl): TWinControl;
+  var
+    I: Integer;
+  begin
+    if AControl.ClassType.InheritsFrom(TWinControl) and AControl.ClassName.Contains('VirtualStringTree') then
+      Exit(AControl);
+    for I := 0 to AControl.ControlCount - 1 do
+      if AControl.Controls[I] is TWinControl then
+      begin
+        Result := FindTree(TWinControl(AControl.Controls[I]));
+        if Result <> nil then
+          Exit;
+      end;
+    Result := nil;
+  end;
+
+var
+  Form: TCustomForm;
+  Tree: TWinControl;
+  Context: TRttiContext;
+  TreeType: TRttiType;
+  Text: TRttiIndexedProperty;
+  Node, Parent, Found: TValue;
+  Caption: string;
+
+  function IsNil(const AValue: TValue): Boolean;
+  begin
+    Result := AValue.IsEmpty or (PPointer(AValue.GetReferenceToRawData)^ = nil);
+  end;
+
+  function TextOf(const ANode: TValue): string;
+  var
+    Column: TValue;
+  begin
+    // Text[Node, Column]: the column index in its own type (TColumnIndex), -1 for the main column
+    TValue.Make(-1, Text.ReadMethod.GetParameters[1].ParamType.Handle, Column);
+    Result := Text.GetValue(Pointer(Tree), [ANode, Column]).AsString;
+  end;
+
+  // A public method by name: the overload that takes at least AArgs, the rest at their defaults
+  // (False for a Boolean, the type's zero otherwise)
+  function Call(const AName: string; const AArgs: array of TValue): TValue;
+  var
+    Method, Best: TRttiMethod;
+    Params: TArray<TRttiParameter>;
+    Args: TArray<TValue>;
+    I: Integer;
+  begin
+    Best := nil;
+    for Method in TreeType.GetMethods(AName) do
+      if (Length(Method.GetParameters) >= Length(AArgs)) and
+        ((Best = nil) or (Length(Method.GetParameters) < Length(Best.GetParameters))) then
+        Best := Method;
+    if Best = nil then
+      raise Exception.Create(AName + ' not found');
+    Params := Best.GetParameters;
+    SetLength(Args, Length(Params));
+    for I := 0 to High(Params) do
+      if I <= High(AArgs) then
+        Args[I] := AArgs[I]
+      else
+        TValue.Make(nil, Params[I].ParamType.Handle, Args[I]);
+    Result := Best.Invoke(Tree, Args);
+  end;
+
+begin
+  if GetTickCount - FOptionsAskedAt > 5000 then
+    FOptionsTimer.Enabled := False;
+  Form := Screen.ActiveCustomForm;
+  if (Form = nil) or (Form.ClassName <> 'TDefaultEnvironmentDialog') then
+    Exit;
+  FOptionsTimer.Enabled := False;
+  try
+    Tree := FindTree(Form);
+    if Tree = nil then
+    begin
+      Log('Settings: no page tree in the Options dialog');
+      Exit;
+    end;
+    Context := TRttiContext.Create;
+    TreeType := Context.GetType(Tree.ClassType);
+    Text := TreeType.GetIndexedProperty('Text');
+    // Third Party, a top-level node: opened, then its RADWinUI child
+    Node := Call('GetFirst', []);
+    Found := TValue.Empty;
+    while not IsNil(Node) do
+    begin
+      Caption := TextOf(Node);
+      if SameText(Caption, 'Third Party') then
+      begin
+        TreeType.GetIndexedProperty('Expanded').SetValue(Pointer(Tree), [Node], True);
+        Parent := Node;
+        Node := Call('GetFirstChild', [Parent]);
+        while not IsNil(Node) do
+        begin
+          if SameText(TextOf(Node), 'RADWinUI') then
+          begin
+            Found := Node;
+            Break;
+          end;
+          Node := Call('GetNextSibling', [Node]);
+        end;
+        Break;
+      end;
+      Node := Call('GetNextSibling', [Node]);
+    end;
+    if IsNil(Found) then
+    begin
+      Log('Settings: Third Party > RADWinUI not found in the Options tree');
+      Exit;
+    end;
+    TreeType.GetIndexedProperty('Selected').SetValue(Pointer(Tree), [Found], True);
+    TreeType.GetProperty('FocusedNode').SetValue(Pointer(Tree), Found);
+    Call('ScrollIntoView', [Found, True]);
+  except
+    on E: Exception do
+      Log('Settings: the Options page could not be selected: ' + E.ClassName + ': ' + E.Message);
+  end;
+end;
+
+function TPreviewCommand.IsCommentKey(AKey: Word): Boolean;
+var
+  Key: TShortCut;
+  Shift: TShiftState;
+begin
+  Shift := [];
+  if GetKeyState(VK_CONTROL) < 0 then
+    Include(Shift, ssCtrl);
+  if GetKeyState(VK_SHIFT) < 0 then
+    Include(Shift, ssShift);
+  if GetKeyState(VK_MENU) < 0 then
+    Include(Shift, ssAlt);
+  Key := ShortCut(AKey, Shift);
+  // Ctrl+/ on the main keyboard and the keypad, and Ctrl with the key that types "/" in this layout
+  Result := (Key = ShortCut(VK_OEM_2, [ssCtrl])) or (Key = ShortCut(VK_DIVIDE, [ssCtrl])) or
+    (Key = SlashShortCut(VkKeyScanEx('/', GetKeyboardLayout(0))));
+end;
+
+function TPreviewCommand.CompleteXaml(const AFile: string): Boolean;
+var
+  Buffer: IOTAEditBuffer;
+  View: IOTAEditView;
+  Plugin: IOTAAIPlugin;
+  Request: TXamlAIRequest;
+  Text, Problem: string;
+  Cursor: Integer;
+begin
+  Result := IsXamlFile(AFile);
+  if not Result then
+    Exit;
+  Buffer := (BorlandIDEServices as IOTAEditorServices).TopBuffer;
+  if (Buffer = nil) or not SameText(Buffer.FileName, AFile) or (Buffer.TopView = nil) then
+    Exit;
+  Plugin := EditorAIPlugin(Problem);
+  if Plugin = nil then
+  begin
+    ShowMessage(Problem);
+    Exit;
+  end;
+  View := Buffer.TopView;
+  Text := SourceText(AFile);
+  Cursor := ViewOffset(View, Text, View.CursorPos);
+  CancelXamlCompletion; // a new request replaces the one still pending
+  Request := TXamlAIRequest.Create;
+  PendingCompletionRef := Request;
+  PendingCompletion := Request;
+  Request.FFile := AFile;
+  Request.FXaml := Text;
+  Request.FCursor := Cursor;
+  Request.FPlugin := Plugin;
+  Request.FNotifier := Plugin.AddNotifier(Request);
+  Request.FRequest := Plugin.Chat(BuildXamlCompletion(Text, Cursor, ProjectUserControls(Text, ExtractFilePath(AFile))));
+  CompletionNote('asked ' + Plugin.Name + ', the answer goes in at the cursor.');
+end;
+
+procedure TPreviewCommand.EditorActionUpdate(Sender: TObject);
+var
+  Buffer: IOTAEditBuffer;
+begin
+  Buffer := (BorlandIDEServices as IOTAEditorServices).TopBuffer;
+  (Sender as TAction).Visible := (Buffer <> nil) and IsXamlFile(Buffer.FileName);
+end;
+
+procedure TPreviewCommand.ExecuteComment(Sender: TObject);
+begin
+  ToggleComment((BorlandIDEServices as IOTAEditorServices).TopBuffer);
+end;
+
+function TPreviewCommand.ToggleComment(const ABuffer: IOTAEditBuffer): Boolean;
+var
+  View: IOTAEditView;
+  Block: IOTAEditBlock;
+  Cursor, Start, Stop: TOTAEditPos;
+  Text, Toggled, Lines: string;
+  Skipped: TArray<Integer>;
+  Line: Integer;
+begin
+  Result := (ABuffer <> nil) and IsXamlFile(ABuffer.FileName);
+  if not Result then
+    Exit;
+  View := ABuffer.TopView;
+  if View = nil then
+    Exit;
+  Text := SourceText(ABuffer.FileName);
+  Cursor := View.CursorPos;
+  Start := Cursor;
+  Stop := Cursor;
+  Block := View.Block;
+  if (Block <> nil) and Block.IsValid and (Block.Size > 0) then
+  begin
+    Start.Line := Block.StartingRow;
+    Start.Col := Block.StartingColumn;
+    Stop.Line := Block.EndingRow;
+    Stop.Col := Block.EndingColumn;
+  end;
+  try
+    Toggled := ToggleXamlComment(Text, ViewOffset(View, Text, Start), ViewOffset(View, Text, Stop), Skipped);
+    if Toggled <> Text then
+      ApplyText(ABuffer.FileName, Text, Toggled);
+    // The same lines stay selected, the cursor where it was
+    if (Block <> nil) and (Start.Line <> Stop.Line) then
+    begin
+      Start.Col := 1;
+      View.CursorPos := Start;
+      Block.BeginBlock;
+      if Stop.Col > 1 then
+      begin
+        Stop.Line := Stop.Line + 1; // the selection covers whole lines
+        Stop.Col := 1;
+      end;
+      View.CursorPos := Stop;
+      Block.EndBlock;
+    end
+    else
+      View.CursorPos := Cursor;
+    View.Paint;
+    if Skipped <> nil then
+    begin
+      MessageBeep(MB_ICONWARNING);
+      Lines := '';
+      for Line in Skipped do
+        Lines := Lines + IntToStr(Line) + ', ';
+      EditorNote('Ctrl+/: line ' + Lines.TrimRight([',', ' ']) +
+        ' left as it is, a XAML comment cannot hold "--".');
+    end;
+  except
+    on E: Exception do
+    begin
+      MessageBeep(MB_ICONWARNING);
+      EditorNote('Ctrl+/: ' + E.Message);
+    end;
+  end;
 end;
 
 destructor TPreviewCommand.Destroy;
 var
   Keys: IOTAKeyboardServices;
+  Options: INTAEnvironmentOptionsServices;
   I: Integer;
 begin
   FreeAndNil(FApplicationEvents);
@@ -1624,6 +3102,20 @@ begin
   FreeAndNil(FPreviewDockForm);
   FWatch.FCommand := nil;
   FWatch.Free;
+  CancelXamlCompletion;
+  FreeAndNil(FSuggestions);
+  if FEditorActions <> nil then
+    (BorlandIDEServices as IOTAEditorServices).GetEditorLocalMenu.UnregisterActionList('RADWinUIXaml');
+  FreeAndNil(FEditorActions);
+  if (FEditorOptions <> nil) and Supports(BorlandIDEServices, INTAEnvironmentOptionsServices, Options) then
+    Options.UnregisterAddInOptions(FEditorOptions);
+  FEditorOptions := nil;
+  FreeAndNil(FPromptBox);
+  FreeAndNil(FOptionsTimer);
+  FCompleteItem.Free;
+  FCompleteAction.Free;
+  FSettingsItem.Free;
+  FSettingsAction.Free;
   FDockedItem.Free;
   FContextMenu.Free;
   FDockedAction.Free;
@@ -1632,6 +3124,7 @@ begin
   FTimer.Free;
   FItem.Free;
   FAction.Free;
+  FRootItem.Free; // after its items
   inherited;
 end;
 
@@ -1786,7 +3279,28 @@ begin
 end;
 
 procedure TPreviewCommand.ApplicationMessage(var Msg: TMsg; var Handled: Boolean);
+var
+  Editors: INTACodeEditorServices;
+  Control: TWinControl;
+  View: IOTAEditView;
 begin
+  // Ctrl+/ in a .xaml code editor, before the IDE's own Ctrl+/ (which writes Pascal's //)
+  if not Handled and (Msg.message = WM_KEYDOWN) and (Application.ModalLevel = 0) and
+    (GetKeyState(VK_CONTROL) < 0) and IsCommentKey(Msg.wParam) and
+    Supports(BorlandIDEServices, INTACodeEditorServices, Editors) then
+  begin
+    Control := FindControl(Msg.hwnd);
+    if (Control <> nil) and Editors.IsIDEEditor(Control) then
+    begin
+      View := Editors.GetViewForEditor(Control);
+      if (View <> nil) and (View.Buffer <> nil) and IsXamlFile(View.Buffer.FileName) then
+      begin
+        Handled := True;
+        if (Msg.lParam and $40000000) = 0 then // not a key repeat
+          ToggleComment(View.Buffer);
+      end;
+    end;
+  end;
   // OTA keyboard bindings cover source editors. A custom Design frame or an
   // inspector can have focus without an IOTAKeyContext/EditBuffer.
   if not Handled and FDesignViewActive and (Application.ModalLevel = 0) and (Msg.message = WM_KEYDOWN) and
@@ -2006,6 +3520,7 @@ var
   Xaml: string;
   Selection: TDesignerSelection;
   WasDesign: Boolean;
+  Part: string;
   Parts: TArray<string>;
 begin
   WasDesign := FDesignViewActive;
@@ -2076,6 +3591,24 @@ begin
           SelectParent
         else if Xaml.StartsWith('NUDGE ') then
           NudgeSelection(Xaml)
+        else if Xaml.StartsWith('NUDGEMULTI ') then
+          NudgeMulti(Xaml)
+        else if Xaml.StartsWith('MULTI ') then
+        begin
+          if FInspector <> nil then
+            FInspector.Commit;
+          FMulti := nil;
+          for Part in Xaml.Substring(6).Split([';']) do
+            if TDesignerSelection.Parse('SELECTED ' + Part, Selection) then
+              FMulti := FMulti + [Selection];
+          if Length(FMulti) > 0 then
+          begin
+            FSelection := FMulti[0];
+            FSelectionPath := FXamlPath;
+            Selected;
+            Log(Format('designer: %d elements selected', [Length(FMulti)]));
+          end;
+        end
         else if Xaml = 'CUT' then
           CutSelection
         else if Xaml = 'COPY' then
@@ -2103,6 +3636,7 @@ begin
         begin
           if FInspector <> nil then
             FInspector.Commit; // to the element selected until now
+          FMulti := nil;
           FSelection := Selection;
           FSelectionPath := FXamlPath;
           Selected;
@@ -2223,6 +3757,7 @@ var
 begin
   if FInspector <> nil then FInspector.Commit;
   FSelection := Default(TDesignerSelection);
+  FMulti := nil;
   FSelectionPath := '';
   FInspectorDirty := True;
   if FInspector <> nil then
@@ -2234,10 +3769,28 @@ end;
 procedure TPreviewCommand.DeleteSelection;
 var
   Xaml: string;
+  Positions, Deletable: TArray<TXamlPosition>;
+  Position: TXamlPosition;
 begin
   if not (esCanDelete in DesignEditState) then Exit;
   try
     if FInspector <> nil then FInspector.Commit;
+    if Length(FMulti) > 1 then
+    begin
+      // Every selected element, but the window and its required content
+      Xaml := SourceText(FXamlPath);
+      Positions := MultiPositions;
+      Deletable := nil;
+      for Position in Positions do
+        if CanDeleteElement(Xaml, Position.Line, Position.Column) then
+          Deletable := Deletable + [Position];
+      if Deletable = nil then Exit;
+      ApplyText(FXamlPath, Xaml, DeleteElements(Xaml, Deletable));
+      ClearSelection;
+      SyncCode(True);
+      SyncStructure;
+      Exit;
+    end;
     if not CanDeleteSelection then Exit;
     Xaml := SourceText(FXamlPath);
     ApplyText(FXamlPath, Xaml, DeleteElement(Xaml, FSelection.Line, FSelection.Column));
@@ -2311,7 +3864,10 @@ begin
   if not (esCanCopy in DesignEditState) then
     Exit;
   try
-    Clipboard.AsText := CopyElement(SourceText(FXamlPath), FSelection.Line, FSelection.Column);
+    if Length(FMulti) > 1 then
+      Clipboard.AsText := CopyElements(SourceText(FXamlPath), MultiPositions)
+    else
+      Clipboard.AsText := CopyElement(SourceText(FXamlPath), FSelection.Line, FSelection.Column);
   except
     on E: Exception do
       ThemedMessageDlg('RADWinUI Copy: ' + E.Message, mtWarning, [mbOK]);
@@ -2450,6 +4006,76 @@ begin
   end;
 end;
 
+/// The elements of the multi-selection where they are now: found by x:Name, else at their position.
+function TPreviewCommand.MultiPositions: TArray<TXamlPosition>;
+var
+  Elements: TArray<TXamlElement>;
+  Element: TXamlElement;
+  Item: TDesignerSelection;
+begin
+  Result := nil;
+  Elements := XamlElements(SourceText(FXamlPath));
+  for Item in FMulti do
+    for Element in Elements do
+      if not Element.DesignOnly and (Element.Tag = Item.Tag) and
+        (((Item.Name <> '') and (Element.Name = Item.Name)) or
+         ((Item.Name = '') and (Element.Line = Item.Line) and (Element.Column = Item.Column))) then
+      begin
+        Result := Result + [TXamlPosition.Create(Element.Line, Element.Column)];
+        Break;
+      end;
+end;
+
+/// NUDGEMULTI <line> <column> <left> <top>;...: Ctrl+Arrow on a multi-selection, one change. The moves
+/// of one burst are one undo step, as for one element.
+procedure TPreviewCommand.NudgeMulti(const AEvent: string);
+var
+  Part, Xaml: string;
+  Parts: TArray<string>;
+  Moves: TArray<TXamlNudge>;
+  Move: TXamlNudge;
+  Buffer: IOTAEditBuffer;
+begin
+  Moves := nil;
+  for Part in AEvent.Substring(Length('NUDGEMULTI ')).Split([';']) do
+  begin
+    Parts := Part.Split([' ']);
+    if Length(Parts) <> 4 then Continue;
+    Move.Line := StrToIntDef(Parts[0], 0);
+    Move.Column := StrToIntDef(Parts[1], 0);
+    Move.Left := StrToIntDef(Parts[2], 0);
+    Move.Top := StrToIntDef(Parts[3], 0);
+    Moves := Moves + [Move];
+  end;
+  if Moves = nil then Exit;
+  try
+    Xaml := SourceText(FXamlPath);
+    if (Xaml = FNudgeText) and (FNudgeLine = -1) and (GetTickCount - FNudgeAt < 1500) then
+    begin
+      Buffer := XamlBuffer;
+      if (Buffer <> nil) and Buffer.Undo then
+        if SourceText(FXamlPath) = FNudgeBase then
+          Xaml := FNudgeBase
+        else
+        begin
+          Buffer.Redo; // not the move it should have taken back: this one becomes its own step
+          FNudgeBase := Xaml;
+        end
+      else
+        FNudgeBase := Xaml;
+    end
+    else
+      FNudgeBase := Xaml;
+    FNudgeText := NudgeElements(Xaml, Moves);
+    ApplyText(FXamlPath, Xaml, FNudgeText);
+    FNudgeLine := -1; // a multi move
+    FNudgeAt := GetTickCount;
+    FInspectorDirty := True;
+  except
+    on E: Exception do Log('designer move: ' + E.Message);
+  end;
+end;
+
 procedure TPreviewCommand.CutSelection;
 var
   State: TEditState;
@@ -2458,7 +4084,10 @@ begin
   if not (esCanCopy in State) or not (esCanCut in State) then
     Exit;
   try
-    Clipboard.AsText := CopyElement(SourceText(FXamlPath), FSelection.Line, FSelection.Column);
+    if Length(FMulti) > 1 then
+      Clipboard.AsText := CopyElements(SourceText(FXamlPath), MultiPositions)
+    else
+      Clipboard.AsText := CopyElement(SourceText(FXamlPath), FSelection.Line, FSelection.Column);
   except
     on E: Exception do
     begin
@@ -3170,6 +4799,13 @@ begin
       FInspectorDirty := True;
       Exit;
     end;
+    // A multi-selection: the change goes to every selected element (a name stays one element's)
+    if (Length(FMulti) > 1) and (AName <> 'Name') then
+    begin
+      ApplyText(FXamlPath, Xaml, SetAttributeOn(Xaml, MultiPositions, AttributeOf(AName), AValue));
+      FInspectorDirty := True;
+      Exit;
+    end;
     if AValue = '' then
       ApplyText(FXamlPath, Xaml, RemoveAttribute(Xaml, FSelection.Line, FSelection.Column, AttributeOf(AName)))
     else
@@ -3265,5 +4901,6 @@ initialization
 
 finalization
   FreeAndNil(Command);
+  FreeAndNil(VocabularyIndex);
 
 end.

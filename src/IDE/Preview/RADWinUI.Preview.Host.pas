@@ -44,6 +44,13 @@ unit RADWinUI.Preview.Host;
   Shift+F10 push it for the selected element. Esc pushes SELECTPARENT and
   Ctrl+X CUT, next to COPY, PASTE, DELETEKEY, UNDO and REDO.
 
+  Several elements: Ctrl+click adds or removes one, Ctrl+drag draws a marquee
+  that adds the children of the panel under the press it touches, Ctrl+A selects
+  the children of the selected element's panel (or of the window's content).
+  MULTI <SELECTED fields>;<SELECTED fields>;... reports them, the first is the
+  primary one. Ctrl+Arrow moves them all: NUDGEMULTI <line> <column> <left>
+  <top>;... Delete, Copy and Cut act on them in the IDE.
+
   Ctrl+Arrow moves the selected child of a Grid or Canvas by 1 DIP, with Shift
   by 8: NUDGE <line> <column> <left> <top>, its new place in the parent (the
   IDE writes Canvas.Left/Top, or Margin with Left/Top alignment). The request
@@ -111,6 +118,13 @@ type
     FTitleBars: TDictionary<string, string>; // key of a TitleBar's placeholder Grid -> its layout XAML
     FSelected: string;
     FSelectedElement: IFrameworkElement;
+    FExtra: TList<string>;          // the other selected elements (multi-selection), by key
+    FExtraBoxes: TList<IUIElement>; // their outlines on the adorner
+    FMarquee: IFrameworkElement;    // the Ctrl+drag rectangle
+    FCtrlPress: Boolean;            // the press had Ctrl: a toggle, or a marquee once it moves
+    FMarqueeOn: Boolean;
+    FNudges: TDictionary<string, TPoint>; // multi nudge: each element's place sent last ...
+    FNudgesAt: Cardinal;                  // ... and when
     FInserts: TArray<Integer>;
     // x:Uid -> ' Text="..."' attributes from the default Resources.resw beside the XAML
     FUidTexts: TDictionary<string, string>;
@@ -177,6 +191,17 @@ type
     function SelectFrom(AObject: IDependencyObject): string;
     function SelectAt(const APoint: RADWinUI.Abi.Point): string;
     procedure Select(const AName: string);
+    function ElementBox(const AElement: IFrameworkElement): RADWinUI.Abi.Rect;
+    procedure KeyedTree(const AObject: IDependencyObject; const AParent: string;
+      AParents: TDictionary<string, string>; AOrder: TList<string>);
+    function SelectionReply: string;
+    procedure SelectKeys(const AKeys: TArray<string>);
+    procedure PlaceExtraBoxes;
+    function ToggleAt(const APoint: RADWinUI.Abi.Point): string;
+    function MarqueeSelect(const AFrom, ATo: RADWinUI.Abi.Point): string;
+    function SelectAllChildren: string;
+    function NudgeAll(ADX, ADY: Integer): string;
+    procedure ShowMarquee(const AFrom, ATo: RADWinUI.Abi.Point);
     procedure StartPipe(const AName: string);
     procedure StartEventPipe(const AName: string);
     function TakeQueuedEvent(out AEvent: string): Boolean;
@@ -804,6 +829,9 @@ begin
   FSelectionBox := FindElement<TWinUIRectangle>('SelectionBox');
   FSelectionText := FindElement<TWinUITextBlock>('SelectionText');
   FElements := TDictionary<string, string>.Create;
+  FExtra := TList<string>.Create;
+  FExtraBoxes := TList<IUIElement>.Create;
+  FNudges := TDictionary<string, TPoint>.Create;
   FTitleBars := TDictionary<string, string>.Create;
   FUidTexts := TDictionary<string, string>.Create;
   FAdornerTimer := TWinUITimer.Create;
@@ -867,11 +895,31 @@ begin
         AArgs.Handled := True;
         Exit;
       end;
+      // Ctrl+A: the children of the selected element's panel, or of the window's content
+      if (AArgs.Key = RADWinUI.Abi.VirtualKey.A) and (GetAsyncKeyState(VK_CONTROL) < 0) and
+        (GetAsyncKeyState(VK_MENU) >= 0) and (GetAsyncKeyState(VK_SHIFT) >= 0) then
+      begin
+        if not AArgs.KeyStatus.WasKeyDown then
+          Queue(SelectAllChildren);
+        AArgs.Handled := True;
+        Exit;
+      end;
       // Ctrl+Arrow moves the selected element, before the arrows could go to the IDE
       if (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_MENU) >= 0) and
         (Ord(AArgs.Key) in [VK_LEFT, VK_UP, VK_RIGHT, VK_DOWN]) then
       begin
         Key := IfThen(GetAsyncKeyState(VK_SHIFT) < 0, 8, 1);
+        if FExtra.Count > 0 then
+        begin
+          case Ord(AArgs.Key) of
+            VK_LEFT: Queue(NudgeAll(-Key, 0));
+            VK_RIGHT: Queue(NudgeAll(Key, 0));
+            VK_UP: Queue(NudgeAll(0, -Key));
+            VK_DOWN: Queue(NudgeAll(0, Key));
+          end;
+          AArgs.Handled := True;
+          Exit;
+        end;
         case Ord(AArgs.Key) of
           VK_LEFT: Queue(Nudge(-Key, 0));
           VK_RIGHT: Queue(Nudge(Key, 0));
@@ -934,6 +982,15 @@ begin
       begin
         Queue(PlaceAt(FPressAt));
         ShowMark(False);
+      end
+      else if GetAsyncKeyState(VK_CONTROL) < 0 then
+      begin
+        // Ctrl: a click toggles the element, a drag draws a marquee (DragTick)
+        FCtrlPress := True;
+        FMarqueeOn := False;
+        FPressed := True;
+        FDragging := False;
+        FDragTimer.Enabled := True;
       end
       else
       begin
@@ -1280,6 +1337,9 @@ begin
   if FPaletteDeferral <> nil then
     FPaletteDeferral.Complete;
   FElements.Free;
+  FExtra.Free;
+  FExtraBoxes.Free;
+  FNudges.Free;
   FTitleBars.Free;
   FUidTexts.Free;
   inherited;
@@ -1287,8 +1347,8 @@ end;
 
 function TPreviewWindow.Load(const APath, AXaml: string): string;
 var
-  Text, Window, Caption: string;
-  Parts: TArray<string>;
+  Text, Window, Caption, Kept: string;
+  Parts, Keys: TArray<string>;
   Element: IUIElement;
 begin
   Result := '';
@@ -1301,7 +1361,12 @@ begin
     (TWinUIObject.IntfOf(FHost, IBorder) as IBorder).Child := Element;
     Supports(Element, IFrameworkElement, FRoot);
     DecorateTitleBars;
-    Select(FSelected); // the same element after an edit, when it still exists
+    // The same elements after an edit (a multi-selection too), those that still exist
+    Keys := nil;
+    for Kept in [FSelected] + FExtra.ToArray do
+      if (Kept <> '') and FElements.ContainsKey(Kept) then
+        Keys := Keys + [Kept];
+    SelectKeys(Keys);
     FErrorBar.Visibility := TWinUIVisibility.Collapsed;
     Parts := Window.Split(['|']);
     Caption := ExtractFileName(APath);
@@ -1575,7 +1640,12 @@ end;
 procedure TPreviewWindow.Select(const AName: string);
 var
   Parts: TArray<string>;
+  Box: IUIElement;
 begin
+  // A plain selection ends a multi-selection
+  FExtra.Clear;
+  for Box in FExtraBoxes do
+    Box.Visibility := RADWinUI.Abi.Visibility.Collapsed;
   if (AName = '') or not FElements.ContainsKey(AName) then
   begin
     FSelected := '';
@@ -1619,6 +1689,351 @@ begin
   Canvas.SetTop(Box, Origin.Y);
   FSelectionBox.Width := Element.ActualWidth;
   FSelectionBox.Height := Element.ActualHeight;
+  PlaceExtraBoxes;
+end;
+
+/// AElement's bounds on the adorner canvas.
+function TPreviewWindow.ElementBox(const AElement: IFrameworkElement): RADWinUI.Abi.Rect;
+var
+  Origin: RADWinUI.Abi.Point;
+begin
+  Origin.X := 0;
+  Origin.Y := 0;
+  Origin := (AElement as IUIElement).TransformToVisual(TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement)
+    .TransformPoint(Origin);
+  Result.X := Origin.X;
+  Result.Y := Origin.Y;
+  Result.Width := AElement.ActualWidth;
+  Result.Height := AElement.ActualHeight;
+end;
+
+/// Every element with a start tag under AObject: its nearest such ancestor (AParents) and
+/// document order (AOrder).
+procedure TPreviewWindow.KeyedTree(const AObject: IDependencyObject; const AParent: string;
+  AParents: TDictionary<string, string>; AOrder: TList<string>);
+var
+  Element: IFrameworkElement;
+  Key, Parent: string;
+  I: Integer;
+begin
+  Parent := AParent;
+  if Supports(AObject, IFrameworkElement, Element) then
+  begin
+    Key := KeyOf(Element);
+    if FElements.ContainsKey(Key) and not AParents.ContainsKey(Key) then
+    begin
+      AParents.Add(Key, AParent);
+      AOrder.Add(Key);
+      Parent := Key;
+    end;
+  end;
+  for I := 0 to VisualTreeHelper.GetChildrenCount(AObject) - 1 do
+    KeyedTree(VisualTreeHelper.GetChild(AObject, I), Parent, AParents, AOrder);
+end;
+
+/// SELECTED for one element, MULTI for several (the primary first), NONE for none.
+function TPreviewWindow.SelectionReply: string;
+var
+  Key: string;
+begin
+  if FSelected = '' then
+    Exit('NONE');
+  if FExtra.Count = 0 then
+    Exit('SELECTED ' + FElements[FSelected]);
+  Result := 'MULTI ' + FElements[FSelected];
+  for Key in FExtra do
+    Result := Result + ';' + FElements[Key];
+end;
+
+/// Selects AKeys, the first one primary.
+procedure TPreviewWindow.SelectKeys(const AKeys: TArray<string>);
+var
+  I: Integer;
+begin
+  if Length(AKeys) = 0 then
+  begin
+    Select('');
+    Exit;
+  end;
+  Select(AKeys[0]);
+  for I := 1 to High(AKeys) do
+    if (AKeys[I] <> AKeys[0]) and not FExtra.Contains(AKeys[I]) then
+      FExtra.Add(AKeys[I]);
+  if FExtra.Count > 0 then
+    FSelectionText.Text := Format('%d elements selected', [FExtra.Count + 1]);
+  PlaceAdorner(nil);
+end;
+
+/// One outline per extra selected element, made as needed.
+procedure TPreviewWindow.PlaceExtraBoxes;
+var
+  I: Integer;
+  Element: IFrameworkElement;
+  Bounds: RADWinUI.Abi.Rect;
+  Box: IUIElement;
+begin
+  if FRoot = nil then
+    Exit;
+  while FExtraBoxes.Count < FExtra.Count do
+  begin
+    Box := RADWinUI.Abi.XamlReader.Load(WinStr('<Rectangle xmlns="http://schemas.microsoft.com/winfx/2006/xaml/' +
+      'presentation" Stroke="#FF0078D4" StrokeThickness="2" StrokeDashArray="3,2" IsHitTestVisible="False"/>'))
+      as IUIElement;
+    (TWinUIObject.IntfOf(FAdorner, IPanel) as IPanel).Children.Append(Box);
+    FExtraBoxes.Add(Box);
+  end;
+  for I := 0 to FExtraBoxes.Count - 1 do
+  begin
+    Box := FExtraBoxes[I];
+    Element := nil;
+    if I < FExtra.Count then
+      Element := FindByKey(FRoot as IDependencyObject, FExtra[I]);
+    if Element = nil then
+    begin
+      Box.Visibility := RADWinUI.Abi.Visibility.Collapsed;
+      Continue;
+    end;
+    Bounds := ElementBox(Element);
+    Canvas.SetLeft(Box, Bounds.X);
+    Canvas.SetTop(Box, Bounds.Y);
+    (Box as IFrameworkElement).Width := Bounds.Width;
+    (Box as IFrameworkElement).Height := Bounds.Height;
+    Box.Visibility := RADWinUI.Abi.Visibility.Visible;
+  end;
+end;
+
+function IndexIn(const AKeys: TArray<string>; const AKey: string): Integer;
+begin
+  for Result := 0 to High(AKeys) do
+    if AKeys[Result] = AKey then
+      Exit;
+  Result := -1;
+end;
+
+/// Ctrl+click: the element at APoint joins the selection, or leaves it.
+function TPreviewWindow.ToggleAt(const APoint: RADWinUI.Abi.Point): string;
+var
+  Keys: TArray<string>;
+  Hit, Previous: string;
+  Extra: TArray<string>;
+begin
+  Previous := FSelected;
+  Extra := FExtra.ToArray;
+  Hit := SelectAt(APoint); // selects it alone: the earlier selection is in Previous and Extra
+  if Hit = 'NONE' then
+  begin
+    SelectKeys([Previous] + Extra);
+    Exit(SelectionReply);
+  end;
+  Hit := FSelected;
+  Keys := [];
+  if Previous <> '' then
+    Keys := [Previous] + Extra;
+  if IndexIn(Keys, Hit) >= 0 then
+    Delete(Keys, IndexIn(Keys, Hit), 1)
+  else
+    Keys := Keys + [Hit];
+  SelectKeys(Keys);
+  Result := SelectionReply;
+end;
+
+/// The marquee from AFrom to ATo (content coordinates) on the adorner.
+procedure TPreviewWindow.ShowMarquee(const AFrom, ATo: RADWinUI.Abi.Point);
+var
+  Inverse: IGeneralTransform;
+  A, B: RADWinUI.Abi.Point;
+begin
+  if FMarquee = nil then
+  begin
+    FMarquee := RADWinUI.Abi.XamlReader.Load(WinStr('<Rectangle xmlns="http://schemas.microsoft.com/winfx/2006/xaml/' +
+      'presentation" Stroke="#FF0078D4" StrokeThickness="1" StrokeDashArray="4,3" Fill="#180078D4" ' +
+      'IsHitTestVisible="False"/>')) as IFrameworkElement;
+    (TWinUIObject.IntfOf(FAdorner, IPanel) as IPanel).Children.Append(FMarquee as IUIElement);
+  end;
+  Inverse := (TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).TransformToVisual(nil).Inverse;
+  A := Inverse.TransformPoint(AFrom);
+  B := Inverse.TransformPoint(ATo);
+  Canvas.SetLeft(FMarquee as IUIElement, Min(A.X, B.X));
+  Canvas.SetTop(FMarquee as IUIElement, Min(A.Y, B.Y));
+  FMarquee.Width := Abs(B.X - A.X);
+  FMarquee.Height := Abs(B.Y - A.Y);
+  (FMarquee as IUIElement).Visibility := RADWinUI.Abi.Visibility.Visible;
+end;
+
+/// Ctrl+drag: the children of the panel under the press that the marquee touches join the selection.
+function TPreviewWindow.MarqueeSelect(const AFrom, ATo: RADWinUI.Abi.Point): string;
+var
+  Parents: TDictionary<string, string>;
+  Order: TList<string>;
+  Keys: TArray<string>;
+  Previous, Container, Key: string;
+  Extra: TArray<string>;
+  Inverse: IGeneralTransform;
+  A, B: RADWinUI.Abi.Point;
+  Area, Bounds: RADWinUI.Abi.Rect;
+  Element: IFrameworkElement;
+  HasChildren: Boolean;
+begin
+  Result := 'NONE';
+  if FRoot = nil then
+    Exit;
+  Previous := FSelected;
+  Extra := FExtra.ToArray;
+  Inverse := (TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).TransformToVisual(nil).Inverse;
+  A := Inverse.TransformPoint(AFrom);
+  B := Inverse.TransformPoint(ATo);
+  Area.X := Min(A.X, B.X);
+  Area.Y := Min(A.Y, B.Y);
+  Area.Width := Abs(B.X - A.X);
+  Area.Height := Abs(B.Y - A.Y);
+  Parents := TDictionary<string, string>.Create;
+  Order := TList<string>.Create;
+  try
+    KeyedTree(FRoot as IDependencyObject, '', Parents, Order);
+    // The panel under the press: the element there when it has children, else its parent
+    if SelectAt(AFrom) = 'NONE' then
+      Container := ''
+    else
+    begin
+      Container := FSelected;
+      HasChildren := False;
+      for Key in Order do
+        if Parents[Key] = Container then
+          HasChildren := True;
+      if not HasChildren then
+        Container := Parents[Container];
+    end;
+    // The selection so far, without the marquee's panel: a panel and its children are not selected together
+    Keys := [];
+    for Key in [Previous] + Extra do
+      if (Key <> '') and (Key <> Container) then
+        Keys := Keys + [Key];
+    for Key in Order do
+      if (Parents[Key] = Container) and (Container <> '') then
+      begin
+        Element := FindByKey(FRoot as IDependencyObject, Key);
+        if Element = nil then
+          Continue;
+        Bounds := ElementBox(Element);
+        // Touching: the rectangles overlap
+        if (Bounds.X <= Area.X + Area.Width) and (Bounds.X + Bounds.Width >= Area.X) and
+          (Bounds.Y <= Area.Y + Area.Height) and (Bounds.Y + Bounds.Height >= Area.Y) and
+          (IndexIn(Keys, Key) < 0) then
+          Keys := Keys + [Key];
+      end;
+  finally
+    Order.Free;
+    Parents.Free;
+  end;
+  SelectKeys(Keys);
+  Result := SelectionReply;
+end;
+
+/// Ctrl+A: the children of the selected element's panel, else of the window's content.
+function TPreviewWindow.SelectAllChildren: string;
+var
+  Parents: TDictionary<string, string>;
+  Order: TList<string>;
+  Keys: TArray<string>;
+  Container, Key, Only: string;
+  Count: Integer;
+begin
+  Result := 'NONE';
+  if FRoot = nil then
+    Exit;
+  Parents := TDictionary<string, string>.Create;
+  Order := TList<string>.Create;
+  try
+    KeyedTree(FRoot as IDependencyObject, '', Parents, Order);
+    if Order.Count = 0 then
+      Exit;
+    if (FSelected <> '') and Parents.ContainsKey(FSelected) and (Parents[FSelected] <> '') then
+      Container := Parents[FSelected]
+    else
+    begin
+      // From the root down while there is a single child: the window's content panel
+      Container := Order[0];
+      repeat
+        Count := 0;
+        Only := '';
+        for Key in Order do
+          if Parents[Key] = Container then
+          begin
+            Inc(Count);
+            Only := Key;
+          end;
+        if Count = 1 then
+          Container := Only;
+      until Count <> 1;
+    end;
+    Keys := [];
+    for Key in Order do
+      if Parents[Key] = Container then
+        Keys := Keys + [Key];
+  finally
+    Order.Free;
+    Parents.Free;
+  end;
+  SelectKeys(Keys);
+  Result := SelectionReply;
+end;
+
+/// NUDGEMULTI for a keyboard move of every selected element of a Grid or Canvas by ADX, ADY DIPs.
+function TPreviewWindow.NudgeAll(ADX, ADY: Integer): string;
+var
+  Key, Kind: string;
+  Keys: TArray<string>;
+  Element, Panel: IFrameworkElement;
+  Origin: RADWinUI.Abi.Point;
+  Slot: RADWinUI.Abi.Rect;
+  Place: TPoint;
+  Parts: TArray<string>;
+  Fresh: Boolean;
+begin
+  Result := 'NONE';
+  if (FSelected = '') or (FRoot = nil) then
+    Exit;
+  // Repeated keys build on the places sent last: the preview shows a move once the IDE has written it
+  Fresh := GetTickCount - FNudgesAt >= 1000;
+  if Fresh then
+    FNudges.Clear;
+  FNudgesAt := GetTickCount;
+  Keys := [FSelected] + FExtra.ToArray;
+  Result := '';
+  for Key in Keys do
+  begin
+    Element := FindByKey(FRoot as IDependencyObject, Key);
+    if (Element = nil) or
+      not Supports(VisualTreeHelper.GetParent(Element as IDependencyObject), IFrameworkElement, Panel) or
+      not FElements.ContainsKey(KeyOf(Panel)) then
+      Continue;
+    Kind := FElements[KeyOf(Panel)].Split([' '])[2];
+    if (Kind <> 'Grid') and (Kind <> 'Canvas') then
+      Continue;
+    if not FNudges.TryGetValue(Key, Place) then
+    begin
+      Origin.X := 0;
+      Origin.Y := 0;
+      Origin := (Element as IUIElement).TransformToVisual(Panel as IUIElement).TransformPoint(Origin);
+      if Kind = 'Canvas' then
+        Place := TPoint.Create(Round(Origin.X - Element.Margin.Left), Round(Origin.Y - Element.Margin.Top))
+      else
+      begin
+        Slot := LayoutInformation.GetLayoutSlot(Element);
+        Place := TPoint.Create(Round(Origin.X - Slot.X), Round(Origin.Y - Slot.Y));
+      end;
+    end;
+    Place.Offset(ADX, ADY);
+    FNudges.AddOrSetValue(Key, Place);
+    Parts := FElements[Key].Split([' ']);
+    if Result <> '' then
+      Result := Result + ';';
+    Result := Result + Format('%s %s %d %d', [Parts[0], Parts[1], Place.X, Place.Y]);
+  end;
+  if Result = '' then
+    Result := 'NONE'
+  else
+    Result := 'NUDGEMULTI ' + Result;
 end;
 
 function TPreviewWindow.Command(const AMessage: string): string;
@@ -2003,6 +2418,28 @@ var
 begin
   GetCursorPos(Cursor);
   At := ToContent(Cursor.X, Cursor.Y);
+  if FCtrlPress then
+  begin
+    if GetAsyncKeyState(VK_LBUTTON) < 0 then
+    begin
+      if Abs(At.X - FPressAt.X) + Abs(At.Y - FPressAt.Y) > 8 then
+        FMarqueeOn := True;
+      if FMarqueeOn then
+        ShowMarquee(FPressAt, At);
+      Exit;
+    end;
+    FDragTimer.Enabled := False;
+    FCtrlPress := False;
+    FPressed := False;
+    if FMarquee <> nil then
+      (FMarquee as IUIElement).Visibility := RADWinUI.Abi.Visibility.Collapsed;
+    if FMarqueeOn then
+      Queue(MarqueeSelect(FPressAt, At))
+    else
+      Queue(ToggleAt(FPressAt));
+    FMarqueeOn := False;
+    Exit;
+  end;
   if GetAsyncKeyState(VK_LBUTTON) < 0 then
   begin
     if FSelected <> '' then

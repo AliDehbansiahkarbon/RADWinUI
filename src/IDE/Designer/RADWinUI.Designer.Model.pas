@@ -50,6 +50,7 @@ type
     FBases: TDictionary<string, string>;
     FProps: TObjectDictionary<string, TList<TDesignerProperty>>;
     FEvents: TObjectDictionary<string, TList<TDesignerEvent>>;
+    FTagCase: TDictionary<string, string>; // lower case -> as written, built on first use
     function Chain(const ATag: string): TArray<string>;
     procedure Load(const AJsonFile, APrefix: string);
   public
@@ -67,6 +68,12 @@ type
     /// <summary>The event opened by a double click on a designer control.</summary>
     function DefaultEventOf(const ATag: string): string;
     function IsVisual(const ATag: string): Boolean;
+    /// <summary>ATag as XAML spells it ('button' gives 'Button', 'rw:sendbutton' gives
+    /// 'rw:SendButton'), '' when no type has that name.</summary>
+    function ExactTag(const ATag: string): string;
+    /// <summary>The property or event AName of ATag as spelled ('content' gives 'Content'),
+    /// '' when the metadata does not list it.</summary>
+    function ExactMember(const ATag, AName: string): string;
   end;
 
   /// <summary>Replace ALength characters at AStart (0-based) with AText.</summary>
@@ -203,11 +210,40 @@ end;
 
 destructor TDesignerTypeIndex.Destroy;
 begin
+  FTagCase.Free;
   FTypes.Free;
   FBases.Free;
   FProps.Free;
   FEvents.Free;
   inherited;
+end;
+
+function TDesignerTypeIndex.ExactTag(const ATag: string): string;
+var
+  Tag: string;
+begin
+  if FTagCase = nil then
+  begin
+    FTagCase := TDictionary<string, string>.Create;
+    for Tag in FTypes.Keys do
+      FTagCase.AddOrSetValue(Tag.ToLower, Tag);
+  end;
+  if not FTagCase.TryGetValue(ATag.ToLower, Result) then
+    Result := '';
+end;
+
+function TDesignerTypeIndex.ExactMember(const ATag, AName: string): string;
+var
+  Prop: TDesignerProperty;
+  Event: TDesignerEvent;
+begin
+  for Prop in PropertiesOf(ATag) do
+    if SameText(Prop.Name, AName) then
+      Exit(Prop.Name);
+  for Event in EventsOf(ATag) do
+    if SameText(Event.Name, AName) then
+      Exit(Event.Name);
+  Result := '';
 end;
 
 function TDesignerTypeIndex.Chain(const ATag: string): TArray<string>;
@@ -400,7 +436,11 @@ var
   Signature, Body: string;
   At: Integer;
 begin
-  Signature := '(Sender: TObject; E: ' + AArgsType + ');';
+  // RADWinUI's own controls: TWinUIWinValueEventHandler = procedure(Sender: TObject; const E: TWinValue)
+  if AArgsType = 'TWinValue' then
+    Signature := '(Sender: TObject; const E: TWinValue);'
+  else
+    Signature := '(Sender: TObject; E: ' + AArgsType + ');';
   // The class declaration, up to its 'end;'
   Decl := TRegEx.Match(APas, '\b' + AClass + '\s*=\s*class\b(?:\([^)]*\))?(.*?)^\s*end\s*;',
     [roIgnoreCase, roSingleLine, roMultiLine]);

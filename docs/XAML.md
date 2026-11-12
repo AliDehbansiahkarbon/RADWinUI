@@ -179,9 +179,66 @@ complete example whose preview rows differ from its real application data.
 
 ## Preview and designer
 
+### AI in the XAML editor
+
+The Code view of a `.xaml` file uses the IDE's AI engine: the plugin chosen for
+the editor in the IDE's AI options (Claude, OpenAI, Gemini or Ollama), else the
+first enabled one. Every request carries the Tool Palette's controls with their
+`rw:` prefix, the project's user controls, the `x:Name`s in use and the rules of
+this page.
+
+- **Suggestions while typing.** On a line still being typed, a start tag such
+  as `<Butt` or `<Button Cont`, a short pause (250 ms by default) sends the
+  engine the line, the elements whose names fit it and a few lines around, and
+  its answer shows as dimmed ghost text after the cursor, up to the end of the
+  line. Empty lines and finished elements get no suggestion: use Complete XAML
+  with AI there. **Tab** inserts it as one undoable edit, **Esc** or
+  moving the cursor dismisses it, and typing its next characters keeps the rest.
+  The lines of a longer suggestion cover the lines below until Tab or Esc. One
+  request is out at a time, and an answer that arrives after the text changed is
+  dropped, unless the line typed since still leads to it: then it shows at
+  once, as it does when you delete back into it. Element and attribute names in an answer are checked against the
+  XAML metadata and written as XAML spells them, the part already typed
+  included (`<butt` and Tab gives `<Button ...`). An answer with an element
+  that does not exist is not offered. Tools > Options > Third Party >
+  **RADWinUI** turns the suggestions off or changes the pause, and saves each
+  change at once.
+- **Create XAML with AI.** **Ctrl+Alt+Space** (or **Tools > RADWinUI > Create
+  XAML with AI...**, or the editor's right-click menu) opens a prompt bar over
+  the IDE. Describe the UI ("a login form with email, password, remember me and
+  a sign-in button") and press Enter: the engine gets the description, the whole
+  file and the rules, and its XAML goes in at the cursor, over the selection, or
+  as children of the panel the cursor is in, indented like the file, as one
+  undoable edit. The bar shows the progress and any error; Esc cancels. Shift+Enter
+  adds a line, Up and Down recall earlier prompts. Enter on an empty bar
+  completes the XAML at the cursor instead. Lines selected in the editor go into
+  the bar, so you can say what to make of them, and the answer replaces them
+  (Tools > RADWinUI > Settings..., "Copy the selected XAML into the prompt").
+
+Kai's ghost text does not cover `.xaml` files, and Kai does not offer its engine
+to other packages, so these use the IDE's own AI engine (`ToolsAPI.AI`).
+
+### Comments
+
+**Ctrl+/** comments the current line, or each selected line, out:
+indentation + `<!-- ` + the line + ` -->`. When every selected line is a
+comment (or the lines are one comment), it takes the markers away. Empty lines
+are skipped; a line that holds `--` stays as it is, because a XAML comment cannot
+contain it, and Messages names it. It is one undoable edit, and the selection
+stays on the same lines. In Pascal files Ctrl+/ stays the IDE's own. The key is Ctrl with the key
+that types "/" in the current keyboard layout, Ctrl+Shift+7 on Turkish Q for
+example, and the code editor's context menu has **Toggle XAML Comment** too.
+
 ### Keyboard and Structure
 
 <img src="images/structure-view-dark.png" alt="The element tree with icons in the Structure view" width="260" />
+
+In Design, **Ctrl+click** adds a control to the selection or takes it out,
+**Ctrl+drag** draws a marquee that selects the children of the panel it starts in
+that it touches, and **Ctrl+A** selects the children of the selected control's
+panel (or of the window's content). The first control is the one the Object
+Inspector shows; a change there goes to every selected control. Delete, Cut,
+Copy, Paste and Ctrl+Arrow act on all of them as one undoable edit.
 
 In Design, **Delete** removes the selected control with one undoable XAML edit.
 **Ctrl+Z** undoes the edit, and **Ctrl+Y** or **Ctrl+Shift+Z** redoes it. These

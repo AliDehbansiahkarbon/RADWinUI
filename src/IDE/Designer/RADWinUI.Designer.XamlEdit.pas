@@ -23,6 +23,17 @@ uses
 type
   EXamlEdit = class(Exception);
 
+  /// <summary>An element's start tag: 1-based line and column.</summary>
+  TXamlPosition = record
+    Line, Column: Integer;
+    class function Create(ALine, AColumn: Integer): TXamlPosition; static;
+  end;
+
+  /// <summary>A Ctrl+Arrow move of one element: its new left and top in its Grid or Canvas.</summary>
+  TXamlNudge = record
+    Line, Column, Left, Top: Integer;
+  end;
+
   TXamlElement = record
     Tag, Name: string;
     ParentIndex, Line, Column, Start, Stop, TagEnd: Integer;
@@ -129,6 +140,33 @@ function CanNudgeElement(const AXaml: string; ALine, ACol: Integer): Boolean;
 ///   (its row and column stay). Raises EXamlEdit where CanNudgeElement is False.
 /// </summary>
 function NudgeElement(AXaml: string; ALine, ACol, ALeft, ATop: Integer): string;
+/// <summary>
+///   Ctrl+/ in the XAML editor, for the lines from ASelStart to ASelEnd (0-based UTF-16, the
+///   cursor when equal): each line becomes indentation + "<!-- " + its text + " -->". When every
+///   selected line is a comment, or the lines are one comment, the markers go. Empty lines stay,
+///   lines that hold "--" (which a XAML comment cannot contain) are left as they are.
+/// </summary>
+function ToggleXamlComment(const AXaml: string; ASelStart, ASelEnd: Integer): string; overload;
+/// <summary>As above; ASkipped are the 1-based numbers of lines left as they were because they hold "--".</summary>
+function ToggleXamlComment(const AXaml: string; ASelStart, ASelEnd: Integer;
+  out ASkipped: TArray<Integer>): string; overload;
+/// <summary>
+///   The designer's multi-selection: AXaml without the elements at APositions, in one change
+///   (an element inside another selected one goes with it).
+/// </summary>
+function DeleteElements(AXaml: string; const APositions: TArray<TXamlPosition>): string;
+/// <summary>The XAML of the elements at APositions in document order, one per line, for the clipboard.</summary>
+function CopyElements(const AXaml: string; const APositions: TArray<TXamlPosition>): string;
+/// <summary>AXaml with attribute AName set to AValue (removed when '') on each element at APositions.</summary>
+function SetAttributeOn(AXaml: string; const APositions: TArray<TXamlPosition>; const AName, AValue: string): string;
+/// <summary>AXaml with each element of AMoves at its new place, as NudgeElement does for one.</summary>
+function NudgeElements(AXaml: string; const AMoves: TArray<TXamlNudge>): string;
+/// <summary>
+///   Ctrl with the key that types "/" in a keyboard layout, from VkKeyScanEx('/', Layout):
+///   Ctrl+/ on US (VK_OEM_2), Ctrl+Shift+7 on Turkish Q. 0 when the layout has no such key,
+///   or types "/" with AltGr, which Ctrl cannot be combined with.
+/// </summary>
+function SlashShortCut(AVkScan: SmallInt): Word;
 
 implementation
 
@@ -733,7 +771,8 @@ begin
   try
     Names.CaseSensitive := False;
     CollectNames(AXaml, Names);
-    Result := FreshName(ATag, Names);
+    // SendButton1, not rw:SendButton1: the name becomes a Pascal field and handler prefix
+    Result := FreshName(ATag.Substring(ATag.IndexOf(':') + 1), Names);
   finally
     Names.Free;
   end;
@@ -741,9 +780,7 @@ end;
 
 function NamedToolboxXaml(const AXaml, ATag: string; ARow, AColumn: Integer): string;
 begin
-  // GlowTile1, not rw:GlowTile1
-  Result := SetAttribute(ToolboxXaml(ATag, ARow, AColumn), 1, 1, 'x:Name',
-    NewElementName(AXaml, ATag.Substring(ATag.IndexOf(':') + 1)));
+  Result := SetAttribute(ToolboxXaml(ATag, ARow, AColumn), 1, 1, 'x:Name', NewElementName(AXaml, ATag));
 end;
 
 function EnsureNamespace(const AXaml, APrefix, AUri: string): string;
@@ -801,9 +838,10 @@ end;
 
 function PasteElement(AXaml: string; ALine, ACol: Integer; const ASnippet: string): string;
 var
-  At, ContentEnd: Integer;
+  At, ContentEnd, I: Integer;
   Target, Pasted: TRange;
-  Snippet, Tag: string;
+  Snippet, Tag, Rest, Part: string;
+  Parts: TArray<string>;
   Root: TMatch;
   Child: TRange;
 begin
@@ -813,7 +851,29 @@ begin
   TagAt(Snippet, 1, 1);
   Pasted := ElementAt(Snippet, 1);
   if Pasted.Stop <> Length(Snippet) + 1 then
-    raise EXamlEdit.Create('Paste one XAML element at a time');
+  begin
+    // Several elements (a multi-selection was copied): one after the other, in their order
+    Parts := nil;
+    Rest := Snippet;
+    while Rest <> '' do
+    begin
+      if Rest[1] <> '<' then
+        raise EXamlEdit.Create('The clipboard does not contain XAML elements');
+      Pasted := ElementAt(Rest, 1);
+      Parts := Parts + [Copy(Rest, 1, Pasted.Stop - 1)];
+      Rest := Copy(Rest, Pasted.Stop, MaxInt).TrimLeft;
+    end;
+    Result := AXaml;
+    // Into a panel each goes last, so in order; after an element each goes right after it, so reversed
+    Tag := TagAt(AXaml, ALine, ACol).Value;
+    if TRegEx.IsMatch(Tag, '^<(Grid|StackPanel|Canvas)(\s|/?>)') then
+      for Part in Parts do
+        Result := PasteElement(Result, ALine, ACol, Part)
+    else
+      for I := High(Parts) downto 0 do
+        Result := PasteElement(Result, ALine, ACol, Parts[I]);
+    Exit;
+  end;
   Snippet := WithFreshNames(AXaml, Snippet);
   At := IndexOf(AXaml, ALine, ACol);
   Tag := TagAt(AXaml, ALine, ACol).Value;
@@ -1218,6 +1278,251 @@ begin
     Result := DeleteElement(AXaml, P[1].ToInteger, P[2].ToInteger)
   else
     raise EXamlEdit.Create('Not a designer event: ' + AEvent);
+end;
+
+{ TXamlPosition }
+
+class function TXamlPosition.Create(ALine, AColumn: Integer): TXamlPosition;
+begin
+  Result.Line := ALine;
+  Result.Column := AColumn;
+end;
+
+/// APositions from the last in the text to the first: an edit there leaves the earlier ones in place.
+function Descending(const APositions: TArray<TXamlPosition>): TArray<TXamlPosition>;
+var
+  I, J: Integer;
+  Swap: TXamlPosition;
+begin
+  Result := Copy(APositions);
+  for I := 1 to High(Result) do
+    for J := I downto 1 do
+      if (Result[J].Line > Result[J - 1].Line) or
+        ((Result[J].Line = Result[J - 1].Line) and (Result[J].Column > Result[J - 1].Column)) then
+      begin
+        Swap := Result[J];
+        Result[J] := Result[J - 1];
+        Result[J - 1] := Swap;
+      end
+      else
+        Break;
+end;
+
+/// Without the positions of elements inside another one of APositions.
+function Outermost(const AXaml: string; const APositions: TArray<TXamlPosition>): TArray<TXamlPosition>;
+var
+  I, J: Integer;
+  Ranges: TArray<TRange>;
+  Inside: Boolean;
+begin
+  SetLength(Ranges, Length(APositions));
+  for I := 0 to High(APositions) do
+    Ranges[I] := ElementAt(AXaml, IndexOf(AXaml, APositions[I].Line, APositions[I].Column));
+  Result := nil;
+  for I := 0 to High(APositions) do
+  begin
+    Inside := False;
+    for J := 0 to High(APositions) do
+      if (I <> J) and (Ranges[J].Start <= Ranges[I].Start) and (Ranges[I].Stop <= Ranges[J].Stop) and
+        ((Ranges[J].Start <> Ranges[I].Start) or (J < I)) then
+        Inside := True;
+    if not Inside then
+      Result := Result + [APositions[I]];
+  end;
+end;
+
+function DeleteElements(AXaml: string; const APositions: TArray<TXamlPosition>): string;
+var
+  Position: TXamlPosition;
+begin
+  Result := AXaml;
+  for Position in Descending(Outermost(AXaml, APositions)) do
+    Result := DeleteElement(Result, Position.Line, Position.Column);
+end;
+
+function CopyElements(const AXaml: string; const APositions: TArray<TXamlPosition>): string;
+var
+  Positions: TArray<TXamlPosition>;
+  I: Integer;
+begin
+  Positions := Descending(Outermost(AXaml, APositions));
+  Result := '';
+  for I := High(Positions) downto 0 do
+  begin
+    if Result <> '' then
+      Result := Result + LineBreak(AXaml);
+    Result := Result + CopyElement(AXaml, Positions[I].Line, Positions[I].Column);
+  end;
+end;
+
+function SetAttributeOn(AXaml: string; const APositions: TArray<TXamlPosition>; const AName, AValue: string): string;
+var
+  Position: TXamlPosition;
+begin
+  Result := AXaml;
+  for Position in Descending(APositions) do
+    if AValue = '' then
+      Result := RemoveAttribute(Result, Position.Line, Position.Column, AName)
+    else
+      Result := SetAttribute(Result, Position.Line, Position.Column, AName, AValue);
+end;
+
+function NudgeElements(AXaml: string; const AMoves: TArray<TXamlNudge>): string;
+var
+  Positions: TArray<TXamlPosition>;
+  Position: TXamlPosition;
+  Move: TXamlNudge;
+begin
+  Positions := nil;
+  for Move in AMoves do
+    Positions := Positions + [TXamlPosition.Create(Move.Line, Move.Column)];
+  Result := AXaml;
+  for Position in Descending(Positions) do
+    for Move in AMoves do
+      if (Move.Line = Position.Line) and (Move.Column = Position.Column) and
+        CanNudgeElement(Result, Move.Line, Move.Column) then
+        Result := NudgeElement(Result, Move.Line, Move.Column, Move.Left, Move.Top);
+end;
+
+function SlashShortCut(AVkScan: SmallInt): Word;
+const
+  scShift = $2000;
+  scCtrl = $4000;
+begin
+  Result := 0;
+  if (AVkScan = -1) or (Hi(Word(AVkScan)) and 6 <> 0) then // no key, or it needs Ctrl or Alt (AltGr)
+    Exit;
+  Result := Lo(Word(AVkScan)) or scCtrl;
+  if Hi(Word(AVkScan)) and 1 <> 0 then
+    Result := Result or scShift;
+end;
+
+const
+  CommentStart = '<!--';
+  CommentEnd = '-->';
+
+function Occurrences(const AText, APart: string): Integer;
+var
+  At: Integer;
+begin
+  Result := 0;
+  At := AText.IndexOf(APart);
+  while At >= 0 do
+  begin
+    Inc(Result);
+    At := AText.IndexOf(APart, At + Length(APart));
+  end;
+end;
+
+/// AText without the comment markers around its non-blank part, and one space inside each.
+function Uncomment(const AText: string): string;
+var
+  First, Last: Integer;
+begin
+  First := AText.IndexOf(CommentStart);
+  Last := AText.LastIndexOf(CommentEnd);
+  Result := Copy(AText, 1, First);
+  if Copy(AText, First + Length(CommentStart) + 1, 1) = ' ' then
+    Inc(First);
+  if (Last > First + Length(CommentStart)) and (AText[Last] = ' ') then
+    Dec(Last);
+  Result := Result + Copy(AText, First + Length(CommentStart) + 1, Last - First - Length(CommentStart)) +
+    Copy(AText, AText.LastIndexOf(CommentEnd) + Length(CommentEnd) + 1, MaxInt);
+end;
+
+function IsComment(const AText: string): Boolean;
+var
+  Trimmed: string;
+begin
+  Trimmed := AText.Trim;
+  Result := Trimmed.StartsWith(CommentStart) and Trimmed.EndsWith(CommentEnd) and
+    (Length(Trimmed) >= Length(CommentStart) + Length(CommentEnd));
+end;
+
+function ToggleXamlComment(const AXaml: string; ASelStart, ASelEnd: Integer): string;
+var
+  Skipped: TArray<Integer>;
+begin
+  Result := ToggleXamlComment(AXaml, ASelStart, ASelEnd, Skipped);
+end;
+
+function ToggleXamlComment(const AXaml: string; ASelStart, ASelEnd: Integer; out ASkipped: TArray<Integer>): string;
+var
+  First, Last, Head, Tail, I, FirstLine: Integer;
+  Block: string;
+  Lines: TArray<string>;
+  AllComments: Boolean;
+
+  function IsLineComment(const ALine: string): Boolean;
+  begin
+    Result := IsComment(ALine) and (Occurrences(ALine, CommentStart) = 1) and (Occurrences(ALine, CommentEnd) = 1);
+  end;
+
+begin
+  ASkipped := nil;
+  if ASelEnd < ASelStart then
+  begin
+    I := ASelStart;
+    ASelStart := ASelEnd;
+    ASelEnd := I;
+  end;
+  ASelStart := EnsureRange(ASelStart, 0, Length(AXaml));
+  ASelEnd := EnsureRange(ASelEnd, 0, Length(AXaml));
+  // A selection that ends at the start of a line leaves that line out
+  if (ASelEnd > ASelStart) and (AXaml[ASelEnd] = #10) then
+    Dec(ASelEnd);
+  // Whole lines, without the line break of the last one
+  if ASelStart = 0 then
+    First := 0
+  else
+    First := AXaml.LastIndexOf(#10, ASelStart - 1) + 1;
+  Last := AXaml.IndexOf(#10, ASelEnd);
+  if Last < 0 then
+    Last := Length(AXaml);
+  if (Last > First) and (AXaml[Last] = #13) then
+    Dec(Last);
+  Block := Copy(AXaml, First + 1, Last - First);
+  if Block.Trim = '' then
+    Exit(AXaml);
+  FirstLine := Occurrences(Copy(AXaml, 1, First), #10) + 1;
+
+  Lines := Block.Split([#10]);
+  if (Length(Lines) > 1) and IsComment(Block) and (Occurrences(Block, CommentStart) = 1) and
+    (Occurrences(Block, CommentEnd) = 1) then
+    // One comment over several lines: its markers go
+    Block := Uncomment(Block)
+  else
+  begin
+    // Line by line, like the Pascal editor: all comments are uncommented, else each line is commented
+    AllComments := True;
+    for I := 0 to High(Lines) do
+      if (Lines[I].Trim <> '') and not IsLineComment(Lines[I]) then
+        AllComments := False;
+    for I := 0 to High(Lines) do
+    begin
+      if Lines[I].Trim = '' then
+        Continue; // empty lines stay empty
+      if AllComments then
+        Lines[I] := Uncomment(Lines[I])
+      else if IsLineComment(Lines[I]) then
+        Continue // already a comment: a comment cannot hold another one
+      else if Lines[I].Contains('--') then
+        ASkipped := ASkipped + [FirstLine + I] // a XAML comment cannot hold "--"
+      else
+      begin
+        Head := 1;
+        while CharInSet(Lines[I][Head], [' ', #9]) do
+          Inc(Head);
+        Tail := Length(Lines[I]);
+        while CharInSet(Lines[I][Tail], [' ', #9, #13]) do
+          Dec(Tail);
+        Lines[I] := Copy(Lines[I], 1, Head - 1) + CommentStart + ' ' + Copy(Lines[I], Head, Tail - Head + 1) + ' ' +
+          CommentEnd + Copy(Lines[I], Tail + 1, MaxInt);
+      end;
+    end;
+    Block := string.Join(#10, Lines);
+  end;
+  Result := Copy(AXaml, 1, First) + Block + Copy(AXaml, Last + 1, MaxInt);
 end;
 
 end.

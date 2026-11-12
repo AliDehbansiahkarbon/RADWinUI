@@ -41,7 +41,7 @@ The demos are another group: `samples\RADWinUISamples.groupproj` (Gallery, Luma,
 
 ## Scripts do the same from a command line: `scripts\Build-Wizard.ps1`.
 
-The package adds File > New > RADWinUI Application, File > New > RADWinUI Window, Tools > RADWinUI Preview and Tools > RADWinUI Docked Preview. It finds the RADWinUI folder from its own location, set `RADWINUI_ROOT` to use another checkout.
+The package adds File > New > RADWinUI Application, File > New > RADWinUI Window, Tools > RADWinUI > RADWinUI Preview and Tools > RADWinUI > RADWinUI Docked Preview. It finds the RADWinUI folder from its own location, set `RADWINUI_ROOT` to use another checkout.
 
 ## 2. A new application
 
@@ -145,7 +145,7 @@ The window gets a typed `ViewModel` property: `ViewModel := TMainViewModel.Creat
   <img src="images/structure-view-dark.png" alt="The window's element tree in the Structure view" width="230" />
 </p>
 
-Open a window's `.xaml` or `.pas` and choose **Tools > RADWinUI Preview**. The XAML renders in its own window, out of the IDE process, and follows every edit within about 150 ms, unsaved text included. Choose **Tools > RADWinUI Docked Preview** to show the same separate-process host in a dockable IDE panel. A broken edit keeps the last good view and shows WinUI's error with the line number. The docked mode's parent, size and shutdown checks pass, its panel behavior still needs confirmation in RAD Studio.
+Open a window's `.xaml` or `.pas` and choose **Tools > RADWinUI > RADWinUI Preview**. The XAML renders in its own window, out of the IDE process, and follows every edit within about 150 ms, unsaved text included. Choose **Tools > RADWinUI > RADWinUI Docked Preview** to show the same separate-process host in a dockable IDE panel. A broken edit keeps the last good view and shows WinUI's error with the line number. The docked mode's parent, size and shutdown checks pass, its panel behavior still needs confirmation in RAD Studio.
 
 Give bound controls sample values for the preview (the app never sees them):
 
@@ -171,7 +171,7 @@ Designer, in the XAML editor's **Design** tab:
 | Esc | selects the parent of the selected element |
 | Ctrl+Arrow / Ctrl+Shift+Arrow | moves the selected element in a Grid or Canvas by 1 / 8 pixels, blue guides show alignment with its neighbours |
 
-Tools > RADWinUI Preview remains available as a separate rendering window. The integrated Design tab uses the native Tool Palette, Object Inspector and Structure view.
+Tools > RADWinUI > RADWinUI Preview remains available as a separate rendering window. The integrated Design tab uses the native Tool Palette, Object Inspector and Structure view.
 
 The XAML text is always the source of truth: the designer only edits it, so the editor's undo, diff and version control see every change.
 
@@ -195,4 +195,4 @@ builds Release and writes `build\deploy\MyApp` with the exe, the bootstrap DLL a
 | The app exits at start with a runtime error | install the Windows App Runtime 2.6 x64 |
 | Nothing happens when started from an elevated IDE | start RAD Studio without administrator rights |
 | `XamlCodeGen did not run`, or a build stops at its pre-build event | open the group of your IDE (`RADWinUI.groupproj` in the 64-bit IDE, `RADWinUI32.groupproj` in the classic 32-bit IDE) and Build All (it makes `bin\XamlCodeGen.exe`). A project made by 0.9.3-rc.3 or older runs `py -3 ...xamlcodegen.py` before each build: in Project > Options > Building > Build Events, change it to `"<RADWinUI>\bin\XamlCodeGen.exe" "$(MSBuildProjectDirectory)"` |
-| No Tools > RADWinUI Preview | Build All of the group of your IDE, install its package, then restart the IDE |
+| No Tools > RADWinUI > RADWinUI Preview | Build All of the group of your IDE, install its package, then restart the IDE |

@@ -71,10 +71,13 @@
         <DCCReference Include="..\src\IDE\Wizard\RADWinUI.Wizard.Registration.pas"/>
         <DCCReference Include="..\src\IDE\Preview\RADWinUI.Preview.Client.pas"/>
         <DCCReference Include="..\src\IDE\Preview\RADWinUI.Preview.Menu.pas"/>
+        <DCCReference Include="..\src\IDE\Preview\RADWinUI.Preview.PromptBox.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.XamlEdit.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Model.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.PaletteIcons.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Palette.pas"/>
+        <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.AICompletion.pas"/>
+        <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Settings.pas"/>
         <DCCReference Include="..\src\Framework\RADWinUI.TabBarIcons.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Dialogs.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.TabItemsEditor.pas"/>
