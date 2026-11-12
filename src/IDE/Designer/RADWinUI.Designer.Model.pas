@@ -224,9 +224,19 @@ begin
   end;
 end;
 
+const
+  // RADWinUI's own <Window> attributes (XamlCodeGen turns them into TWinUIWindow
+  // properties), as name=kind. TitleBar names an element: the inspector lists them.
+  WindowAttributes: array[0..17] of string = ('Width=int', 'Height=int', 'MinWidth=int', 'MinHeight=int',
+    'MaxWidth=int', 'MaxHeight=int', 'WindowStyle=enum:Normal|Overlay',
+    'Backdrop=enum:None|Mica|MicaAlt|Acrylic|Transparent', 'WindowStartupLocation=enum:Manual|CenterScreen|CenterOwner',
+    'WindowState=enum:Normal|Minimized|Maximized|FullScreen|CompactOverlay', 'Resizable=bool', 'Minimizable=bool',
+    'Maximizable=bool', 'AlwaysOnTop=bool', 'ShowActivated=bool',
+    'Dock=enum:None|TopCenter|TopLeft|TopRight|BottomCenter', 'ClickThrough=enum:None|Background', 'TitleBar=string');
+
 function TDesignerTypeIndex.PropertiesOf(const ATag: string): TArray<TDesignerProperty>;
 var
-  Cls, Name: string;
+  Cls, Name, Attribute: string;
   Prop: TDesignerProperty;
   Seen: TDictionary<string, TDesignerProperty>;
   Rest: TList<TDesignerProperty>;
@@ -239,6 +249,13 @@ begin
       for Prop in FProps[Cls] do
         if not Seen.ContainsKey(Prop.Name) then
           Seen.Add(Prop.Name, Prop);
+    if ATag = 'Window' then
+      for Attribute in WindowAttributes do
+      begin
+        Prop.Name := Attribute.Substring(0, Attribute.IndexOf('='));
+        Prop.Kind := Attribute.Substring(Attribute.IndexOf('=') + 1);
+        Seen.AddOrSetValue(Prop.Name, Prop);
+      end;
     if Seen.ContainsKey('HorizontalAlignment') and Seen.ContainsKey('VerticalAlignment') then
     begin
       Prop.Name := 'Align';

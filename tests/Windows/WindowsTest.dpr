@@ -232,6 +232,20 @@ begin
         Hidden.MaxWidth := 800;
         Check(not Hidden.Resizable and not Hidden.Maximizable and not Hidden.Minimizable and (Hidden.MaxWidth = 800),
           'Resizable, Minimizable, Maximizable and MaxWidth');
+        // Full screen and the compact overlay (Tempo's mini player), on the window that is never
+        // shown: the presenter changes, nothing comes on the screen, and back to Normal the
+        // window's own settings are still there
+        Hidden.WindowState := TWinUIWindowState.FullScreen;
+        Check((Hidden.AppWindow.Presenter.Kind = TWinUIAppWindowPresenterKind.FullScreen) and
+          (Hidden.WindowState = TWinUIWindowState.FullScreen) and not Hidden.AppWindow.IsVisible,
+          'WindowState FullScreen uses the full screen presenter');
+        Hidden.WindowState := TWinUIWindowState.CompactOverlay;
+        Check((Hidden.AppWindow.Presenter.Kind = TWinUIAppWindowPresenterKind.CompactOverlay) and
+          (Hidden.WindowState = TWinUIWindowState.CompactOverlay) and not Hidden.AppWindow.IsVisible,
+          'WindowState CompactOverlay uses the compact overlay presenter, as Tempo''s mini player');
+        Hidden.WindowState := TWinUIWindowState.Normal;
+        Check((Hidden.AppWindow.Presenter.Kind = TWinUIAppWindowPresenterKind.Overlapped) and not Hidden.Resizable and
+          not Hidden.AppWindow.IsVisible, 'back to Normal: the overlapped presenter with its settings, still hidden');
       end;
     5:
       begin

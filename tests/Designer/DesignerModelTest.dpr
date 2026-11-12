@@ -133,6 +133,17 @@ begin
     Check(FindProp(Props, 'IsEnabled').Kind = 'bool', 'a Boolean is bool');
     Check(FindProp(Props, 'Background').Kind = 'brush', 'a Brush is brush');
     Check(Length(Index.PropertiesOf('NoSuchTag')) = 0, 'an unknown tag has no properties');
+    // RADWinUI's own <Window> attributes, which WinUI's Window class does not have
+    Props := Index.PropertiesOf('Window');
+    Check((FindProp(Props, 'Title').Kind = 'string') and (FindProp(Props, 'Width').Kind = 'int') and
+      (FindProp(Props, 'MaxHeight').Kind = 'int') and (FindProp(Props, 'Resizable').Kind = 'bool') and
+      (FindProp(Props, 'AlwaysOnTop').Kind = 'bool') and (FindProp(Props, 'TitleBar').Kind = 'string'),
+      'Window: the RADWinUI window attributes are properties');
+    Check(FindProp(Props, 'WindowState').Kind = 'enum:Normal|Minimized|Maximized|FullScreen|CompactOverlay',
+      'Window: WindowState lists its states');
+    Check(FindProp(Props, 'WindowStartupLocation').Kind = 'enum:Manual|CenterScreen|CenterOwner',
+      'Window: WindowStartupLocation lists CenterOwner');
+    Check(FindProp(Index.PropertiesOf('Button'), 'WindowState').Name = '', 'other elements have no window attributes');
     Events := Index.EventsOf('Button');
     Handled := '';
     for Event in Events do

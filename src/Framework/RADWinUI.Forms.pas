@@ -1842,6 +1842,8 @@ begin
 end;
 
 procedure TWinUIWindow.SetWindowState(AValue: TWinUIWindowState);
+var
+  Shown: Boolean;
 begin
   // Maximize would show the window at once: before Show, Show maximizes it
   FMaximizeOnShow := (AValue = TWinUIWindowState.Maximized) and not AppWindow.IsVisible;
@@ -1853,8 +1855,17 @@ begin
     TWinUIWindowState.CompactOverlay:
       AppWindow.SetPresenter(TWinUIAppWindowPresenterKind.CompactOverlay);
   else
+    Shown := AppWindow.IsVisible;
     if AppWindow.Presenter.Kind <> TWinUIAppWindowPresenterKind.Overlapped then
       AppWindow.SetPresenter(Presenter);
+    // Going back to the overlapped presenter, and Restore or Minimize, show a hidden
+    // window: it stays hidden, Show shows it as it is
+    if not Shown then
+    begin
+      if AppWindow.IsVisible then
+        AppWindow.Hide;
+      Exit;
+    end;
     case AValue of
       TWinUIWindowState.Minimized:
         Presenter.Minimize;

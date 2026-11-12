@@ -4,6 +4,8 @@ All notable changes to RADWinUI.
 
 ## Unreleased
 
+- The Object Inspector lists RADWinUI's own `<Window>` attributes when the window is selected: sizes, WindowStyle, Backdrop, WindowStartupLocation, WindowState, Resizable, Minimizable, Maximizable, AlwaysOnTop and the others, with lists for their values, and TitleBar with the window's named elements.
+- Setting `WindowState` on a window that is not shown yet no longer shows it.
 - `AttachNavigationView` finds menu items nested in another item's `MenuItems` and opens their parent. After a page refuses a menu click, the clicked item no longer stays highlighted.
 - Accessibility: RADWinUI's own controls work with Narrator, NVDA and UI Automation like WinUI's. The tab bars are a `Tab` with selectable `TabItem`s, the action buttons are buttons named by their text that Invoke clicks, the NotchPanel is a group that expands and collapses, the data grids are named groups and the DBNavigator a toolbar of named buttons. A focus ring on every interactive own control, and the colours of a Windows contrast theme.
 - Controls written in Delphi get an automation peer through virtual methods of `TWinUICustomControl`: `AutomationRole`, `AutomationPatterns`, `AutomationName` and the Invoke, Toggle, ExpandCollapse and Selection callbacks. `HighContrastOn` and `SystemColor` for contrast themes.

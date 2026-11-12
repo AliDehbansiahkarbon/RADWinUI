@@ -80,6 +80,9 @@ begin
     Exit;
   end;
   Writeln('XAML edit');
+  Same(SetAttribute('<Window x:Class="TMainWindow" Title="App">' + #10 + '  <Grid/>' + #10 + '</Window>', 1, 1,
+    'WindowState', 'Maximized'), '<Window x:Class="TMainWindow" Title="App" WindowState="Maximized">' + #10 + '  <Grid/>' + #10 +
+    '</Window>', 'a window attribute is written on the <Window> root');
   Same(SetAttribute(Xaml, 3, 5, 'FontSize', '40'), Xaml.Replace('FontSize="32"', 'FontSize="40"'),
     'replaces a value in place');
   Same(SetAttribute(Xaml, 3, 5, 'Text', 'It''s'), Xaml.Replace('Text=''0''', 'Text=''It&apos;s'''),

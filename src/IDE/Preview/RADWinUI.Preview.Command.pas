@@ -2881,6 +2881,7 @@ var
   Props: TArray<TDesignerProperty>;
   Prop: TDesignerProperty;
   CanAlign, Found, WasDesign: Boolean;
+  I: Integer;
 begin
   if FInspector = nil then Exit;
   WasDesign := FDesignViewActive;
@@ -2924,6 +2925,19 @@ begin
   Selection := FSelection; // getters belong to this snapshot, not the next mouse selection
   for Prop in FIndex.PropertiesOf(Selection.Tag) do
     if (Prop.Name <> 'Align') or CanAlign then Props := Props + [Prop];
+  // <Window TitleBar>: a list of the named elements of the window
+  if Selection.Tag = 'Window' then
+    for I := 0 to High(Props) do
+      if Props[I].Name = 'TitleBar' then
+      begin
+        Props[I].Kind := 'enum:';
+        for Element in Elements do
+          if (Element.Name <> '') and not Element.DesignOnly and (Element.Tag <> 'Window') then
+            Props[I].Kind := Props[I].Kind + Element.Name + '|';
+        Props[I].Kind := Props[I].Kind.TrimRight(['|']);
+        if Props[I].Kind = 'enum:' then
+          Props[I].Kind := 'string';
+      end;
   FInspector.ShowElement(Trim(Selection.Tag + ' ' + Selection.Name), Props,
     function(AName: string): string
     begin
