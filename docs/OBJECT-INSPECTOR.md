@@ -14,7 +14,7 @@ removed. No WinUI object or per-control VCL proxy enters the IDE process.
 | `IOTAPropInspSelection` | Metadata-backed property lists and inspector state. |
 | `IOTAPropInspPages` | Properties and Events tabs. |
 | `IOTAPropInspInstanceList` | Select the Window or any visual XAML element by name/type. Unnamed elements include their source position. |
-| `DesignIntf.IProperty` | Read attributes, offer Boolean, enum and Align lists, queue minimal undoable attribute edits. |
+| `DesignIntf.IProperty` | Read attributes, offer Boolean, enum and Align lists, queue minimal undoable attribute edits. An absent attribute with a known default (`Visibility` Visible, `IsEnabled` and `IsHitTestVisible` True, `Opacity` 1) shows it in normal type, a set attribute in bold, as in the VCL. Picking the default for an absent attribute writes nothing. |
 | `IProperty80` | Event ellipsis/double-click creates or opens a Pascal handler. Typing a method name assigns it, clearing removes its explicit XAML assignment. |
 
 The adapter reuses `TDesignerTypeIndex` and the existing property/event writers.

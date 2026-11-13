@@ -24,6 +24,8 @@ type
     Name: string;
     /// <summary>string, object, bool, int, number, brush, text or enum:A|B|... (WinMDGen)</summary>
     Kind: string;
+    /// <summary>The value WinUI uses when the attribute is absent, shown greyed; '' when it depends on the element.</summary>
+    Default: string;
     function EnumValues: TArray<string>;
   end;
 
@@ -270,8 +272,23 @@ const
     'Maximizable=bool', 'AlwaysOnTop=bool', 'ShowActivated=bool',
     'Dock=enum:None|TopCenter|TopLeft|TopRight|BottomCenter', 'ClickThrough=enum:None|Background', 'TitleBar=string');
 
+// Defaults that hold for every element that has the property (UIElement and Control), whatever
+// its style: the Object Inspector shows them when the attribute is absent
+function KnownDefault(const AName: string): string;
+begin
+  if AName = 'Visibility' then
+    Result := 'Visible'
+  else if (AName = 'IsEnabled') or (AName = 'IsHitTestVisible') then
+    Result := 'True'
+  else if AName = 'Opacity' then
+    Result := '1'
+  else
+    Result := '';
+end;
+
 function TDesignerTypeIndex.PropertiesOf(const ATag: string): TArray<TDesignerProperty>;
 var
+  I: Integer;
   Cls, Name, Attribute: string;
   Prop: TDesignerProperty;
   Seen: TDictionary<string, TDesignerProperty>;
@@ -311,6 +328,8 @@ begin
         Result := CompareText(A.Name, B.Name);
       end));
     Result := Result + Rest.ToArray;
+    for I := 0 to High(Result) do
+      Result[I].Default := KnownDefault(Result[I].Name);
   finally
     Rest.Free;
     Seen.Free;

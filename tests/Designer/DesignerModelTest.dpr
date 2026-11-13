@@ -132,6 +132,16 @@ begin
     Check(FindProp(Props, 'HorizontalAlignment').Kind = 'enum:Left|Center|Right|Stretch', 'an enum carries its values');
     Check(FindProp(Props, 'IsEnabled').Kind = 'bool', 'a Boolean is bool');
     Check(FindProp(Props, 'Background').Kind = 'brush', 'a Brush is brush');
+    // The Object Inspector shows these when the attribute is absent
+    Check((FindProp(Props, 'Visibility').Default = 'Visible') and (FindProp(Props, 'IsEnabled').Default = 'True'),
+      'Button: Visibility Visible and IsEnabled True by default');
+    Check((FindProp(Props, 'Opacity').Default = '1') and (FindProp(Props, 'Content').Default = ''),
+      'Button: Opacity 1, no default where it depends on the element');
+    Check((FindProp(Index.PropertiesOf('TextBox'), 'IsEnabled').Default = 'True') and
+      (FindProp(Index.PropertiesOf('StackPanel'), 'Visibility').Default = 'Visible') and
+      (FindProp(Index.PropertiesOf('StackPanel'), 'IsEnabled').Name = '') and
+      (FindProp(Index.PropertiesOf('rw:GlowTile'), 'Visibility').Default = 'Visible'),
+      'TextBox, StackPanel (no IsEnabled) and rw:GlowTile get the defaults they have');
     Check(Length(Index.PropertiesOf('NoSuchTag')) = 0, 'an unknown tag has no properties');
     // RADWinUI's own <Window> attributes, which WinUI's Window class does not have
     Props := Index.PropertiesOf('Window');

@@ -103,13 +103,16 @@ type
     FKeepContext: IInterface;
     FGeneration: Integer;
     FName, FValue, FDescription: string;
+    // Shown, not bold, while the attribute is absent
+    FDefault: string;
     FValues: TArray<string>;
     FEvent: Boolean;
     // A special editor behind the '...' button: 'tabitems' for a tab bar's Items
     FEditor: string;
   public
     constructor Create(AContext: TInspectorContext; const AName, AValue, ADescription: string;
-      const AValues: TArray<string>; AEvent: Boolean; const AEditor: string = '');
+      const AValues: TArray<string>; AEvent: Boolean; const AEditor: string = ''; const ADefault: string = '');
+    function Shown: string;
     procedure Activate;
     function AllEqual: Boolean;
     function AutoFill: Boolean;
@@ -213,9 +216,10 @@ end;
 
 constructor TXamlProperty.Create(AContext: TInspectorContext;
   const AName, AValue, ADescription: string; const AValues: TArray<string>; AEvent: Boolean;
-  const AEditor: string);
+  const AEditor, ADefault: string);
 begin
   inherited Create;
+  FDefault := ADefault;
   FContext := AContext;
   FKeepContext := AContext;
   FGeneration := AContext.Generation;
@@ -258,7 +262,7 @@ begin
   else if Length(FValues) > 0 then
   begin
     for I := 0 to High(FValues) do
-      if SameText(FValue, FValues[I]) then
+      if SameText(Shown, FValues[I]) then
       begin
         SetValue(FValues[(I + 1) mod Length(FValues)]);
         Exit;
@@ -290,9 +294,14 @@ begin
   Result := 32767;
 end;
 
+function TXamlProperty.Shown: string;
+begin
+  if FValue = '' then Result := FDefault else Result := FValue;
+end;
+
 function TXamlProperty.GetEditValue(out Value: string): Boolean;
 begin
-  Value := FValue;
+  Value := Shown;
   Result := ValueAvailable;
 end;
 
@@ -317,7 +326,7 @@ end;
 
 function TXamlProperty.GetValue: string;
 begin
-  Result := FValue;
+  Result := Shown;
 end;
 
 procedure TXamlProperty.GetValues(Proc: TGetStrProc);
@@ -337,6 +346,8 @@ var
   Text: string;
 begin
   if not ValueAvailable or (Value = FValue) then Exit;
+  // Picking the default for an absent attribute writes nothing, as the VCL stores no default
+  if (FValue = '') and (FDefault <> '') and SameText(Value, FDefault) then Exit;
   Text := Value;
   if FEvent then
   begin
@@ -494,7 +505,7 @@ begin
         Prop.Kind)
     else
       FProperties[I] := TXamlProperty.Create(AContext, Prop.Name, AValue(Prop.Name),
-        Prop.Kind + ' XAML attribute. Clear the value to use its default.', Values, False);
+        Prop.Kind + ' XAML attribute. Clear the value to use its default.', Values, False, '', Prop.Default);
   end;
   SetLength(FEvents, Length(AEvents));
   for I := 0 to High(AEvents) do
