@@ -9,5 +9,5 @@ if not exist "%CODEGEN%" goto NoCodeGen
 exit /b %ERRORLEVEL%
 
 :NoCodeGen
-echo RADWinUI : error RW1003 : %CODEGEN% is missing. Open RADWinUI.groupproj (RADWinUI32.groupproj in the 32-bit IDE) and use Build All once.
+echo %~f0 : error RW1003 : %CODEGEN% is missing. Open RADWinUI.groupproj (RADWinUI32.groupproj in the 32-bit IDE) and use Build All once.
 exit /b 1

@@ -71,7 +71,7 @@ try {
   $Output = & $MakePri.FullName new /pr $Work /cf $Config /of (Join-Path $OutDir 'resources.pri') /in (Split-Path $ProjectDir -Leaf) /o 2>&1
   if ($LASTEXITCODE -ne 0) {
     $Output | Out-Host
-    Write-Host "RADWinUI : error RW1005 : makepri.exe could not build resources.pri from $Strings"
+    Write-Host "$PSCommandPath : error RW1005 : makepri.exe could not build resources.pri from $Strings"
     exit 1
   }
 } finally {

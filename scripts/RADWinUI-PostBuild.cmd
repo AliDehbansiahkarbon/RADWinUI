@@ -21,5 +21,5 @@ powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0Make-Pri.ps1" -Project
 exit /b %ERRORLEVEL%
 
 :NoSdk
-echo RADWinUI : error RW1001 : Windows App SDK files are missing. Run scripts\Get-WindowsAppSDK.ps1 once - see docs\GETTING-STARTED.md, step 0.
+echo %~dp0Get-WindowsAppSDK.ps1 : error RW1001 : Windows App SDK files are missing. Run scripts\Get-WindowsAppSDK.ps1 once - see docs\GETTING-STARTED.md, step 0.
 exit /b 1

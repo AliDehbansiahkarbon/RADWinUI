@@ -204,7 +204,7 @@ A small app needs Microsoft's free Windows App Runtime 2.6 installed once per PC
 
 | Symptom | Fix |
 | --- | --- |
-| `RADWinUI : error RW1001 : Windows App SDK files are missing`, or a post-build `copy` error in RADWinUIPreview | Run `powershell -ExecutionPolicy Bypass -File scripts\Get-WindowsAppSDK.ps1` once in the RADWinUI folder (step 0), then Build All again. |
+| `error RW1001 : Windows App SDK files are missing`, or a post-build `copy` error in RADWinUIPreview | Run `powershell -ExecutionPolicy Bypass -File scripts\Get-WindowsAppSDK.ps1` once in the RADWinUI folder (step 0), then Build All again. |
 | `RADWinUI : error RW1002 : RADWinUI was not found` | The project is outside the RADWinUI folder. Set `RADWINUI_ROOT` to the RADWinUI folder, then build again. |
 | No Install on the package | Open the group of your IDE: `RADWinUI.groupproj` in the 64-bit IDE, `RADWinUI32.groupproj` in the classic 32-bit IDE. |
 | `XamlCodeGen did not run`, or a build stops at its pre-build event | Open the group of your IDE and use Build All: it makes `bin\XamlCodeGen.exe`. |

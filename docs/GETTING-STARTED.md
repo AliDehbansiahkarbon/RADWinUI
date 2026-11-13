@@ -20,7 +20,7 @@ three parts RADWinUI needs from one project group.
 powershell -ExecutionPolicy Bypass -File scripts\Get-WindowsAppSDK.ps1
 ```
 
-Without these files the first build stops with *RADWinUI : error RW1001 : Windows App SDK files
+Without these files the first build stops with *error RW1001 : Windows App SDK files
 are missing*. A release ZIP already contains the one file the build needs, so there you can skip
 this step. Add `-InstallRuntime` to the command when the Windows App Runtime 2.6 is not installed
 on your PC yet.
@@ -187,10 +187,10 @@ builds Release and writes `build\deploy\MyApp` with the exe, the bootstrap DLL a
 
 | Symptom | Fix |
 | --- | --- |
-| `RADWinUI : error RW1001 : Windows App SDK files are missing`, or a post-build `copy` error in RADWinUIPreview | Run `powershell -ExecutionPolicy Bypass -File scripts\Get-WindowsAppSDK.ps1` once in the RADWinUI folder (step 0), then Build All again. |
+| `error RW1001 : Windows App SDK files are missing`, or a post-build `copy` error in RADWinUIPreview | Run `powershell -ExecutionPolicy Bypass -File scripts\Get-WindowsAppSDK.ps1` once in the RADWinUI folder (step 0), then Build All again. |
 | `RADWinUI : warning RW1004 : makepri.exe was not found`, the app shows no translated texts | Run `scripts\Get-WindowsAppSDK.ps1` again: it also downloads the Windows SDK build tools that build `resources.pri`. |
 | `RADWinUI : error RW1002 : RADWinUI was not found` | The project is outside the RADWinUI folder. Set `RADWINUI_ROOT` to the RADWinUI folder (in Windows or in Tools > Options > IDE > Environment Variables), then build again. |
-| `RADWinUI : error RW1003 : ...XamlCodeGen.exe is missing` | Open the group of your IDE and use Build All once: it makes `bin\XamlCodeGen.exe`. |
+| `error RW1003 : ...XamlCodeGen.exe is missing` | Open the group of your IDE and use Build All once: it makes `bin\XamlCodeGen.exe`. |
 | `Microsoft.WindowsAppRuntime.Bootstrap.dll was not found in: ...` | build once (the post-build copies it), or set `RADWINUI_ROOT` |
 | The app exits at start with a runtime error | install the Windows App Runtime 2.6 x64 |
 | Nothing happens when started from an elevated IDE | start RAD Studio without administrator rights |
