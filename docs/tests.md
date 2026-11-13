@@ -12,6 +12,7 @@ Console and UI Automation test programs, Win64. The scripts in `scripts\` build 
 | `Runtime` | the native crash report | `Test-Samples.ps1` |
 | `AppServices` | dialogs, filters, `TWinUIApp.Queue` and single instance (`AppServicesTest`) | `Test-Samples.ps1` |
 | `Pages` | navigation in a frame inside a NavigationView: parameters, back and forward, KeepAlive, a page that refuses to be left, and a user control used twice | `Test-Samples.ps1` |
+| `HotReload` | hot reload of a generated window through its pipe and XamlCodeGen: fields, events and DataContext after a reload, a XAML error, a XamlCodeGen error, the edits that need a rebuild, the IDE side that finds the app and sends | `Test-Samples.ps1` |
 | `VclHost` | `TWinUIHost` on a VCL form: inline XAML, the island's parent and size, FindElement, Click and naming-convention handlers, `{Binding}`, theme, load errors, focus, a recreated handle, reloads and shutdown | `Test-Samples.ps1` |
 | `Windows` | several windows, Close with OnCloseQuery and OnClose, owned and modal windows, ShutdownMode, placement through text and the registry, title bar passthrough | `Test-Samples.ps1` |
 | `CustomControls` | RADWinUI's own controls; `OverlayControlsTest` also checks the automation peers of the NotchPanel and the GlowTile | `Test-Samples.ps1` (Overlay), by hand (the others) |

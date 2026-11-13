@@ -75,6 +75,12 @@ type
     FDataContext: TWinValue;
     FHasDataContext: Boolean;
     FFocusToken: EventRegistrationToken;
+    {$IFDEF DEBUG}
+    // Hot reload of XamlFile: the text the IDE sent, and the watch (a TXamlHotReload)
+    FHotText: string;
+    FHotReload: TObject;
+    procedure HotReloadXaml(const AXaml: string);
+    {$ENDIF}
     function XamlText: string;
     function PrepareXaml(const AText: string; out ALinks: TArray<TEventLink>): string;
     procedure CreateContent;
@@ -151,6 +157,9 @@ uses
   Vcl.Forms,
   Vcl.Themes
   {$IFNDEF RADWINUI_DESIGNTIME},
+  {$IFDEF DEBUG}
+  RADWinUI.HotReload,
+  {$ENDIF}
   RADWinUI.Runtime.Bootstrap,
   RADWinUI.Runtime.Application
   {$ENDIF};
@@ -226,6 +235,9 @@ begin
   // The forms outlive this unit: their islands close now, while XAML still runs
   for Host in Copy(Hosts) do
     Host.ReleaseContent;
+  {$IFDEF DEBUG}
+  TXamlHotReload.Shutdown;
+  {$ENDIF}
   if MessageHook <> 0 then
     UnhookWindowsHookEx(MessageHook);
   if Assigned(CustomXamlTypesRelease) then
@@ -341,6 +353,9 @@ destructor TWinUIHost.Destroy;
 begin
   {$IFNDEF RADWINUI_DESIGNTIME}
   ReleaseContent;
+  {$IFDEF DEBUG}
+  FreeAndNil(FHotReload);
+  {$ENDIF}
   {$ENDIF}
   FXaml.Free;
   inherited;
@@ -356,6 +371,11 @@ begin
   if FXamlFile = AValue then
     Exit;
   FXamlFile := AValue;
+  {$IF defined(DEBUG) and not defined(RADWINUI_DESIGNTIME)}
+  // Another file: the next load watches it
+  FHotText := '';
+  FreeAndNil(FHotReload);
+  {$ENDIF}
   // The file takes over from inline XAML; clearing Xaml loads the content again
   if (AValue <> '') and (FXaml.Count > 0) then
     FXaml.Clear
@@ -483,6 +503,18 @@ begin
   inherited;
 end;
 
+{$IFDEF DEBUG}
+procedure TWinUIHost.HotReloadXaml(const AXaml: string);
+begin
+  // Loaded again from the edited text; an error shows in the control like any load error
+  FHotText := AXaml;
+  ReleaseContent;
+  if HandleAllocated then
+    CreateContent;
+  Invalidate;
+end;
+{$ENDIF}
+
 function TWinUIHost.XamlText: string;
 var
   Path, Folder: string;
@@ -491,6 +523,10 @@ begin
   Result := FXaml.Text;
   if (Trim(Result) <> '') or (FXamlFile = '') then
     Exit;
+  {$IFDEF DEBUG}
+  if FHotText <> '' then
+    Exit(FHotText);
+  {$ENDIF}
   Path := FXamlFile;
   if TPath.IsRelativePath(Path) then
   begin
@@ -639,6 +675,20 @@ begin
       Exit;
     Text := PrepareXaml(Text, Links);
     StartWinUI;
+    {$IFDEF DEBUG}
+    // A hot reload with a XAML error: shown in the control without an exception, which
+    // would stop the app in the debugger at each typo
+    if (FHotText <> '') and not TXamlHotReload.Loads(Self, Text, FLoadError) then
+    begin
+      Invalidate;
+      Exit;
+    end;
+    {$ENDIF}
+    {$IFDEF DEBUG}
+    // Debug builds: the IDE's edits of the file reach the running app
+    if (FXamlFile <> '') and (FHotReload = nil) then
+      FHotReload := TXamlHotReload.WatchRaw(Self, FXamlFile, HotReloadXaml);
+    {$ENDIF}
     FSource := DesktopWindowXamlSource.New;
     Id.Value := UInt64(Handle);
     FSource.Initialize(Id);

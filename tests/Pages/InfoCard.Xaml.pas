@@ -2,7 +2,7 @@
 
 {
   TInfoCardBase: base class of the user control TInfoCard, generated from InfoCard.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change InfoCard.xaml or the published handlers of TInfoCard
   in InfoCard.pas; the build regenerates this unit.
@@ -27,6 +27,10 @@ type
   protected
     TitleText: TWinUITextBlock;  // InfoCard.xaml(7) <TextBlock>
     GoButton: TWinUIButton;      // InfoCard.xaml(8) <Button>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
     procedure Initialize; override;
   end;
   {$M-}
@@ -34,6 +38,9 @@ type
 implementation
 
 uses
+  {$IFDEF DEBUG}
+  RADWinUI.HotReload,
+  {$ENDIF}
   InfoCard;  // TInfoCard, registered below
 
 const
@@ -46,11 +53,24 @@ const
     '      <Button x:Name="GoButton" Content="Go" />' + sLineBreak +
     '    </StackPanel>' + sLineBreak +
     '  </Border>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:TitleText:TWinUITextBlock;F:GoButton:TWinUIButton;E:GoButton.Click=GoClick';
+  {$ENDIF}
 
 procedure TInfoCardBase.Initialize;
 begin
   inherited;
   LoadContentXaml(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'InfoCard.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TInfoCardBase.WireXaml;
+begin
   // x:Name elements
   TitleText := FindElement<TWinUITextBlock>('TitleText');
   GoButton := FindElement<TWinUIButton>('GoButton');
@@ -58,6 +78,15 @@ begin
   // InfoCard.xaml(8): Click="GoClick"
   GoButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('GoClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: InfoCard.xaml edited in the IDE while the app runs
+procedure TInfoCardBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContentXaml(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 initialization
   TWinUICustomControls.Register(TInfoCard, 'InfoCard', 'User controls');

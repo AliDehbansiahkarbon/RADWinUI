@@ -380,6 +380,14 @@ begin
         (Settings.SuggestionDelay = 700),
         'saved and loaded again');
       Check(not TRADWinUISettings.CodeCompletionEnabled(Key), 'CodeCompletionEnabled reads the stored value');
+      Check(TRADWinUISettings.Defaults.HotReload = hrWhileTyping, 'hot reload is on while typing by default');
+      Settings.HotReload := hrOnSave;
+      Settings.Save(Key);
+      Check(TRADWinUISettings.Load(Key).HotReload = hrOnSave, 'the hot reload choice is saved');
+      Registry.OpenKey(Key, False);
+      Registry.WriteInteger('XamlHotReload', 7);
+      Check(TRADWinUISettings.Load(Key).HotReload = hrWhileTyping, 'an unknown hot reload choice is the default');
+      Registry.CloseKey;
       Registry.OpenKey(Key, False);
       Registry.WriteInteger('XamlAISuggestionDelay', 99999);
       Check(TRADWinUISettings.Load(Key).SuggestionDelay = 250, 'a pause out of range is the default');

@@ -29,7 +29,9 @@ uses
   RADWinUI.Abi,
   RADWinUI.Framework,
   RADWinUI.Xaml,
-  RADWinUI.VclHost;
+  RADWinUI.VclHost,
+  RADWinUI.HotReload,
+  System.IOUtils;
 
 var
   Failures: Integer;
@@ -77,6 +79,7 @@ type
     FSaveClicks: Integer;
     FResetClicks: Integer;
     FMemory: NativeUInt;
+    FFile: string;
     procedure Tick(Sender: TObject);
   public
     constructor Create(AOwner: TComponent); override;
@@ -210,6 +213,15 @@ begin
         end;
       4:
         begin
+          // XamlFile, and the IDE's edits of it in a Debug build (hot reload)
+          FFile := TPath.Combine(TPath.GetTempPath, 'VclHostTest-' + IntToStr(GetCurrentProcessId) + '.xaml');
+          TFile.WriteAllText(FFile, '<TextBlock x:Name="FromFile" Text="file"/>', TEncoding.UTF8);
+          Broken.XamlFile := FFile;
+          Check((Broken.LoadError = '') and (Broken.FindElement<TWinUITextBlock>('FromFile').Text = 'file'),
+            'XamlFile loads the file (' + Broken.LoadError + ')');
+          TXamlHotReload.Apply(ExtractFileName(FFile), '', '', '<TextBlock x:Name="FromFile" Text="edited"/>', '');
+          Check(Broken.FindElement<TWinUITextBlock>('FromFile').Text = 'edited', 'hot reload sends the edited file to the host');
+          TFile.Delete(FFile);
           Check((Host.Content <> nil) and (FLoadedCount = 2), Format('a recreated handle loads the content again ' +
             '(OnLoaded %d)', [FLoadedCount]));
           Check(Host.FindElement<TWinUITextBlock>('Greeting').Text = 'Hello from the form',

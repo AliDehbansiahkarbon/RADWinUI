@@ -27,7 +27,7 @@ uses
   RADWinUI.CodeGen.Xml, RADWinUI.CodeGen.Bindings;
 
 const
-  CodeGenVersion = '0.4'; // bump when the generated code changes shape
+  CodeGenVersion = '0.5'; // bump when the generated code changes shape
 
 type
   ECodeGenError = RADWinUI.CodeGen.Bindings.ECodeGenError;
@@ -101,6 +101,7 @@ type
     FStem, FUnitName, FClassName, FBaseName, FPasName: string;
     FDataContextType, FViewModelUnit, FTitleBar: string;
     FWindowLine, FContentLine, FAutoNames: Integer;
+    FContentXaml: string;
     FFields: TList<TField>;
     FBindings: TList<TBindingInfo>;
     FNamed: TList<TNamed>;
@@ -123,7 +124,11 @@ type
       ACustom: Boolean = False);
     function Emit(const AXaml: string): string;
     function FieldLines: string;
-    function WiringLines: string;
+    // ARoot False: the x:Name fields and the wiring of the content (WireXaml, again after a
+    // hot reload). True: the wiring of the root element itself, once in the constructor.
+    function WiringLines(ARoot: Boolean): string;
+    function HotReloadLines(const AReload: string): string;
+    function SetContent(const AXaml: string): string;
   public
     /// <summary>
     ///   AXamlText and APasText, with AHasTexts, are editor snapshots (the IDE request),
@@ -134,6 +139,13 @@ type
     destructor Destroy; override;
     function Run: string;
     property GeneratedUnit: string read FUnitName;
+    /// <summary>After Run: the XAML the generated unit loads (hot reload sends it to the app).</summary>
+    property ContentXaml: string read FContentXaml;
+    /// <summary>
+    ///   After Run: the x:Name fields (F:Name:Wrapper) and the events (E:Element.Event=Method,
+    ///   sorted) separated by semicolons. Hot reload compares the compiled shape with the edited one.
+    /// </summary>
+    function Shape: string;
   end;
 
 /// <summary>Joins two path parts.</summary>
@@ -857,11 +869,11 @@ begin
           [FXamlPath, FTitleBar, FTitleBar]);
     end;
     if FRootKind = 'Page' then
-      Result := EmitPage(ToXml(Content, Registered))
+      Result := EmitPage(SetContent(ToXml(Content, Registered)))
     else if FRootKind = 'UserControl' then
-      Result := EmitUserControl(ToXml(Content, Registered))
+      Result := EmitUserControl(SetContent(ToXml(Content, Registered)))
     else
-    Result := Emit(ToXml(Content, Registered));
+    Result := Emit(SetContent(ToXml(Content, Registered)));
   finally
     Root.Free;
   end;
@@ -1327,6 +1339,10 @@ begin
     end;
     W('  protected');
     Lines.Append(FieldLines);
+    W('    procedure WireXaml;');
+    W('    {$IFDEF DEBUG}');
+    W('    procedure ReloadXaml(const AXaml: string);');
+    W('    {$ENDIF}');
     W('  public');
     W('    constructor Create; override;');
     if VM <> '' then
@@ -1342,18 +1358,38 @@ begin
     W('');
     W('implementation');
     W('');
+    W('{$IFDEF DEBUG}');
+    W('uses');
+    W('  RADWinUI.HotReload;');
+    W('{$ENDIF}');
+    W('');
     W('const');
     W('  // ' + Src + '(' + IntToStr(FContentLine) + '): the page; event attributes became the');
     W('  // wiring below, x:Class, x:DataType and RADWinUI attributes are removed');
     W('  PageXaml =');
     W('    ' + PascalString(AXaml) + ';');
+    W('  {$IFDEF DEBUG}');
+    W('  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild');
+    W('  XamlShape = ' + PascalString(Shape) + ';');
+    W('  {$ENDIF}');
     W('');
     W('constructor ' + FBaseName + '.Create;');
     W('begin');
     W('  inherited CreateFromXaml(PageXaml);');
-    Lines.Append(WiringLines);
+    W('  WireXaml;');
+    Lines.Append(WiringLines(True));
+    W('  {$IFDEF DEBUG}');
+    W('  AddHelper(TXamlHotReload.Watch(Self, ''' + Src + ''', XamlShape, ReloadXaml));');
+    W('  {$ENDIF}');
     W('end;');
     W('');
+    W('// The x:Name fields and the event wiring of the content, again after a hot reload');
+    W('procedure ' + FBaseName + '.WireXaml;');
+    W('begin');
+    Lines.Append(WiringLines(False));
+    W('end;');
+    W('');
+    Lines.Append(HotReloadLines('ReplaceXaml'));
     if VM <> '' then
     begin
       W('procedure ' + FBaseName + '.SetViewModel(AValue: ' + VM + ');');
@@ -1415,6 +1451,10 @@ begin
     W('  ' + FBaseName + ' = class(TWinUIXamlUserControl)');
     W('  protected');
     Lines.Append(FieldLines);
+    W('    procedure WireXaml;');
+    W('    {$IFDEF DEBUG}');
+    W('    procedure ReloadXaml(const AXaml: string);');
+    W('    {$ENDIF}');
     W('    procedure Initialize; override;');
     W('  end;');
     W('  {$M-}');
@@ -1422,6 +1462,9 @@ begin
     W('implementation');
     W('');
     W('uses');
+    W('  {$IFDEF DEBUG}');
+    W('  RADWinUI.HotReload,');
+    W('  {$ENDIF}');
     W('  ' + FStem + ';  // ' + FClassName + ', registered below');
     W('');
     W('const');
@@ -1429,14 +1472,29 @@ begin
     W('  // wiring below, x:DataType and RADWinUI attributes are removed');
     W('  ContentXaml =');
     W('    ' + PascalString(AXaml) + ';');
+    W('  {$IFDEF DEBUG}');
+    W('  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild');
+    W('  XamlShape = ' + PascalString(Shape) + ';');
+    W('  {$ENDIF}');
     W('');
     W('procedure ' + FBaseName + '.Initialize;');
     W('begin');
     W('  inherited;');
     W('  LoadContentXaml(ContentXaml);');
-    Lines.Append(WiringLines);
+    W('  WireXaml;');
+    Lines.Append(WiringLines(True));
+    W('  {$IFDEF DEBUG}');
+    W('  AddHelper(TXamlHotReload.Watch(Self, ''' + Src + ''', XamlShape, ReloadXaml));');
+    W('  {$ENDIF}');
     W('end;');
     W('');
+    W('// The x:Name fields and the event wiring of the content, again after a hot reload');
+    W('procedure ' + FBaseName + '.WireXaml;');
+    W('begin');
+    Lines.Append(WiringLines(False));
+    W('end;');
+    W('');
+    Lines.Append(HotReloadLines('LoadContentXaml'));
     W('initialization');
     W('  TWinUICustomControls.Register(' + FClassName + ', ''' + XamlNameOf(FClassName) + ''', ''User controls'');');
     W('end.');
@@ -1470,8 +1528,54 @@ begin
   end;
 end;
 
+function TCodeGenerator.SetContent(const AXaml: string): string;
+begin
+  FContentXaml := AXaml;
+  Result := AXaml;
+end;
+
+function TCodeGenerator.Shape: string;
+var
+  Field: TField;
+  B: TBindingInfo;
+  Events: TStringList;
+begin
+  Result := '';
+  for Field in FFields do
+    Result := Result + 'F:' + Field.Name + ':' + Field.Wrapper + ';';
+  Events := TStringList.Create;
+  try
+    Events.CaseSensitive := True;
+    Events.UseLocale := False;
+    for B in FBindings do
+      Events.Add('E:' + B.Element + '.' + B.Event + '=' + B.Method);
+    Events.Sort;
+    Result := Result + string.Join(';', Events.ToStringArray);
+  finally
+    Events.Free;
+  end;
+end;
+
+// Debug builds only: the method hot reload calls, and the watch the constructor registers
+function TCodeGenerator.HotReloadLines(const AReload: string): string;
+var
+  Src: string;
+begin
+  Src := BaseName(FXamlPath);
+  Result :=
+    '{$IFDEF DEBUG}' + #13#10 +
+    '// Hot reload: ' + Src + ' edited in the IDE while the app runs' + #13#10 +
+    'procedure ' + FBaseName + '.ReloadXaml(const AXaml: string);' + #13#10 +
+    'begin' + #13#10 +
+    '  ' + AReload + '(AXaml);' + #13#10 +
+    '  WireXaml;' + #13#10 +
+    'end;' + #13#10 +
+    '{$ENDIF}' + #13#10 +
+    #13#10;
+end;
+
 // The x:Name fields and the event wiring of the generated constructor (or Initialize)
-function TCodeGenerator.WiringLines: string;
+function TCodeGenerator.WiringLines(ARoot: Boolean): string;
 var
   Lines: TStringBuilder;
   Src, Target, Source: string;
@@ -1499,13 +1603,17 @@ begin
   Src := BaseName(FXamlPath);
   Lines := TStringBuilder.Create;
   try
-    if FFields.Count > 0 then
+    if not ARoot and (FFields.Count > 0) then
     begin
       W('  // x:Name elements');
       for Field in FFields do
         W('  ' + Field.Name + ' := FindElement<' + Field.Wrapper + '>(''' + Field.Name + ''');');
     end;
-    if FBindings.Count > 0 then
+    J := 0;
+    for B in FBindings do
+      if (B.Element = 'Self') = ARoot then
+        Inc(J);
+    if J > 0 then
       W('  // Event wiring');
     // a stable insertion sort
     Sorted := FBindings.ToArray;
@@ -1522,6 +1630,8 @@ begin
     end;
     for B in Sorted do
     begin
+      if (B.Element = 'Self') <> ARoot then
+        Continue;
       Target := B.Element;
       if FAutoWrappers.ContainsKey(B.Element) then
         Target := 'FindElement<' + FAutoWrappers[B.Element] + '>(''' + B.Element + ''')';
@@ -1605,6 +1715,10 @@ begin
     end;
     W('  protected');
     Lines.Append(FieldLines);
+    W('    procedure WireXaml;');
+    W('    {$IFDEF DEBUG}');
+    W('    procedure ReloadXaml(const AXaml: string);');
+    W('    {$ENDIF}');
 
     W('  public');
     W('    constructor Create; override;');
@@ -1621,11 +1735,20 @@ begin
     W('');
     W('implementation');
     W('');
+    W('{$IFDEF DEBUG}');
+    W('uses');
+    W('  RADWinUI.HotReload;');
+    W('{$ENDIF}');
+    W('');
     W('const');
     W('  // ' + Src + '(' + IntToStr(FContentLine) + '): the content element; event attributes became the');
     W('  // wiring below, x:DataType and RADWinUI attributes are removed');
     W('  ContentXaml =');
     W('    ' + PascalString(AXaml) + ';');
+    W('  {$IFDEF DEBUG}');
+    W('  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild');
+    W('  XamlShape = ' + PascalString(Shape) + ';');
+    W('  {$ENDIF}');
     W('');
     W('constructor ' + FBaseName + '.Create;');
     W('begin');
@@ -1640,7 +1763,17 @@ begin
         W('  ' + Statement);
     end;
     W('  LoadContent(ContentXaml);');
-    Lines.Append(WiringLines);
+    W('  WireXaml;');
+    Lines.Append(WiringLines(True));
+    W('  {$IFDEF DEBUG}');
+    W('  AddHelper(TXamlHotReload.Watch(Self, ''' + Src + ''', XamlShape, ReloadXaml));');
+    W('  {$ENDIF}');
+    W('end;');
+    W('');
+    W('// The x:Name fields and the event wiring of the content, again after a hot reload');
+    W('procedure ' + FBaseName + '.WireXaml;');
+    W('begin');
+    Lines.Append(WiringLines(False));
     if FTitleBar <> '' then
     begin
       W('  // ' + Src + '(' + IntToStr(FWindowLine) + '): TitleBar="' + FTitleBar + '"');
@@ -1648,6 +1781,7 @@ begin
     end;
     W('end;');
     W('');
+    Lines.Append(HotReloadLines('LoadContent'));
     if VM <> '' then
     begin
       W('procedure ' + FBaseName + '.SetViewModel(AValue: ' + VM + ');');
@@ -1855,6 +1989,12 @@ begin
                 Json.GetValue('pas').Value, True);
               try
                 Response.AddPair('text', Generator.Run);
+                // Hot reload: what the running app loads, and what it compares with its compiled code
+                if Json.GetValue('hotreload') <> nil then
+                begin
+                  Response.AddPair('content', Generator.ContentXaml);
+                  Response.AddPair('shape', Generator.Shape);
+                end;
               finally
                 Generator.Free;
               end;

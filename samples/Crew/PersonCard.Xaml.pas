@@ -2,7 +2,7 @@
 
 {
   TPersonCardBase: base class of the user control TPersonCard, generated from PersonCard.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change PersonCard.xaml or the published handlers of TPersonCard
   in PersonCard.pas; the build regenerates this unit.
@@ -29,6 +29,10 @@ type
     Picture: TWinUIPersonPicture;  // PersonCard.xaml(19) <PersonPicture>
     NameText: TWinUITextBlock;     // PersonCard.xaml(21) <TextBlock>
     RoleText: TWinUITextBlock;     // PersonCard.xaml(22) <TextBlock>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
     procedure Initialize; override;
   end;
   {$M-}
@@ -36,6 +40,9 @@ type
 implementation
 
 uses
+  {$IFDEF DEBUG}
+  RADWinUI.HotReload,
+  {$ENDIF}
   PersonCard;  // TPersonCard, registered below
 
 const
@@ -58,11 +65,24 @@ const
     '      <FontIcon Grid.Column="2" Glyph="" FontSize="12" Opacity="0.6" />' + sLineBreak +
     '    </Grid>' + sLineBreak +
     '  </Button>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:CardButton:TWinUIButton;F:Picture:TWinUIPersonPicture;F:NameText:TWinUITextBlock;F:RoleText:TWinUITextBlock;E:CardButton.Click=CardClick';
+  {$ENDIF}
 
 procedure TPersonCardBase.Initialize;
 begin
   inherited;
   LoadContentXaml(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'PersonCard.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TPersonCardBase.WireXaml;
+begin
   // x:Name elements
   CardButton := FindElement<TWinUIButton>('CardButton');
   Picture := FindElement<TWinUIPersonPicture>('Picture');
@@ -72,6 +92,15 @@ begin
   // PersonCard.xaml(9): Click="CardClick"
   CardButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CardClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: PersonCard.xaml edited in the IDE while the app runs
+procedure TPersonCardBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContentXaml(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 initialization
   TWinUICustomControls.Register(TPersonCard, 'PersonCard', 'User controls');

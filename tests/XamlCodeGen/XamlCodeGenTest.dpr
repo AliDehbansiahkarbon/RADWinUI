@@ -157,8 +157,9 @@ function ContentXaml(const AText: string): string;
 var
   Start: Integer;
 begin
+  // Up to the hot reload shape that follows it in Debug builds
   Start := AText.IndexOf('ContentXaml =');
-  Result := AText.Substring(Start, AText.IndexOf('constructor', Start) - Start);
+  Result := AText.Substring(Start, AText.IndexOf('{$IFDEF DEBUG}', Start) - Start);
 end;
 
 procedure TestUnits;
@@ -175,6 +176,17 @@ begin
   Check(Text.Contains('FindElement<TWinUIButton>(''_rw1'').OnClick := TWinUIRoutedEventHandler(PublishedMethod(''ResetClick''));'),
     'an event attribute on an unnamed element gets an _rwN name and is wired');
   Check(not ContentXaml(Text).Contains('Click="ResetClick"'), 'event attributes are removed from the loaded XAML');
+  // Hot reload: the fields and the wiring in WireXaml, ReloadXaml and the shape in Debug builds only
+  Check(Text.Contains('procedure TMainWindowBase.WireXaml;') and Text.Contains('  LoadContent(ContentXaml);' + #13#10 +
+    '  WireXaml;') and (Text.IndexOf('IncrementButton :=') > Text.IndexOf('procedure TMainWindowBase.WireXaml;')),
+    'the constructor loads the content and calls WireXaml, which fills the fields and wires the events');
+  Check(Text.Contains('{$IFDEF DEBUG}' + #13#10 + '    procedure ReloadXaml(const AXaml: string);') and
+    Text.Contains('  AddHelper(TXamlHotReload.Watch(Self, ''MainWindow.xaml'', XamlShape, ReloadXaml));') and
+    Text.Contains('{$IFDEF DEBUG}' + #13#10 + 'uses' + #13#10 + '  RADWinUI.HotReload;'),
+    'Debug builds watch the .xaml for hot reload');
+  Check(Text.Contains('XamlShape = ''F:CounterText:TWinUITextBlock;F:IncrementButton:TWinUIButton;' +
+    'E:IncrementButton.Click=IncrementButtonClick;E:_rw1.Click=ResetClick'';'),
+    'the shape lists the fields, then the events sorted');
 
   Xaml := WindowXaml.Replace('{handler}', 'ResetClick').Replace('Text="0"', 'Text="Gr'#$FC#$DF'e '#$65E5#$672C#$8A9E' &#xE8A9;"');
   Folder := NewFolder;
@@ -451,12 +463,15 @@ begin
   Check(Text.Contains('Card: TContactCard;') and Text.Contains('  ContactCard,') and Text.Contains('  RADWinUI.Pages;'),
     'a user control element gets a field of its class and its unit');
   Check(Text.Contains('Details: TWinUIPageFrame;'), 'a <Frame> is a TWinUIPageFrame');
+  Check(Text.IndexOf('Self.OnLoaded :=') < Text.IndexOf('procedure TContactsPageBase.WireXaml;'),
+    'a page''s own events are wired once, in the constructor, not again after a hot reload');
   Check(Text.Contains('Self.OnLoaded := TWinUIRoutedEventHandler(PublishedMethod(''PageLoaded''));'),
     'an event attribute of the page itself is wired to the page');
   Check(Text.Contains('Card.OnClicked := TWinUIWinValueEventHandler(PublishedMethod(''CardClicked''));') and
     Text.Contains('FindElement<TContactCard>(''_rw1'').EventByName(''Clicked'').Add(NotifyProc<TWinValue>(''OtherClicked''));'),
     'user control events, full and short handler');
-  Xaml := Text.Substring(Text.IndexOf('PageXaml ='), Text.IndexOf('constructor TContactsPageBase.Create;') - Text.IndexOf('PageXaml ='));
+  Xaml := Text.Substring(Text.IndexOf('PageXaml ='), Text.IndexOf('{$IFDEF DEBUG}', Text.IndexOf('PageXaml =')) -
+    Text.IndexOf('PageXaml ='));
   Check(not Xaml.Contains('x:Class') and Xaml.Contains('Background="Transparent"') and not Xaml.Contains('Loaded='),
     'the page XAML keeps its attributes but not x:Class or event attributes');
 
@@ -466,7 +481,8 @@ begin
   Check(Text.Contains('TContactCardBase = class(TWinUIXamlUserControl)') and Text.Contains('procedure Initialize; override;') and
     Text.Contains('LoadContentXaml(ContentXaml);'), 'a <UserControl> root gives a TWinUIXamlUserControl base');
   Check(Text.Contains('TWinUICustomControls.Register(TContactCard, ''ContactCard'', ''User controls'');') and
-    Text.Contains('uses' + #13#10 + '  ContactCard;'), 'the generated unit registers the user control');
+    Text.Contains('  RADWinUI.HotReload,' + #13#10 + '  {$ENDIF}' + #13#10 + '  ContactCard;'),
+    'the generated unit registers the user control');
   Check(Text.Contains('OpenButton: TWinUIButton;') and
     Text.Contains('OpenButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>(''OpenClick''));'),
     'fields and events inside a user control');

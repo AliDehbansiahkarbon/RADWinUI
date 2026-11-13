@@ -141,6 +141,45 @@ try {
   if ($Value -ne 'Count: 1') { Fail "CounterText is '$Value', expected 'Count: 1'" }
   Write-Host "  [ok] Increment -> ViewModel.Count -> CounterText = 'Count: 1' (Binding, Format converter)"
 
+  # Hot reload, as the IDE sends it: the edited MainWindow.xaml through XamlCodeGen, then the app's pipe
+  if ($Config -eq 'Debug') {
+    # [IO.File] strings: Get-Content adds properties that ConvertTo-Json would write out
+    $Edited = [IO.File]::ReadAllText($MainXaml).Replace('Content="Increment"', 'Content="Add one"')
+    $Request = Join-Path $env:TEMP "RADWinUI-TestWizard-$($Proc.Id).json"
+    @{ path = $MainXaml; xaml = $Edited; pas = [IO.File]::ReadAllText($MainPas); hotreload = $true } | ConvertTo-Json |
+      Set-Content $Request -Encoding UTF8
+    & (Join-Path $RepoRoot 'bin\XamlCodeGen.exe') --ide-request $Request | Out-Null
+    $Answer = Get-Content $Request -Raw -Encoding UTF8 | ConvertFrom-Json
+    Remove-Item $Request
+    if (-not $Answer.content) { Fail "XamlCodeGen gave no hot reload content: $($Answer.error)" }
+    $Bytes = [Text.Encoding]::UTF8.GetBytes((@('RWHR1', 'MainWindow.xaml', $Answer.shape, $Answer.content, $Edited, '') -join [char]0))
+    $Client = New-Object IO.Pipes.NamedPipeClientStream('.', "RADWinUI.HotReload.$($Proc.Id)", [IO.Pipes.PipeDirection]::Out)
+    $Client.Connect(5000)
+    $Client.Write($Bytes, 0, $Bytes.Length)
+    $Client.Dispose()
+    $Deadline = (Get-Date).AddSeconds(15)
+    do {
+      $AddOne = $Win.FindFirst([Windows.Automation.TreeScope]::Descendants, (New-Object Windows.Automation.AndCondition(
+        (New-Object Windows.Automation.PropertyCondition($AE::NameProperty, 'Add one')),
+        (New-Object Windows.Automation.PropertyCondition($AE::ControlTypeProperty, [Windows.Automation.ControlType]::Button)))))
+      Start-Sleep -Milliseconds 200
+    } until ($AddOne -or (Get-Date) -gt $Deadline)
+    if (-not $AddOne) { Fail 'the hot reload did not show the edited button' }
+    $Text = $Win.FindFirst([Windows.Automation.TreeScope]::Descendants,
+      (New-Object Windows.Automation.PropertyCondition($AE::AutomationIdProperty, 'CounterText')))
+    if ($Text.Current.Name -ne 'Count: 1') { Fail "after the hot reload CounterText is '$($Text.Current.Name)', the view model was lost" }
+    $AddOne.GetCurrentPattern([Windows.Automation.InvokePattern]::Pattern).Invoke()
+    $Deadline = (Get-Date).AddSeconds(15)
+    do {
+      $Text = $Win.FindFirst([Windows.Automation.TreeScope]::Descendants,
+        (New-Object Windows.Automation.PropertyCondition($AE::AutomationIdProperty, 'CounterText')))
+      $Value = if ($Text) { $Text.Current.Name } else { '' }
+      Start-Sleep -Milliseconds 200
+    } until ($Value -eq 'Count: 2' -or (Get-Date) -gt $Deadline)
+    if ($Value -ne 'Count: 2') { Fail "after the hot reload the button gives '$Value', expected 'Count: 2'" }
+    Write-Host "  [ok] hot reload: the edited button shows, the count stays, the button still counts ('Count: 2')"
+  }
+
   # The second window: opened from the main window, closed by its own Close button
   $Open = $Win.FindFirst([Windows.Automation.TreeScope]::Descendants, (New-Object Windows.Automation.AndCondition(
     (New-Object Windows.Automation.PropertyCondition($AE::NameProperty, 'Open second window')),

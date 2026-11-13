@@ -2,7 +2,7 @@
 
 {
   TProfilePageBase: base class of the page TProfilePage, generated from ProfilePage.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change ProfilePage.xaml or the published handlers of TProfilePage
   in ProfilePage.pas; the build regenerates this unit.
@@ -33,12 +33,21 @@ type
     NotesBox: TWinUITextBox;       // ProfilePage.xaml(20) <TextBox>
     SaveButton: TWinUIButton;      // ProfilePage.xaml(23) <Button>
     Status: TWinUITextBlock;       // ProfilePage.xaml(25) <TextBlock>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // ProfilePage.xaml(1): the page; event attributes became the
@@ -65,10 +74,25 @@ const
     '    </StackPanel>' + sLineBreak +
     '  </ScrollViewer>' + sLineBreak +
     '</Page>';
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:Picture:TWinUIPersonPicture;F:PageTitle:TWinUITextBlock;F:Subtitle:TWinUITextBlock;F:NameBox:TWinUITextBox;F:RoleBox:TWinUITextBox;F:EmailBox:TWinUITextBox;F:NotesBox:TWinUITextBox;F:SaveButton:TWin' +
+    'UIButton;F:Status:TWinUITextBlock;E:EmailBox.TextChanged=FieldChanged;E:NameBox.TextChanged=FieldChanged;E:NotesBox.TextChanged=FieldChanged;E:RoleBox.TextChanged=FieldChanged;E:SaveButton.Click=SaveC' +
+    'lick';
+  {$ENDIF}
 
 constructor TProfilePageBase.Create;
 begin
   inherited CreateFromXaml(PageXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'ProfilePage.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TProfilePageBase.WireXaml;
+begin
   // x:Name elements
   Picture := FindElement<TWinUIPersonPicture>('Picture');
   PageTitle := FindElement<TWinUITextBlock>('PageTitle');
@@ -91,5 +115,14 @@ begin
   // ProfilePage.xaml(23): Click="SaveClick"
   SaveButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('SaveClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: ProfilePage.xaml edited in the IDE while the app runs
+procedure TProfilePageBase.ReloadXaml(const AXaml: string);
+begin
+  ReplaceXaml(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

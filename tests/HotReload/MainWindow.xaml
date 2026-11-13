@@ -1,0 +1,11 @@
+<Window
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    x:Class="TMainWindow"
+    Title="HotReloadTest" Width="480" Height="320">
+    <StackPanel Padding="16" Spacing="8">
+        <TextBlock x:Name="Caption" Text="Before"/>
+        <TextBlock x:Name="Bound" Text="{Binding}"/>
+        <Button x:Name="CountButton" Content="Count"/>
+    </StackPanel>
+</Window>

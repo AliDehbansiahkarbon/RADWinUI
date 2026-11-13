@@ -2,7 +2,7 @@
 
 {
   TAddStationWindowBase: base class of TAddStationWindow, generated from AddStationWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change AddStationWindow.xaml or the published handlers of TAddStationWindow
   in AddStationWindow.pas; the build regenerates this unit.
@@ -28,12 +28,21 @@ type
     GenreBox: TWinUIComboBox;    // AddStationWindow.xaml(12) <ComboBox>
     AddButton: TWinUIButton;     // AddStationWindow.xaml(20) <Button>
     CancelButton: TWinUIButton;  // AddStationWindow.xaml(22) <Button>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // AddStationWindow.xaml(8): the content element; event attributes became the
@@ -54,6 +63,10 @@ const
     '      <Button x:Name="CancelButton" Content="Cancel" />' + sLineBreak +
     '    </StackPanel>' + sLineBreak +
     '  </StackPanel>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:NameBox:TWinUITextBox;F:GenreBox:TWinUIComboBox;F:AddButton:TWinUIButton;F:CancelButton:TWinUIButton;E:AddButton.Click=AddClick;E:CancelButton.Click=CancelClick;E:NameBox.TextChanged=NameChanged';
+  {$ENDIF}
 
 constructor TAddStationWindowBase.Create;
 begin
@@ -68,6 +81,15 @@ begin
   Minimizable := False;
   Maximizable := False;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'AddStationWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TAddStationWindowBase.WireXaml;
+begin
   // x:Name elements
   NameBox := FindElement<TWinUITextBox>('NameBox');
   GenreBox := FindElement<TWinUIComboBox>('GenreBox');
@@ -81,5 +103,14 @@ begin
   // AddStationWindow.xaml(22): Click="CancelClick"
   CancelButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CancelClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: AddStationWindow.xaml edited in the IDE while the app runs
+procedure TAddStationWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

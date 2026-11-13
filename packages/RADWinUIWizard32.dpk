@@ -61,6 +61,7 @@ contains
   RADWinUI.Designer.Structure in '..\src\IDE\Designer\RADWinUI.Designer.Structure.pas',
   RADWinUI.Preview.Command in '..\src\IDE\Preview\RADWinUI.Preview.Command.pas',
   RADWinUI.VclHost in '..\src\Framework\RADWinUI.VclHost.pas',
-  RADWinUI.Designer.VclHost in '..\src\IDE\Designer\RADWinUI.Designer.VclHost.pas';
+  RADWinUI.Designer.VclHost in '..\src\IDE\Designer\RADWinUI.Designer.VclHost.pas',
+  RADWinUI.Preview.HotReload in '..\src\IDE\Preview\RADWinUI.Preview.HotReload.pas';
 
 end.

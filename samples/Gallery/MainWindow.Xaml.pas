@@ -2,7 +2,7 @@
 
 {
   TMainWindowBase: base class of TMainWindow, generated from MainWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change MainWindow.xaml or the published handlers of TMainWindow
   in MainWindow.pas; the build regenerates this unit.
@@ -117,6 +117,10 @@ type
     XamlSource: TWinUITextBox;                           // MainWindow.xaml(325) <TextBox>
     PascalSource: TWinUITextBox;                         // MainWindow.xaml(327) <TextBox>
     StatusText: TWinUITextBlock;                         // MainWindow.xaml(334) <TextBlock>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
     /// <summary>
@@ -128,6 +132,11 @@ type
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // MainWindow.xaml(10): the content element; event attributes became the
@@ -503,6 +512,31 @@ const
     '      <TextBlock Grid.Column="1" Text="{Binding Clock}" FontSize="11" VerticalAlignment="Center" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
     '    </Grid>' + sLineBreak +
     '  </Grid>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:Surface:TWinUIGrid;F:SolidLayer:TWinUIBorder;F:DragRegion:TWinUIGrid;F:TransparencySwitch:TWinUIToggleSwitch;F:ThemeChoice:TWinUIComboBox;F:Navigation:TWinUINavigationView;F:SearchBox:TWinUIAutoSugg' +
+    'estBox;F:NavHome:TWinUINavigationViewItem;F:NavExplorer:TWinUINavigationViewItem;F:NavInputs:TWinUINavigationViewItem;F:NavCollections:TWinUINavigationViewItem;F:NavDates:TWinUINavigationViewItem;F:Na' +
+    'vFeedback:TWinUINavigationViewItem;F:NavLayout:TWinUINavigationViewItem;F:NavMaterials:TWinUINavigationViewItem;F:NavBinding:TWinUINavigationViewItem;F:PageScroll:TWinUIScrollViewer;F:PageTitle:TWinUI' +
+    'TextBlock;F:PageDescription:TWinUITextBlock;F:HomePage:TWinUIStackPanel;F:InputsPage:TWinUIStackPanel;F:NameEntry:TWinUITextBox;F:GreetingText:TWinUITextBlock;F:DemoSwitch:TWinUIToggleSwitch;F:VolumeT' +
+    'ext:TWinUITextBlock;F:IntensitySlider:TWinUISlider;F:IntensityProgress:TWinUIProgressBar;F:CollectionsPage:TWinUIStackPanel;F:NewItemText:TWinUITextBox;F:DemoList:TWinUIListView;F:SelectionText:TWinUI' +
+    'TextBlock;F:DatesPage:TWinUIStackPanel;F:FeedbackPage:TWinUIStackPanel;F:FeedbackBar:TWinUIInfoBar;F:ActivitySwitch:TWinUIToggleSwitch;F:ActivityRing:TWinUIProgressRing;F:ActivityProgress:TWinUIProgre' +
+    'ssBar;F:LayoutPage:TWinUIStackPanel;F:MaterialsPage:TWinUIStackPanel;F:BackdropChoice:TWinUIComboBox;F:DemoColorPicker:TWinUIColorPicker;F:ColorSwatch:TWinUIBorder;F:ColorValue:TWinUITextBlock;F:Bindi' +
+    'ngPage:TWinUIStackPanel;F:ExplorerPage:TWinUIGrid;F:ExplorerFilter:TWinUITextBox;F:ExplorerCount:TWinUITextBlock;F:ExplorerList:TWinUIListView;F:ControlTitle:TWinUITextBlock;F:ControlCategory:TWinUITe' +
+    'xtBlock;F:ControlDescription:TWinUITextBlock;F:ExplorerSamples:TWinUIStackPanel;F:SampleButton:TWinUIButton;F:SampleToggleButton:TWinUIToggleButton;F:SampleRepeatButton:TWinUIRepeatButton;F:SampleSpli' +
+    'tButton:TWinUISplitButton;F:SampleHyperlinkButton:TWinUIHyperlinkButton;F:SampleTextBox:TWinUITextBox;F:SamplePasswordBox:TWinUIPasswordBox;F:SampleRichEditBox:TWinUIRichEditBox;F:SampleNumberBox:TWin' +
+    'UINumberBox;F:SampleSlider:TWinUISlider;F:SampleToggleSwitch:TWinUIToggleSwitch;F:SampleCheckBox:TWinUICheckBox;F:SampleRadioButtons:TWinUIRadioButtons;F:SampleComboBox:TWinUIComboBox;F:SampleListBox:' +
+    'TWinUIListBox;F:SampleGridView:TWinUIGridView;F:SampleExpander:TWinUIExpander;F:SampleTabView:TWinUITabView;F:SampleCalendarDatePicker:TWinUICalendarDatePicker;F:SampleDatePicker:TWinUIDatePicker;F:Sa' +
+    'mpleTimePicker:TWinUITimePicker;F:SampleProgressBar:TWinUIProgressBar;F:SampleProgressRing:TWinUIProgressRing;F:SampleRatingControl:TWinUIRatingControl;F:SampleColorPicker:TWinUIColorPicker;F:SampleIn' +
+    'foBar:TWinUIInfoBar;F:SampleMenuBar:TWinUIMenuBar;F:SampleCommandBar:TWinUICommandBar;F:SamplePersonPicture:TWinUIPersonPicture;F:SampleTextBlock:TWinUITextBlock;F:ExplorerEnabled:TWinUIToggleSwitch;F' +
+    ':ExplorerFlow:TWinUIComboBox;F:ExplorerValue:TWinUITextBlock;F:SourcePanel:TWinUIExpander;F:XamlSource:TWinUITextBox;F:PascalSource:TWinUITextBox;F:StatusText:TWinUITextBlock;E:ActivitySwitch.Toggled=' +
+    'ActivityChanged;E:BackdropChoice.SelectionChanged=BackdropChanged;E:DemoColorPicker.ColorChanged=ColorChanged;E:DemoList.SelectionChanged=ListChanged;E:ExplorerEnabled.Toggled=ExplorerOptionsChanged;E' +
+    ':ExplorerFilter.TextChanged=ExplorerFilterChanged;E:ExplorerFlow.SelectionChanged=ExplorerFlowChanged;E:ExplorerList.SelectionChanged=ExplorerSelectionChanged;E:IntensitySlider.ValueChanged=IntensityC' +
+    'hanged;E:Navigation.SelectionChanged=NavigationChanged;E:SampleButton.Click=ExplorerButtonClick;E:SampleHyperlinkButton.Click=ExplorerButtonClick;E:SampleRepeatButton.Click=ExplorerButtonClick;E:Searc' +
+    'hBox.QuerySubmitted=SearchSubmitted;E:SearchBox.SuggestionChosen=SearchSuggestionChosen;E:SearchBox.TextChanged=SearchChanged;E:ThemeChoice.SelectionChanged=ThemeChanged;E:_rw1.Click=CategoryClick;E:_' +
+    'rw10.Click=AddItemClick;E:_rw11.Click=RemoveItemClick;E:_rw12.Click=FeedbackClick;E:_rw13.Click=FeedbackClick;E:_rw14.Click=DialogClick;E:_rw15.Click=IncrementClick;E:_rw16.Click=ResetClick;E:_rw17.Cl' +
+    'ick=ExplorerValueClick;E:_rw18.Click=CopyXamlClick;E:_rw19.Click=CopyPascalClick;E:_rw2.Click=CategoryClick;E:_rw3.Click=CategoryClick;E:_rw4.Click=CategoryClick;E:_rw5.Click=CategoryClick;E:_rw6.Clic' +
+    'k=CategoryClick;E:_rw7.Click=CategoryClick;E:_rw8.Click=CategoryClick;E:_rw9.Click=GreetClick';
+  {$ENDIF}
 
 constructor TMainWindowBase.Create;
 begin
@@ -517,6 +551,15 @@ begin
   ExtendsContentIntoTitleBar := True;
   Center;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'MainWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TMainWindowBase.WireXaml;
+begin
   // x:Name elements
   Surface := FindElement<TWinUIGrid>('Surface');
   SolidLayer := FindElement<TWinUIBorder>('SolidLayer');
@@ -681,6 +724,15 @@ begin
   // MainWindow.xaml(326): Click="CopyPascalClick"
   FindElement<TWinUIButton>('_rw19').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('CopyPascalClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: MainWindow.xaml edited in the IDE while the app runs
+procedure TMainWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 procedure TMainWindowBase.SetViewModel(AValue: TMainViewModel);
 begin

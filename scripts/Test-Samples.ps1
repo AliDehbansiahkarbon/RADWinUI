@@ -482,6 +482,21 @@ Write-Host 'WinUI inside VCL forms'
 & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\VclHost\VclHostTest.dpr' | Out-Null
 & (Join-Path $RepoRoot 'tests\VclHost\Win64\Debug\VclHostTest.exe') | Select-Object -Skip 1
 $Results += ($LASTEXITCODE -eq 0)
+Write-Host 'Hot reload'
+& (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\HotReload\HotReloadTest.dpr' | Out-Null
+& (Join-Path $RepoRoot 'tests\HotReload\Win64\Debug\HotReloadTest.exe') | Select-Object -Skip 1
+$Results += ($LASTEXITCODE -eq 0)
+# Debug builds listen for the IDE, Release builds have no pipe and no hot reload code
+& (Join-Path $PSScriptRoot 'Build.ps1') -Project 'samples\Counter\Counter.dpr' -Config Release | Out-Null
+$Pipe = [Text.Encoding]::Unicode.GetBytes('RADWinUI.HotReload.') # the pipe name's prefix
+function Test-HasPipe([string]$Exe) {
+  $Text = [Text.Encoding]::Unicode.GetString([IO.File]::ReadAllBytes($Exe))
+  return $Text.Contains([Text.Encoding]::Unicode.GetString($Pipe))
+}
+$DebugHas = Test-HasPipe (Join-Path $RepoRoot 'samples\Counter\Win64\Debug\Counter.exe')
+$ReleaseHas = Test-HasPipe (Join-Path $RepoRoot 'samples\Counter\Win64\Release\Counter.exe')
+if ($DebugHas -and -not $ReleaseHas) { Write-Host '  [ok] Counter Debug has the hot reload pipe, Counter Release has none' }
+else { Write-Host "  [failed] hot reload pipe in Counter: Debug $DebugHas, Release $ReleaseHas"; $Results += $false }
 Write-Host 'Localization'
 & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Localization\LocalizationTest.dpr' | Out-Null
 & (Join-Path $RepoRoot 'tests\Localization\Win64\Debug\LocalizationTest.exe') | Select-Object -Skip 1

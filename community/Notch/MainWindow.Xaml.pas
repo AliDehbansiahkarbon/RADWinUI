@@ -2,7 +2,7 @@
 
 {
   TMainWindowBase: base class of TMainWindow, generated from MainWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change MainWindow.xaml or the published handlers of TMainWindow
   in MainWindow.pas; the build regenerates this unit.
@@ -67,12 +67,21 @@ type
     SettingsHost: TWinUIBorder;              // MainWindow.xaml(169) <Border>
     ToggleKey: TWinUIHotKey;                 // MainWindow.xaml(176) <HotKey>
     Media: TWinUIMediaSession;               // MainWindow.xaml(177) <MediaSession>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // MainWindow.xaml(13): the content element; event attributes became the
@@ -228,6 +237,18 @@ const
     '    <ns2:HotKey x:Name="ToggleKey" Keys="Ctrl+Alt+N" />' + sLineBreak +
     '    <ns2:MediaSession x:Name="Media" />' + sLineBreak +
     '  </Grid>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:Notch:TWinUINotchPanel;F:PillHost:TWinUIGrid;F:PillGrid:TWinUIGrid;F:PillDot:TWinUIEllipse;F:PillClock:TWinUITextBlock;F:PillMusic:TWinUIFontIcon;F:PillSide:TWinUIStackPanel;F:PillSideDot:TWinUIElli' +
+    'pse;F:PillHours:TWinUITextBlock;F:PillMinutes:TWinUITextBlock;F:HeaderBar:TWinUIGrid;F:ClockLabel:TWinUITextBlock;F:DateLabel:TWinUITextBlock;F:HeaderTools:TWinUIStackPanel;F:HotKeyHint:TWinUITextBloc' +
+    'k;F:TransparencySwitch:TWinUIToggleSwitch;F:TransparencySlider:TWinUISlider;F:EditButton:TWinUIButton;F:EditGlyph:TWinUIFontIcon;F:PinButton:TWinUIButton;F:PinGlyph:TWinUIFontIcon;F:QuitButton:TWinUIB' +
+    'utton;F:WidgetScroller:TWinUIScrollViewer;F:WidgetRow:TWinUIStackPanel;F:EditPage:TWinUIGrid;F:WidgetListHost:TWinUIBorder;F:AddListHost:TWinUIBorder;F:DetailPanel:TWinUIGrid;F:TitleBox:TWinUITextBox;' +
+    'F:DetailHint:TWinUITextBlock;F:ItemListHost:TWinUIBorder;F:EntryForm:TWinUIGrid;F:EntryNameBox:TWinUITextBox;F:EntryTargetBox:TWinUITextBox;F:AddEntryButton:TWinUIButton;F:SearchBox:TWinUITextBox;F:Ap' +
+    'pResults:TWinUIScrollViewer;F:AppResultsHost:TWinUIBorder;F:SettingsPage:TWinUIScrollViewer;F:SettingsHost:TWinUIBorder;F:ToggleKey:TWinUIHotKey;F:Media:TWinUIMediaSession;E:AddEntryButton.Click=AddEn' +
+    'tryButtonClick;E:EditButton.Click=EditButtonClick;E:HeaderBar.PointerPressed=HeaderBarPointerPressed;E:Media.Changed=MediaChanged;E:PillHost.PointerPressed=PillHostPointerPressed;E:PinButton.Click=Pin' +
+    'ButtonClick;E:QuitButton.Click=QuitButtonClick;E:SearchBox.TextChanged=SearchBoxTextChanged;E:TitleBox.TextChanged=TitleBoxTextChanged;E:ToggleKey.Pressed=ToggleKeyPressed;E:TransparencySlider.ValueCh' +
+    'anged=TransparencySliderValueChanged;E:TransparencySwitch.Toggled=TransparencySwitchToggled';
+  {$ENDIF}
 
 constructor TMainWindowBase.Create;
 begin
@@ -241,6 +262,15 @@ begin
   ClickThrough := TWinUIClickThrough.Background;
   ShowActivated := False;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'MainWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TMainWindowBase.WireXaml;
+begin
   // x:Name elements
   Notch := FindElement<TWinUINotchPanel>('Notch');
   PillHost := FindElement<TWinUIGrid>('PillHost');
@@ -310,5 +340,14 @@ begin
   // MainWindow.xaml(177): MediaChanged by name
   Media.EventByName('Changed').Add(NotifyProc<TWinValue>('MediaChanged'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: MainWindow.xaml edited in the IDE while the app runs
+procedure TMainWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

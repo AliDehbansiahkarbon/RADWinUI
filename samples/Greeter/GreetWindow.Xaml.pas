@@ -2,7 +2,7 @@
 
 {
   TGreetWindowBase: base class of TGreetWindow, generated from GreetWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change GreetWindow.xaml or the published handlers of TGreetWindow
   in GreetWindow.pas; the build regenerates this unit.
@@ -28,12 +28,21 @@ type
     GreetButton: TWinUIButton;               // GreetWindow.xaml(9) <Button>
     Greeting: TWinUITextBlock;               // GreetWindow.xaml(10) <TextBlock>
     TransparencySwitch: TWinUIToggleSwitch;  // GreetWindow.xaml(11) <ToggleSwitch>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // GreetWindow.xaml(7): the content element; event attributes became the
@@ -45,6 +54,10 @@ const
     '        <TextBlock x:Name="Greeting" FontSize="24" />' + sLineBreak +
     '        <ToggleSwitch x:Name="TransparencySwitch" Header="Transparency" />' + sLineBreak +
     '    </StackPanel>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:NameBox:TWinUITextBox;F:GreetButton:TWinUIButton;F:Greeting:TWinUITextBlock;F:TransparencySwitch:TWinUIToggleSwitch;E:GreetButton.Click=GreetButtonClick;E:NameBox.TextChanged=NameBoxTextChanged';
+  {$ENDIF}
 
 constructor TGreetWindowBase.Create;
 begin
@@ -58,6 +71,15 @@ begin
   Backdrop := TWinUIBackdrop.Mica;
   Center;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'GreetWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TGreetWindowBase.WireXaml;
+begin
   // x:Name elements
   NameBox := FindElement<TWinUITextBox>('NameBox');
   GreetButton := FindElement<TWinUIButton>('GreetButton');
@@ -69,5 +91,14 @@ begin
   // GreetWindow.xaml(9): GreetButtonClick by name
   GreetButton.OnClick := TWinUIRoutedEventHandler(PublishedMethod('GreetButtonClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: GreetWindow.xaml edited in the IDE while the app runs
+procedure TGreetWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

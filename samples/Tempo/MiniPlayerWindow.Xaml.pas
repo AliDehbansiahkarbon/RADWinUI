@@ -2,7 +2,7 @@
 
 {
   TMiniPlayerWindowBase: base class of TMiniPlayerWindow, generated from MiniPlayerWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change MiniPlayerWindow.xaml or the published handlers of TMiniPlayerWindow
   in MiniPlayerWindow.pas; the build regenerates this unit.
@@ -27,12 +27,21 @@ type
     StationName: TWinUITextBlock;  // MiniPlayerWindow.xaml(16) <TextBlock>
     GenreText: TWinUITextBlock;    // MiniPlayerWindow.xaml(18) <TextBlock>
     PlayButton: TWinUIButton;      // MiniPlayerWindow.xaml(20) <Button>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // MiniPlayerWindow.xaml(10): the content element; event attributes became the
@@ -49,6 +58,10 @@ const
     '    </StackPanel>' + sLineBreak +
     '    <Button x:Name="PlayButton" Grid.Row="1" Content="Play" HorizontalAlignment="Stretch" />' + sLineBreak +
     '  </Grid>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:StationName:TWinUITextBlock;F:GenreText:TWinUITextBlock;F:PlayButton:TWinUIButton;E:PlayButton.Click=PlayClick';
+  {$ENDIF}
 
 constructor TMiniPlayerWindowBase.Create;
 begin
@@ -60,6 +73,15 @@ begin
   Backdrop := TWinUIBackdrop.Acrylic;
   WindowState := TWinUIWindowState.CompactOverlay;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'MiniPlayerWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TMiniPlayerWindowBase.WireXaml;
+begin
   // x:Name elements
   StationName := FindElement<TWinUITextBlock>('StationName');
   GenreText := FindElement<TWinUITextBlock>('GenreText');
@@ -68,5 +90,14 @@ begin
   // MiniPlayerWindow.xaml(20): Click="PlayClick"
   PlayButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('PlayClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: MiniPlayerWindow.xaml edited in the IDE while the app runs
+procedure TMiniPlayerWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

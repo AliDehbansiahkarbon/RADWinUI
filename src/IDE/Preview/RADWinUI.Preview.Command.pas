@@ -36,6 +36,7 @@ uses
   System.JSON,
   System.Win.Registry,
   System.Rtti,
+  System.Generics.Collections,
   Vcl.ActnList,
   Vcl.AppEvnts,
   Vcl.Graphics,
@@ -58,6 +59,7 @@ uses
   RADWinUI.Wizard.Registration,
   RADWinUI.Wizard.Templates,
   RADWinUI.Preview.Client,
+  RADWinUI.Preview.HotReload,
   RADWinUI.Preview.Menu,
   RADWinUI.Designer.XamlEdit,
   RADWinUI.Designer.Model,
@@ -271,6 +273,29 @@ type
     procedure LoadSettings;
   end;
 
+  /// <summary>
+  ///   Hot reload: sends each edited .xaml file of the IDE to the RADWinUI apps built from its
+  ///   folder that run in Debug (RADWinUI.HotReload), after a pause or when it is saved.
+  /// </summary>
+  TXamlHotReloadSender = class
+  strict private
+    FTimer: TTimer;
+    FMode: TRADWinUIHotReload;
+    FModeAt, FAppsAt: UInt64;
+    FApps: TArray<THotReloadApp>;
+    // per file: the last text seen and when it changed; per app and file: the text sent
+    FSeen: TDictionary<string, string>;
+    FChangedAt: TDictionary<string, UInt64>;
+    FSent: TDictionary<string, string>;
+    procedure Tick(Sender: TObject);
+    function XamlFiles: TArray<string>;
+    function TextOf(const AFile: string): string;
+    procedure Send(const AFile, AText: string; const AApps: TArray<THotReloadApp>);
+  public
+    constructor Create;
+    destructor Destroy; override;
+  end;
+
   /// <summary>Tools > Options > Third Party > RADWinUI: RADWinUI's IDE settings
   /// (RADWinUI.Designer.Settings), each change saved at once.</summary>
   TRADWinUIOptions = class(TInterfacedObject, INTAAddInOptions)
@@ -279,6 +304,7 @@ type
     FDelay: TEdit;
     FCodeCompletion: TCheckBox;
     FPromptSelection: TCheckBox;
+    FHotReload: TComboBox;
     FError: TLabel;
     FLoading: Boolean;
     FLastDelay: Integer; // the pause last saved: an invalid one goes back to it
@@ -337,6 +363,7 @@ type
     FOptionsTimer: TTimer;          // selects our page once the Options dialog shows
     FOptionsAskedAt: Cardinal;
     FSuggestions: TXamlSuggestionController;
+    FHotReload: TXamlHotReloadSender;
     FEditorOptions: INTAAddInOptions;
     FEditorActions: TActionList; // the code editor's context menu, .xaml files only
     FPreviewDock: INTACustomDockableForm;
@@ -657,8 +684,10 @@ begin
   end;
 end;
 
-/// Generate from a snapshot of the IDE buffers, without saving the user's XAML/Pascal.
-function GenerateCode(const APath, AXaml, APas: string; out AText, AError: string): Boolean;
+/// Generate from a snapshot of the IDE buffers, without saving the user's XAML/Pascal. AHotReload
+/// also asks for the content the app loads and the shape it compares (AContent, AShape).
+function GenerateCode(const APath, AXaml, APas: string; out AText, AError: string; AHotReload: Boolean;
+  out AContent, AShape: string): Boolean; overload;
 var
   Json: TJSONObject;
   RequestFile, CommandLine: string;
@@ -676,6 +705,8 @@ begin
       Json.AddPair('path', APath);
       Json.AddPair('xaml', AXaml);
       Json.AddPair('pas', APas);
+      if AHotReload then
+        Json.AddPair('hotreload', TJSONTrue.Create);
       TFile.WriteAllText(RequestFile, Json.ToJSON, TEncoding.UTF8);
     finally
       Json.Free;
@@ -705,7 +736,11 @@ begin
     try
       Result := (Json <> nil) and (Json.GetValue('text') <> nil);
       if Result then
-        AText := Json.GetValue('text').Value
+      begin
+        AText := Json.GetValue('text').Value;
+        AContent := Json.GetValue<string>('content', '');
+        AShape := Json.GetValue<string>('shape', '');
+      end
       else if (Json <> nil) and (Json.GetValue('error') <> nil) then
         AError := Json.GetValue('error').Value
       else
@@ -723,6 +758,13 @@ begin
   except
     // Cleanup must not interrupt the IDE if a timed-out XamlCodeGen process is exiting.
   end;
+end;
+
+function GenerateCode(const APath, AXaml, APas: string; out AText, AError: string): Boolean; overload;
+var
+  Content, Shape: string;
+begin
+  Result := GenerateCode(APath, AXaml, APas, AText, AError, False, Content, Shape);
 end;
 
 procedure TPreviewCommand.SyncCode(AImmediate: Boolean);
@@ -2099,6 +2141,143 @@ begin
   end;
 end;
 
+{ TXamlHotReloadSender }
+
+constructor TXamlHotReloadSender.Create;
+begin
+  inherited;
+  FSeen := TDictionary<string, string>.Create;
+  FChangedAt := TDictionary<string, UInt64>.Create;
+  FSent := TDictionary<string, string>.Create;
+  FTimer := TTimer.Create(nil);
+  FTimer.Interval := 250;
+  FTimer.OnTimer := Tick;
+end;
+
+destructor TXamlHotReloadSender.Destroy;
+begin
+  FreeAndNil(FTimer);
+  FSent.Free;
+  FChangedAt.Free;
+  FSeen.Free;
+  inherited;
+end;
+
+function TXamlHotReloadSender.XamlFiles: TArray<string>;
+var
+  Modules: IOTAModuleServices;
+  I: Integer;
+begin
+  Result := nil;
+  Modules := BorlandIDEServices as IOTAModuleServices;
+  for I := 0 to Modules.ModuleCount - 1 do
+    if SameText(ExtractFileExt(Modules.Modules[I].FileName), '.xaml') then
+      Result := Result + [Modules.Modules[I].FileName];
+end;
+
+function TXamlHotReloadSender.TextOf(const AFile: string): string;
+begin
+  // While typing: the editor buffer. On save: the file as saved
+  if FMode = hrWhileTyping then
+    Result := SourceText(AFile)
+  else if FileExists(AFile) then
+    Result := TFile.ReadAllText(AFile)
+  else
+    Result := '';
+end;
+
+procedure TXamlHotReloadSender.Send(const AFile, AText: string; const AApps: TArray<THotReloadApp>);
+var
+  Pas, Generated, Error, Content, Shape: string;
+  Message: TBytes;
+  App: THotReloadApp;
+begin
+  Content := '';
+  Shape := '';
+  Error := '';
+  // A window, page or user control has its unit: XamlCodeGen gives what the app compares and
+  // loads. Any other .xaml (TWinUIHost.XamlFile) goes as it is
+  Pas := ChangeFileExt(AFile, '.pas');
+  if FileExists(Pas) or ((BorlandIDEServices as IOTAModuleServices).FindModule(Pas) <> nil) then
+    GenerateCode(AFile, AText, SourceText(Pas), Generated, Error, True, Content, Shape);
+  Message := HotReloadMessage(AFile, Shape, Content, AText, Error);
+  for App in AApps do
+    if SendHotReload(App.ProcessId, Message) then
+    begin
+      FSent.AddOrSetValue(IntToStr(App.ProcessId) + '|' + AFile, AText);
+      Log(Format('hot reload: %s sent to %s (pid %d)%s', [ExtractFileName(AFile), ExtractFileName(App.ExePath),
+        App.ProcessId, IfThen(Error <> '', ', XamlCodeGen: ' + Error, '')]));
+    end;
+end;
+
+procedure TXamlHotReloadSender.Tick(Sender: TObject);
+var
+  Ticks: UInt64;
+  FileName, Text, Key, Sent: string;
+  App: THotReloadApp;
+  Apps, Due: TArray<THotReloadApp>;
+  Changed: UInt64;
+  Known: Boolean;
+begin
+  Ticks := GetTickCount64;
+  try
+    if Ticks - FModeAt > 2000 then
+    begin
+      FMode := TRADWinUISettings.Load(RADWinUIRegistryKey).HotReload;
+      FModeAt := Ticks;
+    end;
+    if FMode = hrOff then
+      Exit;
+    if Ticks - FAppsAt > 1000 then
+    begin
+      Apps := HotReloadApps;
+      // An app that just started has the XAML it was built with: what is open now is its start
+      for App in Apps do
+      begin
+        Known := False;
+        for var Old in FApps do
+          if Old.ProcessId = App.ProcessId then
+            Known := True;
+        if not Known then
+          for FileName in XamlFiles do
+            if AppUsesFile(App.ExePath, FileName) then
+              FSent.AddOrSetValue(IntToStr(App.ProcessId) + '|' + FileName, TextOf(FileName));
+      end;
+      FApps := Apps;
+      FAppsAt := Ticks;
+      if FApps = nil then
+        FSent.Clear;
+    end;
+    if FApps = nil then
+      Exit;
+    for FileName in XamlFiles do
+    begin
+      Text := TextOf(FileName);
+      if not FSeen.TryGetValue(FileName, Sent) or (Sent <> Text) then
+      begin
+        FSeen.AddOrSetValue(FileName, Text);
+        FChangedAt.AddOrSetValue(FileName, Ticks);
+        Continue;
+      end;
+      // The same pause as the preview before a typed change goes out
+      if FChangedAt.TryGetValue(FileName, Changed) and (Ticks - Changed < 500) and (FMode = hrWhileTyping) then
+        Continue;
+      Due := nil;
+      for App in FApps do
+      begin
+        Key := IntToStr(App.ProcessId) + '|' + FileName;
+        if AppUsesFile(App.ExePath, FileName) and (not FSent.TryGetValue(Key, Sent) or (Sent <> Text)) then
+          Due := Due + [App];
+      end;
+      if Due <> nil then
+        Send(FileName, Text, Due);
+    end;
+  except
+    on E: Exception do
+      Log('hot reload: ' + E.Message);
+  end;
+end;
+
 { TRADWinUIOptions }
 
 function TRADWinUIOptions.GetArea: string;
@@ -2168,19 +2347,39 @@ begin
     FPromptSelection.Caption := 'Copy the selected XAML into the prompt (Ctrl+Alt+Space)';
     FPromptSelection.Checked := Settings.PromptWithSelection;
     FPromptSelection.OnClick := Changed;
+    Heading := TLabel.Create(AFrame);
+    Heading.Parent := AFrame;
+    Heading.SetBounds(16, 160, 300, 16);
+    Heading.Caption := 'Hot reload';
+    Heading.Font.Style := [fsBold];
+    Caption := TLabel.Create(AFrame);
+    Caption.Parent := AFrame;
+    Caption.SetBounds(24, 188, 220, 16);
+    Caption.Caption := 'Send edited XAML to the running app:';
+    FHotReload := TComboBox.Create(AFrame);
+    FHotReload.Parent := AFrame;
+    FHotReload.Style := csDropDownList;
+    FHotReload.SetBounds(250, 184, 220, 22);
+    FHotReload.Items.Add('Off');
+    FHotReload.Items.Add('When a .xaml file is saved');
+    FHotReload.Items.Add('While typing');
+    FHotReload.ItemIndex := Ord(Settings.HotReload);
+    FHotReload.OnChange := Changed;
     Note := TLabel.Create(AFrame);
     Note.Parent := AFrame;
     // The width of the page, and with it when the dialog is resized
     Note.AutoSize := False;
     Note.WordWrap := True;
     if AFrame.ClientWidth - 48 > 300 then
-      Note.SetBounds(24, 158, AFrame.ClientWidth - 48, 80)
+      Note.SetBounds(24, 222, AFrame.ClientWidth - 48, 110)
     else
-      Note.SetBounds(24, 158, 300, 80);
+      Note.SetBounds(24, 222, 300, 110);
     Note.Anchors := [akLeft, akTop, akRight];
     Note.Caption := 'Changes are saved at once. The suggestions appear on a line still being typed, such as "<Butt", ' +
       'and come from the AI plugin set up for the editor in the IDE''s AI options. To write a whole UI from a ' +
-      'description, right-click and choose Create XAML with AI (Ctrl+Alt+Space).';
+      'description, right-click and choose Create XAML with AI (Ctrl+Alt+Space). Hot reload updates the windows, ' +
+      'pages and user controls of an app that runs in Debug from the project folder: changes to Pascal code, ' +
+      'new event handlers or removed x:Name elements still need a rebuild.';
   finally
     FLoading := False;
   end;
@@ -2201,6 +2400,8 @@ begin
   Settings.CodeCompletion := FCodeCompletion.Checked;
   if FPromptSelection <> nil then
     Settings.PromptWithSelection := FPromptSelection.Checked;
+  if (FHotReload <> nil) and (FHotReload.ItemIndex >= 0) then
+    Settings.HotReload := TRADWinUIHotReload(FHotReload.ItemIndex);
   // A pause still being typed is saved once it is in range
   if TryStrToInt(FDelay.Text, Delay) and (Delay >= TRADWinUISettings.MinDelay) and
     (Delay <= TRADWinUISettings.MaxDelay) then
@@ -2265,6 +2466,7 @@ begin
   FDelay := nil;
   FCodeCompletion := nil;
   FPromptSelection := nil;
+  FHotReload := nil;
   FError := nil;
 end;
 
@@ -2360,6 +2562,7 @@ begin
   if Supports(BorlandIDEServices, IOTAKeyboardServices, Keys) then
     FKeyBinding := Keys.AddKeyboardBinding(TDesignerKeyBinding.Create(Self));
   FSuggestions := TXamlSuggestionController.Create;
+  FHotReload := TXamlHotReloadSender.Create;
   // Toggle XAML Comment and Create XAML with AI in the code editor's context menu
   FEditorActions := TActionList.Create(nil);
   EditorAction := TAction.Create(FEditorActions);
@@ -3104,6 +3307,7 @@ begin
   FWatch.Free;
   CancelXamlCompletion;
   FreeAndNil(FSuggestions);
+  FreeAndNil(FHotReload);
   if FEditorActions <> nil then
     (BorlandIDEServices as IOTAEditorServices).GetEditorLocalMenu.UnregisterActionList('RADWinUIXaml');
   FreeAndNil(FEditorActions);

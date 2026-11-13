@@ -2,7 +2,7 @@
 
 {
   TContactsWindowBase: base class of TContactsWindow, generated from ContactsWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change ContactsWindow.xaml or the published handlers of TContactsWindow
   in ContactsWindow.pas; the build regenerates this unit.
@@ -27,12 +27,21 @@ type
     ContactList: TWinUIListView;  // ContactsWindow.xaml(10) <ListView>
     NameBox: TWinUITextBox;       // ContactsWindow.xaml(27) <TextBox>
     Status: TWinUITextBlock;      // ContactsWindow.xaml(33) <TextBlock>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // ContactsWindow.xaml(9): the content element; event attributes became the
@@ -60,6 +69,11 @@ const
     '        ' + sLineBreak +
     '        <TextBlock x:Name="Status" />' + sLineBreak +
     '    </StackPanel>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:ContactList:TWinUIListView;F:NameBox:TWinUITextBox;F:Status:TWinUITextBlock;E:ContactList.SelectionChanged=ContactListSelectionChanged;E:_rw1.Click=AddClick;E:_rw2.Click=RenameClick;E:_rw3.Click=Rem' +
+    'oveClick';
+  {$ENDIF}
 
 constructor TContactsWindowBase.Create;
 begin
@@ -69,6 +83,15 @@ begin
   Width := 460;
   Height := 540;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'ContactsWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TContactsWindowBase.WireXaml;
+begin
   // x:Name elements
   ContactList := FindElement<TWinUIListView>('ContactList');
   NameBox := FindElement<TWinUITextBox>('NameBox');
@@ -83,5 +106,14 @@ begin
   // ContactsWindow.xaml(30): Click="RemoveClick"
   FindElement<TWinUIButton>('_rw3').OnClick := TWinUIRoutedEventHandler(PublishedMethod('RemoveClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: ContactsWindow.xaml edited in the IDE while the app runs
+procedure TContactsWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

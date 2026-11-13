@@ -462,6 +462,15 @@ end;
 - The build stops on a user control that has no `.xaml` file in the project folder, an attribute that is neither its own property or event nor one of a `ContentControl`, and a user control that contains itself.
 - The designer and the preview run without the app's code: there a user control shows as a labelled frame of its size.
 
+## Hot reload (RADWinUI.HotReload)
+
+Debug builds reload their XAML when it is edited in the IDE ([Hot reload](HOT-RELOAD.md)). Nothing to call: the generated units and TWinUIHost register themselves. The generated class has two methods for it:
+
+- `WireXaml` fills the `x:Name` fields and wires the events of the content. The constructor (or `Initialize`) calls it, and a reload calls it again, so the fields always point to the elements on screen. Code that keeps its own references to elements should look them up again after a reload, or use the fields.
+- `ReloadXaml` (Debug builds only) loads new content and calls `WireXaml`.
+
+`TXamlHotReload.LastStatus` holds the last outcome, `TXamlHotReload.Apply` does what a message from the IDE does, for tests.
+
 ## Dialogs and pickers (RADWinUI.Dialogs)
 
 Message boxes, input boxes and the Windows file and folder pickers, named as in the VCL. New windows and pages have the unit in their uses clause, as VCL forms have `Vcl.Dialogs`. WinUI never blocks the UI thread while a dialog is open, so the code after the call runs at once and the answer arrives in a callback, always on the UI thread.

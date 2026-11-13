@@ -2,7 +2,7 @@
 
 {
   TQuillWindowBase: base class of TQuillWindow, generated from QuillWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change QuillWindow.xaml or the published handlers of TQuillWindow
   in QuillWindow.pas; the build regenerates this unit.
@@ -40,12 +40,21 @@ type
     LanguageBox: TWinUIComboBox;         // QuillWindow.xaml(156) <ComboBox>
     LaunchInfo: TWinUITextBlock;         // QuillWindow.xaml(164) <TextBlock>
     SettingsResult: TWinUITextBlock;     // QuillWindow.xaml(177) <TextBlock>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // QuillWindow.xaml(12): the content element; event attributes became the
@@ -211,6 +220,15 @@ const
     '      </ScrollViewer>' + sLineBreak +
     '    </Border>' + sLineBreak +
     '  </Grid>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:DragRegion:TWinUIGrid;F:TitleRow:TWinUIStackPanel;F:TitleNote:TWinUITextBlock;F:NoteList:TWinUIListView;F:NewButton:TWinUIButton;F:ImportButton:TWinUIButton;F:RemindSoon:TWinUIMenuFlyoutItem;F:Remin' +
+    'dMinute:TWinUIMenuFlyoutItem;F:RemindTen:TWinUIMenuFlyoutItem;F:RemindCancel:TWinUIMenuFlyoutItem;F:Editor:TWinUITextBox;F:Status:TWinUITextBlock;F:SettingsPanel:TWinUIBorder;F:LanguageBox:TWinUICombo' +
+    'Box;F:LaunchInfo:TWinUITextBlock;F:SettingsResult:TWinUITextBlock;E:Editor.TextChanged=EditorChanged;E:ImportButton.Click=ImportClick;E:LanguageBox.SelectionChanged=LanguageChanged;E:NewButton.Click=N' +
+    'ewClick;E:NoteList.SelectionChanged=NoteListSelectionChanged;E:RemindCancel.Click=RemindCancelClick;E:RemindMinute.Click=RemindMinuteClick;E:RemindSoon.Click=RemindSoonClick;E:RemindTen.Click=RemindTe' +
+    'nClick;E:_rw1.Click=OpenClick;E:_rw10.Click=UnregisterFilesClick;E:_rw11.Click=RegisterLinksClick;E:_rw12.Click=UnregisterLinksClick;E:_rw2.Click=SaveClick;E:_rw3.Click=SaveAsClick;E:_rw4.Click=Rename' +
+    'Click;E:_rw5.Click=CloseNoteClick;E:_rw6.Click=ExportClick;E:_rw7.Click=SettingsClick;E:_rw8.Click=AboutClick;E:_rw9.Click=RegisterFilesClick';
+  {$ENDIF}
 
 constructor TQuillWindowBase.Create;
 begin
@@ -225,6 +243,15 @@ begin
   ExtendsContentIntoTitleBar := True;
   Center;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'QuillWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TQuillWindowBase.WireXaml;
+begin
   // x:Name elements
   DragRegion := FindElement<TWinUIGrid>('DragRegion');
   TitleRow := FindElement<TWinUIStackPanel>('TitleRow');
@@ -286,5 +313,14 @@ begin
   // QuillWindow.xaml(175): Click="UnregisterLinksClick"
   FindElement<TWinUIButton>('_rw12').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('UnregisterLinksClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: QuillWindow.xaml edited in the IDE while the app runs
+procedure TQuillWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

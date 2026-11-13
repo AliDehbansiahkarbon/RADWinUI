@@ -1613,7 +1613,10 @@ function TWinUIWindow.LoadContent(const AXaml: string): TWinUIFrameworkElement;
 var
   Loaded: IInspectable;
   Previous: TObject;
+  Kept: TWinValue;
 begin
+  // New content binds to the data the old one had (a hot reload, a content swap)
+  Kept := GetDataContext;
   // Controls written in Delphi that this XAML creates belong to this window
   Previous := CustomXamlLoadOwner;
   CustomXamlLoadOwner := Self;
@@ -1627,6 +1630,8 @@ begin
   if TWinUIApp.RightToLeft then
     Result.FlowDirection := TWinUIFlowDirection.RightToLeft;
   Content := Result;
+  if not Kept.IsEmpty and Result.DataContext.IsEmpty then
+    Result.DataContext := Kept;
 end;
 
 { TWinUIWindow: closing, modal windows and owners }

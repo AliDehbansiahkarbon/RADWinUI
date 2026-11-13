@@ -112,6 +112,12 @@ function WindowsGetStringRawBuffer(AString: HSTRING; ALength: PCardinal): PWideC
 procedure CheckWinRT(AResult: HRESULT; const AContext: string);
 
 /// <summary>
+///   What the WinRT object reported for the failure AErrorCode it just returned (for
+///   example a XAML parse error and its position), or the system's text for the code.
+/// </summary>
+function WinRTErrorMessage(AErrorCode: HRESULT): string;
+
+/// <summary>
 ///   Wraps a Delphi string as an HSTRING that lives until the calling routine
 ///   ends: Window.Title := WinStr('Hello');
 /// </summary>
@@ -286,24 +292,27 @@ function GetRestrictedErrorInfo(out AInfo: IRestrictedErrorInfo): HRESULT; stdca
 
 // SafeCallErrorProc: a failing safecall raises EWinRTError with the message
 // the WinRT object reported (for example the XAML parse error and position).
-procedure WinRTSafeCallError(AErrorCode: HRESULT; AErrorAddr: Pointer);
+function WinRTErrorMessage(AErrorCode: HRESULT): string;
 var
   Info: IRestrictedErrorInfo;
   Description, Restricted, Sid: WideString;
   Code: HRESULT;
-  Msg: string;
 begin
-  Msg := '';
+  Result := '';
   if (GetRestrictedErrorInfo(Info) = S_OK) and (Info <> nil) and
     Succeeded(Info.GetErrorDetails(Description, Code, Restricted, Sid)) and (Code = AErrorCode) then
   begin
-    Msg := Trim(string(Restricted));
-    if Msg = '' then
-      Msg := Trim(string(Description));
+    Result := Trim(string(Restricted));
+    if Result = '' then
+      Result := Trim(string(Description));
   end;
-  if Msg = '' then
-    Msg := SysErrorMessage(Cardinal(AErrorCode));
-  raise EWinRTError.CreateMsg(AErrorCode, Msg) at AErrorAddr;
+  if Result = '' then
+    Result := SysErrorMessage(Cardinal(AErrorCode));
+end;
+
+procedure WinRTSafeCallError(AErrorCode: HRESULT; AErrorAddr: Pointer);
+begin
+  raise EWinRTError.CreateMsg(AErrorCode, WinRTErrorMessage(AErrorCode)) at AErrorAddr;
 end;
 
 { Activation }

@@ -94,11 +94,18 @@ type
   strict private
     FFrame: TWinUIPageFrame;
     FKeepAlive: Boolean;
+    // After ReplaceXaml: the names are in the namescope of the content it loaded
+    FNames: IFrameworkElement;
   private
     procedure SetFrame(AFrame: TWinUIPageFrame);
   protected
     /// <summary>Loads AXaml, a &lt;Page&gt; element, as this page. The generated constructor calls it.</summary>
     constructor CreateFromXaml(const AXaml: string);
+    /// <summary>
+    ///   Shows the content of AXaml, a &lt;Page&gt; element, in this page (hot reload).
+    ///   The page keeps its DataContext, its frame and its own attributes.
+    /// </summary>
+    procedure ReplaceXaml(const AXaml: string);
     /// <summary>The page is shown. AArgs.Parameter is what Navigate was given.</summary>
     procedure NavigatedTo(const AArgs: TWinUINavigationArgs); virtual;
     /// <summary>The page was left and another one is shown.</summary>
@@ -345,8 +352,36 @@ begin
 end;
 
 function TWinUIXamlPage.FindElement<T>(const AName: string): T;
+var
+  Found: IInspectable;
 begin
-  Result := T(TWinUIObject.Wrap(Self, FindName(AName).Obj, TWinUIObjectClass(GetTypeData(TypeInfo(T))^.ClassType)));
+  if FNames <> nil then
+    Found := FNames.FindName(WinStr(AName))
+  else
+    Found := FindName(AName).Obj;
+  Result := T(TWinUIObject.Wrap(Self, Found, TWinUIObjectClass(GetTypeData(TypeInfo(T))^.ClassType)));
+end;
+
+procedure TWinUIXamlPage.ReplaceXaml(const AXaml: string);
+var
+  Loaded: IInspectable;
+  Previous: TObject;
+  Moved: IUIElement;
+begin
+  Previous := CustomXamlLoadOwner;
+  CustomXamlLoadOwner := Self;
+  try
+    Loaded := XamlReader.Load(WinStr(AXaml));
+  finally
+    CustomXamlLoadOwner := Previous;
+  end;
+  if not Supports(Loaded, IPage) then
+    raise EArgumentException.CreateFmt('%s: the XAML of a page must have a <Page> root', [ClassName]);
+  // The content moves from the page just loaded into this one, which the frame shows
+  Moved := (Loaded as IUserControl).Content;
+  (Loaded as IUserControl).Content := nil;
+  (WinRTObject as IUserControl).Content := Moved;
+  Supports(Moved, IFrameworkElement, FNames);
 end;
 
 function TWinUIXamlPage.PublishedMethod(const AName: string): TMethod;

@@ -2,7 +2,7 @@
 
 {
   TPeoplePageBase: base class of the page TPeoplePage, generated from PeoplePage.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change PeoplePage.xaml or the published handlers of TPeoplePage
   in PeoplePage.pas; the build regenerates this unit.
@@ -28,12 +28,21 @@ type
     SearchBox: TWinUITextBox;    // PeoplePage.xaml(16) <TextBox>
     CountText: TWinUITextBlock;  // PeoplePage.xaml(18) <TextBlock>
     PeopleList: TWinUIListView;  // PeoplePage.xaml(20) <ListView>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // PeoplePage.xaml(1): the page; event attributes became the
@@ -67,10 +76,23 @@ const
     '    </ListView>' + sLineBreak +
     '  </Grid>' + sLineBreak +
     '</Page>';
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:PageTitle:TWinUITextBlock;F:SearchBox:TWinUITextBox;F:CountText:TWinUITextBlock;F:PeopleList:TWinUIListView;E:PeopleList.ItemClick=PersonClick;E:SearchBox.TextChanged=SearchChanged';
+  {$ENDIF}
 
 constructor TPeoplePageBase.Create;
 begin
   inherited CreateFromXaml(PageXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'PeoplePage.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TPeoplePageBase.WireXaml;
+begin
   // x:Name elements
   PageTitle := FindElement<TWinUITextBlock>('PageTitle');
   SearchBox := FindElement<TWinUITextBox>('SearchBox');
@@ -82,5 +104,14 @@ begin
   // PeoplePage.xaml(20): ItemClick="PersonClick"
   PeopleList.OnItemClick := TWinUIItemClickEventHandler(PublishedMethod('PersonClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: PeoplePage.xaml edited in the IDE while the app runs
+procedure TPeoplePageBase.ReloadXaml(const AXaml: string);
+begin
+  ReplaceXaml(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

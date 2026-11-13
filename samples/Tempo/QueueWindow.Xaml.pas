@@ -2,7 +2,7 @@
 
 {
   TQueueWindowBase: base class of TQueueWindow, generated from QueueWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change QueueWindow.xaml or the published handlers of TQueueWindow
   in QueueWindow.pas; the build regenerates this unit.
@@ -25,12 +25,21 @@ type
   TQueueWindowBase = class(TWinUIWindow)
   protected
     UpNext: TWinUIListView;  // QueueWindow.xaml(17) <ListView>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // QueueWindow.xaml(11): the content element; event attributes became the
@@ -46,6 +55,10 @@ const
     '      ' + sLineBreak +
     '    </ListView>' + sLineBreak +
     '  </Grid>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:UpNext:TWinUIListView;';
+  {$ENDIF}
 
 constructor TQueueWindowBase.Create;
 begin
@@ -61,8 +74,26 @@ begin
   Minimizable := False;
   Maximizable := False;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'QueueWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TQueueWindowBase.WireXaml;
+begin
   // x:Name elements
   UpNext := FindElement<TWinUIListView>('UpNext');
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: QueueWindow.xaml edited in the IDE while the app runs
+procedure TQueueWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

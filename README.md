@@ -36,6 +36,7 @@ RADWinUI works the way a Delphi developer expects. File > New creates the projec
 - **File > New wizards.** RADWinUI Application creates a ready-to-run project. RADWinUI Window, Page, User Control and Resource File add to it.
 - **Pages and navigation.** Pages in a frame, with parameters, back and forward, page transitions and a page that asks before it is left. A NavigationView drives the frame with one call.
 - **User controls.** A `.xaml` file with its `.pas` unit, used in other XAML as `<local:Name/>` with its own properties and events.
+- **Hot reload.** Edit the XAML while the app runs in Debug: windows, pages and user controls update at once and keep their data. An edit that needs new code says "Rebuild needed" ([docs](docs/HOT-RELOAD.md)).
 - **WinUI inside VCL forms.** `TWinUIHost` on the Tool Palette puts WinUI content on an existing VCL form, bound to your data and wired to the form's event handlers, so a VCL application gets a modern screen one panel at a time ([docs](docs/VCL-HOSTING.md)).
 - **Several windows.** Tool windows, modal windows with a result, VCL-style `OnCloseQuery` and `OnClose`, full screen, compact overlay, a window that opens where the user left it, and WinUI's TitleBar control or a title bar of your own.
 - **App services.** Message and input boxes, file and folder pickers, Windows notifications you can answer, single instance, and the files and links Windows starts your app for.

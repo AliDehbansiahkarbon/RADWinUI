@@ -2,7 +2,7 @@
 
 {
   TMainWindowBase: base class of TMainWindow, generated from MainWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change MainWindow.xaml or the published handlers of TMainWindow
   in MainWindow.pas; the build regenerates this unit.
@@ -70,12 +70,21 @@ type
     BubbleBar: TWinUIBubbleFloatTabBar;      // MainWindow.xaml(506) <BubbleFloatTabBar>
     StatusDot: TWinUIEllipse;                // MainWindow.xaml(521) <Ellipse>
     StatusText: TWinUITextBlock;             // MainWindow.xaml(522) <TextBlock>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // MainWindow.xaml(14): the content element; event attributes became the
@@ -594,6 +603,19 @@ const
     '      </Grid>' + sLineBreak +
     '    </ScrollViewer>' + sLineBreak +
     '  </Grid>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:Root:TWinUIGrid;F:Glass:TWinUIBorder;F:VioletSwatch:TWinUIButton;F:SunsetSwatch:TWinUIButton;F:MintSwatch:TWinUIButton;F:AuroraSwatch:TWinUIButton;F:SpeedText:TWinUITextBlock;F:SpeedSlider:TWinUISli' +
+    'der;F:LabelsSwitch:TWinUIToggleSwitch;F:TourSwitch:TWinUIToggleSwitch;F:GlassText:TWinUITextBlock;F:TransparencySwitch:TWinUIToggleSwitch;F:GlassSlider:TWinUISlider;F:PillHome:TWinUIStackPanel;F:PillS' +
+    'earch:TWinUIStackPanel;F:PillLikes:TWinUIStackPanel;F:PillProfile:TWinUIStackPanel;F:PillBar:TWinUISlidingPillTabBar;F:BulgeListen:TWinUIStackPanel;F:BulgeExplore:TWinUIStackPanel;F:BulgeLibrary:TWinU' +
+    'IStackPanel;F:BulgeMe:TWinUIStackPanel;F:BulgeBar:TWinUILiquidBulgeTabBar;F:NotchShop:TWinUIStackPanel;F:NotchCart:TWinUIStackPanel;F:NotchSaved:TWinUIStackPanel;F:NotchAccount:TWinUIStackPanel;F:Notc' +
+    'hBar:TWinUIFloatingNotchTabBar;F:FillFeed:TWinUIStackPanel;F:FillChat:TWinUIStackPanel;F:FillLikes:TWinUIStackPanel;F:FillProfile:TWinUIStackPanel;F:FillBar:TWinUIIconFillTabBar;F:LabelExplore:TWinUIS' +
+    'tackPanel;F:LabelTrips:TWinUIStackPanel;F:LabelSaved:TWinUIStackPanel;F:LabelProfile:TWinUIStackPanel;F:LabelBar:TWinUIExpandingLabelTabBar;F:BubblePhotos:TWinUIStackPanel;F:BubbleAlbums:TWinUIStackPa' +
+    'nel;F:BubbleCamera:TWinUIStackPanel;F:BubbleSettings:TWinUIStackPanel;F:BubbleBar:TWinUIBubbleFloatTabBar;F:StatusDot:TWinUIEllipse;F:StatusText:TWinUITextBlock;E:AuroraSwatch.Click=AuroraClick;E:Bubb' +
+    'leBar.SelectionChanged=TabChanged;E:BulgeBar.SelectionChanged=TabChanged;E:FillBar.SelectionChanged=TabChanged;E:GlassSlider.ValueChanged=GlassChanged;E:LabelBar.SelectionChanged=TabChanged;E:LabelsSw' +
+    'itch.Toggled=LabelsToggled;E:MintSwatch.Click=MintClick;E:NotchBar.SelectionChanged=TabChanged;E:PillBar.SelectionChanged=TabChanged;E:SpeedSlider.ValueChanged=SpeedChanged;E:SunsetSwatch.Click=Sunset' +
+    'Click;E:TourSwitch.Toggled=TourToggled;E:TransparencySwitch.Toggled=TransparencyToggled;E:VioletSwatch.Click=VioletClick';
+  {$ENDIF}
 
 constructor TMainWindowBase.Create;
 begin
@@ -608,6 +630,15 @@ begin
   ExtendsContentIntoTitleBar := True;
   Center;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'MainWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TMainWindowBase.WireXaml;
+begin
   // x:Name elements
   Root := FindElement<TWinUIGrid>('Root');
   Glass := FindElement<TWinUIBorder>('Glass');
@@ -686,5 +717,14 @@ begin
   // MainWindow.xaml(506): SelectionChanged="TabChanged"
   BubbleBar.OnSelectionChanged := TWinUIWinValueEventHandler(PublishedMethod('TabChanged'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: MainWindow.xaml edited in the IDE while the app runs
+procedure TMainWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

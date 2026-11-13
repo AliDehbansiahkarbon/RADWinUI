@@ -2,7 +2,7 @@
 
 {
   TMainWindowBase: base class of TMainWindow, generated from MainWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change MainWindow.xaml or the published handlers of TMainWindow
   in MainWindow.pas; the build regenerates this unit.
@@ -26,12 +26,21 @@ type
   protected
     CounterText: TWinUITextBlock;   // MainWindow.xaml(7) <TextBlock>
     IncrementButton: TWinUIButton;  // MainWindow.xaml(8) <Button>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // MainWindow.xaml(6): the content element; event attributes became the
@@ -42,6 +51,10 @@ const
     '        <Button x:Name="IncrementButton" Content="Increment" />' + sLineBreak +
     '        <Button Content="Reset" x:Name="_rw1" />' + sLineBreak +
     '    </StackPanel>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:CounterText:TWinUITextBlock;F:IncrementButton:TWinUIButton;E:IncrementButton.Click=IncrementButtonClick;E:_rw1.Click=ResetClick';
+  {$ENDIF}
 
 constructor TMainWindowBase.Create;
 begin
@@ -51,6 +64,15 @@ begin
   Width := 360;
   Height := 280;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'MainWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TMainWindowBase.WireXaml;
+begin
   // x:Name elements
   CounterText := FindElement<TWinUITextBlock>('CounterText');
   IncrementButton := FindElement<TWinUIButton>('IncrementButton');
@@ -60,5 +82,14 @@ begin
   // MainWindow.xaml(9): Click="ResetClick"
   FindElement<TWinUIButton>('_rw1').OnClick := TWinUIRoutedEventHandler(PublishedMethod('ResetClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: MainWindow.xaml edited in the IDE while the app runs
+procedure TMainWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

@@ -28,6 +28,8 @@ Windows App SDK 2.6.5   Microsoft.UI.Xaml (real WinUI 3 controls), DispatcherQue
 
 **Framework** (`src/Framework`). The developer-facing API: Pascal properties, events as method pointers with automatic token removal, WinRT errors as Delphi exceptions, `{Binding}` support through RTTI-based `INotifyPropertyChanged` and `ICustomPropertyProvider`. `RADWinUI.VclHost` puts WinUI content on VCL forms (`TWinUIHost`, XAML Islands): the first host starts WinUI on the VCL main thread, and the IDE packages build the same unit as a placeholder without WinUI ([WinUI inside VCL forms](VCL-HOSTING.md)).
 
+**Hot reload** (`RADWinUI.HotReload` in Debug builds, `RADWinUI.Preview.HotReload` in the IDE). The IDE sends an edited `.xaml` file, turned by XamlCodeGen into content and shape, over a named pipe to the Debug apps built from its folder. Their generated units load it again on the UI thread when the compiled fields and events still fit ([Hot reload](HOT-RELOAD.md)).
+
 **XAML code generation** (`tools/XamlCodeGen`, built into `bin\XamlCodeGen.exe`). Reads a `.xaml` file and emits a generated base class (`TMainWindowBase`) with one typed field per `x:Name` and the XAML embedded as a string constant, it checks handlers, binding paths and converters at build time ([XAML reference](XAML.md)). The user's class inherits from it, because Delphi has no partial classes. Handlers are wired by naming convention (`IncrementButtonClick`) or an attribute.
 
 **IDE** (`src/IDE`). Design-time packages:

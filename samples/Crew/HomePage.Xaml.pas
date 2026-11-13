@@ -2,7 +2,7 @@
 
 {
   THomePageBase: base class of the page THomePage, generated from HomePage.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change HomePage.xaml or the published handlers of THomePage
   in HomePage.pas; the build regenerates this unit.
@@ -27,12 +27,21 @@ type
   protected
     PageTitle: TWinUITextBlock;  // HomePage.xaml(8) <TextBlock>
     Summary: TWinUITextBlock;    // HomePage.xaml(9) <TextBlock>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // HomePage.xaml(1): the page; event attributes became the
@@ -52,10 +61,23 @@ const
     '    </StackPanel>' + sLineBreak +
     '  </ScrollViewer>' + sLineBreak +
     '</Page>';
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:PageTitle:TWinUITextBlock;F:Summary:TWinUITextBlock;E:_rw1.Opened=CardOpened;E:_rw2.Opened=CardOpened;E:_rw3.Opened=CardOpened;E:_rw4.Click=EveryoneClick';
+  {$ENDIF}
 
 constructor THomePageBase.Create;
 begin
   inherited CreateFromXaml(PageXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'HomePage.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure THomePageBase.WireXaml;
+begin
   // x:Name elements
   PageTitle := FindElement<TWinUITextBlock>('PageTitle');
   Summary := FindElement<TWinUITextBlock>('Summary');
@@ -69,5 +91,14 @@ begin
   // HomePage.xaml(15): Click="EveryoneClick"
   FindElement<TWinUIHyperlinkButton>('_rw4').Click.Add(NotifyProc<TWinUIRoutedEventArgs>('EveryoneClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: HomePage.xaml edited in the IDE while the app runs
+procedure THomePageBase.ReloadXaml(const AXaml: string);
+begin
+  ReplaceXaml(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

@@ -2,7 +2,7 @@
 
 {
   TFirstPageBase: base class of the page TFirstPage, generated from FirstPage.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change FirstPage.xaml or the published handlers of TFirstPage
   in FirstPage.pas; the build regenerates this unit.
@@ -28,12 +28,21 @@ type
     Caption: TWinUITextBlock;  // FirstPage.xaml(7) <TextBlock>
     CardOne: TInfoCard;        // FirstPage.xaml(8) <InfoCard>
     CardTwo: TInfoCard;        // FirstPage.xaml(9) <InfoCard>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // FirstPage.xaml(1): the page; event attributes became the
@@ -46,10 +55,23 @@ const
     '    <ns2:InfoCard x:Name="CardTwo" Title="Two" />' + sLineBreak +
     '  </StackPanel>' + sLineBreak +
     '</Page>';
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:Caption:TWinUITextBlock;F:CardOne:TInfoCard;F:CardTwo:TInfoCard;E:CardOne.Clicked=CardClicked;E:CardTwo.Clicked=CardClicked';
+  {$ENDIF}
 
 constructor TFirstPageBase.Create;
 begin
   inherited CreateFromXaml(PageXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'FirstPage.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TFirstPageBase.WireXaml;
+begin
   // x:Name elements
   Caption := FindElement<TWinUITextBlock>('Caption');
   CardOne := FindElement<TInfoCard>('CardOne');
@@ -60,5 +82,14 @@ begin
   // FirstPage.xaml(9): Clicked="CardClicked"
   CardTwo.OnClicked := TWinUIWinValueEventHandler(PublishedMethod('CardClicked'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: FirstPage.xaml edited in the IDE while the app runs
+procedure TFirstPageBase.ReloadXaml(const AXaml: string);
+begin
+  ReplaceXaml(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

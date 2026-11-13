@@ -2,7 +2,7 @@
 
 {
   TMainWindowBase: base class of TMainWindow, generated from MainWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change MainWindow.xaml or the published handlers of TMainWindow
   in MainWindow.pas; the build regenerates this unit.
@@ -44,6 +44,10 @@ type
     SweepSwitch: TWinUIToggleSwitch;     // MainWindow.xaml(396) <ToggleSwitch>
     GoalCaptionLabel: TWinUITextBlock;   // MainWindow.xaml(540) <TextBlock>
     GoalList: TWinUIListView;            // MainWindow.xaml(543) <ListView>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
     /// <summary>
@@ -55,6 +59,11 @@ type
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // MainWindow.xaml(12): the content element; event attributes became the
@@ -618,6 +627,13 @@ const
     '      </ScrollViewer>' + sLineBreak +
     '    </Border>' + sLineBreak +
     '  </Grid>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:Surface:TWinUIGrid;F:DragRegion:TWinUIGrid;F:WelcomeText:TWinUITextBlock;F:TotalLabel:TWinUITextBlock;F:AddMoneyButton:TWinUIButton;F:WeekLabel:TWinUITextBlock;F:CountdownLabel:TWinUITextBlock;F:Pla' +
+    'yButton:TWinUIButton;F:PauseButton:TWinUIButton;F:RulesExpander:TWinUIExpander;F:AutoSaveLabel:TWinUITextBlock;F:RoundUpsSwitch:TWinUIToggleSwitch;F:PaydaySwitch:TWinUIToggleSwitch;F:SweepSwitch:TWinU' +
+    'IToggleSwitch;F:GoalCaptionLabel:TWinUITextBlock;F:GoalList:TWinUIListView;E:AddMoneyButton.Click=AddMoneyClick;E:GoalList.ItemClick=GoalClick;E:PauseButton.Click=PauseClick;E:PlayButton.Click=PlayCli' +
+    'ck';
+  {$ENDIF}
 
 constructor TMainWindowBase.Create;
 begin
@@ -631,6 +647,15 @@ begin
   ExtendsContentIntoTitleBar := True;
   Center;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'MainWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TMainWindowBase.WireXaml;
+begin
   // x:Name elements
   Surface := FindElement<TWinUIGrid>('Surface');
   DragRegion := FindElement<TWinUIGrid>('DragRegion');
@@ -658,6 +683,15 @@ begin
   // MainWindow.xaml(543): ItemClick="GoalClick"
   GoalList.OnItemClick := TWinUIItemClickEventHandler(PublishedMethod('GoalClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: MainWindow.xaml edited in the IDE while the app runs
+procedure TMainWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 procedure TMainWindowBase.SetViewModel(AValue: TMainViewModel);
 begin

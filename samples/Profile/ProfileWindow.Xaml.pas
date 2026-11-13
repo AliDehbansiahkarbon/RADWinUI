@@ -2,7 +2,7 @@
 
 {
   TProfileWindowBase: base class of TProfileWindow, generated from ProfileWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change ProfileWindow.xaml or the published handlers of TProfileWindow
   in ProfileWindow.pas; the build regenerates this unit.
@@ -35,6 +35,10 @@ type
     Greeting: TWinUITextBlock;   // ProfileWindow.xaml(19) <TextBlock>
     CityUpper: TWinUITextBlock;  // ProfileWindow.xaml(20) <TextBlock>
     VipBadge: TWinUITextBlock;   // ProfileWindow.xaml(21) <TextBlock>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
     /// <summary>
@@ -46,6 +50,11 @@ type
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // ProfileWindow.xaml(10): the content element; event attributes became the
@@ -63,6 +72,11 @@ const
     '        <TextBlock x:Name="VipBadge" Text="VIP customer" Visibility="{Binding IsVip, Converter={StaticResource BoolToVisibility}}" />' + sLineBreak +
     '        <Button Content="Reset from code" x:Name="_rw1" />' + sLineBreak +
     '    </StackPanel>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:NameBox:TWinUITextBox;F:CityBox:TWinUITextBox;F:VipBox:TWinUICheckBox;F:Summary:TWinUITextBlock;F:Greeting:TWinUITextBlock;F:CityUpper:TWinUITextBlock;F:VipBadge:TWinUITextBlock;E:_rw1.Click=ResetCl' +
+    'ick';
+  {$ENDIF}
 
 constructor TProfileWindowBase.Create;
 begin
@@ -72,6 +86,15 @@ begin
   Width := 420;
   Height := 460;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'ProfileWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TProfileWindowBase.WireXaml;
+begin
   // x:Name elements
   NameBox := FindElement<TWinUITextBox>('NameBox');
   CityBox := FindElement<TWinUITextBox>('CityBox');
@@ -84,6 +107,15 @@ begin
   // ProfileWindow.xaml(23): Click="ResetClick"
   FindElement<TWinUIButton>('_rw1').OnClick := TWinUIRoutedEventHandler(PublishedMethod('ResetClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: ProfileWindow.xaml edited in the IDE while the app runs
+procedure TProfileWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 procedure TProfileWindowBase.SetViewModel(AValue: TProfile);
 begin

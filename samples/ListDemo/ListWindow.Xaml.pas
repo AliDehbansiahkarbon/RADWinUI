@@ -2,7 +2,7 @@
 
 {
   TListWindowBase: base class of TListWindow, generated from ListWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change ListWindow.xaml or the published handlers of TListWindow
   in ListWindow.pas; the build regenerates this unit.
@@ -27,12 +27,21 @@ type
     Fruits: TWinUIListView;   // ListWindow.xaml(7) <ListView>
     NewItem: TWinUITextBox;   // ListWindow.xaml(13) <TextBox>
     Status: TWinUITextBlock;  // ListWindow.xaml(17) <TextBlock>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // ListWindow.xaml(6): the content element; event attributes became the
@@ -51,6 +60,10 @@ const
     '        </StackPanel>' + sLineBreak +
     '        <TextBlock x:Name="Status" />' + sLineBreak +
     '    </StackPanel>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:Fruits:TWinUIListView;F:NewItem:TWinUITextBox;F:Status:TWinUITextBlock;E:Fruits.SelectionChanged=FruitsSelectionChanged;E:_rw1.Click=AddClick;E:_rw2.Click=RemoveClick';
+  {$ENDIF}
 
 constructor TListWindowBase.Create;
 begin
@@ -60,6 +73,15 @@ begin
   Width := 420;
   Height := 520;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'ListWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TListWindowBase.WireXaml;
+begin
   // x:Name elements
   Fruits := FindElement<TWinUIListView>('Fruits');
   NewItem := FindElement<TWinUITextBox>('NewItem');
@@ -72,5 +94,14 @@ begin
   // ListWindow.xaml(15): Click="RemoveClick"
   FindElement<TWinUIButton>('_rw2').OnClick := TWinUIRoutedEventHandler(PublishedMethod('RemoveClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: ListWindow.xaml edited in the IDE while the app runs
+procedure TListWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

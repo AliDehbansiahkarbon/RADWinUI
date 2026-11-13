@@ -10,6 +10,9 @@ unit RADWinUI.Designer.Settings;
 interface
 
 type
+  /// <summary>When the IDE sends an edited .xaml file to the app it is running (Debug builds).</summary>
+  TRADWinUIHotReload = (hrOff, hrOnSave, hrWhileTyping);
+
   TRADWinUISettings = record
     /// <summary>AI suggestions while typing in .xaml files (ghost text, Tab inserts).</summary>
     AISuggestions: Boolean;
@@ -19,6 +22,8 @@ type
     CodeCompletion: Boolean;
     /// <summary>Ctrl+Alt+Space with lines selected puts them in the prompt bar.</summary>
     PromptWithSelection: Boolean;
+    /// <summary>Hot reload: off, when a .xaml file is saved, or while typing (the default).</summary>
+    HotReload: TRADWinUIHotReload;
     const
       DefaultDelay = 250;
       MinDelay = 100;
@@ -44,6 +49,7 @@ const
   DelayValue = 'XamlAISuggestionDelay';
   CodeCompletionValue = 'XamlCodeCompletion';
   PromptWithSelectionValue = 'XamlPromptWithSelection';
+  HotReloadValue = 'XamlHotReload';
   VersionValue = 'SettingsVersion';
   Version = 2;
   OldDefaultDelay = 500; // version 1 saved the default of its time
@@ -54,6 +60,7 @@ begin
   Result.SuggestionDelay := DefaultDelay;
   Result.CodeCompletion := True;
   Result.PromptWithSelection := True;
+  Result.HotReload := hrWhileTyping;
 end;
 
 class function TRADWinUISettings.Load(const AKey: string): TRADWinUISettings;
@@ -85,6 +92,9 @@ begin
       Result.CodeCompletion := Value <> 0;
     if ReadInt(PromptWithSelectionValue, Value) then
       Result.PromptWithSelection := Value <> 0;
+    if ReadInt(HotReloadValue, Value) and (Value >= Ord(Low(TRADWinUIHotReload))) and
+      (Value <= Ord(High(TRADWinUIHotReload))) then
+      Result.HotReload := TRADWinUIHotReload(Value);
     if ReadInt(DelayValue, Value) and (Value >= MinDelay) and (Value <= MaxDelay) and
       not ((Saved < 2) and (Value = OldDefaultDelay)) then
       Result.SuggestionDelay := Value;
@@ -106,6 +116,7 @@ begin
     Registry.WriteInteger(DelayValue, SuggestionDelay);
     Registry.WriteInteger(CodeCompletionValue, Ord(CodeCompletion));
     Registry.WriteInteger(PromptWithSelectionValue, Ord(PromptWithSelection));
+    Registry.WriteInteger(HotReloadValue, Ord(HotReload));
     Registry.WriteInteger(VersionValue, Version);
   finally
     Registry.Free;

@@ -2,7 +2,7 @@
 
 {
   TCachedPageBase: base class of the page TCachedPage, generated from CachedPage.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change CachedPage.xaml or the published handlers of TCachedPage
   in CachedPage.pas; the build regenerates this unit.
@@ -25,12 +25,21 @@ type
   TCachedPageBase = class(TWinUIXamlPage)
   protected
     CountText: TWinUITextBlock;  // CachedPage.xaml(5) <TextBlock>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // CachedPage.xaml(1): the page; event attributes became the
@@ -39,12 +48,34 @@ const
     '<Page xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">' + sLineBreak +
     '  <TextBlock x:Name="CountText" />' + sLineBreak +
     '</Page>';
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:CountText:TWinUITextBlock;';
+  {$ENDIF}
 
 constructor TCachedPageBase.Create;
 begin
   inherited CreateFromXaml(PageXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'CachedPage.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TCachedPageBase.WireXaml;
+begin
   // x:Name elements
   CountText := FindElement<TWinUITextBlock>('CountText');
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: CachedPage.xaml edited in the IDE while the app runs
+procedure TCachedPageBase.ReloadXaml(const AXaml: string);
+begin
+  ReplaceXaml(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.

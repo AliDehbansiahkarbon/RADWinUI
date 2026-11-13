@@ -2,7 +2,7 @@
 
 {
   TMainWindowBase: base class of TMainWindow, generated from MainWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change MainWindow.xaml or the published handlers of TMainWindow
   in MainWindow.pas; the build regenerates this unit.
@@ -247,6 +247,10 @@ type
     ActivityList: TWinUIItemsControl;          // MainWindow.xaml(2349) <ItemsControl>
     Toast: TWinUIBorder;                       // MainWindow.xaml(2379) <Border>
     ToastTitleLabel: TWinUITextBlock;          // MainWindow.xaml(2392) <TextBlock>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
     /// <summary>
@@ -258,6 +262,11 @@ type
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // MainWindow.xaml(13): the content element; event attributes became the
@@ -2652,6 +2661,57 @@ const
     '      </Grid>' + sLineBreak +
     '    </Border>' + sLineBreak +
     '  </Grid>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:Surface:TWinUIGrid;F:SolidBase:TWinUIBorder;F:Orb1:TWinUIEllipse;F:Orb2:TWinUIEllipse;F:Ribbon1:TWinUICanvas;F:Ribbon2:TWinUICanvas;F:Ribbon3:TWinUICanvas;F:Bubble1:TWinUIEllipse;F:Bubble2:TWinUIEll' +
+    'ipse;F:Bubble3:TWinUIEllipse;F:Bubble4:TWinUIEllipse;F:Bubble5:TWinUIEllipse;F:Bubble6:TWinUIEllipse;F:Bubble7:TWinUIEllipse;F:Bubble8:TWinUIEllipse;F:Bubble9:TWinUIEllipse;F:Bubble10:TWinUIEllipse;F:' +
+    'Bubble11:TWinUIEllipse;F:Bubble12:TWinUIEllipse;F:DragRegion:TWinUIGrid;F:NavIndicator:TWinUIBorder;F:NavBar:TWinUIStackPanel;F:NavOverview:TWinUIButton;F:NavApps:TWinUIButton;F:NavReleases:TWinUIButt' +
+    'on;F:NavReviews:TWinUIButton;F:NavAudience:TWinUIButton;F:NavGrowth:TWinUIButton;F:NavPayouts:TWinUIButton;F:NavTeam:TWinUIButton;F:InboxButton:TWinUIButton;F:InboxList:TWinUIItemsControl;F:BellButton' +
+    ':TWinUIButton;F:NoticeList:TWinUIItemsControl;F:BellDot:TWinUIEllipse;F:AvatarButton:TWinUIButton;F:MenuTheme:TWinUIMenuFlyoutItem;F:MenuTeam:TWinUIMenuFlyoutItem;F:RailSearch:TWinUIButton;F:RailNew:T' +
+    'WinUIButton;F:RailCalendar:TWinUIButton;F:ReleaseCalendar:TWinUICalendarView;F:RailUndo:TWinUIButton;F:RailShare:TWinUIButton;F:RailUpload:TWinUIButton;F:RailSettings:TWinUIButton;F:LiveSwitch:TWinUIT' +
+    'oggleSwitch;F:MotionSwitch:TWinUIToggleSwitch;F:TransparencySwitch:TWinUIToggleSwitch;F:RailTheme:TWinUIButton;F:ThemeGlyph:TWinUIFontIcon;F:LiveButton:TWinUIButton;F:LivePulse:TWinUIEllipse;F:PageHos' +
+    't:TWinUIGrid;F:PageOverview:TWinUIScrollViewer;F:OvTitle:TWinUIStackPanel;F:OvKpis:TWinUIStackPanel;F:OvProceedsLabel:TWinUITextBlock;F:ProceedsColumn:TWinUIColumnDefinition;F:RatingsColumn:TWinUIColu' +
+    'mnDefinition;F:ProceedsCard:TWinUIBorder;F:ChartTitle:TWinUITextBlock;F:SeriesProceeds:TWinUIToggleButton;F:SeriesDownloads:TWinUIToggleButton;F:MenuExportChart:TWinUIMenuFlyoutItem;F:MenuLastYear:TWi' +
+    'nUIToggleMenuFlyoutItem;F:ExpandButton:TWinUIButton;F:ExpandGlyph:TWinUIFontIcon;F:ProceedsCanvas:TWinUICanvas;F:ProceedsArea:TWinUIPolygon;F:ProceedsLastYear:TWinUIPolyline;F:ProceedsLine:TWinUIPolyl' +
+    'ine;F:ProceedsGlow:TWinUIEllipse;F:ProceedsDot:TWinUIEllipse;F:RatingsCard:TWinUIBorder;F:StarBarList:TWinUIItemsControl;F:YourAppsCard:TWinUIBorder;F:AllAppsButton:TWinUIButton;F:OverviewApps:TWinUIG' +
+    'ridView;F:PageApps:TWinUIScrollViewer;F:ApTitle:TWinUIStackPanel;F:ApKpis:TWinUIStackPanel;F:ApToolbar:TWinUIGrid;F:AppSearch:TWinUITextBox;F:SortProceeds:TWinUIToggleButton;F:SortDownloads:TWinUITogg' +
+    'leButton;F:SortRating:TWinUIToggleButton;F:AppGrid:TWinUIGridView;F:NoAppsText:TWinUITextBlock;F:PageDetail:TWinUIScrollViewer;F:BackButton:TWinUIButton;F:DeTitle:TWinUIStackPanel;F:DetailNameLabel:TW' +
+    'inUITextBlock;F:DeKpis:TWinUIStackPanel;F:DetailHero:TWinUIGrid;F:DetailSparkCanvas:TWinUICanvas;F:DetailSpark:TWinUIPolyline;F:DetailTabs:TWinUIStackPanel;F:DetailTabOverview:TWinUIToggleButton;F:Det' +
+    'ailTabVersions:TWinUIToggleButton;F:DetailTabIap:TWinUIToggleButton;F:DetailTabReviews:TWinUIToggleButton;F:DetailBody:TWinUIGrid;F:DetailOverview:TWinUIGrid;F:DetailCanvas:TWinUICanvas;F:DetailArea:T' +
+    'WinUIPolygon;F:DetailLine:TWinUIPolyline;F:DetailBars:TWinUIItemsControl;F:DetailVersions:TWinUIBorder;F:VersionList:TWinUIItemsControl;F:DetailIap:TWinUIBorder;F:IapList:TWinUIItemsControl;F:DetailRe' +
+    'views:TWinUIBorder;F:DetailReviewList:TWinUIItemsControl;F:PageReleases:TWinUIScrollViewer;F:ReTitle:TWinUIStackPanel;F:ReKpis:TWinUIStackPanel;F:InFlightLabel:TWinUITextBlock;F:ReToolbar:TWinUIGrid;F' +
+    ':NewReleaseButton:TWinUIButton;F:FilterAll:TWinUIToggleButton;F:Filter0:TWinUIToggleButton;F:Filter1:TWinUIToggleButton;F:Filter2:TWinUIToggleButton;F:Filter3:TWinUIToggleButton;F:Filter4:TWinUIToggle' +
+    'Button;F:Filter5:TWinUIToggleButton;F:ViewBoard:TWinUIToggleButton;F:ViewTimeline:TWinUIToggleButton;F:BoardCard:TWinUIBorder;F:Column0:TWinUIListView;F:Column1:TWinUIListView;F:Column2:TWinUIListView' +
+    ';F:Column3:TWinUIListView;F:Column4:TWinUIListView;F:TimelineCard:TWinUIBorder;F:TimelineList:TWinUIItemsControl;F:PageReviews:TWinUIScrollViewer;F:RvTitle:TWinUIStackPanel;F:RvKpis:TWinUIStackPanel;F' +
+    ':WrittenLabel:TWinUITextBlock;F:RvSummary:TWinUIBorder;F:ReviewBars:TWinUIItemsControl;F:RvList:TWinUIStackPanel;F:StarsAll:TWinUIToggleButton;F:Stars5:TWinUIToggleButton;F:Stars4:TWinUIToggleButton;F' +
+    ':Stars3:TWinUIToggleButton;F:Stars2:TWinUIToggleButton;F:Stars1:TWinUIToggleButton;F:ReviewAppBox:TWinUIComboBox;F:ReviewList:TWinUIListView;F:PageAudience:TWinUIScrollViewer;F:AuTitle:TWinUIStackPane' +
+    'l;F:AuKpis:TWinUIStackPanel;F:AuFilters:TWinUIStackPanel;F:AudAll:TWinUIToggleButton;F:Aud0:TWinUIToggleButton;F:Aud1:TWinUIToggleButton;F:Aud2:TWinUIToggleButton;F:Aud3:TWinUIToggleButton;F:Aud4:TWin' +
+    'UIToggleButton;F:Aud5:TWinUIToggleButton;F:SubsCard:TWinUIBorder;F:SubsCanvas:TWinUICanvas;F:SubsArea:TWinUIPolygon;F:TrialLine:TWinUIPolyline;F:SubsLine:TWinUIPolyline;F:SubsHover:TWinUIGrid;F:SubsGu' +
+    'ide:TWinUIRectangle;F:SubsDot:TWinUIEllipse;F:TrialDot:TWinUIEllipse;F:SubsTip:TWinUIBorder;F:TipMonth:TWinUITextBlock;F:TipSubs:TWinUITextBlock;F:TipTrial:TWinUITextBlock;F:PlansCard:TWinUIBorder;F:D' +
+    'onut:TWinUIGrid;F:PlanArc0:TWinUIEllipse;F:PlanArc1:TWinUIEllipse;F:PlanArc2:TWinUIEllipse;F:CohortCard:TWinUIBorder;F:ExportCsvButton:TWinUIButton;F:CohortList:TWinUIItemsControl;F:CancelCard:TWinUIB' +
+    'order;F:CancelList:TWinUIItemsControl;F:PageGrowth:TWinUIScrollViewer;F:GrTitle:TWinUIStackPanel;F:GrKpis:TWinUIStackPanel;F:SourcesCard:TWinUIBorder;F:SourceList:TWinUIItemsControl;F:FunnelCard:TWinU' +
+    'IBorder;F:FunnelList:TWinUIItemsControl;F:RegionsCard:TWinUIBorder;F:RegionList:TWinUIItemsControl;F:CampaignCard:TWinUIBorder;F:CampaignList:TWinUIItemsControl;F:PagePayouts:TWinUIScrollViewer;F:PaTi' +
+    'tle:TWinUIStackPanel;F:PaKpis:TWinUIStackPanel;F:NextPayoutCard:TWinUIGrid;F:NextPayoutLabel:TWinUITextBlock;F:SplitCard:TWinUIBorder;F:SplitList:TWinUIItemsControl;F:HistoryCard:TWinUIBorder;F:Statem' +
+    'entButton:TWinUIButton;F:PayoutList:TWinUIItemsControl;F:AccountRow:TWinUIGrid;F:InstantSwitch:TWinUIToggleSwitch;F:PageTeam:TWinUIScrollViewer;F:TeTitle:TWinUIStackPanel;F:TeKpis:TWinUIStackPanel;F:M' +
+    'embersLabel:TWinUITextBlock;F:InviteButton:TWinUIButton;F:TeamGrid:TWinUIGridView;F:ActivityCard:TWinUIBorder;F:ActivityList:TWinUIItemsControl;F:Toast:TWinUIBorder;F:ToastTitleLabel:TWinUITextBlock;E' +
+    ':AllAppsButton.Click=AllAppsClick;E:AppGrid.ItemClick=AppClick;E:AppSearch.TextChanged=AppSearchChanged;E:Aud0.Click=AudienceFilterClick;E:Aud1.Click=AudienceFilterClick;E:Aud2.Click=AudienceFilterCli' +
+    'ck;E:Aud3.Click=AudienceFilterClick;E:Aud4.Click=AudienceFilterClick;E:Aud5.Click=AudienceFilterClick;E:AudAll.Click=AudienceFilterClick;E:BackButton.Click=BackClick;E:BellButton.Click=BellClick;E:Col' +
+    'umn0.DragItemsCompleted=BoardDragCompleted;E:Column0.DragItemsStarting=BoardDragStarting;E:Column0.DragOver=BoardDragOver;E:Column0.Drop=BoardDrop;E:Column1.DragItemsCompleted=BoardDragCompleted;E:Col' +
+    'umn1.DragItemsStarting=BoardDragStarting;E:Column1.DragOver=BoardDragOver;E:Column1.Drop=BoardDrop;E:Column2.DragItemsCompleted=BoardDragCompleted;E:Column2.DragItemsStarting=BoardDragStarting;E:Colum' +
+    'n2.DragOver=BoardDragOver;E:Column2.Drop=BoardDrop;E:Column3.DragItemsCompleted=BoardDragCompleted;E:Column3.DragItemsStarting=BoardDragStarting;E:Column3.DragOver=BoardDragOver;E:Column3.Drop=BoardDr' +
+    'op;E:Column4.DragItemsCompleted=BoardDragCompleted;E:Column4.DragItemsStarting=BoardDragStarting;E:Column4.DragOver=BoardDragOver;E:Column4.Drop=BoardDrop;E:DetailCanvas.SizeChanged=ChartSizeChanged;E' +
+    ':DetailTabIap.Click=DetailTabClick;E:DetailTabOverview.Click=DetailTabClick;E:DetailTabReviews.Click=DetailTabClick;E:DetailTabVersions.Click=DetailTabClick;E:ExpandButton.Click=ExpandClick;E:ExportCs' +
+    'vButton.Click=ExportCsvClick;E:Filter0.Click=FilterClick;E:Filter1.Click=FilterClick;E:Filter2.Click=FilterClick;E:Filter3.Click=FilterClick;E:Filter4.Click=FilterClick;E:Filter5.Click=FilterClick;E:F' +
+    'ilterAll.Click=FilterClick;E:InviteButton.Click=InviteClick;E:LiveButton.Click=LiveClick;E:MenuExportChart.Click=ExportChartClick;E:MenuLastYear.Click=LastYearClick;E:MenuTeam.Click=MenuTeamClick;E:Me' +
+    'nuTheme.Click=ThemeClick;E:MotionSwitch.Toggled=MotionSwitchToggled;E:NavApps.Click=NavClick;E:NavAudience.Click=NavClick;E:NavGrowth.Click=NavClick;E:NavOverview.Click=NavClick;E:NavPayouts.Click=Nav' +
+    'Click;E:NavReleases.Click=NavClick;E:NavReviews.Click=NavClick;E:NavTeam.Click=NavClick;E:NewReleaseButton.Click=RailNewClick;E:OverviewApps.ItemClick=AppClick;E:ProceedsCanvas.SizeChanged=ChartSizeCh' +
+    'anged;E:RailNew.Click=RailNewClick;E:RailSearch.Click=RailSearchClick;E:RailShare.Click=RailShareClick;E:RailTheme.Click=ThemeClick;E:RailUndo.Click=RailUndoClick;E:RailUpload.Click=RailUploadClick;E:' +
+    'ReviewAppBox.SelectionChanged=ReviewAppChanged;E:ReviewList.ItemClick=ReviewClick;E:SeriesDownloads.Click=SeriesClick;E:SeriesProceeds.Click=SeriesClick;E:SortDownloads.Click=SortClick;E:SortProceeds.' +
+    'Click=SortClick;E:SortRating.Click=SortClick;E:Stars1.Click=StarsClick;E:Stars2.Click=StarsClick;E:Stars3.Click=StarsClick;E:Stars4.Click=StarsClick;E:Stars5.Click=StarsClick;E:StarsAll.Click=StarsCli' +
+    'ck;E:StatementButton.Click=StatementClick;E:SubsCanvas.SizeChanged=ChartSizeChanged;E:SubsHover.PointerExited=SubsPointerExited;E:SubsHover.PointerMoved=SubsPointerMoved;E:Surface.Loaded=SurfaceLoaded' +
+    ';E:Surface.SizeChanged=SurfaceSizeChanged;E:TransparencySwitch.Toggled=TransparencySwitchToggled;E:ViewBoard.Click=ViewClick;E:ViewTimeline.Click=ViewClick;E:_rw1.Click=RailNewClick;E:_rw2.Click=Colum' +
+    'nAddClick;E:_rw3.Click=ColumnAddClick;E:_rw4.Click=ColumnAddClick;E:_rw5.Click=ColumnAddClick;E:_rw6.Click=ColumnAddClick';
+  {$ENDIF}
 
 constructor TMainWindowBase.Create;
 begin
@@ -2666,6 +2726,15 @@ begin
   ExtendsContentIntoTitleBar := True;
   Center;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'MainWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TMainWindowBase.WireXaml;
+begin
   // x:Name elements
   Surface := FindElement<TWinUIGrid>('Surface');
   SolidBase := FindElement<TWinUIBorder>('SolidBase');
@@ -3084,6 +3153,15 @@ begin
   // MainWindow.xaml(2279): Click="InviteClick"
   InviteButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('InviteClick'));
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: MainWindow.xaml edited in the IDE while the app runs
+procedure TMainWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 procedure TMainWindowBase.SetViewModel(AValue: TMainViewModel);
 begin

@@ -90,6 +90,7 @@
         <DCCReference Include="..\src\IDE\Preview\RADWinUI.Preview.Command.pas"/>
         <DCCReference Include="..\src\Framework\RADWinUI.VclHost.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.VclHost.pas"/>
+        <DCCReference Include="..\src\IDE\Preview\RADWinUI.Preview.HotReload.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

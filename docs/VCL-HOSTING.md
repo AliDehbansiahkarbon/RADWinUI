@@ -18,7 +18,7 @@ At design time the host is a placeholder that names its content (`<StackPanel>, 
 | Member | |
 | --- | --- |
 | `Xaml` | The XAML of the content. When the root element has no `xmlns`, the WinUI namespaces (default and `x:`) are added. Changing it loads the content again: set the whole text at once (`Xaml.Text := ...`). |
-| `XamlFile` | A `.xaml` file that holds the content in place of `Xaml`: setting it clears `Xaml`. The **...** button in the Object Inspector picks the file and stores it relative to the project folder. A relative path is looked for next to the exe, then in the two folders above it (the project folder while the exe runs from `Win64\Debug`): deploy the file next to the exe. |
+| `XamlFile` | A `.xaml` file that holds the content in place of `Xaml`: setting it clears `Xaml`. In a Debug build, editing the file in the IDE reloads it in the running app ([Hot reload](HOT-RELOAD.md)). The **...** button in the Object Inspector picks the file and stores it relative to the project folder. A relative path is looked for next to the exe, then in the two folders above it (the project folder while the exe runs from `Win64\Debug`): deploy the file next to the exe. |
 | `Theme` | `htAuto` (default) picks light or dark from the host's `Color` and paints the content's background in that colour. `htLight` and `htDark` force the theme: the background stays the host's `Color` when it suits the theme, otherwise it is WinUI's own background for it (#F3F3F3 or #202020), so the text is always readable. |
 | `OnLoaded` | After the content loaded and its events were wired, the place to reach elements. It runs again after each reload. |
 | `Content` | The root element (`TWinUIFrameworkElement`), nil before the content loads. |

@@ -2,7 +2,7 @@
 
 {
   TMainWindowBase: base class of TMainWindow, generated from MainWindow.xaml
-  by RADWinUI XamlCodeGen 0.4 (tools/XamlCodeGen).
+  by RADWinUI XamlCodeGen 0.5 (tools/XamlCodeGen).
 
   DO NOT EDIT. Change MainWindow.xaml or the published handlers of TMainWindow
   in MainWindow.pas; the build regenerates this unit.
@@ -37,12 +37,21 @@ type
     MiniButton: TWinUIButton;         // MainWindow.xaml(70) <Button>
     FullScreenButton: TWinUIButton;   // MainWindow.xaml(71) <Button>
     Status: TWinUITextBlock;          // MainWindow.xaml(73) <TextBlock>
+    procedure WireXaml;
+    {$IFDEF DEBUG}
+    procedure ReloadXaml(const AXaml: string);
+    {$ENDIF}
   public
     constructor Create; override;
   end;
   {$M-}
 
 implementation
+
+{$IFDEF DEBUG}
+uses
+  RADWinUI.HotReload;
+{$ENDIF}
 
 const
   // MainWindow.xaml(11): the content element; event attributes became the
@@ -107,6 +116,13 @@ const
     '      </Border>' + sLineBreak +
     '    </Grid>' + sLineBreak +
     '  </Grid>' + sLineBreak;
+  {$IFDEF DEBUG}
+  // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild
+  XamlShape = 'F:AppTitleBar:TWinUITitleBar;F:SearchBox:TWinUIAutoSuggestBox;F:CountText:TWinUITextBlock;F:StationList:TWinUIListView;F:AddButton:TWinUIButton;F:StationName:TWinUITextBlock;F:GenreText:TWinUITextBloc' +
+    'k;F:Progress:TWinUIProgressBar;F:PlayButton:TWinUIButton;F:QueueButton:TWinUIButton;F:MiniButton:TWinUIButton;F:FullScreenButton:TWinUIButton;F:Status:TWinUITextBlock;E:AddButton.Click=AddClick;E:AppT' +
+    'itleBar.BackRequested=TitleBarBackRequested;E:FullScreenButton.Click=FullScreenClick;E:MiniButton.Click=MiniClick;E:PlayButton.Click=PlayClick;E:QueueButton.Click=QueueClick;E:SearchBox.TextChanged=Se' +
+    'archChanged;E:StationList.ItemClick=StationClick';
+  {$ENDIF}
 
 constructor TMainWindowBase.Create;
 begin
@@ -120,6 +136,15 @@ begin
   Backdrop := TWinUIBackdrop.Mica;
   Center;
   LoadContent(ContentXaml);
+  WireXaml;
+  {$IFDEF DEBUG}
+  AddHelper(TXamlHotReload.Watch(Self, 'MainWindow.xaml', XamlShape, ReloadXaml));
+  {$ENDIF}
+end;
+
+// The x:Name fields and the event wiring of the content, again after a hot reload
+procedure TMainWindowBase.WireXaml;
+begin
   // x:Name elements
   AppTitleBar := FindElement<TWinUITitleBar>('AppTitleBar');
   SearchBox := FindElement<TWinUIAutoSuggestBox>('SearchBox');
@@ -154,5 +179,14 @@ begin
   // MainWindow.xaml(1): TitleBar="AppTitleBar"
   UseTitleBar(AppTitleBar);
 end;
+
+{$IFDEF DEBUG}
+// Hot reload: MainWindow.xaml edited in the IDE while the app runs
+procedure TMainWindowBase.ReloadXaml(const AXaml: string);
+begin
+  LoadContent(AXaml);
+  WireXaml;
+end;
+{$ENDIF}
 
 end.
