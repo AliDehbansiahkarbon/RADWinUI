@@ -182,7 +182,14 @@ function FitXamlSuggestion(const AXaml: string; ACursor: Integer; const AAnswer:
 /// XAML spells them. False when an element is unknown or an attribute is lower case and
 /// unknown: the suggestion is not offered.</summary>
 function CorrectXamlSuggestion(const AXaml: string; ACursor: Integer; const ASuggestion: string;
-  const AVocabulary: IXamlVocabulary; out AGhost: TXamlGhost): Boolean;
+  const AVocabulary: IXamlVocabulary; out AGhost: TXamlGhost): Boolean; overload;
+/// <summary>The same, AUnknown names the element or attribute that made it False.</summary>
+function CorrectXamlSuggestion(const AXaml: string; ACursor: Integer; const ASuggestion: string;
+  const AVocabulary: IXamlVocabulary; out AGhost: TXamlGhost; out AUnknown: string): Boolean; overload;
+
+/// <summary>Whether AAnswer is a whole new version of AXaml, not a block to place: its root
+/// element and x:Class are the file's.</summary>
+function IsWholeXamlFile(const AXaml, AAnswer: string): Boolean;
 
 /// <summary>AXaml with AGhost written at ACursor: the typed part corrected and the text inserted.</summary>
 function ApplyXamlGhost(const AXaml: string; ACursor: Integer; const AGhost: TXamlGhost): string;
@@ -299,6 +306,34 @@ begin
     'WindowState and the like) and one content element.'#13#10;
 end;
 
+const
+  // How RADWinUI's own controls are written, and what they look like so an image can be matched to them.
+  // Keep it in step with docs\CUSTOM-CONTROLS.md.
+  OwnControlsReference =
+    'RADWinUI''s own controls (rw: prefix). They are set with attributes only and have no item or child ' +
+    'elements: there is no <rw:...Item>, <rw:...TabBarItem> or <rw:...TabBar.Items>.'#13#10 +
+    '- Tab bars, an app''s navigation bar of icon tabs (not WinUI''s TabView, which is a browser-like tab strip ' +
+    'with close buttons and a + button): rw:SlidingPillTabBar (a violet to cyan pill slides to the tapped tab), ' +
+    'rw:LiquidBulgeTabBar (the whole bar is a gradient that bulges under the active tab), rw:FloatingNotchTabBar ' +
+    '(a floating ball rides a curved notch in the bar, the label shows under it), rw:IconFillTabBar (the active ' +
+    'icon fills with the accent, a small bar under it), rw:ExpandingLabelTabBar (the active tab grows into a pill ' +
+    'with its label), rw:BubbleFloatTabBar (the active icon lifts and glows, bubbles float up). Their tabs: ' +
+    'Items="Label:Icon, Label:Icon" with icons such as Home, Search, Heart, Contact, Settings, Mail, Chat, Bell, ' +
+    'Calendar, Cart, Camera, Music, Star. A tab''s content is a separate element next to the bar, named in ' +
+    'Pages="HomePage, SearchPage" (one name per tab, the bar shows the selected one and collapses the others). ' +
+    'Also SelectedIndex, SelectionChanged="TabsChanged", ShowLabels, AccentFrom, AccentTo. Example:'#13#10 +
+    '  <Grid><Grid.RowDefinitions><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>' +
+    '<Grid x:Name="HomePage">...</Grid><Grid x:Name="SearchPage">...</Grid>' +
+    '<rw:FloatingNotchTabBar x:Name="Tabs" Grid.Row="1" Items="Home:Home, Search:Search" ' +
+    'Pages="HomePage, SearchPage"/></Grid>'#13#10 +
+    '- Action buttons, Text="..." and Click="...": rw:HoldButton (hold to confirm), rw:SendButton, ' +
+    'rw:ConfettiButton, rw:CopyButton (copies its Text), rw:ShineButton (a shine sweeps over it), rw:SlideButton ' +
+    '(slide to confirm).'#13#10 +
+    '- rw:GlowTile (a tile with a glow, Width, Height, Background, CornerRadius, GlowBrush; its content is one child ' +
+    'element), rw:NotchPanel, rw:HotKey Keys="Ctrl+Alt+T" and rw:MediaSession (no look).'#13#10 +
+    '- Data controls like the VCL''s, with DataSource="" and DataField="": rw:DBGrid, rw:DBNavigator, rw:DBText, ' +
+    'rw:DBEdit, rw:DBMemo, rw:DBImage, rw:DBCheckBox, rw:DBComboBox, rw:DBLookupComboBox and the others.'#13#10;
+
 function BuildXamlCompletion(const AXaml: string; ACursor: Integer;
   const AUserControls: TArray<string>): string;
 var
@@ -323,7 +358,7 @@ begin
     'Reply with only the XAML to insert at the cursor: no explanation, no code fences, no text before or after it, ' +
     'and do not repeat XAML that is already in the file. Keep the indentation of the surrounding lines. ' +
     'If nothing fits, reply with nothing.'#13#10 +
-    XamlRules(AXaml, AUserControls) + #13#10 +
+    XamlRules(AXaml, AUserControls) + OwnControlsReference + #13#10 +
     'The XAML file:'#13#10 + Input;
 end;
 
@@ -354,12 +389,18 @@ begin
     'The file is a RADWinUI ' + Root + ': WinUI 3 XAML for a Delphi app. ' + XamlCursorMarker +
     ' marks where your XAML goes; inside a panel it becomes the panel''s children.'#13#10 +
     'The user asks: ' + ADescription.Trim + #13#10 +
-    'Reply with only that XAML: no explanation, no code fences, nothing that is already in the file.'#13#10 +
+    'Reply with XAML only: no explanation, no comments about your changes, no code fences. Choose one of two ' +
+    'forms:'#13#10 +
+    '1. The request only adds UI: reply with just the new elements for the ' + XamlCursorMarker + ' place, ' +
+    'without the marker, nothing that is already in the file, and no xmlns declarations.'#13#10 +
+    '2. The request removes, moves, restyles or replaces existing UI: reply with the complete new file, ' +
+    'from its root start tag to its end tag. Copy the root start tag exactly as it is (element name, x:Class, ' +
+    'every xmlns declaration and attribute) and keep its one content element; it replaces the whole file.'#13#10 +
     'Layout: build it with Grid (RowDefinitions, ColumnDefinitions) and StackPanel (Spacing), never with absolute ' +
     'Margin positions. Give interactive elements and inputs an x:Name. Use realistic texts and labels, ' +
     '{ThemeResource ...} brushes for colours, and no event attributes such as Click unless the user asks for them. ' +
     'Write UI elements; resources (brushes, styles) only when the user asks for them.'#13#10 +
-    XamlRules(AXaml, AUserControls) + #13#10 +
+    XamlRules(AXaml, AUserControls) + OwnControlsReference + #13#10 +
     'The XAML file:'#13#10 + Input;
 end;
 
@@ -675,6 +716,14 @@ end;
 function CorrectXamlSuggestion(const AXaml: string; ACursor: Integer; const ASuggestion: string;
   const AVocabulary: IXamlVocabulary; out AGhost: TXamlGhost): Boolean;
 var
+  Unknown: string;
+begin
+  Result := CorrectXamlSuggestion(AXaml, ACursor, ASuggestion, AVocabulary, AGhost, Unknown);
+end;
+
+function CorrectXamlSuggestion(const AXaml: string; ACursor: Integer; const ASuggestion: string;
+  const AVocabulary: IXamlVocabulary; out AGhost: TXamlGhost; out AUnknown: string): Boolean;
+var
   LineStart, Open, I, TagEnd: Integer;
   Before, Typed, Fragment, Name, Exact, Owner, Member, Tag: string;
   Tags, Attributes: TMatchCollection;
@@ -689,6 +738,7 @@ var
 begin
   Result := False;
   AGhost := Default(TXamlGhost);
+  AUnknown := '';
   ACursor := ClampCursor(AXaml, ACursor);
   // The tag being typed: from its '<' on the cursor's line, when no '>' closed it
   LineStart := AXaml.LastIndexOf(#10, ACursor - 1) + 1;
@@ -714,6 +764,7 @@ begin
       // A property element: Grid.RowDefinitions, rw:TabBar.Items
       Owner := Name.Substring(0, Name.LastIndexOf('.'));
       Member := Name.Substring(Name.LastIndexOf('.') + 1);
+      AUnknown := '<' + Name + '>';
       Exact := AVocabulary.ExactTag(Owner);
       if Exact = '' then
         Exit;
@@ -725,6 +776,7 @@ begin
         Exit;
       Continue;
     end;
+    AUnknown := '<' + Name + '>';
     Exact := AVocabulary.ExactTag(Name);
     if Exact = '' then
       Exit; // <button> that is no type, <Buton>, an unknown control
@@ -747,6 +799,9 @@ begin
     begin
       Name := Attribute.Groups[1].Value;
       I := Match.Index - 1 + Attribute.Groups[1].Index - 1;
+      AUnknown := Name + ' on <' + Tag + '>';
+      if Name = 'xmlns' then
+        Continue; // the default namespace declaration of a whole file
       if Name.Contains(':') then
       begin
         // x:Name, d:Text, mc:Ignorable, xmlns:rw; rw:Name= is no attribute
@@ -771,12 +826,35 @@ begin
     end;
   end;
 
+  AUnknown := '';
   AGhost.TypedStart := LineStart + Open;
   if Typed = '' then
     AGhost.TypedStart := ACursor;
   AGhost.TypedFix := Copy(Fragment, 1, Length(Typed));
   AGhost.Text := Copy(Fragment, Length(Typed) + 1, MaxInt);
   Result := AGhost.Text <> '';
+end;
+
+function IsWholeXamlFile(const AXaml, AAnswer: string): Boolean;
+
+  function RootName(const ATag: string): string;
+  begin
+    Result := TRegEx.Match(ATag, '^<([A-Za-z_][\w.:\-]*)').Groups[1].Value;
+  end;
+
+  function ClassOf(const ATag: string): string;
+  begin
+    Result := TRegEx.Match(ATag, '\sx:Class\s*=\s*"([^"]*)"').Groups[1].Value;
+  end;
+
+var
+  FileRoot, AnswerRoot: string;
+begin
+  FileRoot := RootTagText(AXaml);
+  AnswerRoot := RootTagText(AAnswer);
+  Result := (FileRoot <> '') and (AnswerRoot <> '') and (RootName(FileRoot) = RootName(AnswerRoot)) and
+    (ClassOf(FileRoot) = ClassOf(AnswerRoot)) and
+    AAnswer.TrimRight.EndsWith('</' + RootName(FileRoot) + '>');
 end;
 
 function ApplyXamlGhost(const AXaml: string; ACursor: Integer; const AGhost: TXamlGhost): string;

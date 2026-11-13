@@ -21,6 +21,7 @@ uses
   RADWinUI.Designer.Palette in '..\..\src\IDE\Designer\RADWinUI.Designer.Palette.pas',
   RADWinUI.Designer.Model in '..\..\src\IDE\Designer\RADWinUI.Designer.Model.pas',
   RADWinUI.Designer.AICompletion in '..\..\src\IDE\Designer\RADWinUI.Designer.AICompletion.pas',
+  RADWinUI.Designer.Vision in '..\..\src\IDE\Designer\RADWinUI.Designer.Vision.pas',
   RADWinUI.Designer.Settings in '..\..\src\IDE\Designer\RADWinUI.Designer.Settings.pas',
   System.Win.Registry;
 
@@ -173,7 +174,7 @@ var
   Vocabulary: IXamlVocabulary;
   S: TXamlSuggestions;
   Ghost: TXamlGhost;
-  Text, NewText: string;
+  Text, NewText, Reason: string;
   NewCursor: Integer;
   ID: TGUID;
 
@@ -200,6 +201,43 @@ begin
     Check(Index.ExactTag('button') = 'Button', 'the metadata spells button as Button');
     Check(Index.ExactTag('rw:sendbutton') = 'rw:SendButton', 'and rw:sendbutton as rw:SendButton');
     Check(Index.ExactMember('Button', 'content') = 'Content', 'and content of a Button as Content');
+
+    // What gpt-5 sent for "remove all controls, keep the tab bar, a focus timer in the search tab"
+    // with a screenshot: the whole file. Its xmlns= on the root was taken for an unknown attribute.
+    Text := '<Window xmlns:rw="using:RADWinUI.Controls"'#10 +
+      '    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"'#10 +
+      '    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"'#10 +
+      '    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"'#10 +
+      '    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"'#10 +
+      '    mc:Ignorable="d" x:Class="TMainWindow" Title="RADWinUI Application" Width="480" Height="320"'#10 +
+      '    DataContextType="TMainViewModel">'#10 +
+      '    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}" x:Name="Grid1">'#10 +
+      '        <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/></Grid.RowDefinitions>'#10 +
+      '        <!-- Tab bar kept -->'#10 +
+      '        <rw:SlidingPillTabBar x:Name="SlidingPillTabBar2" Items="Home:Home, Search:Search"/>'#10 +
+      '        <Grid Grid.Row="1">'#10 +
+      '            <TextBlock x:Name="TimeDisplayText" FontSize="48" Text="25:00"/>'#10 +
+      '            <ProgressBar x:Name="TimerProgressBar" Minimum="0" Maximum="1500" Value="0"/>'#10 +
+      '            <NumberBox x:Name="MinutesNumberBox" Header="Minutes" Minimum="1" Maximum="180" Value="25"/>'#10 +
+      '            <ToggleButton x:Name="StartPauseButton" Content="Start"/>'#10 +
+      '            <ToggleSwitch x:Name="AutoStartToggle" Header="Auto-start next session"/>'#10 +
+      '        </Grid>'#10 +
+      '    </Grid>'#10 +
+      '</Window>';
+    Check(CorrectXamlSuggestion('', 0, Text, Vocabulary, Ghost, Reason) and (Reason = '') and (Ghost.Text = Text),
+      'a whole Window with its xmlns declarations passes the check (' + Reason + ')');
+    Check(IsWholeXamlFile('<?xml version="1.0"?>'#13#10'<Window x:Class="TMainWindow" Title="A">'#13#10 +
+      '  <StackPanel/>'#13#10'</Window>', Text), 'and is a whole new version of the window');
+    Check(not IsWholeXamlFile('<Window x:Class="TOtherWindow"><Grid/></Window>', Text),
+      'not for another x:Class');
+    Check(not IsWholeXamlFile('<Window x:Class="TMainWindow"><Grid/></Window>', '<Grid><Button/></Grid>'),
+      'a block is placed, not taken for the file');
+    Check(not IsWholeXamlFile('<Window x:Class="TMainWindow"><Grid/></Window>', '<Window x:Class="TMainWindow">'),
+      'a cut-off answer is no whole file');
+    Check(not CorrectXamlSuggestion('', 0, '<StackPanel><Buton Content="x"/></StackPanel>', Vocabulary, Ghost, Reason)
+      and (Reason = '<Buton>'), 'the error names the unknown element (' + Reason + ')');
+    Check(not CorrectXamlSuggestion('', 0, '<Button content2="x"/>', Vocabulary, Ghost, Reason) and
+      (Reason = 'content2 on <Button>'), 'and the unknown attribute (' + Reason + ')');
 
     // What Ali saw: typed "<butt", the answer "<button Content="Button"/>"
     Check(Replay('<StackPanel>'#13#10'    <butt|'#13#10'</StackPanel>', '<button Content="Button"/>') =
@@ -287,6 +325,13 @@ begin
     'the root, the names in use and the controls');
   Check(Text.Contains('never with absolute Margin positions') and Text.Contains('no event attributes'),
     'layout and event rules');
+  Check(Text.Contains('1. The request only adds UI') and Text.Contains('2. The request removes, moves, restyles') and
+    Text.Contains('Copy the root start tag exactly'), 'the two answer forms: a block, or the whole file');
+  // gpt-5 wrote <rw:FloatingNotchTabBarItem> children: the prompt now says how the tab bars are written
+  Check(Text.Contains('there is no <rw:...Item>') and Text.Contains('rw:FloatingNotchTabBar (a floating ball') and
+    Text.Contains('Items="Label:Icon, Label:Icon"') and Text.Contains('Pages="HomePage, SearchPage"'),
+    'the RADWinUI controls, how they are written and what they look like');
+  Check(Text.Contains('not WinUI''s TabView'), 'and a tab bar is not a TabView');
   Check(Text.Contains('<TextBlock Text="Hi"/>'#13#10'        ' + XamlCursorMarker), 'the file with the cursor');
 
   // On the empty, indented line: at the cursor, the block's lines indented like it

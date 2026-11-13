@@ -32,6 +32,7 @@ uses
   System.IOUtils,
   System.UITypes,
   System.StrUtils,
+  System.Math,
   System.IniFiles,
   System.JSON,
   System.Win.Registry,
@@ -71,6 +72,7 @@ uses
   RADWinUI.Designer.Dialogs,
   RADWinUI.Designer.AICompletion,
   RADWinUI.Designer.Settings,
+  RADWinUI.Designer.Vision,
   RADWinUI.Preview.PromptBox;
 
 type
@@ -306,9 +308,17 @@ type
     FPromptSelection: TCheckBox;
     FHotReload: TComboBox;
     FError: TLabel;
+    FVisionProvider: TComboBox;
+    FVisionModel: TEdit;
+    FVisionKey: TEdit;
+    FVisionTest: TButton;
+    FVisionResult: TLabel;
     FLoading: Boolean;
     FLastDelay: Integer; // the pause last saved: an invalid one goes back to it
     procedure Changed(Sender: TObject);
+    procedure VisionChanged(Sender: TObject);
+    procedure VisionTestClick(Sender: TObject);
+    procedure ShowVisionState;
     procedure DelayExit(Sender: TObject);
     function DelayValid: Boolean;
   public
@@ -360,6 +370,10 @@ type
     FPromptBox: TXamlPromptBox;
     FPromptFile: string;
     FPromptRequest: TXamlAIRequest; // the prompt's request, nil when none is pending
+    FCapturing: Boolean; // the prompt bar waits for the designer's picture
+    // An answer that failed the check, kept for Ctrl+Enter (apply anyway) with what it was asked for
+    FUnchecked, FUncheckedFile, FUncheckedXaml: string;
+    FUncheckedCursor, FUncheckedSelEnd: Integer;
     FOptionsTimer: TTimer;          // selects our page once the Options dialog shows
     FOptionsAskedAt: Cardinal;
     FSuggestions: TXamlSuggestionController;
@@ -469,6 +483,10 @@ type
     procedure PromptSubmit(const APrompt: string);
     procedure PromptCancel(Sender: TObject);
     procedure PromptAnswer(const AAnswer, AError: string);
+    procedure PromptCapture(Sender: TObject);
+    procedure PromptApplyAnyway(Sender: TObject);
+    function ApplyPromptAnswer(const AFile, AXaml: string; ACursor, ASelEnd: Integer; const ABlock: string): Boolean;
+    procedure CaptureDone(const AEvent: string);
     procedure ClosePrompt;
     procedure ExecuteSettings(Sender: TObject);
     procedure SelectOptionsPage(Sender: TObject);
@@ -1182,11 +1200,12 @@ begin
 end;
 
 /// The AI plugin for the editor: the one chosen in the IDE's AI options
-/// (DefaultAIForEditor), else the first enabled plugin that can chat.
+/// (DefaultAIForEditor), else the first enabled plugin that can chat. None while
+/// Smart CodeInsight itself is turned off (EnableAIEngine), even with plugins set up.
 function EditorAIPlugin(out AProblem: string): IOTAAIPlugin;
 var
   Registry: TRegistry;
-  Name: string;
+  Name, Enable: string;
   I: Integer;
   Plugin: IOTAAIPlugin;
 
@@ -1197,19 +1216,34 @@ var
 
 begin
   Result := nil;
-  AProblem := 'No AI engine is enabled. Set up Claude, OpenAI, Gemini or Ollama in the IDE''s AI options ' +
-    '(Tools > Options), then press Ctrl+Alt+Space again. Kai does not offer its engine to other packages.';
+  AProblem := 'No AI engine is enabled. Turn on Claude, OpenAI, Gemini or Ollama in Tools > Options, ' +
+    'Smart CodeInsight, then press Ctrl+Alt+Space again. Kai does not offer its engine to other packages.';
   if AIEngineService = nil then
     Exit;
   Name := '';
+  Enable := '';
   Registry := TRegistry.Create(KEY_READ);
   try
     Registry.RootKey := HKEY_CURRENT_USER;
-    if Registry.OpenKeyReadOnly((BorlandIDEServices as IOTAServices).GetBaseRegistryKey + '\AI Engine') and
-      Registry.ValueExists('DefaultAIForEditor') and (Registry.GetDataType('DefaultAIForEditor') = rdString) then
-      Name := Registry.ReadString('DefaultAIForEditor');
+    if Registry.OpenKeyReadOnly((BorlandIDEServices as IOTAServices).GetBaseRegistryKey + '\AI Engine') then
+    begin
+      if Registry.ValueExists('DefaultAIForEditor') and (Registry.GetDataType('DefaultAIForEditor') = rdString) then
+        Name := Registry.ReadString('DefaultAIForEditor');
+      // "Enable Smart CodeInsight", saved as the string True or False
+      if Registry.ValueExists('EnableAIEngine') then
+        if Registry.GetDataType('EnableAIEngine') = rdString then
+          Enable := Registry.ReadString('EnableAIEngine')
+        else if Registry.GetDataType('EnableAIEngine') = rdInteger then
+          Enable := IntToStr(Registry.ReadInteger('EnableAIEngine'));
+    end;
   finally
     Registry.Free;
+  end;
+  if SameText(Enable, 'False') or (Enable = '0') then
+  begin
+    AProblem := 'Smart CodeInsight is turned off. Check "Enable Smart CodeInsight" in Tools > Options, ' +
+      'Smart CodeInsight, then press Ctrl+Alt+Space again.';
+    Exit;
   end;
   if Name <> '' then
   begin
@@ -2300,6 +2334,7 @@ var
   Settings: TRADWinUISettings;
   Heading, Caption, Note: TLabel;
   Theming: IOTAIDEThemingServices;
+  Provider: TVisionProvider;
 begin
   Settings := TRADWinUISettings.Load(RADWinUIRegistryKey);
   FLoading := True;
@@ -2380,6 +2415,68 @@ begin
       'description, right-click and choose Create XAML with AI (Ctrl+Alt+Space). Hot reload updates the windows, ' +
       'pages and user controls of an app that runs in Debug from the project folder: changes to Pascal code, ' +
       'new event handlers or removed x:Name elements still need a rebuild.';
+    Heading := TLabel.Create(AFrame);
+    Heading.Parent := AFrame;
+    Heading.SetBounds(16, 340, 300, 16);
+    Heading.Caption := 'Prompts with an image';
+    Heading.Font.Style := [fsBold];
+    Caption := TLabel.Create(AFrame);
+    Caption.Parent := AFrame;
+    Caption.SetBounds(24, 368, 220, 16);
+    Caption.Caption := 'Vision model from:';
+    FVisionProvider := TComboBox.Create(AFrame);
+    FVisionProvider.Parent := AFrame;
+    FVisionProvider.Style := csDropDownList;
+    FVisionProvider.SetBounds(250, 364, 220, 22);
+    for Provider := Low(TVisionProvider) to High(TVisionProvider) do
+      FVisionProvider.Items.Add(VisionProviderNames[Provider]);
+    FVisionProvider.ItemIndex := Ord(Settings.VisionProvider);
+    FVisionProvider.OnChange := VisionChanged;
+    Caption := TLabel.Create(AFrame);
+    Caption.Parent := AFrame;
+    Caption.SetBounds(24, 398, 220, 16);
+    Caption.Caption := 'Model:';
+    FVisionModel := TEdit.Create(AFrame);
+    FVisionModel.Parent := AFrame;
+    FVisionModel.SetBounds(250, 394, 220, 22);
+    FVisionModel.Text := Settings.VisionModel;
+    FVisionModel.OnChange := VisionChanged;
+    Caption := TLabel.Create(AFrame);
+    Caption.Parent := AFrame;
+    Caption.SetBounds(24, 428, 220, 16);
+    Caption.Caption := 'API key:';
+    FVisionKey := TEdit.Create(AFrame);
+    FVisionKey.Parent := AFrame;
+    FVisionKey.SetBounds(250, 424, 220, 22);
+    FVisionKey.PasswordChar := '*';
+    FVisionKey.Text := TRADWinUISettings.VisionKey(RADWinUIRegistryKey, Settings.VisionProvider);
+    FVisionKey.OnChange := VisionChanged;
+    FVisionTest := TButton.Create(AFrame);
+    FVisionTest.Parent := AFrame;
+    FVisionTest.SetBounds(480, 423, 75, 24);
+    FVisionTest.Caption := 'Test';
+    FVisionTest.OnClick := VisionTestClick;
+    FVisionResult := TLabel.Create(AFrame);
+    FVisionResult.Parent := AFrame;
+    FVisionResult.AutoSize := False;
+    FVisionResult.EllipsisPosition := epEndEllipsis;
+    FVisionResult.SetBounds(250, 452, 400, 16);
+    FVisionResult.Caption := '';
+    Note := TLabel.Create(AFrame);
+    Note.Parent := AFrame;
+    Note.AutoSize := False;
+    Note.WordWrap := True;
+    if AFrame.ClientWidth - 48 > 300 then
+      Note.SetBounds(24, 476, AFrame.ClientWidth - 48, 96)
+    else
+      Note.SetBounds(24, 476, 300, 96);
+    Note.Anchors := [akLeft, akTop, akRight];
+    Note.Caption := 'The IDE''s AI engine takes text only. A prompt with an image (pasted, dropped or captured in ' +
+      'the Create XAML with AI bar) goes with the XAML file and your words straight from this PC to the provider ' +
+      'chosen here, under your own agreement with that provider, not through RAD Studio''s AI engine and its ' +
+      'terms. The key is stored encrypted for your Windows account. Ollama runs on this PC: nothing leaves it. ' +
+      'Prompts without an image keep using the IDE''s AI engine.';
+    ShowVisionState;
   finally
     FLoading := False;
   end;
@@ -2468,6 +2565,103 @@ begin
   FPromptSelection := nil;
   FHotReload := nil;
   FError := nil;
+  FVisionProvider := nil;
+  FVisionModel := nil;
+  FVisionKey := nil;
+  FVisionTest := nil;
+  FVisionResult := nil;
+end;
+
+procedure TRADWinUIOptions.ShowVisionState;
+var
+  Provider: TVisionProvider;
+begin
+  Provider := TVisionProvider(Max(0, FVisionProvider.ItemIndex));
+  FVisionModel.Enabled := Provider <> vpNone;
+  FVisionModel.TextHint := VisionDefaultModels[Provider];
+  FVisionKey.Enabled := not (Provider in [vpNone, vpOllama]);
+  FVisionTest.Enabled := (Provider <> vpNone) and ((Provider = vpOllama) or (Trim(FVisionKey.Text) <> ''));
+end;
+
+procedure TRADWinUIOptions.VisionChanged(Sender: TObject);
+var
+  Settings: TRADWinUISettings;
+  Provider: TVisionProvider;
+begin
+  if FLoading or (FVisionProvider = nil) then
+    Exit;
+  Provider := TVisionProvider(Max(0, FVisionProvider.ItemIndex));
+  try
+    if Sender = FVisionKey then
+      TRADWinUISettings.SetVisionKey(RADWinUIRegistryKey, Provider, FVisionKey.Text)
+    else
+    begin
+      if Sender = FVisionProvider then
+      begin
+        // Each provider keeps its own key, the model starts at the provider's default
+        FLoading := True;
+        try
+          FVisionModel.Text := '';
+          FVisionKey.Text := TRADWinUISettings.VisionKey(RADWinUIRegistryKey, Provider);
+        finally
+          FLoading := False;
+        end;
+      end;
+      Settings := TRADWinUISettings.Load(RADWinUIRegistryKey);
+      Settings.VisionProvider := Provider;
+      Settings.VisionModel := Trim(FVisionModel.Text);
+      Settings.Save(RADWinUIRegistryKey);
+    end;
+  except
+    on E: Exception do
+      Log('settings: ' + E.Message);
+  end;
+  FVisionResult.Caption := '';
+  ShowVisionState;
+end;
+
+procedure TRADWinUIOptions.VisionTestClick(Sender: TObject);
+var
+  Provider: TVisionProvider;
+  Model, Key, Mime: string;
+  Image: TBytes;
+  Bitmap: HBITMAP;
+  Keep: IInterface;
+begin
+  Provider := TVisionProvider(Max(0, FVisionProvider.ItemIndex));
+  Model := VisionModel(Provider, FVisionModel.Text);
+  Key := Trim(FVisionKey.Text);
+  Bitmap := CreateBitmap(16, 16, 1, 32, nil); // a tiny image, so the test checks image input too
+  try
+    Image := VisionImageFromBitmap(Bitmap, Mime);
+  finally
+    DeleteObject(Bitmap);
+  end;
+  FVisionTest.Enabled := False;
+  FVisionResult.Caption := 'Asking ' + VisionProviderNames[Provider] + ', ' + Model + '...';
+  Keep := Self; // alive until the answer is shown
+  // shortcut: the worker is not cancelled when the IDE unloads the package meanwhile, add a cancel flag if that shows up
+  TThread.CreateAnonymousThread(
+    procedure
+    var
+      Answer, Problem: string;
+    begin
+      if not SendVisionRequest(Provider, Model, Key, 'Reply with the single word OK.', Image, Mime, Answer, Problem) then
+        Answer := '';
+      TThread.Queue(nil,
+        procedure
+        begin
+          if FVisionResult = nil then
+            Exit; // the dialog closed meanwhile
+          if Problem <> '' then
+            FVisionResult.Caption := 'Failed: ' + Problem
+          else
+            FVisionResult.Caption := 'Works: ' + VisionProviderNames[Provider] + ' answered "' +
+              Copy(Answer.Trim, 1, 40) + '".';
+          FVisionTest.Enabled := True;
+          Keep := nil;
+        end);
+    end).Start;
 end;
 
 function TRADWinUIOptions.GetHelpContext: Integer;
@@ -2820,6 +3014,30 @@ begin
     ShowXamlPrompt(Buffer.FileName);
 end;
 
+/// What the prompt bar says at once when no AI is set up, before anything is typed ('' when it is)
+function PromptSetupNotice: string;
+var
+  Problem: string;
+  Settings: TRADWinUISettings;
+begin
+  Result := '';
+  Settings := TRADWinUISettings.Load(RADWinUIRegistryKey);
+  if EditorAIPlugin(Problem) = nil then
+  begin
+    // Problem says why: Smart CodeInsight turned off, or no engine set up in it
+    Problem := Problem.Replace(' Kai does not offer its engine to other packages.', '');
+    if Settings.VisionProvider = vpNone then
+      Result := Problem + ' For prompts with an image, choose a vision model in Tools > RADWinUI > Settings.'
+    else
+      Result := 'Text prompts: ' + Problem + ' Prompts with an image go to ' +
+        VisionProviderNames[Settings.VisionProvider] + '.';
+  end
+  else if (Settings.VisionProvider <> vpOllama) and (Settings.VisionProvider <> vpNone) and
+    (TRADWinUISettings.VisionKey(RADWinUIRegistryKey, Settings.VisionProvider) = '') then
+    Result := 'Prompts with an image need your ' + VisionProviderNames[Settings.VisionProvider] +
+      ' API key in Tools > RADWinUI > Settings.';
+end;
+
 function TPreviewCommand.ShowXamlPrompt(const AFile: string): Boolean;
 var
   Theming: IOTAIDEThemingServices;
@@ -2849,6 +3067,9 @@ begin
   FPromptBox := TXamlPromptBox.CreateBox(nil, Background, Text, Border, RGB(217, 119, 87));
   FPromptBox.OnSubmit := PromptSubmit;
   FPromptBox.OnCancel := PromptCancel;
+  FPromptBox.OnCapture := PromptCapture;
+  FPromptBox.OnApplyAnyway := PromptApplyAnyway;
+  FPromptBox.SetNotice(PromptSetupNotice);
   FPromptBox.ShowOver(Application.MainForm);
   // Lines selected in the editor go into the bar, to describe what to make of them; the answer replaces them
   Buffer := (BorlandIDEServices as IOTAEditorServices).TopBuffer;
@@ -2864,6 +3085,8 @@ end;
 procedure TPreviewCommand.ClosePrompt;
 begin
   FPromptRequest := nil;
+  FCapturing := False;
+  FUnchecked := '';
   if FPromptBox <> nil then
   begin
     FPromptBox.OnCancel := nil;
@@ -2879,6 +3102,58 @@ begin
   ClosePrompt;
 end;
 
+procedure TPreviewCommand.PromptCapture(Sender: TObject);
+var
+  Reply: string;
+begin
+  // The designer host draws the loaded XAML itself: nothing else on the screen goes along
+  if (FClient = nil) or not FClient.Ready or not SameText(FXamlPath, FPromptFile) then
+  begin
+    FPromptBox.ShowError('Open the Design view of ' + ExtractFileName(FPromptFile) + ', then press Capture again.');
+    Exit;
+  end;
+  if not FClient.Request('RENDER', Reply) or Reply.StartsWith('ERROR') then
+  begin
+    FPromptBox.ShowError('The design could not be captured. ' + Reply.Replace('ERROR ', ''));
+    Exit;
+  end;
+  FCapturing := True;
+  FPromptBox.SetBusy(True, 'Capturing the design... (Esc cancels)');
+end;
+
+procedure TPreviewCommand.CaptureDone(const AEvent: string);
+var
+  FileName, Mime: string;
+  Data: TBytes;
+begin
+  Data := nil;
+  if AEvent.StartsWith('RENDERED ') then
+  begin
+    // Only the host's own capture files: %TEMP%\RADWinUI\capture-*.bmp
+    FileName := AEvent.Substring(Length('RENDERED '));
+    if SameText(ExtractFilePath(FileName), IncludeTrailingPathDelimiter(TPath.Combine(TPath.GetTempPath,
+      'RADWinUI'))) and ExtractFileName(FileName).StartsWith('capture-') then
+    try
+      if FCapturing and (FPromptBox <> nil) then
+        Data := VisionImageFromFile(FileName, Mime);
+    finally
+      System.SysUtils.DeleteFile(FileName);
+    end;
+  end;
+  if not FCapturing or (FPromptBox = nil) then
+    Exit; // cancelled
+  FCapturing := False;
+  FPromptBox.SetBusy(False);
+  if Data <> nil then
+    FPromptBox.SetImage(Data, Mime)
+  else if AEvent.StartsWith('RENDERFAILED ') then
+    FPromptBox.ShowError(AEvent.Substring(Length('RENDERFAILED ')))
+  else
+    FPromptBox.ShowError('The captured design could not be read.');
+  if FPromptBox.Memo.CanFocus then
+    FPromptBox.Memo.SetFocus;
+end;
+
 procedure TPreviewCommand.PromptSubmit(const APrompt: string);
 var
   Buffer: IOTAEditBuffer;
@@ -2886,8 +3161,14 @@ var
   Block: IOTAEditBlock;
   Plugin: IOTAAIPlugin;
   Request: TXamlAIRequest;
-  Text, Problem: string;
+  Text, Problem, Description, Model, Key, Mime, Prompt: string;
   Start, Stop: TOTAEditPos;
+  Settings: TRADWinUISettings;
+  Provider: TVisionProvider;
+  Image: TBytes;
+  Keep: IOTAAIServicesNotifier;
+  ID: TGUID;
+  FileName: string;
 begin
   Buffer := (BorlandIDEServices as IOTAEditorServices).TopBuffer;
   if (Buffer = nil) or not SameText(Buffer.FileName, FPromptFile) or (Buffer.TopView = nil) then
@@ -2895,18 +3176,54 @@ begin
     FPromptBox.ShowError('Open ' + ExtractFileName(FPromptFile) + ' in the code editor first.');
     Exit;
   end;
-  if APrompt = '' then
+  if (APrompt = '') and not FPromptBox.HasImage then
   begin
-    // An empty bar: complete at the cursor, as before
+    // An empty bar: complete at the cursor, as before. Without an engine the bar says why: a
+    // message box here ran a modal loop that freed the bar inside its own key handler
+    if EditorAIPlugin(Problem) = nil then
+    begin
+      FPromptBox.ShowError(Problem);
+      Exit;
+    end;
     ClosePrompt;
-    CompleteXaml(Buffer.FileName);
+    FileName := Buffer.FileName;
+    // After the key handler has returned, the bar is released by then
+    TThread.ForceQueue(nil,
+      procedure
+      begin
+        CompleteXaml(FileName);
+      end);
     Exit;
   end;
-  Plugin := EditorAIPlugin(Problem);
-  if Plugin = nil then
+  Plugin := nil;
+  Provider := vpNone;
+  if FPromptBox.HasImage then
   begin
-    FPromptBox.ShowError(Problem);
-    Exit;
+    // The IDE's AI engine takes text only: an image goes to the vision model chosen in Options
+    Settings := TRADWinUISettings.Load(RADWinUIRegistryKey);
+    Provider := Settings.VisionProvider;
+    if Provider = vpNone then
+    begin
+      FPromptBox.ShowError('Choose a vision model for prompts with an image: Tools > Options > Third Party > RADWinUI.');
+      Exit;
+    end;
+    Key := TRADWinUISettings.VisionKey(RADWinUIRegistryKey, Provider);
+    if (Key = '') and (Provider <> vpOllama) then
+    begin
+      FPromptBox.ShowError('Enter your ' + VisionProviderNames[Provider] +
+        ' API key in Tools > Options > Third Party > RADWinUI.');
+      Exit;
+    end;
+    Model := VisionModel(Provider, Settings.VisionModel);
+  end
+  else
+  begin
+    Plugin := EditorAIPlugin(Problem);
+    if Plugin = nil then
+    begin
+      FPromptBox.ShowError(Problem);
+      Exit;
+    end;
   end;
   View := Buffer.TopView;
   Text := SourceText(FPromptFile);
@@ -2929,9 +3246,37 @@ begin
   Request.FCursor := ViewOffset(View, Text, Start);
   Request.FSelEnd := ViewOffset(View, Text, Stop);
   Request.FOnDone := PromptAnswer;
+  FPromptRequest := Request;
+  if Provider <> vpNone then
+  begin
+    Description := APrompt;
+    if Description = '' then
+      Description := 'Build the UI shown in the image.';
+    Prompt := VisionPromptNote + #13#10 + BuildXamlFromDescription(Text, Request.FCursor, Description,
+      ProjectUserControls(Text, ExtractFilePath(FPromptFile)));
+    Image := FPromptBox.Image;
+    Mime := FPromptBox.ImageMimeType;
+    ID := TGUID.NewGuid;
+    Request.FRequest := ID;
+    Keep := Request; // alive until the worker has handed over the answer
+    FPromptBox.SetBusy(True, Format('Sending the prompt and image to %s, %s... (Esc cancels)',
+      [VisionProviderNames[Provider], Model]));
+    Log(Format('Create XAML with AI, with an image (%d bytes) to %s %s: %s', [Length(Image),
+      VisionProviderNames[Provider], Model, LogText(APrompt)]));
+    // shortcut: Esc only drops the answer, the HTTP call runs to its end; the worker is not
+    // stopped if the IDE unloads the package meanwhile, add a cancel flag if that shows up
+    TThread.CreateAnonymousThread(
+      procedure
+      var
+        Answer, Error: string;
+      begin
+        SendVisionRequest(Provider, Model, Key, Prompt, Image, Mime, Answer, Error);
+        (Keep as TXamlAIRequest).Done(Answer, Error, ID); // Done goes on in the main thread
+      end).Start;
+    Exit;
+  end;
   Request.FPlugin := Plugin;
   Request.FNotifier := Plugin.AddNotifier(Request);
-  FPromptRequest := Request;
   FPromptBox.SetBusy(True, 'Writing the XAML with ' + Plugin.Name + '... (Esc cancels)');
   Log('Create XAML with AI: ' + LogText(APrompt));
   Request.FRequest := Plugin.Chat(BuildXamlFromDescription(Text, Request.FCursor, APrompt,
@@ -2941,12 +3286,12 @@ end;
 procedure TPreviewCommand.PromptAnswer(const AAnswer, AError: string);
 var
   Request: TXamlAIRequest;
-  Block, NewText: string;
+  Block, Unknown: string;
   Ghost: TXamlGhost;
-  Cursor, Line, Column: Integer;
 begin
   Request := FPromptRequest;
   FPromptRequest := nil;
+  FUnchecked := '';
   if (Request = nil) or (FPromptBox = nil) then
     Exit; // cancelled
   if AError <> '' then
@@ -2958,27 +3303,70 @@ begin
   Block := CleanXamlCompletion(AAnswer);
   if Block = '' then
   begin
-    FPromptBox.ShowError('The AI engine sent no XAML. Describe it differently and press Enter.');
+    FPromptBox.ShowError('The answer had no XAML. Describe it differently and press Enter.');
     Exit;
   end;
   // The same checks as the suggestions: known elements, their case corrected
-  if not CorrectXamlSuggestion('', 0, Block, XamlVocabulary(Request.FFile, Request.FXaml), Ghost) then
+  if not CorrectXamlSuggestion('', 0, Block, XamlVocabulary(Request.FFile, Request.FXaml), Ghost, Unknown) then
   begin
-    FPromptBox.ShowError('The answer uses names XAML does not know. Press Enter to ask again.');
+    Log('Create XAML with AI: the answer was not applied, unknown ' + Unknown);
+    // Kept as sent: the user may apply it and fix the name with one Replace
+    FUnchecked := Block;
+    FUncheckedFile := Request.FFile;
+    FUncheckedXaml := Request.FXaml;
+    FUncheckedCursor := Request.FCursor;
+    FUncheckedSelEnd := Request.FSelEnd;
+    FPromptBox.ShowError('The answer uses ' + Unknown + ', which XAML does not know. Enter asks again, ' +
+      'Ctrl+Enter applies it anyway.');
     Exit;
   end;
+  ApplyPromptAnswer(Request.FFile, Request.FXaml, Request.FCursor, Request.FSelEnd, Ghost.Text);
+end;
+
+procedure TPreviewCommand.PromptApplyAnyway(Sender: TObject);
+begin
+  if FUnchecked = '' then
+    Exit; // Ctrl+Enter without a rejected answer
+  Log('Create XAML with AI: applied anyway');
+  if ApplyPromptAnswer(FUncheckedFile, FUncheckedXaml, FUncheckedCursor, FUncheckedSelEnd, FUnchecked) then
+    EditorNote('Create XAML with AI: applied without the check. Names XAML does not know show as errors ' +
+      'in the designer; Ctrl+Z restores the file.');
+end;
+
+/// The answer as one undoable edit: a whole new file replaces the file (the request changed
+/// existing UI), a block goes at the cursor or over the selection
+function TPreviewCommand.ApplyPromptAnswer(const AFile, AXaml: string; ACursor, ASelEnd: Integer;
+  const ABlock: string): Boolean;
+var
+  NewText: string;
+  Cursor, Line, Column: Integer;
+  Whole: Boolean;
+begin
+  Result := False;
+  Whole := IsWholeXamlFile(AXaml, ABlock);
   try
-    if SourceText(Request.FFile) <> Request.FXaml then
+    if SourceText(AFile) <> AXaml then
     begin
       FPromptBox.ShowError('The file changed meanwhile. Press Enter to ask again.');
       Exit;
     end;
-    NewText := PlaceXamlBlock(Request.FXaml, Request.FCursor, Request.FSelEnd, Ghost.Text, Cursor);
-    ApplyText(Request.FFile, Request.FXaml, NewText); // one undoable edit
+    if Whole then
+    begin
+      NewText := AdjustLineBreaks(ABlock.Trim, tlbsCRLF) + #13#10;
+      Cursor := 0;
+    end
+    else
+      NewText := PlaceXamlBlock(AXaml, ACursor, ASelEnd, ABlock, Cursor);
+    ApplyText(AFile, AXaml, NewText); // one undoable edit
     ClosePrompt;
     LineColumnOf(NewText, Cursor, Line, Column);
-    GotoSource(Request.FFile, Line, Column);
-    EditorNote('Create XAML with AI: inserted ' + IntToStr(Length(Ghost.Text.Split([#10]))) + ' lines.');
+    GotoSource(AFile, Line, Column);
+    if Whole then
+      EditorNote('Create XAML with AI: rewrote the file (' + IntToStr(Length(NewText.Split([#10]))) +
+        ' lines). Ctrl+Z restores it.')
+    else
+      EditorNote('Create XAML with AI: inserted ' + IntToStr(Length(ABlock.Split([#10]))) + ' lines.');
+    Result := True;
   except
     on E: Exception do
       if FPromptBox <> nil then
@@ -3819,6 +4207,8 @@ begin
             Log(Format('designer: %d elements selected', [Length(FMulti)]));
           end;
         end
+        else if Xaml.StartsWith('RENDERED ') or Xaml.StartsWith('RENDERFAILED ') then
+          CaptureDone(Xaml)
         else if Xaml = 'CUT' then
           CutSelection
         else if Xaml = 'COPY' then

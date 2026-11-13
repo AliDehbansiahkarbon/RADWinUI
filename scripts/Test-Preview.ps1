@@ -172,6 +172,12 @@ if (-not $NoBuild) {
 }
 & (Join-Path $RepoRoot 'tests\Designer\Win64\Debug\AICompletionTest.exe')
 if ($LASTEXITCODE -ne 0) { throw 'AICompletionTest failed' }
+if (-not $NoBuild) {
+  & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Designer\VisionTest.dpr' -Dcc64 $Dcc64 | Out-Null
+  if ($LASTEXITCODE -ne 0) { throw 'Building VisionTest failed' }
+}
+& (Join-Path $RepoRoot 'tests\Designer\Win64\Debug\VisionTest.exe')
+if ($LASTEXITCODE -ne 0) { throw 'VisionTest failed' }
 # UI Automation rectangles in physical pixels, as HIT expects
 Add-Type -Namespace RADWinUITest -Name Dpi -MemberDefinition ('[DllImport("user32.dll")] public static extern IntPtr SetThreadDpiAwarenessContext(IntPtr c);' +
   '[DllImport("user32.dll")] public static extern uint GetDpiForWindow(IntPtr h);')

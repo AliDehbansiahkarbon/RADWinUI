@@ -52,6 +52,7 @@ contains
   RADWinUI.Designer.Palette in '..\src\IDE\Designer\RADWinUI.Designer.Palette.pas',
   RADWinUI.Designer.AICompletion in '..\src\IDE\Designer\RADWinUI.Designer.AICompletion.pas',
   RADWinUI.Designer.Settings in '..\src\IDE\Designer\RADWinUI.Designer.Settings.pas',
+  RADWinUI.Designer.Vision in '..\src\IDE\Designer\RADWinUI.Designer.Vision.pas',
   RADWinUI.TabBarIcons in '..\src\Framework\RADWinUI.TabBarIcons.pas',
   RADWinUI.Designer.Dialogs in '..\src\IDE\Designer\RADWinUI.Designer.Dialogs.pas',
   RADWinUI.Designer.TabItemsEditor in '..\src\IDE\Designer\RADWinUI.Designer.TabItemsEditor.pas',

@@ -184,6 +184,61 @@ begin
   Result := Counters.PrivateUsage div (1024 * 1024);
 end;
 
+/// RENDER (the prompt bar's Capture): the loaded XAML drawn into a .bmp file, named by a RENDERED event
+procedure CheckRender(AClient: TPreviewClient; AParent: HWND; const APath: string);
+var
+  Reply, Event, FileName: string;
+  Started: Cardinal;
+  Data: TBytes;
+  Width, Height, Offset: Integer;
+begin
+  Check(AClient.Request('LOAD ' + APath + #10 +
+    '<StackPanel xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" Orientation="Horizontal">' +
+    '<Border Background="#FFE00000" Width="100" Height="100"/><Border Width="100" Height="100"/></StackPanel>',
+    Reply) and (Reply = 'OK'),
+    'a design to capture is loaded (' + Reply + ')');
+  // The design is laid out before the user can press Capture
+  Started := GetTickCount;
+  repeat
+    PumpWindowMessages(AParent);
+    Sleep(20);
+  until GetTickCount - Started >= 500;
+  Check(AClient.Request('RENDER', Reply) and (Reply = 'OK'), 'RENDER is accepted (' + Reply + ')');
+  FileName := '';
+  Event := '';
+  Started := GetTickCount;
+  repeat
+    PumpWindowMessages(AParent);
+    while AClient.TakeEvent(Event) do
+      if Event.StartsWith('RENDERED ') or Event.StartsWith('RENDERFAILED ') then
+        Break;
+    if Event.StartsWith('RENDER') then
+      Break;
+    Sleep(20);
+  until GetTickCount - Started >= 5000;
+  Check(Event.StartsWith('RENDERED '), 'the capture is reported (' + Event + ')');
+  if not Event.StartsWith('RENDERED ') then
+    Exit;
+  FileName := Event.Substring(Length('RENDERED '));
+  try
+    Data := TFile.ReadAllBytes(FileName);
+    // A top-down 32-bit BMP: the size at 18 and 22, the pixels from 54, BGRA
+    Width := PInteger(@Data[18])^;
+    Height := -PInteger(@Data[22])^;
+    Check((Length(Data) >= 54 + Width * Height * 4) and (Data[0] = Ord('B')) and (Data[1] = Ord('M')) and
+      (Width >= 200) and (Height >= 100), Format('a %dx%d bitmap of the design (%d bytes)', [Width, Height,
+      Length(Data)]));
+    Offset := 54 + ((Height div 2) * Width + Width div 4) * 4;
+    Check((Data[Offset + 2] > 200) and (Data[Offset + 1] < 40) and (Data[Offset] < 40),
+      'the red border is in the left half');
+    Offset := 54 + ((Height div 2) * Width + Width * 3 div 4) * 4;
+    Check((Data[Offset + 2] > 200) and (Data[Offset + 1] > 200) and (Data[Offset] > 200),
+      'the transparent right half is the light page background');
+  finally
+    DeleteFile(FileName);
+  end;
+end;
+
 procedure TestDockedPreview(const AExe, APath, AXaml: string);
 var
   Monitor: TMonitorFind;
@@ -315,6 +370,8 @@ begin
       Check(((ChildRect.Right - ChildRect.Left) = (ParentRect.Right - ParentRect.Left)) and
         ((ChildRect.Bottom - ChildRect.Top) = (ParentRect.Bottom - ParentRect.Top)),
         'the host follows the dock area resize');
+
+      CheckRender(Client, Parent, APath);
     end;
 
   finally

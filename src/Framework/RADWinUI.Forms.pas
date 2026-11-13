@@ -1023,10 +1023,10 @@ begin
   if Overlay then
   begin
     Subclass;
-    NewStyle := (Style and not OverlayRemovedStyles) or WS_POPUP;
+    NewStyle := (Style and not NativeInt(OverlayRemovedStyles)) or NativeInt(WS_POPUP);
   end
   else
-    NewStyle := (Style and not WS_POPUP) or WS_OVERLAPPEDWINDOW;
+    NewStyle := (Style and not NativeInt(WS_POPUP)) or NativeInt(WS_OVERLAPPEDWINDOW);
   if NewStyle <> Style then
   begin
     SetWindowLongPtr(Handle, GWL_STYLE, NewStyle);

@@ -80,6 +80,7 @@
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Palette.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.AICompletion.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Settings.pas"/>
+        <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Vision.pas"/>
         <DCCReference Include="..\src\Framework\RADWinUI.TabBarIcons.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Dialogs.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.TabItemsEditor.pas"/>

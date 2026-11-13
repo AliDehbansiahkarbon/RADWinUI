@@ -221,6 +221,8 @@ type
     procedure Close; reintroduce;
     /// <summary>Shows AXaml (the text of APath), returns '' or the error it shows.</summary>
     function Load(const APath, AXaml: string): string;
+    /// <summary>RENDER: the loaded XAML drawn into a .bmp file, reported by a RENDERED event.</summary>
+    function Render: string;
     /// <summary>Runs one pipe request (LOAD, HIT, TOOL, DRAG, or test EVENT).</summary>
     function Command(const AMessage: string): string;
   end;
@@ -1409,7 +1411,6 @@ procedure TPreviewWindow.ReadUidTexts(const APath: string);
 var
   Resw, Value, Uid, Prop, Attribute: string;
   M: TMatch;
-  Dot: Integer;
 begin
   FUidTexts.Clear;
   if APath = '' then
@@ -2126,6 +2127,8 @@ begin
       FShell.RequestedTheme := TWinUIElementTheme.Light;
     Result := 'OK';
   end
+  else if Request = 'RENDER' then
+    Result := Render
   else if Request = 'EVENT' then
   begin
     Queue('SELECTED 1 1 TextBlock Test');
@@ -2189,6 +2192,124 @@ begin
   end
   else
     Result := 'ERROR unknown request ' + Request;
+end;
+
+type
+  // Windows.Storage.Streams.IBufferByteAccess: the bytes of a WinRT buffer
+  IBufferByteAccess = interface(IUnknown)
+    ['{905A0FEF-BC53-11DF-8C49-001E4FC686DA}']
+    function Buffer(out AValue: PByte): HRESULT; stdcall;
+  end;
+
+/// Premultiplied BGRA pixels over ABackground as a top-down 32-bit .bmp file
+procedure SavePixelsBmp(APixels: PByte; AWidth, AHeight: Integer; ABackground: TWinUIColor; const AFile: string);
+var
+  FileHeader: TBitmapFileHeader;
+  Info: TBitmapInfoHeader;
+  Pixels: TBytes;
+  I, Alpha: Integer;
+  Stream: TFileStream;
+begin
+  SetLength(Pixels, AWidth * AHeight * 4);
+  Move(APixels^, Pixels[0], Length(Pixels));
+  I := 0;
+  while I < Length(Pixels) do
+  begin
+    Alpha := 255 - Pixels[I + 3];
+    Pixels[I] := Pixels[I] + ABackground.B * Alpha div 255;
+    Pixels[I + 1] := Pixels[I + 1] + ABackground.G * Alpha div 255;
+    Pixels[I + 2] := Pixels[I + 2] + ABackground.R * Alpha div 255;
+    Pixels[I + 3] := 255;
+    Inc(I, 4);
+  end;
+  Info := Default(TBitmapInfoHeader);
+  Info.biSize := SizeOf(Info);
+  Info.biWidth := AWidth;
+  Info.biHeight := -AHeight;
+  Info.biPlanes := 1;
+  Info.biBitCount := 32;
+  Info.biCompression := BI_RGB;
+  FileHeader := Default(TBitmapFileHeader);
+  FileHeader.bfType := $4D42; // BM
+  FileHeader.bfOffBits := SizeOf(FileHeader) + SizeOf(Info);
+  FileHeader.bfSize := FileHeader.bfOffBits + Cardinal(Length(Pixels));
+  Stream := TFileStream.Create(AFile, fmCreate);
+  try
+    Stream.WriteBuffer(FileHeader, SizeOf(FileHeader));
+    Stream.WriteBuffer(Info, SizeOf(Info));
+    Stream.WriteBuffer(Pixels[0], Length(Pixels));
+  finally
+    Stream.Free;
+  end;
+end;
+
+function TPreviewWindow.Render: string;
+var
+  Target: TWinUIRenderTargetBitmap;
+  Rendered: RADWinUI.Abi.AsyncActionCompletedHandler;
+  Background: TWinUIColor;
+  FileName: string;
+begin
+  if FRoot = nil then
+    Exit('ERROR nothing is loaded');
+  // The page background behind transparent parts: the designer's colour, else the theme's
+  if FDesignerBackground <> nil then
+    Background := FDesignerBackground.Color
+  else if FShell.RequestedTheme = TWinUIElementTheme.Dark then
+  begin
+    Background.R := $20; Background.G := $20; Background.B := $20;
+  end
+  else
+  begin
+    Background.R := $FF; Background.G := $FF; Background.B := $FF;
+  end;
+  FileName := TPath.Combine(TPath.Combine(TPath.GetTempPath, 'RADWinUI'),
+    Format('capture-%d-%d.bmp', [GetCurrentProcessId, GetTickCount]));
+  ForceDirectories(ExtractFilePath(FileName));
+  Target := TWinUIRenderTargetBitmap.Create(Self);
+  // The handlers sit in variables during the call: passed inline, their reference count
+  // is 0 and the async operation's QueryInterface and Release would free them
+  Rendered := TAsyncActionCompletedHandler.Create(
+    procedure(AAction: RADWinUI.Abi.IAsyncAction; AStatus: RADWinUI.Abi.AsyncStatus)
+    var
+      Width, Height: Integer;
+      Pixels: RADWinUI.Abi.AsyncOperationCompletedHandler_IBuffer;
+    begin
+      if AStatus <> RADWinUI.Abi.AsyncStatus.Completed then
+      begin
+        Queue('RENDERFAILED The design could not be drawn.');
+        Exit;
+      end;
+      Width := Target.PixelWidth;
+      Height := Target.PixelHeight;
+      if (Width = 0) or (Height = 0) then
+      begin
+        Queue('RENDERFAILED The design has no size yet. Show the Design view and try again.');
+        Exit;
+      end;
+      Pixels := TAsyncOperationCompletedHandler_IBuffer.Create(
+        procedure(AOperation: RADWinUI.Abi.IAsyncOperation_IBuffer; AStatus: RADWinUI.Abi.AsyncStatus)
+        var
+          Bytes: PByte;
+        begin
+          try
+            if (AStatus = RADWinUI.Abi.AsyncStatus.Completed) and
+              Succeeded((AOperation.GetResults as IBufferByteAccess).Buffer(Bytes)) then
+            begin
+              SavePixelsBmp(Bytes, Width, Height, Background, FileName);
+              Queue('RENDERED ' + FileName);
+            end
+            else
+              Queue('RENDERFAILED The design could not be read.');
+          except
+            on E: Exception do
+              Queue('RENDERFAILED ' + E.Message);
+          end;
+        end);
+      Target.GetPixelsAsync.Completed := Pixels;
+    end);
+  Target.Intf.RenderAsync(FRoot as IUIElement).Completed := Rendered;
+  Result := 'OK';
 end;
 
 procedure TPreviewWindow.Queue(const AEvent: string);

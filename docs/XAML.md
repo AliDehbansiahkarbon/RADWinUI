@@ -214,6 +214,20 @@ this page.
   completes the XAML at the cursor instead. Lines selected in the editor go into
   the bar, so you can say what to make of them, and the answer replaces them
   (Tools > RADWinUI > Settings..., "Copy the selected XAML into the prompt").
+- **An image with the prompt.** Paste a screenshot or a sketch into the bar
+  (**Ctrl+V**), drop an image file on it, or press **Capture** for the
+  designer's own picture of the file (nothing else on the screen goes along).
+  It shows as a thumbnail; its **x** removes it. Draw arrows or notes over a
+  captured design in Paint, paste it back and say what to change ("make this
+  card like the left one"). The model gets the image, your words and the
+  current XAML, and its answer is checked and placed like any other. To change
+  the whole layout, select it first: the answer replaces the selection. The
+  IDE's AI engine takes text only, so a prompt with an image goes straight to
+  the vision model chosen in Tools > Options > Third Party > **RADWinUI**
+  (OpenAI, Anthropic, Google Gemini, or Ollama on this PC), with its own API
+  key, stored encrypted for your Windows account. That call is under your own
+  agreement with the provider, not RAD Studio's AI terms. **Test** next to the
+  key checks the setup. Prompts without an image keep using the IDE's engine.
 
 Kai's ghost text does not cover `.xaml` files, and Kai does not offer its engine
 to other packages, so these use the IDE's own AI engine (`ToolsAPI.AI`).

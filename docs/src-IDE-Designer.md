@@ -18,7 +18,8 @@
 | `RADWinUI.Designer.XamlEdit` | Minimal text edits: change, insert, move and delete elements and attributes |
 | `RADWinUI.Designer.Model` | Type index, property and event lists, handler creation in the window unit |
 | `RADWinUI.Designer.Palette`, `.PaletteIcons` | Tool Palette entries, categories and self-painted icons |
-| `RADWinUI.Designer.Settings` | RADWinUI's IDE settings in the registry: AI suggestions, their pause, code completion |
+| `RADWinUI.Designer.Settings` | RADWinUI's IDE settings in the registry: AI suggestions, their pause, code completion, the vision model and its DPAPI-encrypted key |
+| `RADWinUI.Designer.Vision` | Prompts with an image: the OpenAI, Anthropic, Gemini and Ollama requests and answers, DPAPI key storage, image scaling and encoding (`tests\Designer\VisionTest`) |
 | `RADWinUI.Designer.AICompletion` | AI in the XAML editor: the prompts for the IDE's AI engine, the state of the suggestions while typing, the insertion of answers |
 | `RADWinUI.Designer.ObjectInspector`, `.Structure` | ToolsAPI adapters for the native Object Inspector and Structure view |
 | `RADWinUI.Designer.TabItemsEditor` | The '...' editor of a tab bar's Items: tabs, labels and icons |

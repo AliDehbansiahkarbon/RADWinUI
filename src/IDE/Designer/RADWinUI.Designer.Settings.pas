@@ -4,10 +4,14 @@ unit RADWinUI.Designer.Settings;
   RADWinUI's IDE settings, in HKEY_CURRENT_USER under the IDE's own key
   (Software\Embarcadero\BDS\<version>\RADWinUI), where the wizard keeps its values.
   Tools > Options > Third Party > RADWinUI edits them and saves each change at once.
+  The vision API keys are stored encrypted with DPAPI, readable only by the same Windows user.
   IDE-free: the caller passes the key.
 }
 
 interface
+
+uses
+  RADWinUI.Designer.Vision;
 
 type
   /// <summary>When the IDE sends an edited .xaml file to the app it is running (Debug builds).</summary>
@@ -24,6 +28,10 @@ type
     PromptWithSelection: Boolean;
     /// <summary>Hot reload: off, when a .xaml file is saved, or while typing (the default).</summary>
     HotReload: TRADWinUIHotReload;
+    /// <summary>Where Create XAML with AI sends a prompt with an image (none by default: nothing is sent).</summary>
+    VisionProvider: TVisionProvider;
+    /// <summary>The vision model, '' for the provider's default.</summary>
+    VisionModel: string;
     const
       DefaultDelay = 250;
       MinDelay = 100;
@@ -35,6 +43,11 @@ type
     procedure Save(const AKey: string);
     /// <summary>Whether the offline XAML code completion is on: the one place that feature reads.</summary>
     class function CodeCompletionEnabled(const AKey: string): Boolean; static;
+    /// <summary>The API key of AProvider, decrypted ('' when none). Kept apart from the record so it
+    /// is read only where a request is sent.</summary>
+    class function VisionKey(const AKey: string; AProvider: TVisionProvider): string; static;
+    /// <summary>Stores the API key of AProvider encrypted for the current Windows user; '' removes it.</summary>
+    class procedure SetVisionKey(const AKey: string; AProvider: TVisionProvider; const AValue: string); static;
   end;
 
 implementation
@@ -50,6 +63,9 @@ const
   CodeCompletionValue = 'XamlCodeCompletion';
   PromptWithSelectionValue = 'XamlPromptWithSelection';
   HotReloadValue = 'XamlHotReload';
+  VisionProviderValue = 'VisionProvider';
+  VisionModelValue = 'VisionModel';
+  VisionKeyValue = 'VisionKey'; // + the provider name, binary DPAPI data
   VersionValue = 'SettingsVersion';
   Version = 2;
   OldDefaultDelay = 500; // version 1 saved the default of its time
@@ -61,6 +77,8 @@ begin
   Result.CodeCompletion := True;
   Result.PromptWithSelection := True;
   Result.HotReload := hrWhileTyping;
+  Result.VisionProvider := vpNone;
+  Result.VisionModel := '';
 end;
 
 class function TRADWinUISettings.Load(const AKey: string): TRADWinUISettings;
@@ -95,6 +113,11 @@ begin
     if ReadInt(HotReloadValue, Value) and (Value >= Ord(Low(TRADWinUIHotReload))) and
       (Value <= Ord(High(TRADWinUIHotReload))) then
       Result.HotReload := TRADWinUIHotReload(Value);
+    if ReadInt(VisionProviderValue, Value) and (Value >= Ord(Low(TVisionProvider))) and
+      (Value <= Ord(High(TVisionProvider))) then
+      Result.VisionProvider := TVisionProvider(Value);
+    if Registry.ValueExists(VisionModelValue) and (Registry.GetDataType(VisionModelValue) = rdString) then
+      Result.VisionModel := Registry.ReadString(VisionModelValue);
     if ReadInt(DelayValue, Value) and (Value >= MinDelay) and (Value <= MaxDelay) and
       not ((Saved < 2) and (Value = OldDefaultDelay)) then
       Result.SuggestionDelay := Value;
@@ -117,6 +140,8 @@ begin
     Registry.WriteInteger(CodeCompletionValue, Ord(CodeCompletion));
     Registry.WriteInteger(PromptWithSelectionValue, Ord(PromptWithSelection));
     Registry.WriteInteger(HotReloadValue, Ord(HotReload));
+    Registry.WriteInteger(VisionProviderValue, Ord(VisionProvider));
+    Registry.WriteString(VisionModelValue, VisionModel);
     Registry.WriteInteger(VersionValue, Version);
   finally
     Registry.Free;
@@ -126,6 +151,56 @@ end;
 class function TRADWinUISettings.CodeCompletionEnabled(const AKey: string): Boolean;
 begin
   Result := Load(AKey).CodeCompletion;
+end;
+
+function VisionKeyName(AProvider: TVisionProvider): string;
+const
+  Names: array[TVisionProvider] of string = ('None', 'OpenAI', 'Anthropic', 'Gemini', 'Ollama');
+begin
+  Result := VisionKeyValue + Names[AProvider];
+end;
+
+class function TRADWinUISettings.VisionKey(const AKey: string; AProvider: TVisionProvider): string;
+var
+  Registry: TRegistry;
+  Data: TBytes;
+  Name: string;
+begin
+  Result := '';
+  Name := VisionKeyName(AProvider);
+  Registry := TRegistry.Create(KEY_READ);
+  try
+    Registry.RootKey := HKEY_CURRENT_USER;
+    if not Registry.OpenKeyReadOnly(AKey) or not Registry.ValueExists(Name) or
+      (Registry.GetDataType(Name) <> rdBinary) then
+      Exit;
+    SetLength(Data, Registry.GetDataSize(Name));
+    if Length(Data) > 0 then
+      Registry.ReadBinaryData(Name, Data[0], Length(Data));
+    Result := UnprotectText(Data);
+  finally
+    Registry.Free;
+  end;
+end;
+
+class procedure TRADWinUISettings.SetVisionKey(const AKey: string; AProvider: TVisionProvider; const AValue: string);
+var
+  Registry: TRegistry;
+  Data: TBytes;
+begin
+  Data := ProtectText(AValue.Trim);
+  Registry := TRegistry.Create;
+  try
+    Registry.RootKey := HKEY_CURRENT_USER;
+    if not Registry.OpenKey(AKey, True) then
+      raise Exception.Create('Cannot write the RADWinUI settings to HKEY_CURRENT_USER' + AKey);
+    if Length(Data) = 0 then
+      Registry.DeleteValue(VisionKeyName(AProvider))
+    else
+      Registry.WriteBinaryData(VisionKeyName(AProvider), Data[0], Length(Data));
+  finally
+    Registry.Free;
+  end;
 end;
 
 end.
