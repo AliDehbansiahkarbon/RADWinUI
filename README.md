@@ -36,6 +36,7 @@ RADWinUI works the way a Delphi developer expects. File > New creates the projec
 - **File > New wizards.** RADWinUI Application creates a ready-to-run project. RADWinUI Window, Page, User Control and Resource File add to it.
 - **Pages and navigation.** Pages in a frame, with parameters, back and forward, page transitions and a page that asks before it is left. A NavigationView drives the frame with one call.
 - **User controls.** A `.xaml` file with its `.pas` unit, used in other XAML as `<local:Name/>` with its own properties and events.
+- **WinUI inside VCL forms.** `TWinUIHost` on the Tool Palette puts WinUI content on an existing VCL form, bound to your data and wired to the form's event handlers, so a VCL application gets a modern screen one panel at a time ([docs](docs/VCL-HOSTING.md)).
 - **Several windows.** Tool windows, modal windows with a result, VCL-style `OnCloseQuery` and `OnClose`, full screen, compact overlay, a window that opens where the user left it, and WinUI's TitleBar control or a title bar of your own.
 - **App services.** Message and input boxes, file and folder pickers, Windows notifications you can answer, single instance, and the files and links Windows starts your app for.
 - **Several languages.** `x:Uid` texts from `.resw` files, one language or many, right to left included, without MSIX.
@@ -166,6 +167,7 @@ Open `samples\RADWinUISamples.groupproj`, Build All, and run:
 - **[Quill](docs/samples-Quill.md):** a notes app that uses the app services: open, save and folder pickers, "Save changes?" and rename dialogs, reminders as Windows notifications you can answer, and one running Quill that Windows starts for `.qnote` files and `quill://` links. In English, German and Persian (right to left).
 - **[Crew](docs/samples-Crew.md):** a team directory in a NavigationView: four pages, the person handed to the profile page as a parameter, a People page that keeps its search, a profile that asks before it is left with unsaved changes, and a person card user control used three times.
 - **[Tempo](docs/samples-Tempo.md):** a radio player with several windows: WinUI's TitleBar with a search box and a back button, a tool window, a modal dialog window with a result, a compact overlay mini player, full screen, and a window that opens where you left it.
+- **[Customers_VCL](docs/samples-Customers_VCL.md):** a classic VCL screen whose details panel is WinUI in a `TWinUIHost`, bound two-way to the selected customer.
 - **[AppServicesDemo](docs/samples-AppServicesDemo.md):** one button for each dialog, picker, notification and activation service, with a log of every result, to try them one at a time.
 
 Smaller samples (Counter, Greeter, ListDemo, Contacts, Profile) show one topic each. They are in the same group, or build one with `scripts\Build.ps1 -Project samples\Counter\Counter.dpr`.

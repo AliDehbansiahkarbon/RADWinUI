@@ -26,7 +26,7 @@ Windows App SDK 2.6.5   Microsoft.UI.Xaml (real WinUI 3 controls), DispatcherQue
 - `RADWinUI.Runtime.Bootstrap`: Windows App Runtime bootstrapper
 - `RADWinUI.Runtime.Application`: `TWinUIApplication`, the Delphi subclass of `Microsoft.UI.Xaml.Application` (COM aggregation), with `IXamlMetadataProvider` forwarding and `XamlControlsResources` merged at launch
 
-**Framework** (`src/Framework`). The developer-facing API: Pascal properties, events as method pointers with automatic token removal, WinRT errors as Delphi exceptions, `{Binding}` support through RTTI-based `INotifyPropertyChanged` and `ICustomPropertyProvider`.
+**Framework** (`src/Framework`). The developer-facing API: Pascal properties, events as method pointers with automatic token removal, WinRT errors as Delphi exceptions, `{Binding}` support through RTTI-based `INotifyPropertyChanged` and `ICustomPropertyProvider`. `RADWinUI.VclHost` puts WinUI content on VCL forms (`TWinUIHost`, XAML Islands): the first host starts WinUI on the VCL main thread, and the IDE packages build the same unit as a placeholder without WinUI ([WinUI inside VCL forms](VCL-HOSTING.md)).
 
 **XAML code generation** (`tools/XamlCodeGen`, built into `bin\XamlCodeGen.exe`). Reads a `.xaml` file and emits a generated base class (`TMainWindowBase`) with one typed field per `x:Name` and the XAML embedded as a string constant, it checks handlers, binding paths and converters at build time ([XAML reference](XAML.md)). The user's class inherits from it, because Delphi has no partial classes. Handlers are wired by naming convention (`IncrementButtonClick`) or an attribute.
 

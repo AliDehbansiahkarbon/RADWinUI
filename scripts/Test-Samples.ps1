@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Drives the samples (Counter, Greeter, ListDemo, Contacts, Profile) with UI Automation.
+  Drives the samples (Counter, Greeter, ListDemo, Contacts, Profile, Customers_VCL...) with UI Automation.
 
 .DESCRIPTION
   Starts each sample from samples\<Name>\Win64\<Config>, performs its
@@ -108,18 +108,76 @@ function Get-Children($Element, $Type) {
     (New-Object Windows.Automation.PropertyCondition($AE::ControlTypeProperty, $Type))))
 }
 
-function Test-Sample([string]$Name, [scriptblock]$Scenario) {
+# A VCL app shows its main form itself (TWinUIWindow.Show does it for WinUI windows):
+# started hidden (the first ShowWindow takes the startup value), then put where the
+# test windows go and shown without activation
+Add-Type @'
+using System;
+using System.Runtime.InteropServices;
+public static class HiddenStart {
+  [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Unicode)]
+  struct STARTUPINFO { public int cb; public string reserved, desktop, title; public int x, y, w, h, xChars, yChars, fill, flags; public short show, reserved2; public IntPtr reserved3, input, output, error; }
+  [StructLayout(LayoutKind.Sequential)]
+  struct PROCESS_INFORMATION { public IntPtr process, thread; public int processId, threadId; }
+  [DllImport("kernel32", CharSet = CharSet.Unicode, SetLastError = true)]
+  static extern bool CreateProcess(string app, string cmd, IntPtr pa, IntPtr ta, bool inherit, int flags, IntPtr env, string dir, ref STARTUPINFO si, out PROCESS_INFORMATION pi);
+  [DllImport("kernel32")] static extern bool CloseHandle(IntPtr h);
+  [DllImport("user32")] public static extern bool SetWindowPos(IntPtr h, IntPtr after, int x, int y, int cx, int cy, int flags);
+  [DllImport("user32")] public static extern bool ShowWindow(IntPtr h, int cmd);
+  [DllImport("user32")] static extern bool PostMessage(IntPtr h, int msg, IntPtr w, IntPtr l);
+  public static void Click(IntPtr button) { PostMessage(button, 0xF5, IntPtr.Zero, IntPtr.Zero); } // BM_CLICK
+  delegate bool EnumProc(IntPtr h, IntPtr data);
+  [DllImport("user32")] static extern bool EnumWindows(EnumProc proc, IntPtr data);
+  [DllImport("user32")] static extern int GetWindowThreadProcessId(IntPtr h, out int pid);
+  [DllImport("user32", CharSet = CharSet.Unicode)] static extern int GetClassName(IntPtr h, System.Text.StringBuilder name, int size);
+  // A top-level window of the process with that class, visible or not; zero when there is none yet
+  public static IntPtr Find(int processId, string className) {
+    IntPtr found = IntPtr.Zero;
+    EnumWindows((h, data) => {
+      int pid; GetWindowThreadProcessId(h, out pid);
+      var name = new System.Text.StringBuilder(256); GetClassName(h, name, 256);
+      if (pid == processId && name.ToString() == className) { found = h; return false; }
+      return true;
+    }, IntPtr.Zero);
+    return found;
+  }
+  public static int Start(string exe) {
+    var si = new STARTUPINFO(); si.cb = Marshal.SizeOf(si); si.flags = 1; si.show = 0; // STARTF_USESHOWWINDOW, SW_HIDE
+    PROCESS_INFORMATION pi;
+    if (!CreateProcess(exe, null, IntPtr.Zero, IntPtr.Zero, false, 0, IntPtr.Zero, System.IO.Path.GetDirectoryName(exe), ref si, out pi))
+      throw new System.ComponentModel.Win32Exception(Marshal.GetLastWin32Error());
+    CloseHandle(pi.thread); CloseHandle(pi.process);
+    return pi.processId;
+  }
+}
+'@
+function Show-InTestArea([IntPtr]$H) {
+  Add-Type -AssemblyName System.Windows.Forms
+  $Area = if ($Monitor -eq 'offscreen') { New-Object Drawing.Rectangle(-32000, -32000, 3840, 2160) }
+    else { ([Windows.Forms.Screen]::AllScreens | Sort-Object Primary | Select-Object -First 1).WorkingArea }
+  # SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE, then SW_SHOWNOACTIVATE
+  $null = [HiddenStart]::SetWindowPos($H, [IntPtr]::Zero, $Area.X + 40, $Area.Y + 200, 0, 0, 0x15)
+  $null = [HiddenStart]::ShowWindow($H, 4)
+}
+
+function Test-Sample([string]$Name, [scriptblock]$Scenario, [string]$VclForm) {
   if ($Only -and $Name -notin $Only) { return $true }
   Write-Host $Name
   $Exe = Join-Path $RepoRoot "samples\$Name\Win64\$Config\$Name.exe"
-  $Proc = Start-Process $Exe -PassThru
+  $Proc = if ($VclForm) { Get-Process -Id ([HiddenStart]::Start($Exe)) } else { Start-Process $Exe -PassThru }
   $null = $Proc.Handle # keeps ExitCode readable after exit
   $Win = $null
   $Cond = New-Object Windows.Automation.PropertyCondition($AE::ProcessIdProperty, $Proc.Id)
   try {
-    # The WinUI window itself: other top-level elements of the process have no WindowPattern
+    # The WinUI window itself, or the VCL form: other top-level elements of the process have no WindowPattern
+    $Class = if ($VclForm) { $VclForm } else { 'WinUIDesktopWin32WindowClass' }
     $WinCond = New-Object Windows.Automation.AndCondition($Cond,
-      (New-Object Windows.Automation.PropertyCondition($AE::ClassNameProperty, 'WinUIDesktopWin32WindowClass')))
+      (New-Object Windows.Automation.PropertyCondition($AE::ClassNameProperty, $Class)))
+    if ($VclForm) {
+      # Hidden windows are not in the UI Automation tree: find the form by its window class
+      $Hwnd = Wait-For { $H = [HiddenStart]::Find($Proc.Id, $VclForm); if ($H -ne [IntPtr]::Zero) { $H } } "the $Name form"
+      Show-InTestArea $Hwnd
+    }
     $Win = Wait-For { $AE::RootElement.FindFirst([Windows.Automation.TreeScope]::Children, $WinCond) } "the $Name window"
     & $Scenario $Win
     $Win.GetCurrentPattern([Windows.Automation.WindowPattern]::Pattern).Close()
@@ -366,6 +424,22 @@ $Results = @(
     Expect-Name $Win 'StationName' 'Lo-fi Study'
     Write-Host "  [ok] the title bar's back button goes back"
   }
+  Test-Sample 'Customers_VCL' -VclForm 'TCustomersForm' {
+    param($Win)
+    # The WinUI details panel inside the VCL form, bound to the selected customer
+    Expect-Value $Win 'NameBox' 'Ada Lovelace'
+    Set-Text (Get-Id $Win 'NameBox') 'Ada King'
+    Invoke-Named $Win 'Save'
+    $null = Get-Named $Win 'Saved Ada King'
+    Write-Host "  [ok] Save (SaveButtonClick) takes the two-way bound name to the VCL status bar"
+    Set-Text (Get-Id $Win 'EmailBox') 'changed@example.com'
+    Invoke-Named $Win 'Revert'
+    Expect-Value $Win 'EmailBox' 'ada@example.com'
+    # A VCL TButton is a plain pane for UI Automation: click it through its window
+    [HiddenStart]::Click([IntPtr](Get-Named $Win 'New').Current.NativeWindowHandle)
+    Expect-Value $Win 'NameBox' 'New customer'
+    Write-Host "  [ok] the VCL New button shows the new customer in the WinUI panel"
+  }
 )
 
 # Closing a window must not crash the app afterwards (the WinUI DLLs stay
@@ -403,6 +477,10 @@ $Results += ($LASTEXITCODE -eq 0)
 Write-Host 'Overlay controls and their automation peers'
 & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\CustomControls\OverlayControlsTest.dpr' | Out-Null
 & (Join-Path $RepoRoot 'tests\CustomControls\Win64\Debug\OverlayControlsTest.exe')
+$Results += ($LASTEXITCODE -eq 0)
+Write-Host 'WinUI inside VCL forms'
+& (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\VclHost\VclHostTest.dpr' | Out-Null
+& (Join-Path $RepoRoot 'tests\VclHost\Win64\Debug\VclHostTest.exe') | Select-Object -Skip 1
 $Results += ($LASTEXITCODE -eq 0)
 Write-Host 'Localization'
 & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Localization\LocalizationTest.dpr' | Out-Null

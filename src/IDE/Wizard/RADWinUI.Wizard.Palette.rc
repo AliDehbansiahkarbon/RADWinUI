@@ -1,0 +1,4 @@
+// Tool Palette images of TWinUIHost (RADWinUI.VclHost), drawn from RADWinUI.ico
+TWINUIHOST BITMAP "TWinUIHost24.bmp"
+TWINUIHOST16 BITMAP "TWinUIHost16.bmp"
+TWINUIHOST32 BITMAP "TWinUIHost32.bmp"

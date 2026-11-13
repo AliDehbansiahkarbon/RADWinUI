@@ -48,6 +48,8 @@
         <DCC_DcuOutput>..\build\packages\$(Platform)\dcu</DCC_DcuOutput>
         <DCC_SYMBOL_PLATFORM>false</DCC_SYMBOL_PLATFORM>
         <DCC_UNIT_PLATFORM>false</DCC_UNIT_PLATFORM>
+        <!-- RADWinUI.VclHost as plain VCL: TWinUIHost paints a placeholder, no WinUI in the IDE -->
+        <DCC_Define>RADWINUI_DESIGNTIME;$(DCC_Define)</DCC_Define>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_1)'!=''">
         <DCC_Define>DEBUG;$(DCC_Define)</DCC_Define>
@@ -86,6 +88,8 @@
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Retention.pas"/>
         <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.Structure.pas"/>
         <DCCReference Include="..\src\IDE\Preview\RADWinUI.Preview.Command.pas"/>
+        <DCCReference Include="..\src\Framework\RADWinUI.VclHost.pas"/>
+        <DCCReference Include="..\src\IDE\Designer\RADWinUI.Designer.VclHost.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>

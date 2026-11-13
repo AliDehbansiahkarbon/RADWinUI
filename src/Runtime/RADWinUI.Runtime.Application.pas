@@ -60,6 +60,11 @@ var
 procedure OnApplicationStart(const AProc: TProc);
 /// <summary>Runs AProc when the app ends, before WinRT shuts down.</summary>
 procedure OnApplicationShutdown(const AProc: TProc);
+/// <summary>
+///   Keeps the WinUI DLLs loaded until the process ends: call it before RoUninitialize
+///   when WinUI was started without Run (XAML islands in a VCL app).
+/// </summary>
+procedure PinXamlModules;
 
 type
   TWinUIApplication = class;

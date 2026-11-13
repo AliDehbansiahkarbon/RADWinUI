@@ -25,12 +25,18 @@ implementation
 uses
   Winapi.Windows,
   System.SysUtils,
+  System.Classes,
+  DesignIntf,
   System.IOUtils,
   Vcl.Graphics,
   ToolsAPI,
   RADWinUI.Wizard.Templates,
   RADWinUI.Wizard.Dialog,
-  RADWinUI.Preview.Command;
+  RADWinUI.Preview.Command,
+  RADWinUI.VclHost,
+  RADWinUI.Designer.VclHost;
+
+{$R RADWinUI.Wizard.Palette.res} // TWinUIHost's Tool Palette images
 
 type
   TRADWinUIWizard = class(TNotifierObject, IOTAWizard, IOTARepositoryWizard, IOTARepositoryWizard60,
@@ -415,6 +421,9 @@ begin
   RegisterPackageWizard(TRADWinUIFileWizard.Create(fkUserControl));
   RegisterPackageWizard(TRADWinUIFileWizard.Create(fkResource));
   AddPreviewCommand;
+  // WinUI content on VCL forms; the package builds it as a placeholder
+  RegisterComponents('RADWinUI', [TWinUIHost]);
+  RegisterPropertyEditor(TypeInfo(string), TWinUIHost, 'XamlFile', TWinUIXamlFileProperty);
   try
     AddSplashBranding;
   except
