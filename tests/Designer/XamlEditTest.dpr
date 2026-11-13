@@ -119,6 +119,21 @@ begin
   Check(Raised, 'refuses an attribute name that is not a name');
 
   Writeln('XAML structure edits');
+  // A drag of a multi-selection: every element placed in its own panel, in one edit
+  Value := ApplyDesignerEvent('<Grid>' + NL + '  <Button x:Name="A" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,10,0,0"/>' + NL +
+    '  <Button x:Name="B" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="10,70,0,0"/>' + NL + '</Grid>',
+    'MOVEMULTI 2 3 50 30;3 3 50 90');
+  Check(Value.Contains('x:Name="A" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="50,30,0,0"') and
+    Value.Contains('x:Name="B" HorizontalAlignment="Left" VerticalAlignment="Top" Margin="50,90,0,0"'),
+    'MOVEMULTI moves every element of a multi-selection drag');
+  Raised := False;
+  try
+    ApplyDesignerEvent('<Grid/>', 'MOVEMULTI 1 1 5');
+  except
+    on EXamlEdit do
+      Raised := True;
+  end;
+  Check(Raised, 'a MOVEMULTI with a missing field is refused');
   Same(CopyElement(Xaml, 4, 5), '<Button x:Name="IncrementButton"' + NL +
     '            Content="Increment"/>', 'copy keeps the selected element text');
   Value := PasteElement(Xaml, 4, 5, CopyElement(Xaml, 4, 5));

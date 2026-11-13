@@ -4,6 +4,8 @@ All notable changes to RADWinUI.
 
 ## Unreleased
 
+- Designer: dragging one of several selected controls moves them all by the same offset, each in its own Grid or Canvas, with their outlines following the pointer and the snap guides of the control under it. It is one undoable edit and the selection stays. A drag that starts on a control outside the selection moves that control alone, as before.
+
 - Hot reload: edit a `.xaml` file in the IDE while the app runs in Debug, and its windows, pages and user controls show the change without a rebuild. They keep their DataContext, size, position and Pascal state, and their `x:Name` fields and events are wired again. An edit that needs new code (a removed `x:Name`, other event wiring) keeps the content and says "Rebuild needed", a XAML error keeps the last good content. A bar at the top of the window shows the outcome. Tools > Options > Third Party > RADWinUI sets it to while typing (default), on save or off. TWinUIHost reloads its `XamlFile` too. Release builds have no hot reload code. See [Hot reload](HOT-RELOAD.md).
 - XamlCodeGen 0.5: the constructor (or Initialize) calls `WireXaml`, which fills the fields and wires the events of the content. Debug builds get `ReloadXaml` and the `XamlShape` hot reload compares. `TWinUIWindow.LoadContent` keeps the DataContext of the content it replaces. New `TWinUIXamlPage.ReplaceXaml`.
 

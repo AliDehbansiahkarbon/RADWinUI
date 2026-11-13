@@ -95,7 +95,8 @@ function NewElementName(const AXaml, ATag: string): string;
 ///   MOVE <line> <column> <panel line> <panel column> <index> <row> <column>,
 ///   DELETE <line> <column>, and free placement:
 ///   PLACE <line> <column> <panel line> <panel column> Grid|Canvas <row> <column> <left> <top>,
-///   INSERTAT <tag> <panel line> <panel column> Grid|Canvas <row> <column> <left> <top>.
+///   INSERTAT <tag> <panel line> <panel column> Grid|Canvas <row> <column> <left> <top>,
+///   and NUDGEMULTI or MOVEMULTI <line> <column> <left> <top>;... for several elements.
 ///   Raises EXamlEdit for anything else.
 /// </summary>
 function ApplyDesignerEvent(AXaml: string; const AEvent: string): string;
@@ -1258,8 +1259,28 @@ end;
 
 function ApplyDesignerEvent(AXaml: string; const AEvent: string): string;
 var
-  P: TArray<string>;
+  P, Fields: TArray<string>;
+  Moves: TArray<TXamlNudge>;
+  Move: TXamlNudge;
+  Part: string;
 begin
+  // NUDGEMULTI or MOVEMULTI <line> <column> <left> <top>;...: several elements moved in their panels
+  if AEvent.StartsWith('NUDGEMULTI ') or AEvent.StartsWith('MOVEMULTI ') then
+  begin
+    Moves := nil;
+    for Part in AEvent.Substring(AEvent.IndexOf(' ') + 1).Split([';']) do
+    begin
+      Fields := Part.Split([' ']);
+      if Length(Fields) <> 4 then
+        raise EXamlEdit.Create('Not a designer event: ' + AEvent);
+      Move.Line := Fields[0].ToInteger;
+      Move.Column := Fields[1].ToInteger;
+      Move.Left := Fields[2].ToInteger;
+      Move.Top := Fields[3].ToInteger;
+      Moves := Moves + [Move];
+    end;
+    Exit(NudgeElements(AXaml, Moves));
+  end;
   P := AEvent.Split([' ']);
   if (Length(P) = 10) and (P[0] = 'PLACE') then
     Exit(PlaceElement(AXaml, P[1].ToInteger, P[2].ToInteger, P[3].ToInteger, P[4].ToInteger, P[5],

@@ -238,7 +238,10 @@ In Design, **Ctrl+click** adds a control to the selection or takes it out,
 that it touches, and **Ctrl+A** selects the children of the selected control's
 panel (or of the window's content). The first control is the one the Object
 Inspector shows; a change there goes to every selected control. Delete, Cut,
-Copy, Paste and Ctrl+Arrow act on all of them as one undoable edit.
+Copy, Paste and Ctrl+Arrow act on all of them as one undoable edit. Dragging one
+of the selected controls moves them all by the same offset, each in its own Grid
+or Canvas, as one undoable edit, and they stay selected. A drag that starts on a
+control outside the selection selects and moves that control alone.
 
 In Design, **Delete** removes the selected control with one undoable XAML edit.
 **Ctrl+Z** undoes the edit, and **Ctrl+Y** or **Ctrl+Shift+Z** redoes it. These

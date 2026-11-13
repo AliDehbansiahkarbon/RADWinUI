@@ -49,7 +49,8 @@ unit RADWinUI.Preview.Host;
   the children of the selected element's panel (or of the window's content).
   MULTI <SELECTED fields>;<SELECTED fields>;... reports them, the first is the
   primary one. Ctrl+Arrow moves them all: NUDGEMULTI <line> <column> <left>
-  <top>;... Delete, Copy and Cut act on them in the IDE.
+  <top>;... and so does a drag that starts on one of them, by the pointer's offset
+  (each in its own Grid or Canvas): MOVEMULTI with the same fields. Delete, Copy and Cut act on them in the IDE.
 
   Ctrl+Arrow moves the selected child of a Grid or Canvas by 1 DIP, with Shift
   by 8: NUDGE <line> <column> <left> <top>, its new place in the parent (the
@@ -159,8 +160,16 @@ type
     FTargetKind: string;      // set by DropTarget: StackPanel, Grid or Canvas
     FCellOrigin: RADWinUI.Abi.Point; // set by DropTarget: the Grid cell's or Canvas's top-left, content coordinates
     FGrab: RADWinUI.Abi.Point;       // where the pointer holds the dragged element, from its top-left
+    // A press on an element of a multi-selection: a drag moves them all (FDragElement under the pointer)
+    FMultiDrag: Boolean;
+    FDragElement: IFrameworkElement;
     procedure PaletteDropTick(Sender: TObject);
     procedure GrabAt(const APoint: RADWinUI.Abi.Point);
+    procedure GrabElement(const APoint: RADWinUI.Abi.Point; const AElement: IFrameworkElement);
+    function KeyAt(const APoint: RADWinUI.Abi.Point): string;
+    function PressAt(const APoint: RADWinUI.Abi.Point): string;
+    function MoveAll(const AFrom, ATo: RADWinUI.Abi.Point): string;
+    procedure OffsetOutlines(const AFrom, ATo: RADWinUI.Abi.Point);
     function FreeTarget: Boolean;
     procedure DragTick(Sender: TObject);
     function OverPreview(const APoint: RADWinUI.Abi.Point): Boolean;
@@ -200,7 +209,7 @@ type
     function ToggleAt(const APoint: RADWinUI.Abi.Point): string;
     function MarqueeSelect(const AFrom, ATo: RADWinUI.Abi.Point): string;
     function SelectAllChildren: string;
-    function NudgeAll(ADX, ADY: Integer): string;
+    function NudgeAll(ADX, ADY: Integer; ARestart: Boolean = False): string;
     procedure ShowMarquee(const AFrom, ATo: RADWinUI.Abi.Point);
     procedure StartPipe(const AName: string);
     procedure StartEventPipe(const AName: string);
@@ -994,8 +1003,7 @@ begin
       end
       else
       begin
-        FPressReply := SelectAt(FPressAt);
-        GrabAt(FPressAt);
+        FPressReply := PressAt(FPressAt);
         FSnap := Default(RADWinUI.Abi.Point);
         FPressed := True;
         FDragging := False;
@@ -1979,7 +1987,7 @@ begin
 end;
 
 /// NUDGEMULTI for a keyboard move of every selected element of a Grid or Canvas by ADX, ADY DIPs.
-function TPreviewWindow.NudgeAll(ADX, ADY: Integer): string;
+function TPreviewWindow.NudgeAll(ADX, ADY: Integer; ARestart: Boolean): string;
 var
   Key, Kind: string;
   Keys: TArray<string>;
@@ -1994,7 +2002,7 @@ begin
   if (FSelected = '') or (FRoot = nil) then
     Exit;
   // Repeated keys build on the places sent last: the preview shows a move once the IDE has written it
-  Fresh := GetTickCount - FNudgesAt >= 1000;
+  Fresh := ARestart or (GetTickCount - FNudgesAt >= 1000);
   if Fresh then
     FNudges.Clear;
   FNudgesAt := GetTickCount;
@@ -2162,10 +2170,21 @@ begin
   begin
     Parts := Request.Split([' ']);
     At := ToContent(StrToIntDef(Parts[1], 0), StrToIntDef(Parts[2], 0));
-    if SelectAt(At) = 'NONE' then
+    if PressAt(At) = 'NONE' then
       Exit('NONE');
-    GrabAt(At);
-    Result := MoveTo(ToContent(StrToIntDef(Parts[3], 0), StrToIntDef(Parts[4], 0)));
+    if FMultiDrag then
+      Result := MoveAll(At, ToContent(StrToIntDef(Parts[3], 0), StrToIntDef(Parts[4], 0)))
+    else
+      Result := MoveTo(ToContent(StrToIntDef(Parts[3], 0), StrToIntDef(Parts[4], 0)));
+    FMultiDrag := False;
+    FDragElement := nil;
+    Queue(Result);
+  end
+  else if Request.StartsWith('TOGGLE ') then
+  begin
+    // A Ctrl+click at a screen pixel, as tests send it
+    Parts := Request.Split([' ']);
+    Result := ToggleAt(ToContent(StrToIntDef(Parts[1], 0), StrToIntDef(Parts[2], 0)));
     Queue(Result);
   end
   else
@@ -2415,6 +2434,7 @@ var
   Cursor: TPoint;
   At, Origin: RADWinUI.Abi.Point;
   Target: string;
+  Panel: IFrameworkElement;
 begin
   GetCursorPos(Cursor);
   At := ToContent(Cursor.X, Cursor.Y);
@@ -2442,6 +2462,27 @@ begin
   end;
   if GetAsyncKeyState(VK_LBUTTON) < 0 then
   begin
+    if FMultiDrag and (FDragElement <> nil) then
+    begin
+      if Abs(At.X - FPressAt.X) + Abs(At.Y - FPressAt.Y) > 8 then
+        FDragging := True;
+      if FDragging then
+      begin
+        // The whole selection follows the pointer, lined up by the element under it
+        FSnap := Default(RADWinUI.Abi.Point);
+        if Supports(VisualTreeHelper.GetParent(FDragElement as IDependencyObject), IFrameworkElement, Panel) then
+        begin
+          Origin.X := At.X - FGrab.X;
+          Origin.Y := At.Y - FGrab.Y;
+          FSnap := ShowGuides(Origin, FDragElement.ActualWidth, FDragElement.ActualHeight, Panel,
+            GetAsyncKeyState(VK_MENU) >= 0);
+        end;
+        Origin.X := At.X + FSnap.X;
+        Origin.Y := At.Y + FSnap.Y;
+        OffsetOutlines(FPressAt, Origin);
+      end;
+      Exit;
+    end;
     if FSelected <> '' then
     begin
       if Abs(At.X - FPressAt.X) + Abs(At.Y - FPressAt.Y) > 8 then
@@ -2479,7 +2520,20 @@ begin
   end;
   FDragTimer.Enabled := False;
   HideGuides(nil);
-  if FDragging then
+  if FMultiDrag then
+  begin
+    OffsetOutlines(FPressAt, FPressAt);
+    if FDragging then
+    begin
+      At.X := At.X + FSnap.X;
+      At.Y := At.Y + FSnap.Y;
+      Queue(MoveAll(FPressAt, At));
+    end
+    else
+      // A click on one of the selected elements selects it alone
+      Queue(SelectAt(FPressAt));
+  end
+  else if FDragging then
   begin
     At.X := At.X + FSnap.X;
     At.Y := At.Y + FSnap.Y;
@@ -2490,6 +2544,8 @@ begin
   FPressReply := '';
   FPressed := False;
   FDragging := False;
+  FMultiDrag := False;
+  FDragElement := nil;
   ShowMark(False);
 end;
 
@@ -2782,8 +2838,6 @@ end;
 
 /// Remembers where APoint holds the selected element, for free placement.
 procedure TPreviewWindow.GrabAt(const APoint: RADWinUI.Abi.Point);
-var
-  TopLeft: RADWinUI.Abi.Point;
 begin
   FGrab.X := 0;
   FGrab.Y := 0;
@@ -2791,13 +2845,112 @@ begin
     Exit;
   if FSelectedElement = nil then
     FSelectedElement := FindByKey(FRoot as IDependencyObject, FSelected);
-  if FSelectedElement = nil then
+  GrabElement(APoint, FSelectedElement);
+end;
+
+/// Remembers where APoint holds AElement, from its top-left.
+procedure TPreviewWindow.GrabElement(const APoint: RADWinUI.Abi.Point; const AElement: IFrameworkElement);
+var
+  TopLeft: RADWinUI.Abi.Point;
+begin
+  FGrab.X := 0;
+  FGrab.Y := 0;
+  if AElement = nil then
     Exit;
   TopLeft.X := 0;
   TopLeft.Y := 0;
-  TopLeft := (FSelectedElement as IUIElement).TransformToVisual(nil).TransformPoint(TopLeft);
+  TopLeft := (AElement as IUIElement).TransformToVisual(nil).TransformPoint(TopLeft);
   FGrab.X := APoint.X - TopLeft.X;
   FGrab.Y := APoint.Y - TopLeft.Y;
+end;
+
+/// The key of the topmost designable element at APoint, '' when there is none. Selects nothing.
+function TPreviewWindow.KeyAt(const APoint: RADWinUI.Abi.Point): string;
+var
+  Hits: IIterator_UIElement;
+  Hit: IDependencyObject;
+  Element: IFrameworkElement;
+begin
+  Result := '';
+  Hits := VisualTreeHelper.FindAllElementsInHostCoordinatesPoint(APoint,
+    TWinUIObject.IntfOf(FHost, IUIElement) as IUIElement, True).First;
+  if not Hits.HasCurrent then
+    Exit;
+  Hit := Hits.Current as IDependencyObject;
+  while Hit <> nil do
+  begin
+    if Supports(Hit, IFrameworkElement, Element) and FElements.ContainsKey(KeyOf(Element)) then
+      Exit(KeyOf(Element));
+    Hit := VisualTreeHelper.GetParent(Hit);
+  end;
+end;
+
+/// A press without Ctrl: on an element of a multi-selection it keeps the selection, for a drag
+/// of them all (FMultiDrag), otherwise it selects the element under the pointer.
+function TPreviewWindow.PressAt(const APoint: RADWinUI.Abi.Point): string;
+var
+  Key: string;
+begin
+  FMultiDrag := False;
+  FDragElement := nil;
+  Key := KeyAt(APoint);
+  if (FExtra.Count > 0) and (Key <> '') and ((Key = FSelected) or FExtra.Contains(Key)) and (FRoot <> nil) then
+  begin
+    FDragElement := FindByKey(FRoot as IDependencyObject, Key);
+    if FDragElement <> nil then
+    begin
+      FMultiDrag := True;
+      GrabElement(APoint, FDragElement);
+      Exit(SelectionReply);
+    end;
+  end;
+  Result := SelectAt(APoint);
+  GrabAt(APoint);
+end;
+
+/// The drop of a multi-selection drag from AFrom to ATo (content coordinates): every selected
+/// element of a Grid or Canvas moves by that offset in its own panel, as one NUDGEMULTI edit.
+/// They stay in their panels: a drop over another container moves none of them into it.
+function TPreviewWindow.MoveAll(const AFrom, ATo: RADWinUI.Abi.Point): string;
+var
+  Panel: IUIElement;
+  ToPanel: IGeneralTransform;
+  From, Upto: RADWinUI.Abi.Point;
+begin
+  Result := 'NONE';
+  if (FDragElement = nil) or
+    not Supports(VisualTreeHelper.GetParent(FDragElement as IDependencyObject), IUIElement, Panel) then
+    Exit;
+  // The offset in the panel's own units: a zoomed preview scales the pointer's
+  ToPanel := Panel.TransformToVisual(nil).Inverse;
+  From := ToPanel.TransformPoint(AFrom);
+  Upto := ToPanel.TransformPoint(ATo);
+  if (Round(Upto.X - From.X) = 0) and (Round(Upto.Y - From.Y) = 0) then
+    Exit(SelectionReply);
+  Result := NudgeAll(Round(Upto.X - From.X), Round(Upto.Y - From.Y), True);
+  // A drag is one change of its own, not part of a burst of Ctrl+Arrow moves
+  if Result.StartsWith('NUDGEMULTI ') then
+    Result := 'MOVEMULTI ' + Result.Substring(Length('NUDGEMULTI '));
+end;
+
+/// The outlines of the selection shown moved by the pointer's offset from AFrom to ATo while it
+/// drags them (AFrom = ATo puts them back).
+procedure TPreviewWindow.OffsetOutlines(const AFrom, ATo: RADWinUI.Abi.Point);
+var
+  ToAdorner: IGeneralTransform;
+  From, Upto: RADWinUI.Abi.Point;
+  Shift: ITranslateTransform;
+  Box: IUIElement;
+begin
+  ToAdorner := (TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).TransformToVisual(nil).Inverse;
+  From := ToAdorner.TransformPoint(AFrom);
+  Upto := ToAdorner.TransformPoint(ATo);
+  Shift := TranslateTransform.New;
+  Shift.X := Upto.X - From.X;
+  Shift.Y := Upto.Y - From.Y;
+  (TWinUIObject.IntfOf(FSelectionBox, IUIElement) as IUIElement).RenderTransform := Shift as ITransform;
+  for Box in FExtraBoxes do
+    Box.RenderTransform := Shift as ITransform;
 end;
 
 procedure TPreviewWindow.WatchTick(Sender: TObject);

@@ -316,6 +316,41 @@ try {
     Where-Object { $_.Current.AutomationId -ne 'ToolText_Button' } | Select-Object -First 1 } 'the moved Button').Current.BoundingRectangle
   if ([Math]::Abs(($Moved.X - $NB.X) - $C.Width * 0.2) -gt 6) { throw "the Button moved $($Moved.X - $NB.X) px, not $($C.Width * 0.2)" }
   Ok "free move in a Grid: $Event writes the new Margin and the Button follows"
+  # A multi-selection moves together: Ctrl+click two buttons, drag one of them, both move by the same offset
+  $Pair = "<Grid xmlns=`"http://schemas.microsoft.com/winfx/2006/xaml/presentation`" xmlns:x=`"http://schemas.microsoft.com/winfx/2006/xaml`">`n" +
+    "    <Button x:Name=`"First`" Content=`"First`" HorizontalAlignment=`"Left`" VerticalAlignment=`"Top`" Margin=`"10,10,0,0`"/>`n" +
+    "    <Button x:Name=`"Second`" Content=`"Second`" HorizontalAlignment=`"Left`" VerticalAlignment=`"Top`" Margin=`"10,70,0,0`"/>`n" +
+    "    <Button x:Name=`"Third`" Content=`"Third`" HorizontalAlignment=`"Left`" VerticalAlignment=`"Top`" Margin=`"200,10,0,0`"/>`n</Grid>"
+  [IO.File]::WriteAllText($Edited, $Pair)
+  if ((Send $Edited $Pair) -ne 'OK') { throw 'LOAD of the two buttons failed' }
+  $F = (Wait-For { $E = Find-Id $Win 'First'; if ($E -and $E.Current.BoundingRectangle.Width -gt 0) { $E } } 'the First button').Current.BoundingRectangle
+  $S = (Find-Id $Win 'Second').Current.BoundingRectangle
+  $null = Hit-At ([int]($F.X + 5)) ([int]($F.Y + 5))
+  $Event = Request "TOGGLE $([int]($S.X + 5)) $([int]($S.Y + 5))"
+  $Pushed = Read-Event
+  if ($Event -notmatch '^MULTI ' -or $Pushed -ne $Event) { throw "Ctrl+click on Second answered $Event, pushed $Pushed" }
+  $Dpi = [RADWinUITest.Dpi]::GetDpiForWindow([IntPtr]$Win.Current.NativeWindowHandle)
+  $Event = Request "DRAG $([int]($S.X + 5)) $([int]($S.Y + 5)) $([int]($S.X + 5 + 40)) $([int]($S.Y + 5 + 20))"
+  $Pushed = Read-Event
+  if ($Pushed -ne $Event) { throw "the multi DRAG replied $Event but pushed $Pushed" }
+  $DX = [Math]::Round(40 * 96 / $Dpi); $DY = [Math]::Round(20 * 96 / $Dpi)
+  if ($Event -notmatch '^MOVEMULTI \d+ \d+ (\d+) (\d+);\d+ \d+ (\d+) (\d+)$') { throw "dragging the selection answered: $Event" }
+  $Got = @([int]$Matches[1], [int]$Matches[2], [int]$Matches[3], [int]$Matches[4]) | Sort-Object
+  $Want = @((10 + $DX), (10 + $DY), (10 + $DX), (70 + $DY)) | Sort-Object
+  for ($I = 0; $I -lt 4; $I++) { if ([Math]::Abs($Got[$I] - $Want[$I]) -gt 2) { throw "the selection moved to $Event, expected near $($Want -join ',')" } }
+  $Text = Apply $Event
+  if ($Text -notmatch "x:Name=`"First`"[^>]*Margin=`"(\d+),(\d+),0,0`"" -or [Math]::Abs([int]$Matches[1] - (10 + $DX)) -gt 2) { throw "First after the drag: $Text" }
+  if ($Text -notmatch "x:Name=`"Second`"[^>]*Margin=`"(\d+),(\d+),0,0`"" -or [Math]::Abs([int]$Matches[2] - (70 + $DY)) -gt 2) { throw "Second after the drag: $Text" }
+  if ($Text -notmatch "x:Name=`"Third`"[^>]*Margin=`"200,10,0,0`"") { throw "Third moved with the selection: $Text" }
+  $null = Wait-For { $E = Find-Id $Win 'First'; $E -and [Math]::Abs(($E.Current.BoundingRectangle.X - $F.X) - 40) -le 4 } 'First to follow'
+  $null = Wait-For { $E = Find-Id $Win 'Second'; $E -and [Math]::Abs(($E.Current.BoundingRectangle.Y - $S.Y) - 20) -le 4 } 'Second to follow'
+  Ok "multi drag: $Event moves First and Second by the same offset, Third stays"
+  # A drag that starts on an element outside the selection moves that one alone
+  $T = (Find-Id $Win 'Third').Current.BoundingRectangle
+  $Event = Request "DRAG $([int]($T.X + 5)) $([int]($T.Y + 5)) $([int]($T.X + 5 + 30)) $([int]($T.Y + 5))"
+  $null = Read-Event
+  if ($Event -notmatch '^PLACE ') { throw "dragging Third outside the selection answered: $Event" }
+  Ok "a drag outside the selection moves only that element: $Event"
   if ((Request 'TOOL AutoSuggestBox') -ne 'OK') { throw 'a generated palette control was not accepted' }
   $Event = Hit-At ([int]($C.X + 20)) ([int]($C.Y + 20))
   if ($Event -notmatch '^INSERTAT AutoSuggestBox ') { throw "generated palette control answered: $Event" }

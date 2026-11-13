@@ -3797,6 +3797,12 @@ begin
           NudgeSelection(Xaml)
         else if Xaml.StartsWith('NUDGEMULTI ') then
           NudgeMulti(Xaml)
+        else if Xaml.StartsWith('MOVEMULTI ') then
+        begin
+          // A drag of the multi-selection: the same moves, one undo step of its own
+          FNudgeText := '';
+          NudgeMulti('NUDGEMULTI ' + Xaml.Substring(Length('MOVEMULTI ')));
+        end
         else if Xaml.StartsWith('MULTI ') then
         begin
           if FInspector <> nil then
