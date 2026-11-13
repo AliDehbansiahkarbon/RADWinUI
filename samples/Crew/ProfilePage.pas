@@ -90,8 +90,7 @@ begin
   // Stay for now, ask, and let the navigation go on after Yes or No
   AArgs.Cancel := True;
   Proceed := AArgs.Proceed;
-  MessageDlg(Format('Save changes to %s?', [FPerson.Name]), TMsgDlgType.mtConfirmation,
-    [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo, TMsgDlgBtn.mbCancel],
+  MessageDlg(Format('Save changes to %s?', [FPerson.Name]), mtConfirmation, mbYesNoCancel,
     procedure(AResult: TModalResult)
     begin
       case AResult of

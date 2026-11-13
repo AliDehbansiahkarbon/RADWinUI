@@ -373,7 +373,7 @@ begin
     Exit;
   AArgs.Cancel := True;
   Proceed := AArgs.Proceed;
-  MessageDlg('Save changes?', TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo, TMsgDlgBtn.mbCancel],
+  MessageDlg('Save changes?', mtConfirmation, mbYesNoCancel,
     procedure(AResult: TModalResult)
     begin
       if AResult = mrYes then
@@ -464,16 +464,25 @@ end;
 
 ## Dialogs and pickers (RADWinUI.Dialogs)
 
-Message boxes, input boxes and the Windows file and folder pickers, named as in the VCL. WinUI never blocks the UI thread while a dialog is open, so the answer arrives in a callback, always on the UI thread.
+Message boxes, input boxes and the Windows file and folder pickers, named as in the VCL. New windows and pages have the unit in their uses clause, as VCL forms have `Vcl.Dialogs`. WinUI never blocks the UI thread while a dialog is open, so the code after the call runs at once and the answer arrives in a callback, always on the UI thread.
 
 ```pascal
 ShowMessage('Saved.');
+ShowMessageFmt('%d notes exported', [Count]);
 
-MessageDlg('Delete the file?', TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo],
+MessageDlg('Delete the file?', mtConfirmation, mbYesNo,
   procedure(AResult: TModalResult)
   begin
     if AResult = mrYes then
       DeleteFile(FFileName);
+  end);
+
+MessageDlg('The file was not found.', mtError, [mbOK]);   // no callback when the answer does not matter
+
+InputBox('Rename', 'New name:', FName,
+  procedure(const AValue: string)   // FName again when the user cancelled
+  begin
+    FName := AValue;
   end);
 
 InputQuery('Rename', 'New name:', FName,
@@ -494,6 +503,7 @@ FOpenDialog.Execute(
 ```
 
 - Dialogs and pickers belong to the active window, `TWinUIWindow.Active`. A dialog requested while another one is open waits for it.
+- The VCL names work: `mtWarning`, `mtError`, `mtInformation`, `mtConfirmation`, `mbYes`, `mbOK` and the other buttons, and the sets `mbYesNo`, `mbYesNoCancel`, `mbOKCancel`, `mbAbortRetryIgnore` and `mbAbortIgnore`. The results are `mrYes`, `mrNo`, `mrOK`, `mrCancel` and the others from `System.UITypes`.
 - A WinUI dialog has at most three buttons. Esc gives the result of Cancel, Close, No or Abort, the first of them in the buttons.
 - The pickers keep their settings between `Execute` calls: `Title`, `InitialDir`, `Filter` and `FilterIndex` in VCL syntax, `MultiSelect` and `Files`, `DefaultExt`, `OverwritePrompt` and `Folder`. They work in an elevated app too.
 - The captions of the buttons are resource strings (`SMsgDlgYes` and the others) that a translation can replace.

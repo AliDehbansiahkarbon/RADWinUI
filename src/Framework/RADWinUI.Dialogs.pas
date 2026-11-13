@@ -41,9 +41,36 @@ uses
   RADWinUI.Xaml,
   RADWinUI.Forms;
 
+const
+  // The names VCL code uses (Vcl.Dialogs): MessageDlg('Delete it?', mtConfirmation, mbYesNo, ...)
+  mtWarning = TMsgDlgType.mtWarning;
+  mtError = TMsgDlgType.mtError;
+  mtInformation = TMsgDlgType.mtInformation;
+  mtConfirmation = TMsgDlgType.mtConfirmation;
+  mtCustom = TMsgDlgType.mtCustom;
+
+  mbYes = TMsgDlgBtn.mbYes;
+  mbNo = TMsgDlgBtn.mbNo;
+  mbOK = TMsgDlgBtn.mbOK;
+  mbCancel = TMsgDlgBtn.mbCancel;
+  mbAbort = TMsgDlgBtn.mbAbort;
+  mbRetry = TMsgDlgBtn.mbRetry;
+  mbIgnore = TMsgDlgBtn.mbIgnore;
+  mbAll = TMsgDlgBtn.mbAll;
+  mbNoToAll = TMsgDlgBtn.mbNoToAll;
+  mbYesToAll = TMsgDlgBtn.mbYesToAll;
+  mbClose = TMsgDlgBtn.mbClose;
+
+  mbYesNo = [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo];
+  mbYesNoCancel = [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo, TMsgDlgBtn.mbCancel];
+  mbOKCancel = [TMsgDlgBtn.mbOK, TMsgDlgBtn.mbCancel];
+  mbAbortRetryIgnore = [TMsgDlgBtn.mbAbort, TMsgDlgBtn.mbRetry, TMsgDlgBtn.mbIgnore];
+  mbAbortIgnore = [TMsgDlgBtn.mbAbort, TMsgDlgBtn.mbIgnore];
+
 type
   TWinUIDialogResultProc = reference to procedure(AResult: TModalResult);
   TWinUIInputResultProc = reference to procedure(AOk: Boolean; const AValue: string);
+  TWinUIInputBoxProc = reference to procedure(const AValue: string);
   TWinUIExecuteProc = reference to procedure(AOk: Boolean);
 
   /// <summary>Base of the file and folder pickers.</summary>
@@ -125,17 +152,22 @@ type
 
 /// <summary>Shows AText with an OK button. AOnClose runs when it closes.</summary>
 procedure ShowMessage(const AText: string; const AOnClose: TProc = nil);
+/// <summary>ShowMessage(Format(AFormat, AArgs)).</summary>
+procedure ShowMessageFmt(const AFormat: string; const AArgs: array of const; const AOnClose: TProc = nil);
 
 /// <summary>
 ///   Shows AText with up to three buttons and passes the button that closed it
 ///   as mrYes, mrNo, mrOK, mrCancel and so on. Esc gives the result of Cancel,
-///   Close, No or Abort, the first one of them in AButtons.
+///   Close, No or Abort, the first one of them in AButtons. The dialog does not
+///   block: the code after the call runs at once, the answer arrives in AOnResult.
 /// </summary>
 procedure MessageDlg(const AText: string; ADlgType: TMsgDlgType; AButtons: TMsgDlgButtons;
-  const AOnResult: TWinUIDialogResultProc);
+  const AOnResult: TWinUIDialogResultProc = nil);
 
 /// <summary>Asks for one line of text. AOnResult gets False when the user cancelled.</summary>
 procedure InputQuery(const ACaption, APrompt, ADefault: string; const AOnResult: TWinUIInputResultProc);
+/// <summary>Asks for one line of text, like the VCL InputBox: ADefault when the user cancelled.</summary>
+procedure InputBox(const ACaption, APrompt, ADefault: string; const AOnResult: TWinUIInputBoxProc);
 
 /// <summary>
 ///   Splits a VCL filter into its descriptions and extension lists: '*.txt;*.log'
@@ -838,6 +870,21 @@ begin
     begin
       if Assigned(AOnClose) then
         AOnClose;
+    end);
+end;
+
+procedure ShowMessageFmt(const AFormat: string; const AArgs: array of const; const AOnClose: TProc);
+begin
+  ShowMessage(Format(AFormat, AArgs), AOnClose);
+end;
+
+procedure InputBox(const ACaption, APrompt, ADefault: string; const AOnResult: TWinUIInputBoxProc);
+begin
+  InputQuery(ACaption, APrompt, ADefault,
+    procedure(AOk: Boolean; const AValue: string)
+    begin
+      if Assigned(AOnResult) then
+        AOnResult(AValue); // InputQuery passes ADefault when cancelled
     end);
 end;
 

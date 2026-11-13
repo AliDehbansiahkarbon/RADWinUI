@@ -186,6 +186,8 @@ type
     procedure Step(Sender: TObject);
     function OpenDialog: IContentDialog;
     function HideDialog: Boolean;
+    // The open dialog's text, '' when none is open; hides it
+    function HideDialogText: string;
   public
     constructor Create; override;
     destructor Destroy; override;
@@ -243,6 +245,18 @@ begin
   Result := Dialog <> nil;
   if Result then
     Dialog.Hide;
+end;
+
+function TTestWindow.HideDialogText: string;
+var
+  Dialog: IContentDialog;
+begin
+  Result := '';
+  Dialog := OpenDialog;
+  if Dialog = nil then
+    Exit;
+  Result := TWinValue((Dialog as IContentControl).Content).AsString;
+  Dialog.Hide;
 end;
 
 function UIThreadId: Cardinal;
@@ -328,6 +342,27 @@ begin
     17:
       begin
         Check(QueuedOnThread = UIThreadId, 'TWinUIApp.Queue from another thread runs on the UI thread');
+        // The VCL names: InputBox gives the default when cancelled, ShowMessageFmt formats
+        InputBox('Rename', 'New name:', 'keep.txt',
+          procedure(const AValue: string)
+          begin
+            FLog := FLog + ['box=' + AValue];
+          end);
+      end;
+    19:
+      Check(HideDialog, 'InputBox opens a ContentDialog');
+    21:
+      begin
+        Check(FLog[High(FLog)] = 'box=keep.txt', 'cancelled InputBox gives the default');
+        ShowMessageFmt('%d notes exported', [3]);
+        MessageDlg('Saved.', mtInformation, [mbOK]); // no callback needed
+      end;
+    23:
+      Check(HideDialogText = '3 notes exported', 'ShowMessageFmt shows the formatted text');
+    25:
+      Check(HideDialog, 'MessageDlg with mtInformation, [mbOK] and no callback');
+    27:
+      begin
         Check(TWinUIApp.LaunchActivation.Kind = TWinUIActivationKind.Launch, 'LaunchActivation of a normal start');
         Check(TWinUINotification.Supported or True, 'TWinUINotification.Supported answers: ' +
           BoolToStr(TWinUINotification.Supported, True));

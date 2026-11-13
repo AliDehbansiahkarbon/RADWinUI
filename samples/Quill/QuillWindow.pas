@@ -388,7 +388,7 @@ begin
     end;
   if not FileExists(APath) then
   begin
-    MessageDlg(Format(S('NotFoundFormat'), [APath]), TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], nil);
+    MessageDlg(Format(S('NotFoundFormat'), [APath]), mtError, [mbOK]);
     Exit;
   end;
   Note := AddNote(ChangeFileExt(ExtractFileName(APath), ''), APath, TFile.ReadAllText(APath, TEncoding.UTF8));
@@ -439,8 +439,7 @@ begin
     Exit;
   end;
   Select(ANote);
-  MessageDlg(Format(S('SaveChangesFormat'), [ANote.Title]), TMsgDlgType.mtConfirmation,
-    [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo, TMsgDlgBtn.mbCancel],
+  MessageDlg(Format(S('SaveChangesFormat'), [ANote.Title]), mtConfirmation, mbYesNoCancel,
     procedure(AResult: TModalResult)
     begin
       case AResult of
@@ -534,7 +533,7 @@ begin
         if FileExists(NewPath) or not RenameFile(Note.FileName, NewPath) then
         begin
           MessageDlg(Format(S('RenameFailedFormat'), [ExtractFileName(NewPath)]),
-            TMsgDlgType.mtError, [TMsgDlgBtn.mbOK], nil);
+            mtError, [mbOK]);
           Exit;
         end;
         if SameText(FReminderPath, Note.FileName) then
@@ -626,7 +625,7 @@ begin
     ScheduleReminder(Note.FileName, ASeconds)
   else
     MessageDlg(Format(S('SaveFirstFormat'), [Note.Title]),
-      TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo],
+      mtConfirmation, mbYesNo,
       procedure(AResult: TModalResult)
       begin
         if AResult = mrYes then
@@ -813,7 +812,7 @@ begin
   Name := LanguageNames[Index];
   if Name = '' then
     Name := S('LanguageSystem/Content');
-  MessageDlg(Format(S('RestartFormat'), [Name]), TMsgDlgType.mtConfirmation, [TMsgDlgBtn.mbYes, TMsgDlgBtn.mbNo],
+  MessageDlg(Format(S('RestartFormat'), [Name]), mtConfirmation, mbYesNo,
     procedure(AResult: TModalResult)
     begin
       if AResult <> mrYes then
