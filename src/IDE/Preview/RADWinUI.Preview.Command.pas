@@ -3171,6 +3171,14 @@ var
   FileName: string;
 begin
   Buffer := (BorlandIDEServices as IOTAEditorServices).TopBuffer;
+  // From the designer the top buffer may be another file: the designed file's own buffer
+  if (Buffer = nil) or not SameText(Buffer.FileName, FPromptFile) then
+  try
+    if not Supports(EditorOf(FPromptFile), IOTAEditBuffer, Buffer) then
+      Buffer := nil;
+  except
+    Buffer := nil; // the file is closed: the error below says so
+  end;
   if (Buffer = nil) or not SameText(Buffer.FileName, FPromptFile) or (Buffer.TopView = nil) then
   begin
     FPromptBox.ShowError('Open ' + ExtractFileName(FPromptFile) + ' in the code editor first.');
@@ -4178,6 +4186,12 @@ begin
           if Length(Parts) = 4 then
             ShowContextMenu(StrToIntDef(Parts[1], 0), StrToIntDef(Parts[2], 0), Parts[3] = '1');
           Break; // its commands run once the menu closes, they can change the view
+        end
+        else if Xaml = 'XAMLPROMPT' then
+        begin
+          // Ctrl+Alt+Space in the designer: the bar for the designed file
+          ShowXamlPrompt(FXamlPath);
+          Break; // the bar takes the focus
         end
         else if Xaml = 'SELECTPARENT' then
           SelectParent

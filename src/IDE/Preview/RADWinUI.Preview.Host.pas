@@ -877,6 +877,16 @@ begin
         AArgs.Handled := True;
         Exit;
       end;
+      // Ctrl+Alt+Space: the IDE's Create XAML with AI bar. The designer has the keyboard, and
+      // Alt combinations are not passed on as shortcuts below.
+      if (Ord(AArgs.Key) = VK_SPACE) and (GetAsyncKeyState(VK_CONTROL) < 0) and (GetAsyncKeyState(VK_MENU) < 0) and
+        (GetAsyncKeyState(VK_SHIFT) >= 0) then
+      begin
+        if not AArgs.KeyStatus.WasKeyDown then
+          Queue('XAMLPROMPT');
+        AArgs.Handled := True;
+        Exit;
+      end;
       if (Ord(AArgs.Key) = VK_DELETE) and (GetAsyncKeyState(VK_CONTROL) >= 0) and (FSelected <> '') then
       begin
         Queue('DELETEKEY');
