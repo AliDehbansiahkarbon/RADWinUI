@@ -266,6 +266,11 @@ deletion. **Ctrl+X** cuts the selected control, **Esc** selects its parent.
 eight. Blue guide lines show when its edges or centre line up with a neighbour or
 its panel, a drag snaps to them (hold Alt to place it freely).
 
+Hold the mouse over a control in Design and a tooltip shows, like the VCL designer's: its
+`x:Name` and Delphi class (`SaveButton: TWinUIButton`), its origin in its parent and its size,
+its Grid cell when it is in a Grid, and its line and column in the XAML. **Ctrl+Alt+Space** in
+Design opens Create XAML with AI for the designed file.
+
 Right-click a control for the designer's menu, the same commands plus Bring to
 Front, Send to Back, View Source, Split View and the control's own commands, such
 as Add Row on a Grid or Add TabViewItem on a TabView. Every command is one

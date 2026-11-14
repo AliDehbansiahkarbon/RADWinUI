@@ -239,6 +239,35 @@ begin
   end;
 end;
 
+/// HOVER: the tooltip the designer shows for the element under the mouse, like the VCL designer's
+procedure CheckHover(AClient: TPreviewClient; AParent: HWND; const APath: string; const AHostRect: TRect);
+var
+  Reply: string;
+  Started: Cardinal;
+begin
+  Check(AClient.Request('LOAD ' + APath + #10 +
+    '<Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" ' +
+    'xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="Outer">' +
+    '<Grid.ColumnDefinitions><ColumnDefinition Width="40"/><ColumnDefinition/></Grid.ColumnDefinitions>' +
+    '<Button x:Name="SaveButton" Grid.Column="1" Content="Save" Width="3000" Height="3000"/>' +
+    '</Grid>', Reply) and (Reply = 'OK'), 'a design to hover is loaded (' + Reply + ')');
+  Started := GetTickCount;
+  repeat
+    PumpWindowMessages(AParent);
+    Sleep(20);
+  until GetTickCount - Started >= 500;
+  // Right of the toolbox column and the 40 DIP column: on the button
+  Check(AClient.Request(Format('HOVER %d %d', [AHostRect.Left + 400, AHostRect.Top + 150]), Reply) and
+    Reply.StartsWith('HOVER SaveButton: TWinUIButton|'), 'the tooltip names the element and its class (' + Reply + ')');
+  Check(Reply.Contains('Origin: 40, 0; Size: 3000 x 3000'), 'its origin in the Grid and its size');
+  Check(Reply.Contains('Grid.Row: 0; Grid.Column: 1'), 'its Grid cell');
+  Check(Reply.EndsWith('|XAML line 1, column 241'), 'and its place in the XAML');
+  // The docked designer has no toolbox column: left of the button is the Grid's first column
+  Check(AClient.Request(Format('HOVER %d %d', [AHostRect.Left + 5, AHostRect.Top + 150]), Reply) and
+    Reply.StartsWith('HOVER Outer: TWinUIGrid|Origin: 0, 0;') and not Reply.Contains('Grid.Row'),
+    'left of it, the Grid, with no cell of its own (' + Reply + ')');
+end;
+
 procedure TestDockedPreview(const AExe, APath, AXaml: string);
 var
   Monitor: TMonitorFind;
@@ -372,6 +401,7 @@ begin
         'the host follows the dock area resize');
 
       CheckRender(Client, Parent, APath);
+      CheckHover(Client, Parent, APath, HostRect);
     end;
 
   finally

@@ -4,6 +4,8 @@ All notable changes to RADWinUI.
 
 ## Unreleased
 
+- Designer: holding the mouse over a control shows a tooltip like the VCL designer's: its x:Name and Delphi class, its origin in its parent and size, its Grid cell, whether it is disabled, and its line and column in the XAML. Ctrl+Alt+Space in Design opens Create XAML with AI.
+
 - Create XAML with AI with an image: paste a screenshot or sketch into the prompt bar (Ctrl+V), drop an image file on it, or press Capture for the designer's own picture of the file. A thumbnail shows it, its x removes it. The image, the words and the current XAML go to the vision model chosen in Tools > Options > Third Party > RADWinUI (OpenAI, Anthropic, Google Gemini or Ollama on this PC), because the IDE's AI engine takes text only. Its API key is stored encrypted for the Windows user, and Test checks the setup. The answer is checked against the XAML metadata and applied as one undoable edit, as before. Images are scaled to at most 1568 pixels and sent as PNG, or JPEG when large. Prompts without an image keep using the IDE's engine.
 - Create XAML with AI, with or without an image: a request that removes, moves or restyles existing UI gets the whole file back and replaces it (one undoable edit, Ctrl+Z restores it), a request that adds UI still gets a block at the cursor. The prompt describes RADWinUI's own controls (how the tab bars take their tabs and pages, what each one looks like). An answer with a name XAML does not know says which one, and Ctrl+Enter applies it anyway. When no AI is set up, or Smart CodeInsight is turned off, the bar says so and where to change it as soon as it opens, and the AI features stay off until it is turned on.
 

@@ -148,6 +148,11 @@ type
     FRightHit: string;      // SELECTED of the right click, NONE beside every element
     FGuideX, FGuideY: TWinUIRectangle; // alignment guides: a vertical and a horizontal line
     FGuideTimer: TWinUITimer;          // hides the guides of keyboard moves
+    FHoverTip: TWinUIBorder;           // the tooltip of the element under the mouse, like the VCL designer's
+    FHoverText: TWinUITextBlock;
+    FHoverTimer: TWinUITimer;          // the pause before it shows
+    FHoverAt, FHoverLocal: RADWinUI.Abi.Point; // the mouse in window and in adorner coordinates
+    FHoverKey: string;                 // the element it shows, '' while hidden
     FSnap: RADWinUI.Abi.Point;         // the snap of the current drag
     FNudgeKey: string;                 // the element of the last keyboard move ...
     FNudgeLeft, FNudgeTop: Integer;    // ... its place sent to the IDE ...
@@ -199,6 +204,10 @@ type
     procedure DecorateTitleBars;
     function SelectFrom(AObject: IDependencyObject): string;
     function SelectAt(const APoint: RADWinUI.Abi.Point): string;
+    function HoverElement(const APoint: RADWinUI.Abi.Point; out AKey: string): IFrameworkElement;
+    function HoverText(const AElement: IFrameworkElement; const AKey: string): string;
+    procedure ShowHover(Sender: TObject);
+    procedure HideHover;
     procedure Select(const AName: string);
     function ElementBox(const AElement: IFrameworkElement): RADWinUI.Abi.Rect;
     procedure KeyedTree(const AObject: IDependencyObject; const AParent: string;
@@ -811,7 +820,11 @@ begin
     '<Rectangle x:Name="SelectionBox" Visibility="Collapsed" Stroke="#FF0078D4" StrokeThickness="2"/>' +
     '<Rectangle x:Name="DropMark" Visibility="Collapsed" Fill="#C00078D4" RadiusX="2" RadiusY="2"/>' +
     '<Rectangle x:Name="GuideX" Visibility="Collapsed" Width="1" Fill="#FF0078D4"/>' +
-    '<Rectangle x:Name="GuideY" Visibility="Collapsed" Height="1" Fill="#FF0078D4"/></Canvas>' +
+    '<Rectangle x:Name="GuideY" Visibility="Collapsed" Height="1" Fill="#FF0078D4"/>' +
+    '<Border x:Name="HoverTip" Visibility="Collapsed" IsHitTestVisible="False" CornerRadius="4" Padding="8,5" ' +
+    'BorderThickness="1" Background="{ThemeResource ToolTipBackground}" ' +
+    'BorderBrush="{ThemeResource ToolTipBorderBrush}"><TextBlock x:Name="HoverText" FontSize="12" ' +
+    'Foreground="{ThemeResource ToolTipForeground}"/></Border></Canvas>' +
     '</Grid></ScrollViewer>' +
     '<TextBlock x:Name="SelectionText" AutomationProperties.AutomationId="PreviewSelection" Grid.Row="2" ' +
     'Grid.ColumnSpan="2" Margin="8,4" Opacity="0.7" Text="Click an element to select it"/></Grid>';
@@ -854,12 +867,18 @@ begin
   FGuideTimer := TWinUITimer.Create;
   FGuideTimer.Interval := 1000;
   FGuideTimer.OnTimer := HideGuides;
+  FHoverTip := FindElement<TWinUIBorder>('HoverTip');
+  FHoverText := FindElement<TWinUITextBlock>('HoverText');
+  FHoverTimer := TWinUITimer.Create;
+  FHoverTimer.Interval := 600; // about the VCL designer's hint pause
+  FHoverTimer.OnTimer := ShowHover;
   (TWinUIObject.IntfOf(FShell, IUIElement) as IUIElement).add_PreviewKeyDown(TKeyEventHandler.Create(
     procedure(ASender: IInspectable; AArgs: IKeyRoutedEventArgs)
     var
       Key: Integer;
       At: RADWinUI.Abi.Point;
     begin
+      HideHover;
       if (Ord(AArgs.Key) = VK_F9) and (GetAsyncKeyState(VK_MENU) >= 0) then
       begin
         if not AArgs.KeyStatus.WasKeyDown then
@@ -991,6 +1010,7 @@ begin
     procedure(ASender: IInspectable; AArgs: IPointerRoutedEventArgs)
     begin
       (TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).Focus(RADWinUI.Abi.FocusState.Pointer);
+      HideHover;
       FPressAt := AArgs.GetCurrentPoint(nil).Position;
       FRightPressed := AArgs.GetCurrentPoint(nil).Properties.IsRightButtonPressed;
       if FRightPressed then
@@ -1027,13 +1047,28 @@ begin
     end));
   (TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).add_PointerMoved(TPointerEventHandler.Create(
     procedure(ASender: IInspectable; AArgs: IPointerRoutedEventArgs)
+    var
+      Key: string;
     begin
       if (FTool <> '') and not FPressed then
         ShowMark(DropTarget(AArgs.GetCurrentPoint(nil).Position, '') <> '');
+      FHoverAt := AArgs.GetCurrentPoint(nil).Position;
+      FHoverLocal := AArgs.GetCurrentPoint(TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).Position;
+      // The tooltip stays while the mouse is over its element, another one waits for the pause again
+      if FHoverKey <> '' then
+      begin
+        HoverElement(FHoverAt, Key);
+        if Key = FHoverKey then
+          Exit;
+        HideHover;
+      end;
+      FHoverTimer.Enabled := False;
+      FHoverTimer.Enabled := not FPressed and (FTool = '');
     end));
   (TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).add_PointerExited(TPointerEventHandler.Create(
     procedure(ASender: IInspectable; AArgs: IPointerRoutedEventArgs)
     begin
+      HideHover;
       if not FPressed then
         ShowMark(False);
     end));
@@ -1353,6 +1388,7 @@ begin
   FTimer.Free;
   FAdornerTimer.Free;
   FDragTimer.Free;
+  FHoverTimer.Free;
   FPaletteTimer.Free;
   if FPaletteDeferral <> nil then
     FPaletteDeferral.Complete;
@@ -1378,6 +1414,7 @@ begin
     Text := NameElements(AXaml, PreviewXaml(AXaml, Window));
     if not Supports(RADWinUI.Abi.XamlReader.Load(WinStr(Text)), IUIElement, Element) then
       raise Exception.Create('The root must be a UI element (a panel or a control)');
+    HideHover;
     (TWinUIObject.IntfOf(FHost, IBorder) as IBorder).Child := Element;
     Supports(Element, IFrameworkElement, FRoot);
     DecorateTitleBars;
@@ -1654,6 +1691,138 @@ begin
     Result := SelectFrom(Hits.Current as IDependencyObject)
   else
     Result := 'NONE';
+end;
+
+/// The element with a start tag at APoint (window content coordinates, DIPs), as SelectAt finds it.
+function TPreviewWindow.HoverElement(const APoint: RADWinUI.Abi.Point; out AKey: string): IFrameworkElement;
+var
+  Hits: IIterator_UIElement;
+  AObject: IDependencyObject;
+begin
+  AKey := '';
+  Result := nil;
+  if FRoot = nil then
+    Exit;
+  Hits := VisualTreeHelper.FindAllElementsInHostCoordinatesPoint(APoint,
+    TWinUIObject.IntfOf(FHost, IUIElement) as IUIElement, True).First;
+  if not Hits.HasCurrent then
+    Exit;
+  AObject := Hits.Current as IDependencyObject;
+  while AObject <> nil do
+  begin
+    if Supports(AObject, IFrameworkElement, Result) then
+    begin
+      AKey := KeyOf(Result);
+      if FElements.ContainsKey(AKey) then
+        Exit;
+    end;
+    AObject := VisualTreeHelper.GetParent(AObject);
+  end;
+  AKey := '';
+  Result := nil;
+end;
+
+/// The tooltip of an element: name and Delphi class, origin in its XAML parent and size (DIPs),
+/// its Grid cell, and its place in the XAML.
+function TPreviewWindow.HoverText(const AElement: IFrameworkElement; const AKey: string): string;
+var
+  Parts: TArray<string>;
+  Tag, Name, ClassName, Cell: string;
+  Parent: IDependencyObject;
+  Container: IFrameworkElement;
+  Origin: RADWinUI.Abi.Point;
+  Control: IControl;
+  Row, Column, RowSpan, ColumnSpan: Integer;
+begin
+  Parts := FElements[AKey].Split([' ']); // line, column, type, x:Name or -
+  Tag := Parts[2];
+  Name := Parts[3];
+  // The class the generated unit declares: TWinUIButton, TWinUIFloatingNotchTabBar, a user control's own
+  if Tag.Contains(':') and not Tag.StartsWith('rw:') then
+    ClassName := 'T' + Tag.Substring(Tag.IndexOf(':') + 1)
+  else
+    ClassName := 'TWinUI' + Tag.Substring(Tag.IndexOf(':') + 1);
+  if Name = '-' then
+    Result := ClassName + ' (no x:Name)'
+  else
+    Result := Name + ': ' + ClassName;
+  // The origin in the element that contains it in the XAML, like Left and Top in a VCL parent
+  Container := nil;
+  Parent := VisualTreeHelper.GetParent(AElement as IDependencyObject);
+  while Parent <> nil do
+  begin
+    if Supports(Parent, IFrameworkElement, Container) and FElements.ContainsKey(KeyOf(Container)) then
+      Break;
+    Container := nil;
+    Parent := VisualTreeHelper.GetParent(Parent);
+  end;
+  Origin.X := 0;
+  Origin.Y := 0;
+  if Container <> nil then
+    Origin := (AElement as IUIElement).TransformToVisual(Container as IUIElement).TransformPoint(Origin);
+  Result := Result + #10 + Format('Origin: %d, %d; Size: %d x %d', [Round(Origin.X), Round(Origin.Y),
+    Round(AElement.ActualWidth), Round(AElement.ActualHeight)]);
+  if Supports(VisualTreeHelper.GetParent(AElement as IDependencyObject), IGrid) then
+  begin
+    Row := RADWinUI.Abi.Grid.GetRow(AElement);
+    Column := RADWinUI.Abi.Grid.GetColumn(AElement);
+    RowSpan := RADWinUI.Abi.Grid.GetRowSpan(AElement);
+    ColumnSpan := RADWinUI.Abi.Grid.GetColumnSpan(AElement);
+    Cell := Format('Grid.Row: %d; Grid.Column: %d', [Row, Column]);
+    if RowSpan > 1 then
+      Cell := Cell + Format('; RowSpan: %d', [RowSpan]);
+    if ColumnSpan > 1 then
+      Cell := Cell + Format('; ColumnSpan: %d', [ColumnSpan]);
+    Result := Result + #10 + Cell;
+  end;
+  if Supports(AElement, IControl, Control) and not Control.IsEnabled then
+    Result := Result + #10 + 'IsEnabled: False';
+  Result := Result + #10 + Format('XAML line %s, column %s', [Parts[0], Parts[1]]);
+end;
+
+procedure TPreviewWindow.ShowHover(Sender: TObject);
+var
+  Element: IFrameworkElement;
+  Key: string;
+  Tip: IUIElement;
+  Available: RADWinUI.Abi.Size;
+  X, Y, Width, Height: Double;
+begin
+  FHoverTimer.Enabled := False;
+  if FPressed or (FTool <> '') then
+    Exit;
+  Element := HoverElement(FHoverAt, Key);
+  if Element = nil then
+  begin
+    HideHover;
+    Exit;
+  end;
+  FHoverText.Text := HoverText(Element, Key);
+  FHoverKey := Key;
+  Tip := TWinUIObject.IntfOf(FHoverTip, IUIElement) as IUIElement;
+  FHoverTip.Visibility := TWinUIVisibility.Visible;
+  Available.Width := 10000;
+  Available.Height := 10000;
+  Tip.Measure(Available);
+  Width := Tip.DesiredSize.Width;
+  Height := Tip.DesiredSize.Height;
+  // Below and right of the pointer, inside the visible area
+  X := FHoverLocal.X + 12;
+  Y := FHoverLocal.Y + 20;
+  if (X + Width > FAdorner.ActualWidth) and (FHoverLocal.X - Width - 4 >= 0) then
+    X := FHoverLocal.X - Width - 4;
+  if (Y + Height > FAdorner.ActualHeight) and (FHoverLocal.Y - Height - 8 >= 0) then
+    Y := FHoverLocal.Y - Height - 8;
+  Canvas.SetLeft(Tip, X);
+  Canvas.SetTop(Tip, Y);
+end;
+
+procedure TPreviewWindow.HideHover;
+begin
+  FHoverTimer.Enabled := False;
+  FHoverKey := '';
+  if FHoverTip <> nil then
+    FHoverTip.Visibility := TWinUIVisibility.Collapsed;
 end;
 
 procedure TPreviewWindow.Select(const AName: string);
@@ -2192,6 +2361,19 @@ begin
     FMultiDrag := False;
     FDragElement := nil;
     Queue(Result);
+  end
+  else if Request.StartsWith('HOVER ') then
+  begin
+    // The tooltip at a screen pixel, shown at once: as tests send it
+    Parts := Request.Split([' ']);
+    if Length(Parts) <> 3 then Exit('ERROR invalid position');
+    FHoverAt := ToContent(StrToIntDef(Parts[1], 0), StrToIntDef(Parts[2], 0));
+    FHoverLocal := (TWinUIObject.IntfOf(FAdorner, IUIElement) as IUIElement).TransformToVisual(nil).Inverse
+      .TransformPoint(FHoverAt);
+    ShowHover(nil);
+    if FHoverKey = '' then
+      Exit('NONE');
+    Result := 'HOVER ' + FHoverText.Text.Replace(#10, '|');
   end
   else if Request.StartsWith('TOGGLE ') then
   begin
