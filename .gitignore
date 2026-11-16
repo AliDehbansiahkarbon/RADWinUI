@@ -63,6 +63,8 @@ samples/Haven/Haven.res
 samples/Lucent/Lucent.res
 samples/TabBars/TabBars.res
 samples/ActionButtons/ActionButtons.res
+samples/AdvancedComponents/AdvancedComponents.res
+samples/Ember/Ember.res
 samples/DataControls/DataControls.res
 samples/Gallery/Gallery.res
 samples/Counter/Counter.res
@@ -74,7 +76,6 @@ samples/Quill/Quill.res
 samples/AppServicesDemo/AppServicesDemo.res
 samples/Crew/Crew.res
 samples/Tempo/Tempo.res
-samples/Ember/Ember.res
 src/IDE/Preview/RADWinUIPreview.res
 tests/Designer/XamlEditTest.res
 tools/XamlCodeGen/XamlCodeGen.res

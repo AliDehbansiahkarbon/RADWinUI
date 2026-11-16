@@ -21,6 +21,9 @@
         <Projects Include="ActionButtons\ActionButtons.dproj">
             <Dependencies/>
         </Projects>
+        <Projects Include="AdvancedComponents\AdvancedComponents.dproj">
+            <Dependencies/>
+        </Projects>
         <Projects Include="DataControls\DataControls.dproj">
             <Dependencies/>
         </Projects>
@@ -112,6 +115,15 @@
     </Target>
     <Target Name="TabBars:Make">
         <MSBuild Projects="TabBars\TabBars.dproj" Targets="Make"/>
+    </Target>
+    <Target Name="AdvancedComponents">
+        <MSBuild Projects="AdvancedComponents\AdvancedComponents.dproj"/>
+    </Target>
+    <Target Name="AdvancedComponents:Clean">
+        <MSBuild Projects="AdvancedComponents\AdvancedComponents.dproj" Targets="Clean"/>
+    </Target>
+    <Target Name="AdvancedComponents:Make">
+        <MSBuild Projects="AdvancedComponents\AdvancedComponents.dproj" Targets="Make"/>
     </Target>
     <Target Name="ActionButtons">
         <MSBuild Projects="ActionButtons\ActionButtons.dproj"/>
@@ -240,13 +252,13 @@
         <MSBuild Projects="Ember_VCL\Ember_VCL.dproj" Targets="Make"/>
     </Target>
     <Target Name="Build">
-        <CallTarget Targets="Gallery;Luma;Haven;Lucent;TabBars;ActionButtons;DataControls;Quill;AppServicesDemo;Crew;Tempo;Counter;Greeter;ListDemo;Contacts;Profile;Customers_VCL;Ember;Ember_VCL"/>
+        <CallTarget Targets="Gallery;Luma;Haven;Lucent;TabBars;ActionButtons;AdvancedComponents;DataControls;Quill;AppServicesDemo;Crew;Tempo;Counter;Greeter;ListDemo;Contacts;Profile;Customers_VCL;Ember;Ember_VCL"/>
     </Target>
     <Target Name="Clean">
-        <CallTarget Targets="Gallery:Clean;Luma:Clean;Haven:Clean;Lucent:Clean;TabBars:Clean;ActionButtons:Clean;DataControls:Clean;Quill:Clean;AppServicesDemo:Clean;Crew:Clean;Tempo:Clean;Counter:Clean;Greeter:Clean;ListDemo:Clean;Contacts:Clean;Profile:Clean;Customers_VCL:Clean;Ember:Clean;Ember_VCL:Clean"/>
+        <CallTarget Targets="Gallery:Clean;Luma:Clean;Haven:Clean;Lucent:Clean;TabBars:Clean;ActionButtons:Clean;AdvancedComponents:Clean;DataControls:Clean;Quill:Clean;AppServicesDemo:Clean;Crew:Clean;Tempo:Clean;Counter:Clean;Greeter:Clean;ListDemo:Clean;Contacts:Clean;Profile:Clean;Customers_VCL:Clean;Ember:Clean;Ember_VCL:Clean"/>
     </Target>
     <Target Name="Make">
-        <CallTarget Targets="Gallery:Make;Luma:Make;Haven:Make;Lucent:Make;TabBars:Make;ActionButtons:Make;DataControls:Make;Quill:Make;AppServicesDemo:Make;Crew:Make;Tempo:Make;Counter:Make;Greeter:Make;ListDemo:Make;Contacts:Make;Profile:Make;Customers_VCL:Make;Ember:Make;Ember_VCL:Make"/>
+        <CallTarget Targets="Gallery:Make;Luma:Make;Haven:Make;Lucent:Make;TabBars:Make;ActionButtons:Make;AdvancedComponents:Make;DataControls:Make;Quill:Make;AppServicesDemo:Make;Crew:Make;Tempo:Make;Counter:Make;Greeter:Make;ListDemo:Make;Contacts:Make;Profile:Make;Customers_VCL:Make;Ember:Make;Ember_VCL:Make"/>
     </Target>
     <Import Project="$(BDS)\Bin\CodeGear.Group.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Group.Targets')"/>
 </Project>

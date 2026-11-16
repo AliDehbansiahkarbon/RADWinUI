@@ -392,6 +392,23 @@ $Results = @(
     $null = Wait-For { (Get-Id $Win 'StatusText').Current.Name -like 'Paper Plane: Click*' } 'the Send click through Invoke'
     Write-Host "  [ok] Send and Copy are named buttons, Invoke sends"
   }
+  Test-Sample 'AdvancedComponents' {
+    param($Win)
+    # The section bar is a Tab whose tabs show one section each; the swipe lists and pagers speak to UI Automation too
+    $CT = [Windows.Automation.ControlType]
+    $Bar = Get-Id $Win 'SectionBar'
+    Expect-Control $Bar $CT::Tab 'Sections'
+    $Tabs = Get-Children $Bar $CT::TabItem
+    $Names = ($Tabs | ForEach-Object { $_.Current.Name }) -join ','
+    if ($Names -ne 'Fields,Swipe,Pages,Steps,Tabs,Buttons') { throw "sections: $Names" }
+    $Tabs[3].GetCurrentPattern([Windows.Automation.SelectionItemPattern]::Pattern).Select()
+    $null = Wait-For { (Get-Id $Win 'StatusText').Current.Name -like 'Section: Steps*' } 'the Steps section'
+    Invoke-Named $Win 'Next'
+    $null = Wait-For { (Get-Id $Win 'StatusText').Current.Name -like '*StepChanged*' } 'Next moves the steps'
+    $Tabs[2].GetCurrentPattern([Windows.Automation.SelectionItemPattern]::Pattern).Select()
+    Expect-Control (Get-Id $Win 'ClassicPager1') $CT::Tab 'Results pages'
+    Write-Host "  [ok] sections $Names, Next moves the progress steps, the pagers are tab lists"
+  }
   Test-Sample 'DataControls' {
     param($Win)
     # The navigator is a toolbar of named buttons, a grid is a named group around its rows
