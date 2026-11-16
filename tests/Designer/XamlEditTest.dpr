@@ -335,6 +335,12 @@ begin
     'a data control comes with DataSource and DataField to fill in');
   Check(ToolboxXaml('SendButton', 0, 0) = '<rw:SendButton Text="Send"/>',
     'an action button comes with its rw: prefix and its label');
+  Check((PaletteCategoryOf('OtpCodeField') = 'Text Fields') and (PaletteCategoryOf('UndoSwipeList') = 'Swipe Actions') and
+    (PaletteCategoryOf('StepsPager') = 'Pagination') and (PaletteCategoryOf('RingSteps') = 'Progress Steps'),
+    'the text fields, swipe actions, pagers and progress steps are in their categories');
+  Check(ToolboxXaml('PillsPager', 0, 0) = '<rw:PillsPager PageCount="9"/>', 'a pager comes with its page count');
+  Check(ToolboxXaml('NumberedSteps', 0, 0) = '<rw:NumberedSteps Items="Cart:Cart, Address:Location, Payment:Card, Done:Check"/>',
+    'progress steps come with their steps written out');
   if Failures > 0 then
   begin
     Writeln('XAML edit test FAILED (', Failures, ')');

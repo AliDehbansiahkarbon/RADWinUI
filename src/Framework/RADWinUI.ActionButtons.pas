@@ -462,6 +462,9 @@ end;
 
 function Clamp01(AValue: Double): Double;
 begin
+  // NaN (0 / 0 while a control has no size yet) counts as 0: XAML refuses it
+  if IsNan(AValue) then
+    Exit(0);
   Result := Max(0, Min(1, AValue));
 end;
 

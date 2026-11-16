@@ -23,7 +23,11 @@ uses
   RADWinUI.Controls,
   RADWinUI.TabBars,
   RADWinUI.ActionButtons,
-  RADWinUI.DBControls;
+  RADWinUI.DBControls,
+  RADWinUI.TextFields,
+  RADWinUI.SwipeActions,
+  RADWinUI.Pagination,
+  RADWinUI.ProgressSteps;
 
 type
   TTestWindow = class(TWinUIWindow)

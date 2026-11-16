@@ -8,6 +8,7 @@ uses
   RADWinUI.Interop.Core, RADWinUI.CustomControls, RADWinUI.Runtime.Application,
   // the controls the preview host links (src\IDE\Preview\RADWinUIPreview.dpr)
   RADWinUI.Controls, RADWinUI.TabBars, RADWinUI.ActionButtons, RADWinUI.DBControls,
+  RADWinUI.TextFields, RADWinUI.SwipeActions, RADWinUI.Pagination, RADWinUI.ProgressSteps,
   RADWinUI.Designer.XamlEdit in '..\..\src\IDE\Designer\RADWinUI.Designer.XamlEdit.pas',
   RADWinUI.Designer.Palette in '..\..\src\IDE\Designer\RADWinUI.Designer.Palette.pas',
   RADWinUI.Designer.Snap in '..\..\src\IDE\Designer\RADWinUI.Designer.Snap.pas',

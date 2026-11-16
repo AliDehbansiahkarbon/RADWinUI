@@ -8,11 +8,12 @@ unit RADWinUI.Designer.Palette;
   types of the metadata (CalendarViewDayItem, ColorSpectrum, *Presenter,
   *Item, Thumb, ...) are left out, they still work when written in XAML.
   Names are the XAML element names the palette inserts (Button, not
-  TWinUIButton). The Overlay, Tab Bars, Action Buttons and Data Controls
-  categories hold RADWinUI's own controls (RADWinUI.Controls,
-  RADWinUI.TabBars, RADWinUI.ActionButtons, RADWinUI.DBControls), which
-  XAML writes with the rw: prefix. No
-  ToolsAPI, VCL or WinUI here.
+  TWinUIButton). The Overlay, Tab Bars, Action Buttons, Data Controls, Text
+  Fields, Swipe Actions, Pagination and Progress Steps categories hold
+  RADWinUI's own controls (RADWinUI.Controls, RADWinUI.TabBars,
+  RADWinUI.ActionButtons, RADWinUI.DBControls, RADWinUI.TextFields,
+  RADWinUI.SwipeActions, RADWinUI.Pagination, RADWinUI.ProgressSteps), which
+  XAML writes with the rw: prefix. No ToolsAPI, VCL or WinUI here.
 }
 
 interface
@@ -44,11 +45,11 @@ uses
   System.SysUtils;
 
 const
-  Categories: array[0..12] of string = ('Standard', 'Layout', 'Input', 'Date and Time', 'Collections',
+  Categories: array[0..16] of string = ('Standard', 'Layout', 'Input', 'Date and Time', 'Collections',
     'Navigation', 'Text and Media', 'Status', 'Shapes', 'Overlay', 'Tab Bars', 'Action Buttons',
-    'Data Controls');
+    'Data Controls', 'Text Fields', 'Swipe Actions', 'Pagination', 'Progress Steps');
   // One string per category above, same order
-  Members: array[0..12] of string = (
+  Members: array[0..16] of string = (
     'Button TextBlock TextBox CheckBox RadioButton ComboBox ListBox ToggleSwitch Slider ProgressBar Image ' +
       'HyperlinkButton',
     'Grid StackPanel Canvas Border ScrollViewer RelativePanel Viewbox SplitView Expander',
@@ -66,13 +67,18 @@ const
     'HoldButton SendButton ConfettiButton CopyButton ShineButton SlideButton',
     // In the order of VCL's Data Controls, then the WinUI ones
     'DBGrid DBNavigator DBText DBEdit DBMemo DBImage DBListBox DBComboBox DBCheckBox DBRadioGroup DBLookupListBox ' +
-      'DBLookupComboBox DBRichEdit DBCtrlGrid DBDatePicker DBNumberBox DBToggleSwitch');
+      'DBLookupComboBox DBRichEdit DBCtrlGrid DBDatePicker DBNumberBox DBToggleSwitch',
+    'OtpCodeField CardNumberField StrengthMeterField AutoGrowField TagInputField GhostCompleteField',
+    'SwipeCardStack PinSwipeList PeekSwipeList LiquidDeleteList SnoozeSwipeList UndoSwipeList',
+    'ClassicPager PillsPager DotsPager BorderedPager TrackPager SegmentedPager ProgressPager StepsPager',
+    'NumberedSteps SegmentBarSteps CheckoutSteps OrderTrackingSteps BreadcrumbSteps RingSteps');
 
 /// The categories of RADWinUI's own controls
 function IsOwnCategory(const ACategory: string): Boolean;
 begin
   Result := (ACategory = 'Overlay') or (ACategory = 'Tab Bars') or (ACategory = 'Action Buttons') or
-    (ACategory = 'Data Controls');
+    (ACategory = 'Data Controls') or (ACategory = 'Text Fields') or (ACategory = 'Swipe Actions') or
+    (ACategory = 'Pagination') or (ACategory = 'Progress Steps');
 end;
 
 function PaletteEntries: TArray<TPaletteEntry>;

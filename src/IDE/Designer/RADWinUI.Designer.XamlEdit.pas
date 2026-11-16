@@ -961,6 +961,30 @@ begin
     Result := '<rw:ShineButton Text="Upgrade to Pro"'
   else if Tag = 'rw:SlideButton' then
     Result := '<rw:SlideButton Text="Slide to confirm"'
+  // The text fields with their header written out
+  else if Tag = 'rw:OtpCodeField' then
+    Result := '<rw:OtpCodeField Header="Enter the code we sent"'
+  else if Tag = 'rw:CardNumberField' then
+    Result := '<rw:CardNumberField Header="Card"'
+  else if Tag = 'rw:StrengthMeterField' then
+    Result := '<rw:StrengthMeterField Header="New password"'
+  else if Tag = 'rw:TagInputField' then
+    Result := '<rw:TagInputField Header="Topics"'
+  else if Tag = 'rw:GhostCompleteField' then
+    Result := '<rw:GhostCompleteField Header="Email"'
+  // The swipe lists and the progress steps with their rows or steps written out, so the editor starts from them
+  else if (Tag = 'rw:LiquidDeleteList') or (Tag.StartsWith('rw:') and Tag.EndsWith('SwipeList')) then
+    Result := '<' + Tag + ' Items="Leo Cruz|Sent the files|9:12; Ava Stone|Lunch tomorrow?|8:30; ' +
+      'Mia Park|See you at 7?|9:41"'
+  else if Tag = 'rw:OrderTrackingSteps' then
+    Result := '<rw:OrderTrackingSteps Items="Ordered:Package, Packed:Package, Shipped:Package, Delivered:Home"'
+  else if Tag.StartsWith('rw:') and Tag.EndsWith('Steps') then
+    Result := '<' + Tag + ' Items="Cart:Cart, Address:Location, Payment:Card, Done:Check"'
+  // The pagers with their page count
+  else if Tag = 'rw:PillsPager' then
+    Result := '<rw:PillsPager PageCount="9"'
+  else if Tag.StartsWith('rw:') and Tag.EndsWith('Pager') then
+    Result := '<' + Tag + ' PageCount="5"'
   // The data controls with their link written out, to fill in from the Object Inspector
   else if Tag = 'rw:DBNavigator' then
     Result := '<rw:DBNavigator DataSource=""'

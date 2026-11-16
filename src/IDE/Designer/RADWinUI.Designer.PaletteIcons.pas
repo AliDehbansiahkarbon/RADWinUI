@@ -341,6 +341,389 @@ begin
   ACanvas.Pen.Color := RGB(32, 122, 216);
 end;
 
+/// The text fields, swipe actions, pagers and progress steps: the moment each one is known for
+function DrawAdvancedControl(ACanvas: TCanvas; const AName: string): Boolean;
+var
+  I: Integer;
+
+  procedure Solid(AShade: Integer);
+  begin
+    // Lighter shades become more transparent (see RenderIcon)
+    ACanvas.Brush.Style := bsSolid;
+    ACanvas.Brush.Color := RGB(AShade, 122 + (AShade - 32) * 133 div 223, 216 + (AShade - 32) * 39 div 223);
+  end;
+
+  procedure Pen(AWidth: Integer);
+  begin
+    ACanvas.Pen.Style := psSolid;
+    ACanvas.Pen.Color := RGB(32, 122, 216);
+    ACanvas.Pen.Width := AWidth;
+  end;
+
+  procedure NoPen;
+  begin
+    ACanvas.Pen.Style := psClear;
+  end;
+
+  procedure Hollow;
+  begin
+    ACanvas.Brush.Style := bsClear;
+  end;
+
+  procedure Line(X1, Y1, X2, Y2: Integer);
+  begin
+    ACanvas.MoveTo(X1, Y1);
+    ACanvas.LineTo(X2, Y2);
+  end;
+
+  procedure Row(ALeft, ATop: Integer);
+  begin
+    // A list row: avatar and two lines of text, outlined
+    Pen(5);
+    Hollow;
+    ACanvas.RoundRect(ALeft, ATop, ALeft + 76, ATop + 36, 14, 14);
+    NoPen;
+    Solid(32);
+    ACanvas.Ellipse(ALeft + 8, ATop + 9, ALeft + 26, ATop + 27);
+    Solid(120);
+    ACanvas.Rectangle(ALeft + 32, ATop + 11, ALeft + 64, ATop + 16);
+    ACanvas.Rectangle(ALeft + 32, ATop + 21, ALeft + 54, ATop + 26);
+  end;
+
+begin
+  Result := True;
+  if AName = 'otpcodefield' then
+  begin
+    // Four code boxes, two filled in
+    for I := 0 to 3 do
+    begin
+      Pen(5);
+      Hollow;
+      if I = 2 then
+        ACanvas.Pen.Width := 7;
+      ACanvas.RoundRect(4 + I * 23, 30, 22 + I * 23, 66, 8, 8);
+      if I < 2 then
+      begin
+        NoPen;
+        Solid(32);
+        ACanvas.Ellipse(8 + I * 23, 43, 18 + I * 23, 53);
+      end;
+    end;
+  end
+  else if AName = 'cardnumberfield' then
+  begin
+    // A card with its chip and number
+    NoPen;
+    Solid(120);
+    ACanvas.RoundRect(4, 18, 92, 78, 16, 16);
+    Solid(32);
+    ACanvas.RoundRect(14, 30, 34, 46, 6, 6);
+    for I := 0 to 3 do
+      ACanvas.Rectangle(14 + I * 19, 58, 28 + I * 19, 64);
+  end
+  else if AName = 'strengthmeterfield' then
+  begin
+    // A password field and the strength bars under it
+    Pen(5);
+    Hollow;
+    ACanvas.RoundRect(4, 18, 92, 54, 14, 14);
+    NoPen;
+    Solid(32);
+    for I := 0 to 4 do
+      ACanvas.Ellipse(14 + I * 13, 31, 23 + I * 13, 40);
+    for I := 0 to 3 do
+    begin
+      if I < 3 then
+        Solid(32)
+      else
+        Solid(190);
+      ACanvas.RoundRect(4 + I * 23, 64, 22 + I * 23, 74, 6, 6);
+    end;
+  end
+  else if AName = 'autogrowfield' then
+  begin
+    // A tall field with three lines and the send button
+    Pen(5);
+    Hollow;
+    ACanvas.RoundRect(4, 10, 92, 86, 18, 18);
+    NoPen;
+    Solid(120);
+    ACanvas.Rectangle(16, 24, 70, 30);
+    ACanvas.Rectangle(16, 38, 64, 44);
+    ACanvas.Rectangle(16, 52, 48, 58);
+    Solid(32);
+    ACanvas.Ellipse(58, 54, 84, 80);
+  end
+  else if AName = 'taginputfield' then
+  begin
+    // A field with two chips and the caret
+    Pen(5);
+    Hollow;
+    ACanvas.RoundRect(2, 26, 94, 70, 16, 16);
+    NoPen;
+    Solid(32);
+    ACanvas.RoundRect(10, 36, 42, 60, 22, 22);
+    Solid(120);
+    ACanvas.RoundRect(46, 36, 76, 60, 22, 22);
+    Pen(4);
+    Line(84, 36, 84, 60);
+  end
+  else if AName = 'ghostcompletefield' then
+  begin
+    // Typed text and its completion, fainter, in a field
+    Pen(5);
+    Hollow;
+    ACanvas.RoundRect(2, 28, 94, 68, 16, 16);
+    NoPen;
+    Solid(32);
+    ACanvas.Rectangle(12, 44, 44, 52);
+    Solid(185);
+    ACanvas.Rectangle(48, 44, 84, 52);
+    Pen(3);
+    Line(46, 38, 46, 58);
+  end
+  else if AName = 'swipecardstack' then
+  begin
+    // Two cards, the top one tilting away with a heart
+    NoPen;
+    Solid(170);
+    ACanvas.RoundRect(14, 16, 66, 86, 14, 14);
+    Solid(32);
+    ACanvas.Polygon([Point(40, 18), Point(86, 6), Point(94, 72), Point(48, 84)]);
+    ACanvas.Brush.Color := clWhite;
+    ACanvas.Ellipse(56, 34, 70, 48);
+    ACanvas.Ellipse(68, 31, 82, 45);
+    ACanvas.Polygon([Point(57, 44), Point(81, 40), Point(72, 60)]);
+  end
+  else if AName = 'pinswipelist' then
+  begin
+    // A row pulled right, the pin behind it
+    NoPen;
+    Solid(150);
+    ACanvas.RoundRect(2, 30, 40, 66, 14, 14);
+    Solid(32);
+    ACanvas.Ellipse(12, 38, 26, 52);
+    ACanvas.Polygon([Point(15, 50), Point(23, 50), Point(19, 60)]);
+    Row(18, 30);
+  end
+  else if AName = 'peekswipelist' then
+  begin
+    // A row nudged left, the action peeking out and an arrow
+    NoPen;
+    Solid(120);
+    ACanvas.RoundRect(58, 40, 94, 76, 14, 14);
+    Row(4, 40);
+    Pen(5);
+    Line(30, 18, 62, 18);
+    Line(30, 18, 40, 10);
+    Line(30, 18, 40, 26);
+  end
+  else if AName = 'liquiddeletelist' then
+  begin
+    // A row and the goo blob stretching off its edge
+    Row(0, 30);
+    NoPen;
+    Solid(32);
+    ACanvas.Polygon([Point(74, 40), Point(84, 44), Point(84, 52), Point(74, 56)]);
+    ACanvas.Ellipse(78, 34, 96, 62);
+  end
+  else if AName = 'snoozeswipelist' then
+  begin
+    // A row pulled left and the clock behind it
+    NoPen;
+    Solid(150);
+    ACanvas.RoundRect(52, 30, 94, 66, 14, 14);
+    Pen(4);
+    ACanvas.Brush.Color := clWhite;
+    ACanvas.Ellipse(62, 36, 86, 60);
+    Line(74, 48, 74, 40);
+    Line(74, 48, 80, 52);
+    Row(-22, 30);
+  end
+  else if AName = 'undoswipelist' then
+  begin
+    // The strip a deleted row leaves, with the undo arrow
+    Pen(5);
+    ACanvas.Pen.Style := psDot;
+    ACanvas.Pen.Width := 1;
+    Hollow;
+    ACanvas.RoundRect(2, 28, 94, 68, 14, 14);
+    Pen(6);
+    ACanvas.Arc(40, 32, 76, 64, 40, 48, 70, 34);
+    NoPen;
+    Solid(32);
+    ACanvas.Polygon([Point(34, 44), Point(50, 44), Point(42, 58)]);
+  end
+  else if AName = 'classicpager' then
+  begin
+    // Three page boxes, the middle one current, and the arrows
+    Pen(5);
+    Hollow;
+    ACanvas.RoundRect(8, 32, 32, 64, 8, 8);
+    ACanvas.RoundRect(64, 32, 88, 64, 8, 8);
+    NoPen;
+    Solid(32);
+    ACanvas.RoundRect(36, 32, 60, 64, 8, 8);
+  end
+  else if AName = 'pillspager' then
+  begin
+    // Dots and the stretched pill of the current page
+    NoPen;
+    Solid(120);
+    ACanvas.Ellipse(4, 40, 20, 56);
+    ACanvas.Ellipse(76, 40, 92, 56);
+    Solid(32);
+    ACanvas.RoundRect(24, 40, 72, 56, 16, 16);
+  end
+  else if AName = 'dotspager' then
+  begin
+    NoPen;
+    Solid(150);
+    for I := 0 to 4 do
+      if I <> 2 then
+        ACanvas.Ellipse(6 + I * 18, 42, 18 + I * 18, 54);
+    Solid(32);
+    ACanvas.Ellipse(38, 36, 58, 56);
+  end
+  else if AName = 'borderedpager' then
+  begin
+    // One frame around the pages, the current one filled
+    Pen(5);
+    Hollow;
+    ACanvas.RoundRect(4, 30, 92, 66, 10, 10);
+    Line(33, 30, 33, 66);
+    Line(63, 30, 63, 66);
+    NoPen;
+    Solid(32);
+    ACanvas.Rectangle(35, 32, 62, 65);
+  end
+  else if AName = 'trackpager' then
+  begin
+    NoPen;
+    Solid(190);
+    ACanvas.RoundRect(4, 42, 92, 54, 12, 12);
+    Solid(32);
+    ACanvas.RoundRect(30, 38, 62, 58, 20, 20);
+  end
+  else if AName = 'segmentedpager' then
+  begin
+    NoPen;
+    Solid(190);
+    ACanvas.RoundRect(2, 32, 94, 64, 16, 16);
+    Solid(32);
+    ACanvas.RoundRect(34, 36, 62, 60, 12, 12);
+  end
+  else if AName = 'progresspager' then
+  begin
+    // The progress bar between two arrows
+    NoPen;
+    Solid(190);
+    ACanvas.RoundRect(22, 42, 74, 54, 12, 12);
+    Solid(32);
+    ACanvas.RoundRect(22, 42, 54, 54, 12, 12);
+    ACanvas.Polygon([Point(4, 48), Point(16, 38), Point(16, 58)]);
+    ACanvas.Polygon([Point(92, 48), Point(80, 38), Point(80, 58)]);
+  end
+  else if AName = 'stepspager' then
+  begin
+    Pen(4);
+    Line(14, 48, 82, 48);
+    NoPen;
+    Solid(32);
+    ACanvas.Ellipse(4, 38, 24, 58);
+    ACanvas.Ellipse(38, 38, 58, 58);
+    Pen(4);
+    ACanvas.Brush.Color := clWhite;
+    ACanvas.Ellipse(72, 38, 92, 58);
+  end
+  else if AName = 'numberedsteps' then
+  begin
+    // Two steps done, one to go
+    Pen(6);
+    Line(14, 48, 46, 48);
+    ACanvas.Pen.Color := RGB(190, 220, 245);
+    Line(46, 48, 82, 48);
+    NoPen;
+    Solid(32);
+    ACanvas.Ellipse(2, 36, 26, 60);
+    ACanvas.Ellipse(36, 36, 60, 60);
+    Pen(5);
+    ACanvas.Brush.Color := clWhite;
+    ACanvas.Ellipse(70, 36, 94, 60);
+  end
+  else if AName = 'segmentbarsteps' then
+  begin
+    NoPen;
+    for I := 0 to 3 do
+    begin
+      if I < 2 then
+        Solid(32)
+      else
+        Solid(190);
+      ACanvas.RoundRect(2 + I * 24, 42, 22 + I * 24, 54, 10, 10);
+    end;
+  end
+  else if AName = 'checkoutsteps' then
+  begin
+    // A check badge, a dotted path, the next step
+    Pen(4);
+    ACanvas.Pen.Style := psDot;
+    ACanvas.Pen.Width := 1;
+    Line(30, 48, 66, 48);
+    NoPen;
+    Solid(32);
+    ACanvas.Ellipse(4, 30, 40, 66);
+    Pen(5);
+    ACanvas.Pen.Color := clWhite;
+    Line(13, 48, 20, 55);
+    Line(20, 55, 31, 41);
+    Pen(5);
+    ACanvas.Brush.Color := clWhite;
+    ACanvas.Ellipse(64, 34, 92, 62);
+  end
+  else if AName = 'ordertrackingsteps' then
+  begin
+    // The van on its road
+    Pen(5);
+    Line(2, 80, 94, 80);
+    NoPen;
+    Solid(32);
+    ACanvas.RoundRect(6, 30, 58, 66, 8, 8);
+    ACanvas.Polygon([Point(58, 40), Point(78, 40), Point(90, 54), Point(90, 66), Point(58, 66)]);
+    ACanvas.Brush.Color := clWhite;
+    ACanvas.Ellipse(16, 58, 32, 74);
+    ACanvas.Ellipse(64, 58, 80, 74);
+    Solid(32);
+    ACanvas.Ellipse(20, 62, 28, 70);
+    ACanvas.Ellipse(68, 62, 76, 70);
+  end
+  else if AName = 'breadcrumbsteps' then
+  begin
+    // Arrow shaped steps, two done
+    NoPen;
+    Solid(32);
+    ACanvas.Polygon([Point(2, 32), Point(30, 32), Point(42, 48), Point(30, 64), Point(2, 64)]);
+    ACanvas.Polygon([Point(34, 32), Point(58, 32), Point(70, 48), Point(58, 64), Point(34, 64), Point(46, 48)]);
+    Solid(190);
+    ACanvas.Polygon([Point(62, 32), Point(94, 32), Point(94, 64), Point(62, 64), Point(74, 48)]);
+  end
+  else if AName = 'ringsteps' then
+  begin
+    // A ring three quarters round, the number in the middle
+    Pen(10);
+    ACanvas.Pen.Color := RGB(190, 220, 245);
+    Hollow;
+    ACanvas.Ellipse(12, 12, 84, 84);
+    Pen(10);
+    ACanvas.Arc(12, 12, 84, 84, 12, 48, 48, 12);
+    NoPen;
+    Solid(32);
+    ACanvas.Rectangle(43, 34, 53, 62);
+  end
+  else
+    Result := False;
+end;
+
 procedure DrawControl(ACanvas: TCanvas; const AName: string);
 var
   Name, Letters: string;
@@ -494,6 +877,8 @@ begin
     // Play and pause
     Line(4, 7, 4, 17); Line(4, 7, 11, 12); Line(4, 17, 11, 12); Line(15, 7, 15, 17); Line(19, 7, 19, 17);
   end
+  else if DrawAdvancedControl(ACanvas, Name) then
+    // Drawn above
   else if Name.StartsWith('db') then
     DrawDataControl(ACanvas, Name)
   else if Name.EndsWith('tabbar') then

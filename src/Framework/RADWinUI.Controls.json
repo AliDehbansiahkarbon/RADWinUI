@@ -230,6 +230,188 @@
 "props": {"DataSource": "datasource", "DataField": "datafield", "ReadOnly": "bool", "Header": "string", "ValueChecked": "string", "ValueUnchecked": "string"},
 "unit": "RADWinUI.DBControls",
 "wrapper": "TWinUIDBToggleSwitch"
+},
+"RADWinUI.Controls.OtpCodeField": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"TextChanged": ["TWinUIWinValueEventHandler", "TWinValue"], "Completed": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Header": "string", "Text": "string", "PlaceholderText": "string", "CodeLength": "int", "VerifiedText": "string", "AutoVerify": "bool"},
+"unit": "RADWinUI.TextFields",
+"wrapper": "TWinUIOtpCodeField"
+},
+"RADWinUI.Controls.CardNumberField": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"TextChanged": ["TWinUIWinValueEventHandler", "TWinValue"], "Completed": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Header": "string", "Text": "string", "PlaceholderText": "string", "Expiry": "string", "Cvc": "string"},
+"unit": "RADWinUI.TextFields",
+"wrapper": "TWinUICardNumberField"
+},
+"RADWinUI.Controls.StrengthMeterField": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"TextChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Header": "string", "Text": "string", "PlaceholderText": "string", "RevealPassword": "bool", "ScoreLabels": "string"},
+"unit": "RADWinUI.TextFields",
+"wrapper": "TWinUIStrengthMeterField"
+},
+"RADWinUI.Controls.AutoGrowField": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"TextChanged": ["TWinUIWinValueEventHandler", "TWinValue"], "Submitted": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Header": "string", "Text": "string", "PlaceholderText": "string", "MaxLines": "int", "ShowSendButton": "bool"},
+"unit": "RADWinUI.TextFields",
+"wrapper": "TWinUIAutoGrowField"
+},
+"RADWinUI.Controls.TagInputField": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"TextChanged": ["TWinUIWinValueEventHandler", "TWinValue"], "TagsChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Header": "string", "Text": "string", "PlaceholderText": "string", "Tags": "string", "MaxTags": "int"},
+"unit": "RADWinUI.TextFields",
+"wrapper": "TWinUITagInputField"
+},
+"RADWinUI.Controls.GhostCompleteField": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"TextChanged": ["TWinUIWinValueEventHandler", "TWinValue"], "Accepted": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Header": "string", "Text": "string", "PlaceholderText": "string", "Suggestions": "string", "CompleteAfter": "string", "HintText": "string", "AcceptedText": "string"},
+"unit": "RADWinUI.TextFields",
+"wrapper": "TWinUIGhostCompleteField"
+},
+"RADWinUI.Controls.SwipeCardStack": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Liked": ["TWinUIWinValueEventHandler", "TWinValue"], "Passed": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Items": "string", "Loop": "bool", "LikeText": "string", "PassText": "string", "ShowButtons": "bool"},
+"unit": "RADWinUI.SwipeActions",
+"wrapper": "TWinUISwipeCardStack"
+},
+"RADWinUI.Controls.PinSwipeList": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Pinned": ["TWinUIWinValueEventHandler", "TWinValue"], "Unpinned": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Items": "string"},
+"unit": "RADWinUI.SwipeActions",
+"wrapper": "TWinUIPinSwipeList"
+},
+"RADWinUI.Controls.PeekSwipeList": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Deleted": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Items": "string", "HintIndex": "int", "HintInterval": "int", "HintText": "string", "ActionText": "string"},
+"unit": "RADWinUI.SwipeActions",
+"wrapper": "TWinUIPeekSwipeList"
+},
+"RADWinUI.Controls.LiquidDeleteList": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Deleted": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Items": "string"},
+"unit": "RADWinUI.SwipeActions",
+"wrapper": "TWinUILiquidDeleteList"
+},
+"RADWinUI.Controls.SnoozeSwipeList": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Snoozed": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Items": "string", "SnoozeOptions": "string"},
+"unit": "RADWinUI.SwipeActions",
+"wrapper": "TWinUISnoozeSwipeList"
+},
+"RADWinUI.Controls.UndoSwipeList": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"Deleted": ["TWinUIWinValueEventHandler", "TWinValue"], "Restored": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Items": "string", "UndoText": "string", "UndoDuration": "int"},
+"unit": "RADWinUI.SwipeActions",
+"wrapper": "TWinUIUndoSwipeList"
+},
+"RADWinUI.Controls.ClassicPager": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"PageChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "PageCount": "int", "Page": "int", "ShowArrows": "bool"},
+"unit": "RADWinUI.Pagination",
+"wrapper": "TWinUIClassicPager"
+},
+"RADWinUI.Controls.PillsPager": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"PageChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "PageCount": "int", "Page": "int", "ShowArrows": "bool"},
+"unit": "RADWinUI.Pagination",
+"wrapper": "TWinUIPillsPager"
+},
+"RADWinUI.Controls.DotsPager": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"PageChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "PageCount": "int", "Page": "int", "ShowArrows": "bool"},
+"unit": "RADWinUI.Pagination",
+"wrapper": "TWinUIDotsPager"
+},
+"RADWinUI.Controls.BorderedPager": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"PageChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "PageCount": "int", "Page": "int", "ShowArrows": "bool"},
+"unit": "RADWinUI.Pagination",
+"wrapper": "TWinUIBorderedPager"
+},
+"RADWinUI.Controls.TrackPager": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"PageChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "PageCount": "int", "Page": "int", "ShowArrows": "bool"},
+"unit": "RADWinUI.Pagination",
+"wrapper": "TWinUITrackPager"
+},
+"RADWinUI.Controls.SegmentedPager": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"PageChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "PageCount": "int", "Page": "int", "ShowArrows": "bool"},
+"unit": "RADWinUI.Pagination",
+"wrapper": "TWinUISegmentedPager"
+},
+"RADWinUI.Controls.ProgressPager": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"PageChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "PageCount": "int", "Page": "int", "ShowArrows": "bool"},
+"unit": "RADWinUI.Pagination",
+"wrapper": "TWinUIProgressPager"
+},
+"RADWinUI.Controls.StepsPager": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"PageChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "PageCount": "int", "Page": "int", "ShowArrows": "bool"},
+"unit": "RADWinUI.Pagination",
+"wrapper": "TWinUIStepsPager"
+},
+"RADWinUI.Controls.NumberedSteps": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"StepChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Items": "tabitems", "Step": "int"},
+"unit": "RADWinUI.ProgressSteps",
+"wrapper": "TWinUINumberedSteps"
+},
+"RADWinUI.Controls.SegmentBarSteps": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"StepChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Items": "tabitems", "Step": "int"},
+"unit": "RADWinUI.ProgressSteps",
+"wrapper": "TWinUISegmentBarSteps"
+},
+"RADWinUI.Controls.CheckoutSteps": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"StepChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Items": "tabitems", "Step": "int"},
+"unit": "RADWinUI.ProgressSteps",
+"wrapper": "TWinUICheckoutSteps"
+},
+"RADWinUI.Controls.OrderTrackingSteps": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"StepChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Items": "tabitems", "Step": "int", "Title": "string", "Subtitle": "string"},
+"unit": "RADWinUI.ProgressSteps",
+"wrapper": "TWinUIOrderTrackingSteps"
+},
+"RADWinUI.Controls.BreadcrumbSteps": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"StepChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Items": "tabitems", "Step": "int"},
+"unit": "RADWinUI.ProgressSteps",
+"wrapper": "TWinUIBreadcrumbSteps"
+},
+"RADWinUI.Controls.RingSteps": {
+"base": "Microsoft.UI.Xaml.Controls.ContentControl",
+"events": {"StepChanged": ["TWinUIWinValueEventHandler", "TWinValue"]},
+"props": {"AccentFrom": "brush", "AccentTo": "brush", "Items": "tabitems", "Step": "int", "Title": "string", "Subtitle": "string"},
+"unit": "RADWinUI.ProgressSteps",
+"wrapper": "TWinUIRingSteps"
 }
 },
 "namespace": "using:RADWinUI.Controls",
@@ -266,7 +448,33 @@
 {"category": "Data Controls", "name": "DBCtrlGrid", "runtime": "RADWinUI.Controls.DBCtrlGrid"},
 {"category": "Data Controls", "name": "DBDatePicker", "runtime": "RADWinUI.Controls.DBDatePicker"},
 {"category": "Data Controls", "name": "DBNumberBox", "runtime": "RADWinUI.Controls.DBNumberBox"},
-{"category": "Data Controls", "name": "DBToggleSwitch", "runtime": "RADWinUI.Controls.DBToggleSwitch"}
+{"category": "Data Controls", "name": "DBToggleSwitch", "runtime": "RADWinUI.Controls.DBToggleSwitch"},
+{"category": "Text Fields", "name": "OtpCodeField", "runtime": "RADWinUI.Controls.OtpCodeField"},
+{"category": "Text Fields", "name": "CardNumberField", "runtime": "RADWinUI.Controls.CardNumberField"},
+{"category": "Text Fields", "name": "StrengthMeterField", "runtime": "RADWinUI.Controls.StrengthMeterField"},
+{"category": "Text Fields", "name": "AutoGrowField", "runtime": "RADWinUI.Controls.AutoGrowField"},
+{"category": "Text Fields", "name": "TagInputField", "runtime": "RADWinUI.Controls.TagInputField"},
+{"category": "Text Fields", "name": "GhostCompleteField", "runtime": "RADWinUI.Controls.GhostCompleteField"},
+{"category": "Swipe Actions", "name": "SwipeCardStack", "runtime": "RADWinUI.Controls.SwipeCardStack"},
+{"category": "Swipe Actions", "name": "PinSwipeList", "runtime": "RADWinUI.Controls.PinSwipeList"},
+{"category": "Swipe Actions", "name": "PeekSwipeList", "runtime": "RADWinUI.Controls.PeekSwipeList"},
+{"category": "Swipe Actions", "name": "LiquidDeleteList", "runtime": "RADWinUI.Controls.LiquidDeleteList"},
+{"category": "Swipe Actions", "name": "SnoozeSwipeList", "runtime": "RADWinUI.Controls.SnoozeSwipeList"},
+{"category": "Swipe Actions", "name": "UndoSwipeList", "runtime": "RADWinUI.Controls.UndoSwipeList"},
+{"category": "Pagination", "name": "ClassicPager", "runtime": "RADWinUI.Controls.ClassicPager"},
+{"category": "Pagination", "name": "PillsPager", "runtime": "RADWinUI.Controls.PillsPager"},
+{"category": "Pagination", "name": "DotsPager", "runtime": "RADWinUI.Controls.DotsPager"},
+{"category": "Pagination", "name": "BorderedPager", "runtime": "RADWinUI.Controls.BorderedPager"},
+{"category": "Pagination", "name": "TrackPager", "runtime": "RADWinUI.Controls.TrackPager"},
+{"category": "Pagination", "name": "SegmentedPager", "runtime": "RADWinUI.Controls.SegmentedPager"},
+{"category": "Pagination", "name": "ProgressPager", "runtime": "RADWinUI.Controls.ProgressPager"},
+{"category": "Pagination", "name": "StepsPager", "runtime": "RADWinUI.Controls.StepsPager"},
+{"category": "Progress Steps", "name": "NumberedSteps", "runtime": "RADWinUI.Controls.NumberedSteps"},
+{"category": "Progress Steps", "name": "SegmentBarSteps", "runtime": "RADWinUI.Controls.SegmentBarSteps"},
+{"category": "Progress Steps", "name": "CheckoutSteps", "runtime": "RADWinUI.Controls.CheckoutSteps"},
+{"category": "Progress Steps", "name": "OrderTrackingSteps", "runtime": "RADWinUI.Controls.OrderTrackingSteps"},
+{"category": "Progress Steps", "name": "BreadcrumbSteps", "runtime": "RADWinUI.Controls.BreadcrumbSteps"},
+{"category": "Progress Steps", "name": "RingSteps", "runtime": "RADWinUI.Controls.RingSteps"}
 ],
 "types": {
 "NotchPanel": "RADWinUI.Controls.NotchPanel",
@@ -301,6 +509,32 @@
 "DBCtrlGrid": "RADWinUI.Controls.DBCtrlGrid",
 "DBDatePicker": "RADWinUI.Controls.DBDatePicker",
 "DBNumberBox": "RADWinUI.Controls.DBNumberBox",
-"DBToggleSwitch": "RADWinUI.Controls.DBToggleSwitch"
+"DBToggleSwitch": "RADWinUI.Controls.DBToggleSwitch",
+"OtpCodeField": "RADWinUI.Controls.OtpCodeField",
+"CardNumberField": "RADWinUI.Controls.CardNumberField",
+"StrengthMeterField": "RADWinUI.Controls.StrengthMeterField",
+"AutoGrowField": "RADWinUI.Controls.AutoGrowField",
+"TagInputField": "RADWinUI.Controls.TagInputField",
+"GhostCompleteField": "RADWinUI.Controls.GhostCompleteField",
+"SwipeCardStack": "RADWinUI.Controls.SwipeCardStack",
+"PinSwipeList": "RADWinUI.Controls.PinSwipeList",
+"PeekSwipeList": "RADWinUI.Controls.PeekSwipeList",
+"LiquidDeleteList": "RADWinUI.Controls.LiquidDeleteList",
+"SnoozeSwipeList": "RADWinUI.Controls.SnoozeSwipeList",
+"UndoSwipeList": "RADWinUI.Controls.UndoSwipeList",
+"ClassicPager": "RADWinUI.Controls.ClassicPager",
+"PillsPager": "RADWinUI.Controls.PillsPager",
+"DotsPager": "RADWinUI.Controls.DotsPager",
+"BorderedPager": "RADWinUI.Controls.BorderedPager",
+"TrackPager": "RADWinUI.Controls.TrackPager",
+"SegmentedPager": "RADWinUI.Controls.SegmentedPager",
+"ProgressPager": "RADWinUI.Controls.ProgressPager",
+"StepsPager": "RADWinUI.Controls.StepsPager",
+"NumberedSteps": "RADWinUI.Controls.NumberedSteps",
+"SegmentBarSteps": "RADWinUI.Controls.SegmentBarSteps",
+"CheckoutSteps": "RADWinUI.Controls.CheckoutSteps",
+"OrderTrackingSteps": "RADWinUI.Controls.OrderTrackingSteps",
+"BreadcrumbSteps": "RADWinUI.Controls.BreadcrumbSteps",
+"RingSteps": "RADWinUI.Controls.RingSteps"
 }
 }

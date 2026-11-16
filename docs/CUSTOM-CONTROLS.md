@@ -2,7 +2,7 @@
 
 RADWinUI controls do not have to come from WinUI. A class derived from `TWinUICustomControl` (unit `RADWinUI.CustomControls`) is a real XAML element: XAML creates it, its properties are dependency properties, so bindings, styles and animations work on them, and Pascal sees the same object through `FindElement`.
 
-RADWinUI's own controls are built this way. They are in `RADWinUI.Controls`, `RADWinUI.TabBars`, `RADWinUI.ActionButtons` and `RADWinUI.DBControls`, and on the Tool Palette in the Overlay, Tab Bars, Action Buttons and Data Controls categories.
+RADWinUI's own controls are built this way. They are in `RADWinUI.Controls`, `RADWinUI.TabBars`, `RADWinUI.ActionButtons`, `RADWinUI.DBControls`, `RADWinUI.TextFields`, `RADWinUI.SwipeActions`, `RADWinUI.Pagination` and `RADWinUI.ProgressSteps`, and on the Tool Palette in the Overlay, Tab Bars, Action Buttons, Data Controls, Text Fields, Swipe Actions, Pagination and Progress Steps categories.
 
 ## Using them in XAML
 
@@ -162,6 +162,83 @@ The lookups take their choices from the records of `ListSource`, a data source n
 
 In the Object Inspector, `DataSource` and `ListSource` list the data sources, and `DataField`, `KeyField` and `ListField` list the fields of their datasets. The lists come from the `.dfm` files of the project's data modules and forms, so persistent fields and `FieldDefs` are there, but fields a query only makes when it opens are not. Any name can be typed. The Design view has no data: there each control shows its field names as placeholders.
 
+## The text fields
+
+Six inputs from the Text Fields category. Each one is a real WinUI text box (or password box) under its drawing, so typing, selection, copy and paste, the touch keyboard and screen readers work as usual.
+
+| Control | What it does | Own properties | Event |
+| --- | --- | --- | --- |
+| `TWinUIOtpCodeField` | One box per digit and a blinking caret. A full code raises `Completed`, `Verify(True)` runs a mint wave over the boxes, `Verify(False)` shakes them red. | `CodeLength` (6), `AutoVerify`, `VerifiedText`, `IsVerified`, `Clear` | `Completed` |
+| `TWinUICardNumberField` | Groups the digits in fours as they are typed. With 16 digits it folds to "•••• 4242" and the expiry and CVC fields slide in. | `Expiry`, `Cvc`, `IsComplete` | `Completed` |
+| `TWinUIStrengthMeterField` | A password box with four segments under it that fill and change colour with the strength: length, mixed case, digits and symbols. | `RevealPassword`, `ScoreLabels`, `Score`, `PasswordScore` | `TextChanged` |
+| `TWinUIAutoGrowField` | A message box that grows a line at a time up to `MaxLines`, then scrolls. Ctrl+Enter or the send button submits. | `MaxLines` (6), `ShowSendButton` | `Submitted` |
+| `TWinUITagInputField` | Space, comma or Enter turns the typed word into a chip. Backspace twice, or the chip's x, removes one. | `Tags` (comma separated), `MaxTags` (0 for no limit), `TagCount` | `TagsChanged` |
+| `TWinUIGhostCompleteField` | Shows the rest of a word faintly after the caret, such as the mail domain after `@`. Tab, the right arrow at the end, or the Tab chip takes it. | `Suggestions`, `CompleteAfter` (`@`), `HintText`, `AcceptedText`, `Suggestion` | `Accepted` |
+
+```xml
+<rw:OtpCodeField x:Name="CodeField" CodeLength="4" AutoVerify="False" Completed="CodeCompleted"/>
+<rw:TagInputField x:Name="Topics" Header="Topics" Tags="Delphi, WinUI" TagsChanged="TopicsChanged"/>
+```
+
+All six have `Header`, `Text`, `PlaceholderText` and the `TextChanged` event. `FocusField` puts the caret in the field.
+
+## The swipe actions
+
+Six controls from the Swipe Actions category that act on a swipe with the mouse, a pen or a finger. The lists take their rows from `Items`: `Name|Line|Time` entries separated by semicolons, such as `Leo Cruz|Sent the files|9:12; Ava Stone|Lunch tomorrow?|8:30`. Each row gets an avatar with the name's initial. With the keyboard, Up and Down choose a row and Left or Right swipes it.
+
+| Control | What it does | Own properties | Events |
+| --- | --- | --- | --- |
+| `TWinUISwipeCardStack` | A stack of cards. Drag the top one: it tilts and a LIKE or NOPE stamp fades in. Far enough and it flies off, the next one rises. The round buttons do the same. Its `Items` gives each card a title, a line and an icon. | `Loop`, `LikeText`, `PassText`, `ShowButtons`, `CurrentIndex`, `CurrentTitle`, `Like`, `Pass` | `Liked`, `Passed` |
+| `TWinUIPinSwipeList` | Swipe a row right to pin it: the pin pops on and the row jumps to the top. Again to unpin. | | `Pinned`, `Unpinned` |
+| `TWinUIPeekSwipeList` | A row peeks left now and then to show the action behind it. Swipe it open and tap the action. | `HintIndex`, `HintInterval` (ms, 0 peeks once), `HintText`, `ActionText`, `Hint` | `Deleted` |
+| `TWinUILiquidDeleteList` | Swipe left: a red blob stretches out of the row, snaps off, pops into drops, and the row goes. | | `Deleted` |
+| `TWinUISnoozeSwipeList` | Swipe left to snooze: a clock spins as you drag and the time steps through `SnoozeOptions`. The row then shows its snooze time in amber. | `SnoozeOptions` (`1h, 3h, 6 PM`), `SnoozeOf` | `Snoozed` |
+| `TWinUIUndoSwipeList` | A row swiped away leaves an Undo strip with a countdown. Undo slides the row back, otherwise it is gone after `UndoDuration`. | `UndoText`, `UndoDuration` (ms), `Undo` | `Deleted`, `Restored` |
+
+```xml
+<rw:UndoSwipeList x:Name="Inbox" Items="Leo Cruz|Sent the files|9:12; Mia Park|See you at 7?|9:41" Deleted="MailDeleted"/>
+```
+
+In an event, `ActionIndex` and `ActionName` say which row it is about, and `Items` already reflects a removed or moved row. `SwipeRow(Index)` does a row's swipe from code.
+
+## The pagers
+
+Eight pagers in the Pagination category. Each has `PageCount`, `Page` (from 1), `ShowArrows`, `NextPage` and `PreviousPage`, and raises `PageChanged`. The page indicator springs from page to page. A click on a page or an arrow, the arrow keys, Home and End change the page.
+
+| Control | Look |
+| --- | --- |
+| `TWinUIClassicPager` | Numbered pages and arrows. Far from the ends the pages in between fold into an ellipsis. |
+| `TWinUIPillsPager` | Dots, the current one stretched into a pill that slides with a little lag. Nine pages unless set. |
+| `TWinUIDotsPager` | A row of dots with double arrows, the current dot larger and glowing. |
+| `TWinUIBorderedPager` | One frame around the pages, the current one filled, arrows at both ends. |
+| `TWinUITrackPager` | A thin track with a thumb that springs to the page. |
+| `TWinUISegmentedPager` | A segmented control, the current segment lit and glowing. |
+| `TWinUIProgressPager` | "4 of 12" as a bar between two arrows. A click on the bar jumps to that part. |
+| `TWinUIStepsPager` | Pages as steps on a line: done, current and still to come. |
+
+```xml
+<rw:ClassicPager x:Name="ResultsPager" PageCount="20" PageChanged="ResultsPageChanged"/>
+```
+
+## The progress steps
+
+Six controls in the Progress Steps category that show where the user is in a flow. `Items` holds the steps as `Label:Icon` entries separated by commas (the icon names are those of the tab bars, plus Card, Pin, Check and Package), `Step` is the current one from 1, and `Step` = the number of steps + 1 shows them all done (`IsComplete`). `Next` and `Back` move one step, a click on a step goes there, and `StepChanged` follows every change.
+
+| Control | Look | Own properties |
+| --- | --- | --- |
+| `TWinUINumberedSteps` | Numbered circles on a line. The line fills to the next step and a done number turns into a check. | |
+| `TWinUISegmentBarSteps` | A segment per step, filling in turn, with the step number rolling over above it. | |
+| `TWinUICheckoutSteps` | An icon per step on a dotted path. A done step gets a check badge. | |
+| `TWinUIOrderTrackingSteps` | A van drives along a road from stop to stop, under the order and its arrival. | `Title`, `Subtitle` |
+| `TWinUIBreadcrumbSteps` | Arrow shaped steps. The colour wipes into the next arrow with a pointed edge. | |
+| `TWinUIRingSteps` | A ring of arcs around the step number, which rolls to the next one. | `Title`, `Subtitle` |
+
+```xml
+<rw:CheckoutSteps x:Name="Checkout" Items="Cart:Cart, Address:Location, Payment:Card, Done:Check" Step="2"/>
+```
+
+The text fields, swipe actions, pagers and progress steps all have `AccentFrom` and `AccentTo` (the accent gradient, violet to pink unless set), and use `Background`, `BorderBrush`, `Foreground` and `FontSize` like the action buttons. Without a `Background` they follow the light or dark theme by themselves.
+
 ## Writing your own
 
 ```pascal
@@ -234,10 +311,10 @@ protected
 - For the keyboard, make an interactive control a tab stop with `IsTabStop := True` and `UseSystemFocusVisuals := True` (the focus ring of WinUI's controls), and handle Enter and Space like a click.
 - In a contrast theme (Settings > Accessibility > Contrast themes), `HighContrastOn` is True: paint with `SystemColor(COLOR_WINDOW)`, `COLOR_WINDOWTEXT`, `COLOR_HIGHLIGHT` and the other colours of the theme instead of your own.
 
-RADWinUI's own controls do all of this: the tab bars are a `Tab` with one `TabItem` per tab, the action buttons are buttons named by their text, the NotchPanel is a group that expands and collapses, the GlowTile and the data grids are groups, the DBNavigator is a toolbar of named buttons.
+RADWinUI's own controls do all of this: the tab bars are a `Tab` with one `TabItem` per tab, the action buttons are buttons named by their text, the NotchPanel is a group that expands and collapses, the GlowTile and the data grids are groups, the DBNavigator is a toolbar of named buttons, a swipe list is a list, a pager and a progress steps control are a `Tab` with selectable items.
 
 ## How it works
 
 Each element is a COM aggregate, the way C# and C++/WinRT build one: a Delphi outer object around WinUI's `ContentControl`. The application's `IXamlMetadataProvider` answers XAML's questions about `RADWinUI.Controls.*` types with the registered descriptions, and the dependency properties are registered with `DependencyProperty.Register` the first time a type is used.
 
-Tests: `tests\CustomControls\CustomControlTest` (every property kind, bindings both ways, template, events, creation from Pascal), `tests\CustomControls\OverlayControlsTest` (the Overlay controls and their automation peers, run by `Test-Samples.ps1`), `tests\CustomControls\TabBarsTest` (the tab bars), `tests\CustomControls\ActionButtonsTest` (the action buttons) and `tests\CustomControls\DBControlsTest` (the data controls).
+Tests: `tests\CustomControls\CustomControlTest` (every property kind, bindings both ways, template, events, creation from Pascal), `tests\CustomControls\OverlayControlsTest` (the Overlay controls and their automation peers, run by `Test-Samples.ps1`), `tests\CustomControls\TabBarsTest` (the tab bars), `tests\CustomControls\ActionButtonsTest` (the action buttons), `tests\CustomControls\DBControlsTest` (the data controls) and `tests\CustomControls\AdvancedControlsTest` (the text fields, swipe actions, pagers and progress steps).

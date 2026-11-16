@@ -89,7 +89,7 @@ A handler is `(Sender: TObject; E: <args class>)` or `(Sender: TObject)`, the ar
 
 ## RADWinUI's own controls
 
-`xmlns:rw="using:RADWinUI.Controls"` on `<Window>` makes RADWinUI's own controls available as `<rw:NotchPanel>`, `<rw:GlowTile>`, `<rw:HotKey>`, `<rw:MediaSession>`, the tab bars such as `<rw:SlidingPillTabBar>`, the action buttons such as `<rw:SlideButton>` and the data controls such as `<rw:DBGrid>`. They get typed fields and event wiring like WinUI's controls, their events take `(Sender: TObject; const E: TWinValue)` or `(Sender: TObject)`, and an unknown `rw:` element stops the build. See [CUSTOM-CONTROLS.md](CUSTOM-CONTROLS.md).
+`xmlns:rw="using:RADWinUI.Controls"` on `<Window>` makes RADWinUI's own controls available as `<rw:NotchPanel>`, `<rw:GlowTile>`, `<rw:HotKey>`, `<rw:MediaSession>`, the tab bars such as `<rw:SlidingPillTabBar>`, the action buttons such as `<rw:SlideButton>`, the data controls such as `<rw:DBGrid>`, the text fields such as `<rw:OtpCodeField>`, the swipe actions such as `<rw:UndoSwipeList>`, the pagers such as `<rw:ClassicPager>` and the progress steps such as `<rw:CheckoutSteps>`. They get typed fields and event wiring like WinUI's controls, their events take `(Sender: TObject; const E: TWinValue)` or `(Sender: TObject)`, and an unknown `rw:` element stops the build. See [CUSTOM-CONTROLS.md](CUSTOM-CONTROLS.md).
 
 ## Accessing designer controls from Pascal
 

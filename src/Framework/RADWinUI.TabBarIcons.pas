@@ -60,7 +60,7 @@ type
 
 const
   HelpGlyph = $E897;
-  Icons: array[0..49] of TIconEntry = (
+  Icons: array[0..53] of TIconEntry = (
     (Names: 'Home'; Glyph: $E80F; Filled: $EA8A),
     (Names: 'Search|Find'; Glyph: $E721; Filled: $E721),
     (Names: 'Heart|Likes|Love|Favorites'; Glyph: $EB51; Filled: $EB52),
@@ -110,7 +110,11 @@ const
     (Names: 'Filter'; Glyph: $E71C; Filled: $E71C),
     (Names: 'Emoji|Smile|Mood'; Glyph: $E76E; Filled: $E76E),
     (Names: 'Wifi|Network'; Glyph: $E701; Filled: $E701),
-    (Names: 'More|Ellipsis'; Glyph: $E712; Filled: $E712));
+    (Names: 'More|Ellipsis'; Glyph: $E712; Filled: $E712),
+    (Names: 'Card|Payment|CreditCard|Wallet'; Glyph: $E8C7; Filled: $E8C7),
+    (Names: 'Pin|Pinned'; Glyph: $E718; Filled: $E842),
+    (Names: 'Check|Done|Accept|CheckMark'; Glyph: $E73E; Filled: $E73E),
+    (Names: 'Package|Box|Parcel|Order'; Glyph: $E7B8; Filled: $E7B8));
 
 function TabBarIcons: TArray<TTabBarIcon>;
 var
