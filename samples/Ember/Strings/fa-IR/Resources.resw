@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AppTitleBar.Subtitle" xml:space="preserve"><value>برشته‌کاری</value></data>
+  <data name="SearchBox.PlaceholderText" xml:space="preserve"><value>جستجوی سفارش، کافه یا قهوه</value></data>
+  <data name="NavDashboard.Content" xml:space="preserve"><value>داشبورد</value></data>
+  <data name="NavOrders.Content" xml:space="preserve"><value>سفارش‌ها</value></data>
+  <data name="NavRoastery.Content" xml:space="preserve"><value>برشته‌کاری</value></data>
+  <data name="BadgeTitle.Text" xml:space="preserve"><value>دستگاه آماده است</value></data>
+  <data name="BadgeText.Text" xml:space="preserve"><value>آماده برای بچ بعدی</value></data>
+  <data name="LongDayNames" xml:space="preserve"><value>یکشنبه, دوشنبه, سه‌شنبه, چهارشنبه, پنجشنبه, جمعه, شنبه</value></data>
+  <data name="ShortDayNames" xml:space="preserve"><value>یکشنبه, دوشنبه, سه‌شنبه, چهارشنبه, پنجشنبه, جمعه, شنبه</value></data>
+  <data name="LongMonthNames" xml:space="preserve"><value>ژانویه, فوریه, مارس, آوریل, مه, ژوئن, ژوئیه, اوت, سپتامبر, اکتبر, نوامبر, دسامبر</value></data>
+  <data name="SuggestCafe" xml:space="preserve"><value>کافه</value></data>
+  <data name="SuggestCoffee" xml:space="preserve"><value>قهوه</value></data>
+  <data name="NewOrderButton.Text" xml:space="preserve"><value>سفارش تازه</value></data>
+  <data name="RevenueLabel.Text" xml:space="preserve"><value>فروش امروز</value></data>
+  <data name="OpenOrdersLabel.Text" xml:space="preserve"><value>سفارش‌های باز</value></data>
+  <data name="OpenOrdersHint.Text" xml:space="preserve"><value>در انتظار برشته‌کاری یا ارسال</value></data>
+  <data name="StockLabel.Text" xml:space="preserve"><value>قهوه سبز در انبار</value></data>
+  <data name="BatchLabel.Text" xml:space="preserve"><value>دستگاه برشته‌کاری</value></data>
+  <data name="WeekTitle.Text" xml:space="preserve"><value>فروش این هفته</value></data>
+  <data name="NextRoastTitle.Text" xml:space="preserve"><value>برشته‌کاری بعدی</value></data>
+  <data name="CoffeeBox.Header" xml:space="preserve"><value>قهوه</value></data>
+  <data name="BatchSizeLabel.Text" xml:space="preserve"><value>اندازه بچ</value></data>
+  <data name="StartRoastButton.Text" xml:space="preserve"><value>برای شروع بکشید</value></data>
+  <data name="StartRoastButton.DoneText" xml:space="preserve"><value>در حال برشته شدن</value></data>
+  <data name="TopTitle.Text" xml:space="preserve"><value>پرفروش‌ها، ۳۰ روز گذشته</value></data>
+  <data name="RecentTitle.Text" xml:space="preserve"><value>تازه‌ترین سفارش‌ها</value></data>
+  <data name="AllOrdersLink.Content" xml:space="preserve"><value>همه سفارش‌ها</value></data>
+  <data name="GreetingMorning" xml:space="preserve"><value>صبح بخیر</value></data>
+  <data name="GreetingAfternoon" xml:space="preserve"><value>عصر بخیر</value></data>
+  <data name="GreetingEvening" xml:space="preserve"><value>شب بخیر</value></data>
+  <data name="DeltaFormat" xml:space="preserve"><value>%+.0f%% نسبت به دیروز</value></data>
+  <data name="RoasterIdle" xml:space="preserve"><value>آماده</value></data>
+  <data name="RoasterIdleHint" xml:space="preserve"><value>آماده برای بچ بعدی</value></data>
+  <data name="LastBatchFormat" xml:space="preserve"><value>آخرین بچ: #%d %s</value></data>
+  <data name="RoastingHintFormat" xml:space="preserve"><value>بچ #%d، %s</value></data>
+  <data name="Today" xml:space="preserve"><value>امروز</value></data>
+  <data name="StatusOpen" xml:space="preserve"><value>باز</value></data>
+  <data name="StatusRoasting" xml:space="preserve"><value>در حال برشته شدن</value></data>
+  <data name="StatusShipped" xml:space="preserve"><value>ارسال شده</value></data>
+  <data name="OrdersTitle.Text" xml:space="preserve"><value>سفارش‌ها</value></data>
+  <data name="StatusTabs.Items" xml:space="preserve"><value>همه:E8FD, باز:Clock, برشته‌کاری:ECAD, ارسال شده:E73E</value></data>
+  <data name="AllOrdersTitle.Text" xml:space="preserve"><value>همه سفارش‌ها</value></data>
+  <data name="OrderLabel.Text" xml:space="preserve"><value>سفارش</value></data>
+  <data name="TotalLabel.Text" xml:space="preserve"><value>جمع</value></data>
+  <data name="CustomerCombo.Header" xml:space="preserve"><value>کافه</value></data>
+  <data name="CoffeeCombo.Header" xml:space="preserve"><value>قهوه</value></data>
+  <data name="KgBox.Header" xml:space="preserve"><value>کیلوگرم</value></data>
+  <data name="DatePicker.Header" xml:space="preserve"><value>تاریخ</value></data>
+  <data name="StatusCombo.Header" xml:space="preserve"><value>وضعیت</value></data>
+  <data name="NoteMemo.Header" xml:space="preserve"><value>یادداشت</value></data>
+  <data name="OrdersCountFormat" xml:space="preserve"><value>%d سفارش</value></data>
+  <data name="OrdersFoundFormat" xml:space="preserve"><value>%d سفارش برای «%s»</value></data>
+  <data name="RoasteryTitle.Text" xml:space="preserve"><value>برشته‌کاری</value></data>
+  <data name="PopOutText.Text" xml:space="preserve"><value>پنجره کوچک</value></data>
+  <data name="DropButton.Text" xml:space="preserve"><value>برای تخلیه نگه دارید</value></data>
+  <data name="DropButton.DoneText" xml:space="preserve"><value>تخلیه شد</value></data>
+  <data name="BeanTempLabel.Text" xml:space="preserve"><value>دمای دانه</value></data>
+  <data name="RoastTimeLabel.Text" xml:space="preserve"><value>زمان برشته‌کاری</value></data>
+  <data name="RorLabel.Text" xml:space="preserve"><value>نرخ افزایش دما</value></data>
+  <data name="DevLabel.Text" xml:space="preserve"><value>مرحله توسعه</value></data>
+  <data name="PhaseDrying.Text" xml:space="preserve"><value>خشک شدن</value></data>
+  <data name="PhaseMaillard.Text" xml:space="preserve"><value>مایار</value></data>
+  <data name="PhaseDevelopment.Text" xml:space="preserve"><value>توسعه</value></data>
+  <data name="PhaseDone.Text" xml:space="preserve"><value>تمام</value></data>
+  <data name="PhaseIdle" xml:space="preserve"><value>آماده</value></data>
+  <data name="CrackLabel.Text" xml:space="preserve"><value>ترک اول</value></data>
+  <data name="EmptyTitle.Text" xml:space="preserve"><value>دستگاه برشته‌کاری آماده است</value></data>
+  <data name="EmptyText.Text" xml:space="preserve"><value>یک بچ را اینجا یا از داشبورد شروع کنید و رشد منحنی را ببینید.</value></data>
+  <data name="QuickStartFormat" xml:space="preserve"><value>برشته کردن %d کیلو %s</value></data>
+  <data name="NoBatch" xml:space="preserve"><value>بچی در دستگاه نیست</value></data>
+  <data name="BatchFormat" xml:space="preserve"><value>بچ #%d  -  %s، %.0f کیلو</value></data>
+  <data name="BadgeRoastingFormat" xml:space="preserve"><value>برشته‌کاری بچ #%d</value></data>
+  <data name="BadgeDoneFormat" xml:space="preserve"><value>بچ #%d آماده است</value></data>
+  <data name="NoteTitleFormat" xml:space="preserve"><value>بچ #%d آماده است</value></data>
+  <data name="NoteTextFormat" xml:space="preserve"><value>%s، %.1f کیلو، تخلیه در %s پس از %s توسعه.</value></data>
+  <data name="NoteShow" xml:space="preserve"><value>نمایش برشته‌کاری</value></data>
+  <data name="NoteNext" xml:space="preserve"><value>شروع بچ بعدی</value></data>
+  <data name="MiniTitle" xml:space="preserve"><value>برشته‌کار Ember</value></data>
+  <data name="SettingsTitle.Text" xml:space="preserve"><value>تنظیمات</value></data>
+  <data name="ThemeTitle.Text" xml:space="preserve"><value>پوسته</value></data>
+  <data name="ThemeText.Text" xml:space="preserve"><value>روشن، تیره یا مانند ویندوز</value></data>
+  <data name="ThemeSystem.Content" xml:space="preserve"><value>پیش‌فرض ویندوز</value></data>
+  <data name="ThemeLight.Content" xml:space="preserve"><value>روشن</value></data>
+  <data name="ThemeDark.Content" xml:space="preserve"><value>تیره</value></data>
+  <data name="LanguageTitle.Text" xml:space="preserve"><value>زبان</value></data>
+  <data name="LanguageText.Text" xml:space="preserve"><value>Ember با زبان تازه دوباره باز می‌شود</value></data>
+  <data name="LanguageSystem" xml:space="preserve"><value>پیش‌فرض ویندوز</value></data>
+  <data name="RestartFormat" xml:space="preserve"><value>Ember اکنون با %s دوباره باز شود؟</value></data>
+  <data name="NotifyTitle.Text" xml:space="preserve"><value>اعلان‌ها</value></data>
+  <data name="NotifyText.Text" xml:space="preserve"><value>ویندوز آماده شدن هر بچ را خبر می‌دهد</value></data>
+  <data name="TestNoteButton.Content" xml:space="preserve"><value>ارسال آزمایشی</value></data>
+  <data name="TestNoteTitle" xml:space="preserve"><value>Ember آماده است</value></data>
+  <data name="TestNoteText" xml:space="preserve"><value>وقتی بچی تمام شود، پیامی مانند این می‌بینید.</value></data>
+  <data name="AboutTitle.Text" xml:space="preserve"><value>درباره Ember</value></data>
+  <data name="AboutText.Text" xml:space="preserve"><value>Ember نمونه‌ای از RADWinUI است: یک برنامه بومی WinUI 3 که با دلفی نوشته شده. صفحه‌های آن فایل‌های XAML با یونیت‌های Object Pascal هستند، داده‌هایش از FireDAC می‌آید و به شکل یک برنامه ساده Win64 منتشر می‌شود.</value></data>
+</root>

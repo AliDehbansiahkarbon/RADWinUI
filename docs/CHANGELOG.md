@@ -4,6 +4,8 @@ All notable changes to RADWinUI.
 
 ## Unreleased
 
+- New samples Ember and Ember_VCL: a coffee roastery's app with a dashboard, FireDAC orders in the data controls, a live roast curve, a compact overlay mini roaster, batch-ready notifications with buttons, a theme switch, and English, German and Persian. Ember_VCL shows the same orders on a VCL form, with the current order as a WinUI card in a `TWinUIHost`. Both are in `RADWinUISamples.groupproj` and `Test-Samples.ps1`.
+
 - Designer: holding the mouse over a control shows a tooltip like the VCL designer's: its x:Name and Delphi class, its origin in its parent and size, its Grid cell, whether it is disabled, and its line and column in the XAML. Ctrl+Alt+Space in Design opens Create XAML with AI.
 
 - Create XAML with AI with an image: paste a screenshot or sketch into the prompt bar (Ctrl+V), drop an image file on it, or press Capture for the designer's own picture of the file. A thumbnail shows it, its x removes it. The image, the words and the current XAML go to the vision model chosen in Tools > Options > Third Party > RADWinUI (OpenAI, Anthropic, Google Gemini or Ollama on this PC), because the IDE's AI engine takes text only. Its API key is stored encrypted for the Windows user, and Test checks the setup. The answer is checked against the XAML metadata and applied as one undoable edit, as before. Images are scaled to at most 1568 pixels and sent as PNG, or JPEG when large. Prompts without an image keep using the IDE's engine.

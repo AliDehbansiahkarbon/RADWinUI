@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <resheader name="resmimetype"><value>text/microsoft-resx</value></resheader>
+  <resheader name="version"><value>2.0</value></resheader>
+  <resheader name="reader"><value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <resheader name="writer"><value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value></resheader>
+  <data name="AppTitleBar.Subtitle" xml:space="preserve"><value>Rösterei</value></data>
+  <data name="SearchBox.PlaceholderText" xml:space="preserve"><value>Bestellungen, Cafés oder Kaffees suchen</value></data>
+  <data name="NavDashboard.Content" xml:space="preserve"><value>Übersicht</value></data>
+  <data name="NavOrders.Content" xml:space="preserve"><value>Bestellungen</value></data>
+  <data name="NavRoastery.Content" xml:space="preserve"><value>Rösterei</value></data>
+  <data name="BadgeTitle.Text" xml:space="preserve"><value>Röster bereit</value></data>
+  <data name="BadgeText.Text" xml:space="preserve"><value>Bereit für die nächste Charge</value></data>
+  <data name="LongDayNames" xml:space="preserve"><value>Sonntag, Montag, Dienstag, Mittwoch, Donnerstag, Freitag, Samstag</value></data>
+  <data name="ShortDayNames" xml:space="preserve"><value>So, Mo, Di, Mi, Do, Fr, Sa</value></data>
+  <data name="LongMonthNames" xml:space="preserve"><value>Januar, Februar, März, April, Mai, Juni, Juli, August, September, Oktober, November, Dezember</value></data>
+  <data name="SuggestCafe" xml:space="preserve"><value>Café</value></data>
+  <data name="SuggestCoffee" xml:space="preserve"><value>Kaffee</value></data>
+  <data name="NewOrderButton.Text" xml:space="preserve"><value>Neue Bestellung</value></data>
+  <data name="RevenueLabel.Text" xml:space="preserve"><value>Umsatz heute</value></data>
+  <data name="OpenOrdersLabel.Text" xml:space="preserve"><value>Offene Bestellungen</value></data>
+  <data name="OpenOrdersHint.Text" xml:space="preserve"><value>Warten auf Röstung oder Versand</value></data>
+  <data name="StockLabel.Text" xml:space="preserve"><value>Rohkaffee auf Lager</value></data>
+  <data name="BatchLabel.Text" xml:space="preserve"><value>Röster</value></data>
+  <data name="WeekTitle.Text" xml:space="preserve"><value>Umsatz diese Woche</value></data>
+  <data name="NextRoastTitle.Text" xml:space="preserve"><value>Nächste Röstung</value></data>
+  <data name="CoffeeBox.Header" xml:space="preserve"><value>Kaffee</value></data>
+  <data name="BatchSizeLabel.Text" xml:space="preserve"><value>Chargengröße</value></data>
+  <data name="StartRoastButton.Text" xml:space="preserve"><value>Zum Rösten schieben</value></data>
+  <data name="StartRoastButton.DoneText" xml:space="preserve"><value>Röstet</value></data>
+  <data name="TopTitle.Text" xml:space="preserve"><value>Bestseller, letzte 30 Tage</value></data>
+  <data name="RecentTitle.Text" xml:space="preserve"><value>Neueste Bestellungen</value></data>
+  <data name="AllOrdersLink.Content" xml:space="preserve"><value>Alle Bestellungen</value></data>
+  <data name="GreetingMorning" xml:space="preserve"><value>Guten Morgen</value></data>
+  <data name="GreetingAfternoon" xml:space="preserve"><value>Guten Tag</value></data>
+  <data name="GreetingEvening" xml:space="preserve"><value>Guten Abend</value></data>
+  <data name="DeltaFormat" xml:space="preserve"><value>%+.0f%% zu gestern</value></data>
+  <data name="RoasterIdle" xml:space="preserve"><value>Bereit</value></data>
+  <data name="RoasterIdleHint" xml:space="preserve"><value>Bereit für die nächste Charge</value></data>
+  <data name="LastBatchFormat" xml:space="preserve"><value>Letzte Charge: #%d %s</value></data>
+  <data name="RoastingHintFormat" xml:space="preserve"><value>Charge #%d, %s</value></data>
+  <data name="Today" xml:space="preserve"><value>Heute</value></data>
+  <data name="StatusOpen" xml:space="preserve"><value>Offen</value></data>
+  <data name="StatusRoasting" xml:space="preserve"><value>In Röstung</value></data>
+  <data name="StatusShipped" xml:space="preserve"><value>Versandt</value></data>
+  <data name="OrdersTitle.Text" xml:space="preserve"><value>Bestellungen</value></data>
+  <data name="StatusTabs.Items" xml:space="preserve"><value>Alle:E8FD, Offen:Clock, In Röstung:ECAD, Versandt:E73E</value></data>
+  <data name="AllOrdersTitle.Text" xml:space="preserve"><value>Alle Bestellungen</value></data>
+  <data name="OrderLabel.Text" xml:space="preserve"><value>Bestellung</value></data>
+  <data name="TotalLabel.Text" xml:space="preserve"><value>Summe</value></data>
+  <data name="CustomerCombo.Header" xml:space="preserve"><value>Café</value></data>
+  <data name="CoffeeCombo.Header" xml:space="preserve"><value>Kaffee</value></data>
+  <data name="KgBox.Header" xml:space="preserve"><value>Kilogramm</value></data>
+  <data name="DatePicker.Header" xml:space="preserve"><value>Datum</value></data>
+  <data name="StatusCombo.Header" xml:space="preserve"><value>Status</value></data>
+  <data name="NoteMemo.Header" xml:space="preserve"><value>Notiz</value></data>
+  <data name="OrdersCountFormat" xml:space="preserve"><value>%d Bestellungen</value></data>
+  <data name="OrdersFoundFormat" xml:space="preserve"><value>%d Bestellungen für "%s"</value></data>
+  <data name="RoasteryTitle.Text" xml:space="preserve"><value>Rösterei</value></data>
+  <data name="PopOutText.Text" xml:space="preserve"><value>Mini-Röster</value></data>
+  <data name="DropButton.Text" xml:space="preserve"><value>Halten zum Abwerfen</value></data>
+  <data name="DropButton.DoneText" xml:space="preserve"><value>Abgeworfen</value></data>
+  <data name="BeanTempLabel.Text" xml:space="preserve"><value>Bohnentemperatur</value></data>
+  <data name="RoastTimeLabel.Text" xml:space="preserve"><value>Röstzeit</value></data>
+  <data name="RorLabel.Text" xml:space="preserve"><value>Anstiegsrate</value></data>
+  <data name="DevLabel.Text" xml:space="preserve"><value>Entwicklung</value></data>
+  <data name="PhaseDrying.Text" xml:space="preserve"><value>Trocknung</value></data>
+  <data name="PhaseMaillard.Text" xml:space="preserve"><value>Maillard</value></data>
+  <data name="PhaseDevelopment.Text" xml:space="preserve"><value>Entwicklung</value></data>
+  <data name="PhaseDone.Text" xml:space="preserve"><value>Fertig</value></data>
+  <data name="PhaseIdle" xml:space="preserve"><value>Bereit</value></data>
+  <data name="CrackLabel.Text" xml:space="preserve"><value>First Crack</value></data>
+  <data name="EmptyTitle.Text" xml:space="preserve"><value>Der Röster ist bereit</value></data>
+  <data name="EmptyText.Text" xml:space="preserve"><value>Starten Sie eine Charge hier oder in der Übersicht und sehen Sie der Kurve zu.</value></data>
+  <data name="QuickStartFormat" xml:space="preserve"><value>%d kg %s rösten</value></data>
+  <data name="NoBatch" xml:space="preserve"><value>Keine Charge im Röster</value></data>
+  <data name="BatchFormat" xml:space="preserve"><value>Charge #%d  -  %s, %.0f kg</value></data>
+  <data name="BadgeRoastingFormat" xml:space="preserve"><value>Charge #%d röstet</value></data>
+  <data name="BadgeDoneFormat" xml:space="preserve"><value>Charge #%d ist fertig</value></data>
+  <data name="NoteTitleFormat" xml:space="preserve"><value>Charge #%d ist fertig</value></data>
+  <data name="NoteTextFormat" xml:space="preserve"><value>%s, %.1f kg, abgeworfen bei %s nach %s Entwicklung.</value></data>
+  <data name="NoteShow" xml:space="preserve"><value>Röstung zeigen</value></data>
+  <data name="NoteNext" xml:space="preserve"><value>Nächste Charge starten</value></data>
+  <data name="MiniTitle" xml:space="preserve"><value>Ember Röster</value></data>
+  <data name="SettingsTitle.Text" xml:space="preserve"><value>Einstellungen</value></data>
+  <data name="ThemeTitle.Text" xml:space="preserve"><value>Design</value></data>
+  <data name="ThemeText.Text" xml:space="preserve"><value>Hell, dunkel oder wie Windows</value></data>
+  <data name="ThemeSystem.Content" xml:space="preserve"><value>Wie Windows</value></data>
+  <data name="ThemeLight.Content" xml:space="preserve"><value>Hell</value></data>
+  <data name="ThemeDark.Content" xml:space="preserve"><value>Dunkel</value></data>
+  <data name="LanguageTitle.Text" xml:space="preserve"><value>Sprache</value></data>
+  <data name="LanguageText.Text" xml:space="preserve"><value>Ember startet in der neuen Sprache neu</value></data>
+  <data name="LanguageSystem" xml:space="preserve"><value>Wie Windows</value></data>
+  <data name="RestartFormat" xml:space="preserve"><value>Ember jetzt auf %s neu starten?</value></data>
+  <data name="NotifyTitle.Text" xml:space="preserve"><value>Benachrichtigungen</value></data>
+  <data name="NotifyText.Text" xml:space="preserve"><value>Windows meldet, wenn eine Charge fertig ist</value></data>
+  <data name="TestNoteButton.Content" xml:space="preserve"><value>Test senden</value></data>
+  <data name="TestNoteTitle" xml:space="preserve"><value>Ember ist bereit</value></data>
+  <data name="TestNoteText" xml:space="preserve"><value>So eine Meldung erscheint, wenn eine Charge fertig ist.</value></data>
+  <data name="AboutTitle.Text" xml:space="preserve"><value>Über Ember</value></data>
+  <data name="AboutText.Text" xml:space="preserve"><value>Ember ist ein RADWinUI-Beispiel: eine native WinUI-3-App in Delphi. Die Seiten sind XAML-Dateien mit Object-Pascal-Units, die Daten kommen aus FireDAC, und ausgeliefert wird ein einfaches Win64-Programm.</value></data>
+</root>

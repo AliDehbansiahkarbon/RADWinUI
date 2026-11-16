@@ -1,0 +1,306 @@
+<Page
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:rw="using:RADWinUI.Controls"
+    mc:Ignorable="d"
+    x:Class="THomePage">
+  <!-- The dashboard: today's numbers, the week, the next roast, the best
+       sellers and the newest orders. HomePage.pas fills it from the FireDAC
+       data module and animates the cards in. -->
+  <Page.Resources>
+    <Style x:Key="Card" TargetType="Border">
+      <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}"/>
+      <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="16"/>
+      <Setter Property="Padding" Value="22,18,22,20"/>
+    </Style>
+    <Style x:Key="CardTitle" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="16"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style x:Key="Label" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="13"/>
+      <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
+    </Style>
+    <Style x:Key="Value" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="28"/>
+      <Setter Property="FontWeight" Value="SemiBold"/>
+    </Style>
+    <Style x:Key="Disc" TargetType="Border">
+      <Setter Property="Width" Value="40"/>
+      <Setter Property="Height" Value="40"/>
+      <Setter Property="CornerRadius" Value="20"/>
+      <Setter Property="Background" Value="#26FF7A3D"/>
+    </Style>
+    <Style x:Key="DiscIcon" TargetType="FontIcon">
+      <Setter Property="FontSize" Value="18"/>
+      <Setter Property="Foreground" Value="#F0652B"/>
+    </Style>
+    <Style x:Key="Bar" TargetType="Border">
+      <Setter Property="Width" Value="34"/>
+      <Setter Property="Height" Value="40"/>
+      <Setter Property="CornerRadius" Value="8,8,4,4"/>
+      <Setter Property="Background" Value="#40F0652B"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+    </Style>
+    <Style x:Key="BarValue" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="11"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
+    </Style>
+    <Style x:Key="BarDay" TargetType="TextBlock">
+      <Setter Property="FontSize" Value="12"/>
+      <Setter Property="HorizontalAlignment" Value="Center"/>
+      <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
+    </Style>
+    <LinearGradientBrush x:Key="EmberBrush" StartPoint="0,0" EndPoint="1,1">
+      <GradientStop Color="#FF9A4D" Offset="0"/>
+      <GradientStop Color="#E2452B" Offset="0.6"/>
+      <GradientStop Color="#9E2A1E" Offset="1"/>
+    </LinearGradientBrush>
+    <LinearGradientBrush x:Key="TodayBarBrush" StartPoint="0,0" EndPoint="0,1">
+      <GradientStop Color="#FF9A4D" Offset="0"/>
+      <GradientStop Color="#E2452B" Offset="1"/>
+    </LinearGradientBrush>
+  </Page.Resources>
+
+  <ScrollViewer>
+    <Grid RowSpacing="18" Padding="0,4,0,8" MaxWidth="1240" HorizontalAlignment="Stretch">
+      <Grid.RowDefinitions>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+        <RowDefinition Height="Auto"/>
+      </Grid.RowDefinitions>
+
+      <!-- Greeting -->
+      <Grid ColumnSpacing="16">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="*"/>
+          <ColumnDefinition Width="Auto"/>
+        </Grid.ColumnDefinitions>
+        <StackPanel Spacing="2" VerticalAlignment="Center">
+          <TextBlock x:Name="GreetingText" Text="Good morning" FontSize="32" FontWeight="SemiBold"/>
+          <TextBlock x:Name="DateText" Style="{StaticResource Label}" FontSize="14" d:Text="Tuesday, 8 December 2026  -  3 batches planned"/>
+        </StackPanel>
+        <rw:ShineButton x:Name="NewOrderButton" x:Uid="NewOrderButton" Grid.Column="1" Text="New order" VerticalAlignment="Center" AccentFrom="#FFB36B" AccentTo="#E2452B"
+                        Click="NewOrderClick"/>
+      </Grid>
+
+      <!-- Today's numbers -->
+      <Grid x:Name="KpiRow" Grid.Row="1" ColumnSpacing="16">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition/>
+          <ColumnDefinition/>
+          <ColumnDefinition/>
+          <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Border x:Name="RevenueCard" Style="{StaticResource Card}">
+          <StackPanel Spacing="10">
+            <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource DiscIcon}" Glyph="&#xE8EC;"/></Border>
+            <TextBlock x:Uid="RevenueLabel" Style="{StaticResource Label}" Text="Revenue today"/>
+            <TextBlock x:Name="RevenueValue" Style="{StaticResource Value}" d:Text="$1,284"/>
+            <TextBlock x:Name="RevenueDelta" FontSize="12" Foreground="#2E9E5B" d:Text="+18% on yesterday"/>
+          </StackPanel>
+        </Border>
+        <Border x:Name="OrdersCard" Grid.Column="1" Style="{StaticResource Card}">
+          <StackPanel Spacing="10">
+            <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource DiscIcon}" Glyph="&#xE7BF;"/></Border>
+            <TextBlock x:Uid="OpenOrdersLabel" Style="{StaticResource Label}" Text="Open orders"/>
+            <TextBlock x:Name="OpenOrdersValue" Style="{StaticResource Value}" d:Text="9"/>
+            <TextBlock x:Uid="OpenOrdersHint" FontSize="12" Style="{StaticResource Label}" Text="Waiting to be roasted or shipped"/>
+          </StackPanel>
+        </Border>
+        <Border x:Name="StockCard" Grid.Column="2" Style="{StaticResource Card}">
+          <StackPanel Spacing="10">
+            <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource DiscIcon}" Glyph="&#xEC32;"/></Border>
+            <TextBlock x:Uid="StockLabel" Style="{StaticResource Label}" Text="Green coffee in stock"/>
+            <TextBlock x:Name="StockValue" Style="{StaticResource Value}" d:Text="632 kg"/>
+            <ProgressBar x:Name="StockBar" Maximum="1000" Value="632" Foreground="#F0652B" Margin="0,6,0,0"/>
+          </StackPanel>
+        </Border>
+        <Border x:Name="BatchCard" Grid.Column="3" Style="{StaticResource Card}">
+          <StackPanel Spacing="10">
+            <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource DiscIcon}" Glyph="&#xECAD;"/></Border>
+            <TextBlock x:Uid="BatchLabel" Style="{StaticResource Label}" Text="Roaster"/>
+            <TextBlock x:Name="BatchValue" Style="{StaticResource Value}" d:Text="Idle"/>
+            <TextBlock x:Name="BatchHint" FontSize="12" Style="{StaticResource Label}" d:Text="Last batch: #41 Huila"/>
+          </StackPanel>
+        </Border>
+      </Grid>
+
+      <!-- The week, and the next roast -->
+      <Grid Grid.Row="2" ColumnSpacing="16">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition Width="1.55*"/>
+          <ColumnDefinition Width="*"/>
+        </Grid.ColumnDefinitions>
+        <Border x:Name="WeekCard" Style="{StaticResource Card}">
+          <Grid RowSpacing="12">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*"/>
+            </Grid.RowDefinitions>
+            <Grid>
+              <TextBlock x:Uid="WeekTitle" Style="{StaticResource CardTitle}" Text="Sales this week"/>
+              <TextBlock x:Name="WeekTotal" HorizontalAlignment="Right" FontWeight="SemiBold" d:Text="$7,940"/>
+            </Grid>
+            <Grid x:Name="Chart" Grid.Row="1" Height="232" Padding="4,0">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+              </Grid.ColumnDefinitions>
+              <StackPanel VerticalAlignment="Bottom" Spacing="6">
+                <TextBlock x:Name="Value0" Style="{StaticResource BarValue}" d:Text="$980"/>
+                <Border x:Name="Bar0" Style="{StaticResource Bar}"/>
+                <TextBlock x:Name="Day0" Style="{StaticResource BarDay}" d:Text="Wed"/>
+              </StackPanel>
+              <StackPanel Grid.Column="1" VerticalAlignment="Bottom" Spacing="6">
+                <TextBlock x:Name="Value1" Style="{StaticResource BarValue}" d:Text="$1,120"/>
+                <Border x:Name="Bar1" Style="{StaticResource Bar}"/>
+                <TextBlock x:Name="Day1" Style="{StaticResource BarDay}" d:Text="Thu"/>
+              </StackPanel>
+              <StackPanel Grid.Column="2" VerticalAlignment="Bottom" Spacing="6">
+                <TextBlock x:Name="Value2" Style="{StaticResource BarValue}" d:Text="$760"/>
+                <Border x:Name="Bar2" Style="{StaticResource Bar}"/>
+                <TextBlock x:Name="Day2" Style="{StaticResource BarDay}" d:Text="Fri"/>
+              </StackPanel>
+              <StackPanel Grid.Column="3" VerticalAlignment="Bottom" Spacing="6">
+                <TextBlock x:Name="Value3" Style="{StaticResource BarValue}" d:Text="$1,410"/>
+                <Border x:Name="Bar3" Style="{StaticResource Bar}"/>
+                <TextBlock x:Name="Day3" Style="{StaticResource BarDay}" d:Text="Sat"/>
+              </StackPanel>
+              <StackPanel Grid.Column="4" VerticalAlignment="Bottom" Spacing="6">
+                <TextBlock x:Name="Value4" Style="{StaticResource BarValue}" d:Text="$1,050"/>
+                <Border x:Name="Bar4" Style="{StaticResource Bar}"/>
+                <TextBlock x:Name="Day4" Style="{StaticResource BarDay}" d:Text="Sun"/>
+              </StackPanel>
+              <StackPanel Grid.Column="5" VerticalAlignment="Bottom" Spacing="6">
+                <TextBlock x:Name="Value5" Style="{StaticResource BarValue}" d:Text="$1,330"/>
+                <Border x:Name="Bar5" Style="{StaticResource Bar}"/>
+                <TextBlock x:Name="Day5" Style="{StaticResource BarDay}" d:Text="Mon"/>
+              </StackPanel>
+              <StackPanel Grid.Column="6" VerticalAlignment="Bottom" Spacing="6">
+                <TextBlock x:Name="Value6" Style="{StaticResource BarValue}" d:Text="$1,284"/>
+                <Border x:Name="Bar6" Style="{StaticResource Bar}" Background="{StaticResource TodayBarBrush}"/>
+                <TextBlock x:Name="Day6" Style="{StaticResource BarDay}" FontWeight="SemiBold" d:Text="Today"/>
+              </StackPanel>
+            </Grid>
+          </Grid>
+        </Border>
+
+        <!-- The next roast: pick a coffee and a batch size, then slide to start -->
+        <Border x:Name="RoastCard" Grid.Column="1" CornerRadius="16" Padding="24,20" Background="{StaticResource EmberBrush}"
+                RequestedTheme="Dark">
+          <Border.Resources>
+            <SolidColorBrush x:Key="SliderTrackValueFill" Color="White"/>
+            <SolidColorBrush x:Key="SliderTrackValueFillPointerOver" Color="White"/>
+            <SolidColorBrush x:Key="SliderTrackValueFillPressed" Color="White"/>
+            <SolidColorBrush x:Key="SliderThumbBackground" Color="White"/>
+            <SolidColorBrush x:Key="SliderThumbBackgroundPointerOver" Color="White"/>
+            <SolidColorBrush x:Key="SliderThumbBackgroundPressed" Color="White"/>
+            <SolidColorBrush x:Key="SliderTrackFill" Color="#59FFFFFF"/>
+            <SolidColorBrush x:Key="SliderTrackFillPointerOver" Color="#73FFFFFF"/>
+            <SolidColorBrush x:Key="SliderTrackFillPressed" Color="#73FFFFFF"/>
+          </Border.Resources>
+          <Grid RowSpacing="14">
+            <Grid.RowDefinitions>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="Auto"/>
+              <RowDefinition Height="*"/>
+              <RowDefinition Height="Auto"/>
+            </Grid.RowDefinitions>
+            <StackPanel Orientation="Horizontal" Spacing="10">
+              <FontIcon Glyph="&#xECAD;" FontSize="20" Foreground="White"/>
+              <TextBlock x:Uid="NextRoastTitle" Text="Next roast" FontSize="18" FontWeight="SemiBold" Foreground="White"/>
+            </StackPanel>
+            <ComboBox x:Name="CoffeeBox" x:Uid="CoffeeBox" Grid.Row="1" Header="Coffee" HorizontalAlignment="Stretch"
+                      SelectionChanged="CoffeeChanged" d:PlaceholderText="Yirgacheffe, Ethiopia"/>
+            <StackPanel Grid.Row="2" Spacing="4">
+              <Grid>
+                <TextBlock x:Uid="BatchSizeLabel" Text="Batch size" Foreground="#E6FFFFFF"/>
+                <TextBlock x:Name="KgText" HorizontalAlignment="Right" FontWeight="SemiBold" Foreground="White" d:Text="12 kg"/>
+              </Grid>
+              <Slider x:Name="KgSlider" Minimum="5" Maximum="25" StepFrequency="1" Value="12" ValueChanged="KgChanged"
+                      AutomationProperties.Name="Batch size"/>
+              <TextBlock x:Name="CoffeeNotes" FontSize="13" Foreground="#D9FFFFFF" TextWrapping="Wrap" d:Text="Jasmine, lemon, black tea"/>
+            </StackPanel>
+            <rw:SlideButton x:Name="StartRoastButton" x:Uid="StartRoastButton" Grid.Row="3" HorizontalAlignment="Stretch" Width="Auto"
+                            Text="Slide to start the roast" DoneText="Roasting" AccentFrom="#FFC38A" AccentTo="#FF7A3D" Confirmed="StartRoastConfirmed"/>
+          </Grid>
+        </Border>
+      </Grid>
+
+      <!-- Best sellers and the newest orders -->
+      <Grid Grid.Row="3" ColumnSpacing="16">
+        <Grid.ColumnDefinitions>
+          <ColumnDefinition/>
+          <ColumnDefinition/>
+        </Grid.ColumnDefinitions>
+        <Border x:Name="TopCard" Style="{StaticResource Card}">
+          <StackPanel Spacing="12">
+            <TextBlock x:Uid="TopTitle" Style="{StaticResource CardTitle}" Text="Best sellers, last 30 days"/>
+            <ItemsControl x:Name="TopList">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="TCoffeeRow">
+                  <Grid ColumnSpacing="12" Padding="0,6">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="150"/>
+                      <ColumnDefinition Width="*"/>
+                      <ColumnDefinition Width="64"/>
+                    </Grid.ColumnDefinitions>
+                    <StackPanel>
+                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
+                      <TextBlock Text="{Binding Origin}" FontSize="12" Opacity="0.65"/>
+                    </StackPanel>
+                    <ProgressBar Grid.Column="1" Value="{Binding Share}" Maximum="100" Foreground="#F0652B" VerticalAlignment="Center"/>
+                    <TextBlock Grid.Column="2" Text="{Binding KgText}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+        <Border x:Name="RecentCard" Grid.Column="1" Style="{StaticResource Card}">
+          <StackPanel Spacing="12">
+            <Grid>
+              <TextBlock x:Uid="RecentTitle" Style="{StaticResource CardTitle}" Text="Newest orders"/>
+              <HyperlinkButton x:Name="AllOrdersLink" x:Uid="AllOrdersLink" Content="All orders" HorizontalAlignment="Right" Padding="4,0"
+                               Click="AllOrdersClick"/>
+            </Grid>
+            <ItemsControl x:Name="RecentList">
+              <ItemsControl.ItemTemplate>
+                <DataTemplate x:DataType="TOrderRow">
+                  <Grid ColumnSpacing="12" Padding="0,6">
+                    <Grid.ColumnDefinitions>
+                      <ColumnDefinition Width="Auto"/>
+                      <ColumnDefinition Width="*"/>
+                      <ColumnDefinition Width="Auto"/>
+                    </Grid.ColumnDefinitions>
+                    <PersonPicture DisplayName="{Binding Customer}" Width="34" Height="34"/>
+                    <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                      <TextBlock Text="{Binding Customer}" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
+                      <TextBlock Text="{Binding Detail}" FontSize="12" Opacity="0.65" TextTrimming="CharacterEllipsis"/>
+                    </StackPanel>
+                    <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
+                      <TextBlock Text="{Binding TotalText}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
+                      <TextBlock Text="{Binding Status}" FontSize="12" Foreground="#F0652B" HorizontalAlignment="Right"/>
+                    </StackPanel>
+                  </Grid>
+                </DataTemplate>
+              </ItemsControl.ItemTemplate>
+            </ItemsControl>
+          </StackPanel>
+        </Border>
+      </Grid>
+    </Grid>
+  </ScrollViewer>
+</Page>

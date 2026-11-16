@@ -1,0 +1,103 @@
+<Page
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    xmlns:rw="using:RADWinUI.Controls"
+    mc:Ignorable="d"
+    x:Class="TOrdersPage">
+  <!-- The orders, the Delphi way: every control is bound with DataSource and
+       DataField to the FireDAC tables of the RoasteryData module. The tab bar
+       filters by status, the title bar's search filters by cafe or coffee. -->
+  <Page.Resources>
+    <Style x:Key="Card" TargetType="Border">
+      <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}"/>
+      <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
+      <Setter Property="BorderThickness" Value="1"/>
+      <Setter Property="CornerRadius" Value="16"/>
+      <Setter Property="Padding" Value="20,16,20,20"/>
+    </Style>
+  </Page.Resources>
+
+  <Grid RowSpacing="18" Padding="0,4,0,0">
+    <Grid.RowDefinitions>
+      <RowDefinition Height="Auto"/>
+      <RowDefinition Height="*"/>
+    </Grid.RowDefinitions>
+
+    <Grid ColumnSpacing="24">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="*"/>
+        <ColumnDefinition Width="Auto"/>
+      </Grid.ColumnDefinitions>
+      <StackPanel Spacing="2" VerticalAlignment="Center">
+        <TextBlock x:Uid="OrdersTitle" Text="Orders" FontSize="32" FontWeight="SemiBold"/>
+        <TextBlock x:Name="CountText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" d:Text="63 orders"/>
+      </StackPanel>
+      <rw:SlidingPillTabBar x:Name="StatusTabs" x:Uid="StatusTabs" Grid.Column="1" Width="480" VerticalAlignment="Center"
+                            AutomationProperties.Name="Order status"
+                            Items="All:E8FD, Open:Clock, Roasting:ECAD, Shipped:E73E" ShowLabels="True" AccentFrom="#FFB36B" AccentTo="#E2452B"
+                            Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}"
+                            Foreground="{ThemeResource TextFillColorSecondaryBrush}"
+                            SelectionChanged="StatusChanged"/>
+    </Grid>
+
+    <Grid Grid.Row="1" ColumnSpacing="16">
+      <Grid.ColumnDefinitions>
+        <ColumnDefinition Width="1.9*"/>
+        <ColumnDefinition Width="*"/>
+      </Grid.ColumnDefinitions>
+
+      <Border x:Name="GridCard" Style="{StaticResource Card}">
+        <Grid RowSpacing="12">
+          <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+          </Grid.RowDefinitions>
+          <Grid>
+            <TextBlock x:Uid="AllOrdersTitle" Text="All orders" FontSize="16" FontWeight="SemiBold" VerticalAlignment="Center"/>
+            <rw:DBNavigator x:Name="OrdersNavigator" HorizontalAlignment="Right" DataSource="OrdersSource"
+                            AutomationProperties.Name="Orders navigator"
+                            VisibleButtons="First, Prior, Next, Last, Insert, Delete, Post, Cancel"/>
+          </Grid>
+          <rw:DBGrid x:Name="OrdersGrid" Grid.Row="1" DataSource="OrdersSource" ReadOnly="True" Width="Auto" Height="Auto"
+                     AutomationProperties.Name="Orders"
+                     Columns="OrderNo:62, OrderDate:96, Customer:150, Coffee:100, Total:80, Status:86"/>
+        </Grid>
+      </Border>
+
+      <Border x:Name="FormCard" Grid.Column="1" Style="{StaticResource Card}">
+        <ScrollViewer>
+          <StackPanel Spacing="14">
+            <Grid>
+              <StackPanel>
+                <TextBlock x:Uid="OrderLabel" Text="Order" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <rw:DBText x:Name="OrderNoText" DataSource="OrdersSource" DataField="OrderNo" FontSize="24" FontWeight="SemiBold"/>
+              </StackPanel>
+              <StackPanel HorizontalAlignment="Right">
+                <TextBlock x:Uid="TotalLabel" Text="Total" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}"/>
+                <rw:DBText x:Name="TotalText" DataSource="OrdersSource" DataField="Total" FontSize="24" FontWeight="SemiBold"
+                           Foreground="#F0652B" HorizontalAlignment="Right"/>
+              </StackPanel>
+            </Grid>
+            <rw:DBLookupComboBox x:Name="CustomerCombo" x:Uid="CustomerCombo" DataSource="OrdersSource" DataField="CustomerID"
+                                 ListSource="CustomersSource" KeyField="ID" ListField="Name" Header="Cafe" HorizontalAlignment="Stretch"/>
+            <rw:DBLookupComboBox x:Name="CoffeeCombo" x:Uid="CoffeeCombo" DataSource="OrdersSource" DataField="CoffeeID"
+                                 ListSource="CoffeesSource" KeyField="ID" ListField="Name" Header="Coffee" HorizontalAlignment="Stretch"/>
+            <Grid ColumnSpacing="14">
+              <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+              </Grid.ColumnDefinitions>
+              <rw:DBNumberBox x:Name="KgBox" x:Uid="KgBox" DataSource="OrdersSource" DataField="Kg" Header="Kilograms"/>
+              <rw:DBDatePicker x:Name="DatePicker" x:Uid="DatePicker" Grid.Column="1" DataSource="OrdersSource" DataField="OrderDate" Header="Date"/>
+            </Grid>
+            <rw:DBComboBox x:Name="StatusCombo" x:Uid="StatusCombo" DataSource="OrdersSource" DataField="Status"
+                           Items="Open, Roasting, Shipped" Header="Status" HorizontalAlignment="Stretch"/>
+            <rw:DBMemo x:Name="NoteMemo" x:Uid="NoteMemo" DataSource="OrdersSource" DataField="Note" Header="Note" Height="88"/>
+          </StackPanel>
+        </ScrollViewer>
+      </Border>
+    </Grid>
+  </Grid>
+</Page>

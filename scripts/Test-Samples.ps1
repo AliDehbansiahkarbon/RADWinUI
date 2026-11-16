@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-  Drives the samples (Counter, Greeter, ListDemo, Contacts, Profile, Customers_VCL...) with UI Automation.
+  Drives the samples (Counter, Greeter, ListDemo, Contacts, Profile, Customers_VCL, Ember...) with UI Automation.
 
 .DESCRIPTION
   Starts each sample from samples\<Name>\Win64\<Config>, performs its
@@ -209,6 +209,10 @@ $TempoPlacement = (Get-ItemProperty 'HKCU:\Software\Tempo\Placement' -ErrorActio
 $QuillLanguage = (Get-ItemProperty 'HKCU:\Software\Quill' -ErrorAction SilentlyContinue).Language
 if (-not (Test-Path 'HKCU:\Software\Quill')) { New-Item 'HKCU:\Software\Quill' | Out-Null }
 Set-ItemProperty 'HKCU:\Software\Quill' -Name Language -Value 'en-US'
+# Ember too
+$EmberLanguage = (Get-ItemProperty 'HKCU:\Software\RADWinUI\Ember' -ErrorAction SilentlyContinue).Language
+if (-not (Test-Path 'HKCU:\Software\RADWinUI\Ember')) { New-Item 'HKCU:\Software\RADWinUI\Ember' -Force | Out-Null }
+Set-ItemProperty 'HKCU:\Software\RADWinUI\Ember' -Name Language -Value 'en-US'
 $Results = @(
   Test-Sample 'Counter' {
     param($Win)
@@ -424,6 +428,42 @@ $Results = @(
     Expect-Name $Win 'StationName' 'Lo-fi Study'
     Write-Host "  [ok] the title bar's back button goes back"
   }
+  Test-Sample 'Ember' {
+    param($Win)
+    # The dashboard, FireDAC orders in the data controls, and a roast from start to drop
+    $null = Get-Id $Win 'GreetingText'
+    Select-Named $Win 'Orders'
+    Expect-Name $Win 'CountText' '63 orders'
+    # The title bar search filters the Orders page while typing, ignoring case
+    $SearchText = (Get-Id $Win 'SearchBox').FindFirst($Scope, (New-Object Windows.Automation.PropertyCondition($AE::IsValuePatternAvailableProperty, $true)))
+    Set-Text $SearchText 'huila'
+    Expect-Name $Win 'CountText' '8 orders for "huila"'
+    Set-Text $SearchText ''
+    Expect-Name $Win 'CountText' '63 orders'
+    # Back to the dashboard: its loops over the tables once hung while the Orders lookups were alive
+    Select-Named $Win 'Dashboard'
+    $null = Get-Id $Win 'GreetingText'
+    Write-Host "  [ok] live search on Orders, and back to the dashboard"
+    Select-Named $Win 'Orders'
+    Expect-Name $Win 'CountText' '63 orders'
+    Select-Named $Win 'Roastery'
+    Invoke-Named $Win 'Start a batch'
+    Expect-Name $Win 'BatchText' 'Batch #42  -  Yirgacheffe, 12 kg'
+    $null = Wait-For { (Get-Id $Win 'TimeText').Current.Name -ne '0:00' } 'the roast clock'
+    Write-Host "  [ok] orders page, a batch starts and its clock runs"
+    Invoke-Named $Win 'Hold to drop'
+    Expect-Name $Win 'BadgeTitle' 'Batch #42 is ready'
+    Write-Host "  [ok] the batch drops and the pane footer says so"
+  }
+  Test-Sample 'Ember_VCL' -VclForm 'TOrdersForm' {
+    param($Win)
+    # The WinUI order card inside the VCL form follows the VCL grid's dataset
+    $null = Get-Named $Win 'Kissa Tanaka'
+    $null = Get-Named $Win '63 orders, 9 open'
+    Invoke-Named $Win 'Mark as shipped'
+    $null = Get-Named $Win '63 orders, 8 open'
+    Write-Host "  [ok] the WinUI button (ShipClick on the form) ships the order in the FireDAC table"
+  }
   Test-Sample 'Customers_VCL' -VclForm 'TCustomersForm' {
     param($Win)
     # The WinUI details panel inside the VCL form, bound to the selected customer
@@ -466,6 +506,8 @@ if ($TempoPlacement) { Set-ItemProperty 'HKCU:\Software\Tempo\Placement' -Name T
 else { Remove-Item 'HKCU:\Software\Tempo' -Recurse -ErrorAction SilentlyContinue }
 if ($null -ne $QuillLanguage) { Set-ItemProperty 'HKCU:\Software\Quill' -Name Language -Value $QuillLanguage }
 else { Remove-ItemProperty 'HKCU:\Software\Quill' -Name Language -ErrorAction SilentlyContinue }
+if ($null -ne $EmberLanguage) { Set-ItemProperty 'HKCU:\Software\RADWinUI\Ember' -Name Language -Value $EmberLanguage }
+else { Remove-ItemProperty 'HKCU:\Software\RADWinUI\Ember' -Name Language -ErrorAction SilentlyContinue }
 Write-Host 'Pages, navigation and user controls'
 & (Join-Path $PSScriptRoot 'Build.ps1') -Project 'tests\Pages\PagesTest.dpr' | Out-Null
 & (Join-Path $RepoRoot 'tests\Pages\Win64\Debug\PagesTest.exe') | Select-Object -Skip 1
