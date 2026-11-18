@@ -10,61 +10,88 @@
        sellers and the newest orders. HomePage.pas fills it from the FireDAC
        data module and animates the cards in. -->
   <Page.Resources>
-    <Style x:Key="Card" TargetType="Border">
-      <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}"/>
-      <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
-      <Setter Property="BorderThickness" Value="1"/>
-      <Setter Property="CornerRadius" Value="16"/>
-      <Setter Property="Padding" Value="22,18,22,20"/>
-    </Style>
-    <Style x:Key="CardTitle" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="16"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
-    </Style>
-    <Style x:Key="Label" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="13"/>
-      <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
-    </Style>
-    <Style x:Key="Value" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="28"/>
-      <Setter Property="FontWeight" Value="SemiBold"/>
-    </Style>
-    <Style x:Key="Disc" TargetType="Border">
-      <Setter Property="Width" Value="40"/>
-      <Setter Property="Height" Value="40"/>
-      <Setter Property="CornerRadius" Value="20"/>
-      <Setter Property="Background" Value="#26FF7A3D"/>
-    </Style>
-    <Style x:Key="DiscIcon" TargetType="FontIcon">
-      <Setter Property="FontSize" Value="18"/>
-      <Setter Property="Foreground" Value="#F0652B"/>
-    </Style>
-    <Style x:Key="Bar" TargetType="Border">
-      <Setter Property="Width" Value="34"/>
-      <Setter Property="Height" Value="40"/>
-      <Setter Property="CornerRadius" Value="8,8,4,4"/>
-      <Setter Property="Background" Value="#40F0652B"/>
-      <Setter Property="HorizontalAlignment" Value="Center"/>
-    </Style>
-    <Style x:Key="BarValue" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="11"/>
-      <Setter Property="HorizontalAlignment" Value="Center"/>
-      <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
-    </Style>
-    <Style x:Key="BarDay" TargetType="TextBlock">
-      <Setter Property="FontSize" Value="12"/>
-      <Setter Property="HorizontalAlignment" Value="Center"/>
-      <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
-    </Style>
-    <LinearGradientBrush x:Key="EmberBrush" StartPoint="0,0" EndPoint="1,1">
-      <GradientStop Color="#FF9A4D" Offset="0"/>
-      <GradientStop Color="#E2452B" Offset="0.6"/>
-      <GradientStop Color="#9E2A1E" Offset="1"/>
-    </LinearGradientBrush>
-    <LinearGradientBrush x:Key="TodayBarBrush" StartPoint="0,0" EndPoint="0,1">
-      <GradientStop Color="#FF9A4D" Offset="0"/>
-      <GradientStop Color="#E2452B" Offset="1"/>
-    </LinearGradientBrush>
+    <ResourceDictionary>
+      <ResourceDictionary.ThemeDictionaries>
+        <ResourceDictionary x:Key="Light">
+          <SolidColorBrush x:Key="EmberAccentSoft" Color="{ThemeResource SystemAccentColor}" Opacity="0.16"/>
+          <SolidColorBrush x:Key="EmberAccentFaint" Color="{ThemeResource SystemAccentColor}" Opacity="0.25"/>
+          <SolidColorBrush x:Key="EmberAccentHalf" Color="{ThemeResource SystemAccentColor}" Opacity="0.5"/>
+          <SolidColorBrush x:Key="EmberFrom" Color="{ThemeResource SystemAccentColorLight2}"/>
+          <SolidColorBrush x:Key="EmberTo" Color="{ThemeResource SystemAccentColorDark1}"/>
+          <LinearGradientBrush x:Key="EmberBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="{ThemeResource SystemAccentColorLight1}" Offset="0"/>
+            <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="0.6"/>
+            <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="1"/>
+          </LinearGradientBrush>
+          <LinearGradientBrush x:Key="TodayBarBrush" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="{ThemeResource SystemAccentColorLight1}" Offset="0"/>
+            <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="1"/>
+          </LinearGradientBrush>
+        </ResourceDictionary>
+        <ResourceDictionary x:Key="Dark">
+          <SolidColorBrush x:Key="EmberAccentSoft" Color="{ThemeResource SystemAccentColor}" Opacity="0.16"/>
+          <SolidColorBrush x:Key="EmberAccentFaint" Color="{ThemeResource SystemAccentColor}" Opacity="0.25"/>
+          <SolidColorBrush x:Key="EmberAccentHalf" Color="{ThemeResource SystemAccentColor}" Opacity="0.5"/>
+          <SolidColorBrush x:Key="EmberFrom" Color="{ThemeResource SystemAccentColorLight2}"/>
+          <SolidColorBrush x:Key="EmberTo" Color="{ThemeResource SystemAccentColorDark1}"/>
+          <LinearGradientBrush x:Key="EmberBrush" StartPoint="0,0" EndPoint="1,1">
+            <GradientStop Color="{ThemeResource SystemAccentColorLight1}" Offset="0"/>
+            <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="0.6"/>
+            <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="1"/>
+          </LinearGradientBrush>
+          <LinearGradientBrush x:Key="TodayBarBrush" StartPoint="0,0" EndPoint="0,1">
+            <GradientStop Color="{ThemeResource SystemAccentColorLight1}" Offset="0"/>
+            <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="1"/>
+          </LinearGradientBrush>
+        </ResourceDictionary>
+      </ResourceDictionary.ThemeDictionaries>
+      <Style x:Key="Card" TargetType="Border">
+        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}"/>
+        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}"/>
+        <Setter Property="BorderThickness" Value="1"/>
+        <Setter Property="CornerRadius" Value="16"/>
+        <Setter Property="Padding" Value="22,18,22,20"/>
+      </Style>
+      <Style x:Key="CardTitle" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="16"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+      </Style>
+      <Style x:Key="Label" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="13"/>
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
+      </Style>
+      <Style x:Key="Value" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="28"/>
+        <Setter Property="FontWeight" Value="SemiBold"/>
+      </Style>
+      <Style x:Key="Disc" TargetType="Border">
+        <Setter Property="Width" Value="40"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="CornerRadius" Value="20"/>
+        <Setter Property="Background" Value="{ThemeResource EmberAccentSoft}"/>
+      </Style>
+      <Style x:Key="DiscIcon" TargetType="FontIcon">
+        <Setter Property="FontSize" Value="18"/>
+        <Setter Property="Foreground" Value="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
+      </Style>
+      <Style x:Key="Bar" TargetType="Border">
+        <Setter Property="Width" Value="34"/>
+        <Setter Property="Height" Value="40"/>
+        <Setter Property="CornerRadius" Value="8,8,4,4"/>
+        <Setter Property="Background" Value="{ThemeResource EmberAccentFaint}"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+      </Style>
+      <Style x:Key="BarValue" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="11"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
+      </Style>
+      <Style x:Key="BarDay" TargetType="TextBlock">
+        <Setter Property="FontSize" Value="12"/>
+        <Setter Property="HorizontalAlignment" Value="Center"/>
+        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}"/>
+      </Style>
+    </ResourceDictionary>
   </Page.Resources>
 
   <ScrollViewer>
@@ -86,7 +113,7 @@
           <TextBlock x:Name="GreetingText" Text="Good morning" FontSize="32" FontWeight="SemiBold"/>
           <TextBlock x:Name="DateText" Style="{StaticResource Label}" FontSize="14" d:Text="Tuesday, 8 December 2026  -  3 batches planned"/>
         </StackPanel>
-        <rw:ShineButton x:Name="NewOrderButton" x:Uid="NewOrderButton" Grid.Column="1" Text="New order" VerticalAlignment="Center" AccentFrom="#FFB36B" AccentTo="#E2452B"
+        <rw:ShineButton x:Name="NewOrderButton" x:Uid="NewOrderButton" Grid.Column="1" Text="New order" VerticalAlignment="Center" AccentFrom="{ThemeResource EmberFrom}" AccentTo="{ThemeResource EmberTo}"
                         Click="NewOrderClick"/>
       </Grid>
 
@@ -119,7 +146,7 @@
             <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource DiscIcon}" Glyph="&#xEC32;"/></Border>
             <TextBlock x:Uid="StockLabel" Style="{StaticResource Label}" Text="Green coffee in stock"/>
             <TextBlock x:Name="StockValue" Style="{StaticResource Value}" d:Text="632 kg"/>
-            <ProgressBar x:Name="StockBar" Maximum="1000" Value="632" Foreground="#F0652B" Margin="0,6,0,0"/>
+            <ProgressBar x:Name="StockBar" Maximum="1000" Value="632" Margin="0,6,0,0"/>
           </StackPanel>
         </Border>
         <Border x:Name="BatchCard" Grid.Column="3" Style="{StaticResource Card}">
@@ -234,7 +261,7 @@
               <TextBlock x:Name="CoffeeNotes" FontSize="13" Foreground="#D9FFFFFF" TextWrapping="Wrap" d:Text="Jasmine, lemon, black tea"/>
             </StackPanel>
             <rw:SlideButton x:Name="StartRoastButton" x:Uid="StartRoastButton" Grid.Row="3" HorizontalAlignment="Stretch" Width="Auto"
-                            Text="Slide to start the roast" DoneText="Roasting" AccentFrom="#FFC38A" AccentTo="#FF7A3D" Confirmed="StartRoastConfirmed"/>
+                            Text="Slide to start the roast" DoneText="Roasting" AccentFrom="{ThemeResource EmberFrom}" AccentTo="{ThemeResource EmberTo}" Confirmed="StartRoastConfirmed"/>
           </Grid>
         </Border>
       </Grid>
@@ -261,7 +288,7 @@
                       <TextBlock Text="{Binding Name}" FontWeight="SemiBold"/>
                       <TextBlock Text="{Binding Origin}" FontSize="12" Opacity="0.65"/>
                     </StackPanel>
-                    <ProgressBar Grid.Column="1" Value="{Binding Share}" Maximum="100" Foreground="#F0652B" VerticalAlignment="Center"/>
+                    <ProgressBar Grid.Column="1" Value="{Binding Share}" Maximum="100" VerticalAlignment="Center"/>
                     <TextBlock Grid.Column="2" Text="{Binding KgText}" HorizontalAlignment="Right" VerticalAlignment="Center"/>
                   </Grid>
                 </DataTemplate>
@@ -292,7 +319,7 @@
                     </StackPanel>
                     <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">
                       <TextBlock Text="{Binding TotalText}" FontWeight="SemiBold" HorizontalAlignment="Right"/>
-                      <TextBlock Text="{Binding Status}" FontSize="12" Foreground="#F0652B" HorizontalAlignment="Right"/>
+                      <TextBlock Text="{Binding Status}" FontSize="12" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" HorizontalAlignment="Right"/>
                     </StackPanel>
                   </Grid>
                 </DataTemplate>

@@ -25,40 +25,40 @@ type
   {$M+}
   TRoastPageBase = class(TWinUIXamlPage)
   protected
-    BatchText: TWinUITextBlock;      // RoastPage.xaml(70) <TextBlock>
-    PopOutButton: TWinUIButton;      // RoastPage.xaml(72) <Button>
-    DropButton: TWinUIHoldButton;    // RoastPage.xaml(79) <HoldButton>
-    TempTile: TWinUIBorder;          // RoastPage.xaml(94) <Border>
-    TempText: TWinUITextBlock;       // RoastPage.xaml(99) <TextBlock>
-    TimeTile: TWinUIBorder;          // RoastPage.xaml(103) <Border>
-    TimeText: TWinUITextBlock;       // RoastPage.xaml(108) <TextBlock>
-    RorTile: TWinUIBorder;           // RoastPage.xaml(112) <Border>
-    RorText: TWinUITextBlock;        // RoastPage.xaml(117) <TextBlock>
-    DevTile: TWinUIBorder;           // RoastPage.xaml(121) <Border>
-    DevText: TWinUITextBlock;        // RoastPage.xaml(126) <TextBlock>
-    ChartCard: TWinUIBorder;         // RoastPage.xaml(133) <Border>
-    DryingChip: TWinUIGrid;          // RoastPage.xaml(140) <Grid>
-    DryingLit: TWinUIBorder;         // RoastPage.xaml(141) <Border>
-    MaillardChip: TWinUIGrid;        // RoastPage.xaml(144) <Grid>
-    MaillardLit: TWinUIBorder;       // RoastPage.xaml(145) <Border>
-    DevelopmentChip: TWinUIGrid;     // RoastPage.xaml(148) <Grid>
-    DevelopmentLit: TWinUIBorder;    // RoastPage.xaml(149) <Border>
-    DoneChip: TWinUIGrid;            // RoastPage.xaml(152) <Grid>
-    DoneLit: TWinUIBorder;           // RoastPage.xaml(153) <Border>
-    Plot: TWinUICanvas;              // RoastPage.xaml(158) <Canvas>
-    Grid100: TWinUIPolyline;         // RoastPage.xaml(159) <Polyline>
-    Grid150: TWinUIPolyline;         // RoastPage.xaml(160) <Polyline>
-    Grid200: TWinUIPolyline;         // RoastPage.xaml(161) <Polyline>
-    CrackLine: TWinUIPolyline;       // RoastPage.xaml(162) <Polyline>
-    Label100: TWinUITextBlock;       // RoastPage.xaml(163) <TextBlock>
-    Label150: TWinUITextBlock;       // RoastPage.xaml(164) <TextBlock>
-    Label200: TWinUITextBlock;       // RoastPage.xaml(165) <TextBlock>
-    CrackLabel: TWinUITextBlock;     // RoastPage.xaml(166) <TextBlock>
-    Curve: TWinUIPolyline;           // RoastPage.xaml(168) <Polyline>
-    Glow: TWinUIEllipse;             // RoastPage.xaml(169) <Ellipse>
-    Dot: TWinUIEllipse;              // RoastPage.xaml(170) <Ellipse>
-    EmptyState: TWinUIStackPanel;    // RoastPage.xaml(173) <StackPanel>
-    QuickStartButton: TWinUIButton;  // RoastPage.xaml(178) <Button>
+    BatchText: TWinUITextBlock;      // RoastPage.xaml(93) <TextBlock>
+    PopOutButton: TWinUIButton;      // RoastPage.xaml(95) <Button>
+    DropButton: TWinUIHoldButton;    // RoastPage.xaml(102) <HoldButton>
+    TempTile: TWinUIBorder;          // RoastPage.xaml(117) <Border>
+    TempText: TWinUITextBlock;       // RoastPage.xaml(122) <TextBlock>
+    TimeTile: TWinUIBorder;          // RoastPage.xaml(126) <Border>
+    TimeText: TWinUITextBlock;       // RoastPage.xaml(131) <TextBlock>
+    RorTile: TWinUIBorder;           // RoastPage.xaml(135) <Border>
+    RorText: TWinUITextBlock;        // RoastPage.xaml(140) <TextBlock>
+    DevTile: TWinUIBorder;           // RoastPage.xaml(144) <Border>
+    DevText: TWinUITextBlock;        // RoastPage.xaml(149) <TextBlock>
+    ChartCard: TWinUIBorder;         // RoastPage.xaml(156) <Border>
+    DryingChip: TWinUIGrid;          // RoastPage.xaml(163) <Grid>
+    DryingLit: TWinUIBorder;         // RoastPage.xaml(164) <Border>
+    MaillardChip: TWinUIGrid;        // RoastPage.xaml(167) <Grid>
+    MaillardLit: TWinUIBorder;       // RoastPage.xaml(168) <Border>
+    DevelopmentChip: TWinUIGrid;     // RoastPage.xaml(171) <Grid>
+    DevelopmentLit: TWinUIBorder;    // RoastPage.xaml(172) <Border>
+    DoneChip: TWinUIGrid;            // RoastPage.xaml(175) <Grid>
+    DoneLit: TWinUIBorder;           // RoastPage.xaml(176) <Border>
+    Plot: TWinUICanvas;              // RoastPage.xaml(181) <Canvas>
+    Grid100: TWinUIPolyline;         // RoastPage.xaml(182) <Polyline>
+    Grid150: TWinUIPolyline;         // RoastPage.xaml(183) <Polyline>
+    Grid200: TWinUIPolyline;         // RoastPage.xaml(184) <Polyline>
+    CrackLine: TWinUIPolyline;       // RoastPage.xaml(185) <Polyline>
+    Label100: TWinUITextBlock;       // RoastPage.xaml(186) <TextBlock>
+    Label150: TWinUITextBlock;       // RoastPage.xaml(187) <TextBlock>
+    Label200: TWinUITextBlock;       // RoastPage.xaml(188) <TextBlock>
+    CrackLabel: TWinUITextBlock;     // RoastPage.xaml(189) <TextBlock>
+    Curve: TWinUIPolyline;           // RoastPage.xaml(191) <Polyline>
+    Glow: TWinUIEllipse;             // RoastPage.xaml(192) <Ellipse>
+    Dot: TWinUIEllipse;              // RoastPage.xaml(193) <Ellipse>
+    EmptyState: TWinUIStackPanel;    // RoastPage.xaml(196) <StackPanel>
+    QuickStartButton: TWinUIButton;  // RoastPage.xaml(201) <Button>
     procedure WireXaml;
     {$IFDEF DEBUG}
     procedure ReloadXaml(const AXaml: string);
@@ -82,45 +82,68 @@ const
     '<Page xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:ns2="using:RADWinUI.Controls" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">' + sLineBreak +
     '  ' + sLineBreak +
     '  <Page.Resources>' + sLineBreak +
-    '    <Style x:Key="Card" TargetType="Border">' + sLineBreak +
-    '      <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />' + sLineBreak +
-    '      <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />' + sLineBreak +
-    '      <Setter Property="BorderThickness" Value="1" />' + sLineBreak +
-    '      <Setter Property="CornerRadius" Value="16" />' + sLineBreak +
-    '      <Setter Property="Padding" Value="20,16,20,18" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="Label" TargetType="TextBlock">' + sLineBreak +
-    '      <Setter Property="FontSize" Value="13" />' + sLineBreak +
-    '      <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="Big" TargetType="TextBlock">' + sLineBreak +
-    '      <Setter Property="FontSize" Value="34" />' + sLineBreak +
-    '      <Setter Property="FontWeight" Value="SemiBold" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="TileIcon" TargetType="FontIcon">' + sLineBreak +
-    '      <Setter Property="FontSize" Value="18" />' + sLineBreak +
-    '      <Setter Property="Foreground" Value="#F0652B" />' + sLineBreak +
-    '      <Setter Property="HorizontalAlignment" Value="Right" />' + sLineBreak +
-    '      <Setter Property="VerticalAlignment" Value="Top" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="Phase" TargetType="Border">' + sLineBreak +
-    '      <Setter Property="CornerRadius" Value="14" />' + sLineBreak +
-    '      <Setter Property="Padding" Value="14,5,14,6" />' + sLineBreak +
-    '      <Setter Property="Background" Value="{ThemeResource SubtleFillColorSecondaryBrush}" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="PhaseLit" TargetType="Border">' + sLineBreak +
-    '      <Setter Property="CornerRadius" Value="14" />' + sLineBreak +
-    '      <Setter Property="Background" Value="#F0652B" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="AxisText" TargetType="TextBlock">' + sLineBreak +
-    '      <Setter Property="FontSize" Value="11" />' + sLineBreak +
-    '      <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <LinearGradientBrush x:Key="CurveBrush" StartPoint="0,0" EndPoint="1,0">' + sLineBreak +
-    '      <GradientStop Color="#FFB36B" Offset="0" />' + sLineBreak +
-    '      <GradientStop Color="#F0652B" Offset="0.55" />' + sLineBreak +
-    '      <GradientStop Color="#B7301E" Offset="1" />' + sLineBreak +
-    '    </LinearGradientBrush>' + sLineBreak +
+    '    <ResourceDictionary>' + sLineBreak +
+    '      <ResourceDictionary.ThemeDictionaries>' + sLineBreak +
+    '        <ResourceDictionary x:Key="Light">' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentSoft" Color="{ThemeResource SystemAccentColor}" Opacity="0.16" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentFaint" Color="{ThemeResource SystemAccentColor}" Opacity="0.25" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentHalf" Color="{ThemeResource SystemAccentColor}" Opacity="0.5" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberFrom" Color="{ThemeResource SystemAccentColorLight2}" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberTo" Color="{ThemeResource SystemAccentColorDark1}" />' + sLineBreak +
+    '          <LinearGradientBrush x:Key="CurveBrush" StartPoint="0,0" EndPoint="1,0">' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColorLight2}" Offset="0" />' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="0.55" />' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="1" />' + sLineBreak +
+    '          </LinearGradientBrush>' + sLineBreak +
+    '        </ResourceDictionary>' + sLineBreak +
+    '        <ResourceDictionary x:Key="Dark">' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentSoft" Color="{ThemeResource SystemAccentColor}" Opacity="0.16" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentFaint" Color="{ThemeResource SystemAccentColor}" Opacity="0.25" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentHalf" Color="{ThemeResource SystemAccentColor}" Opacity="0.5" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberFrom" Color="{ThemeResource SystemAccentColorLight2}" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberTo" Color="{ThemeResource SystemAccentColorDark1}" />' + sLineBreak +
+    '          <LinearGradientBrush x:Key="CurveBrush" StartPoint="0,0" EndPoint="1,0">' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColorLight2}" Offset="0" />' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="0.55" />' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="1" />' + sLineBreak +
+    '          </LinearGradientBrush>' + sLineBreak +
+    '        </ResourceDictionary>' + sLineBreak +
+    '      </ResourceDictionary.ThemeDictionaries>' + sLineBreak +
+    '      <Style x:Key="Card" TargetType="Border">' + sLineBreak +
+    '        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />' + sLineBreak +
+    '        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />' + sLineBreak +
+    '        <Setter Property="BorderThickness" Value="1" />' + sLineBreak +
+    '        <Setter Property="CornerRadius" Value="16" />' + sLineBreak +
+    '        <Setter Property="Padding" Value="20,16,20,18" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="Label" TargetType="TextBlock">' + sLineBreak +
+    '        <Setter Property="FontSize" Value="13" />' + sLineBreak +
+    '        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="Big" TargetType="TextBlock">' + sLineBreak +
+    '        <Setter Property="FontSize" Value="34" />' + sLineBreak +
+    '        <Setter Property="FontWeight" Value="SemiBold" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="TileIcon" TargetType="FontIcon">' + sLineBreak +
+    '        <Setter Property="FontSize" Value="18" />' + sLineBreak +
+    '        <Setter Property="Foreground" Value="{ThemeResource AccentTextFillColorPrimaryBrush}" />' + sLineBreak +
+    '        <Setter Property="HorizontalAlignment" Value="Right" />' + sLineBreak +
+    '        <Setter Property="VerticalAlignment" Value="Top" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="Phase" TargetType="Border">' + sLineBreak +
+    '        <Setter Property="CornerRadius" Value="14" />' + sLineBreak +
+    '        <Setter Property="Padding" Value="14,5,14,6" />' + sLineBreak +
+    '        <Setter Property="Background" Value="{ThemeResource SubtleFillColorSecondaryBrush}" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="PhaseLit" TargetType="Border">' + sLineBreak +
+    '        <Setter Property="CornerRadius" Value="14" />' + sLineBreak +
+    '        <Setter Property="Background" Value="{ThemeResource AccentFillColorDefaultBrush}" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="AxisText" TargetType="TextBlock">' + sLineBreak +
+    '        <Setter Property="FontSize" Value="11" />' + sLineBreak +
+    '        <Setter Property="Foreground" Value="{ThemeResource TextFillColorTertiaryBrush}" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '    </ResourceDictionary>' + sLineBreak +
     '  </Page.Resources>' + sLineBreak +
     '' + sLineBreak +
     '  <Grid RowSpacing="16" Padding="0,4,0,0">' + sLineBreak +
@@ -147,8 +170,9 @@ const
     '          <TextBlock x:Uid="PopOutText" Text="Mini roaster" />' + sLineBreak +
     '        </StackPanel>' + sLineBreak +
     '      </Button>' + sLineBreak +
-    '      <ns2:HoldButton x:Name="DropButton" x:Uid="DropButton" Grid.Column="2" VerticalAlignment="Center" Text="Hold to drop" DoneText="Dropped" Icon="E896" HoldDuration="1000" AccentFrom="#FFB36B" Acce' +
-    'ntTo="#E2452B" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
+    '      <ns2:HoldButton x:Name="DropButton" x:Uid="DropButton" Grid.Column="2" VerticalAlignment="Center" Text="Hold to drop" DoneText="Dropped" Icon="E896" HoldDuration="1000" AccentFrom="{ThemeResourc' +
+    'e EmberFrom}" AccentTo="{ThemeResource EmberTo}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush}" Foreground="{ThemeResource T' +
+    'extFillColorSecondaryBrush}" />' + sLineBreak +
     '    </Grid>' + sLineBreak +
     '' + sLineBreak +
     '    ' + sLineBreak +
@@ -164,7 +188,7 @@ const
     '          <FontIcon Style="{StaticResource TileIcon}" Glyph="" />' + sLineBreak +
     '          <StackPanel Spacing="4">' + sLineBreak +
     '            <TextBlock x:Uid="BeanTempLabel" Style="{StaticResource Label}" Text="Bean temperature" />' + sLineBreak +
-    '            <TextBlock x:Name="TempText" Style="{StaticResource Big}" Foreground="#F0652B" />' + sLineBreak +
+    '            <TextBlock x:Name="TempText" Style="{StaticResource Big}" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />' + sLineBreak +
     '          </StackPanel>' + sLineBreak +
     '        </Grid>' + sLineBreak +
     '      </Border>' + sLineBreak +
@@ -227,18 +251,19 @@ const
     '            <Polyline x:Name="Grid100" Stroke="{ThemeResource DividerStrokeColorDefaultBrush}" StrokeThickness="1" />' + sLineBreak +
     '            <Polyline x:Name="Grid150" Stroke="{ThemeResource DividerStrokeColorDefaultBrush}" StrokeThickness="1" StrokeDashArray="4,4" />' + sLineBreak +
     '            <Polyline x:Name="Grid200" Stroke="{ThemeResource DividerStrokeColorDefaultBrush}" StrokeThickness="1" />' + sLineBreak +
-    '            <Polyline x:Name="CrackLine" Stroke="#80F0652B" StrokeThickness="1.5" StrokeDashArray="3,3" />' + sLineBreak +
+    '            <Polyline x:Name="CrackLine" Stroke="{ThemeResource EmberAccentHalf}" StrokeThickness="1.5" StrokeDashArray="3,3" />' + sLineBreak +
     '            <TextBlock x:Name="Label100" Style="{StaticResource AxisText}" Text="100°" />' + sLineBreak +
     '            <TextBlock x:Name="Label150" Style="{StaticResource AxisText}" Text="150°  Maillard" />' + sLineBreak +
     '            <TextBlock x:Name="Label200" Style="{StaticResource AxisText}" Text="200°" />' + sLineBreak +
-    '            <TextBlock x:Name="CrackLabel" x:Uid="CrackLabel" Style="{StaticResource AxisText}" Foreground="#F0652B" Text="First crack" Visibility="Collapsed" />' + sLineBreak +
+    '            <TextBlock x:Name="CrackLabel" x:Uid="CrackLabel" Style="{StaticResource AxisText}" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" Text="First crack" Visibility="Collapsed" /' +
+    '>' + sLineBreak +
     '            <Polyline x:Name="Curve" Stroke="{StaticResource CurveBrush}" StrokeThickness="3.5" StrokeLineJoin="Round" />' + sLineBreak +
-    '            <Ellipse x:Name="Glow" Width="26" Height="26" Fill="#40F0652B" Visibility="Collapsed" />' + sLineBreak +
-    '            <Ellipse x:Name="Dot" Width="12" Height="12" Fill="#F0652B" Stroke="White" StrokeThickness="2" Visibility="Collapsed" />' + sLineBreak +
+    '            <Ellipse x:Name="Glow" Width="26" Height="26" Fill="{ThemeResource EmberAccentFaint}" Visibility="Collapsed" />' + sLineBreak +
+    '            <Ellipse x:Name="Dot" Width="12" Height="12" Fill="{ThemeResource AccentFillColorDefaultBrush}" Stroke="White" StrokeThickness="2" Visibility="Collapsed" />' + sLineBreak +
     '          </Canvas>' + sLineBreak +
     '          ' + sLineBreak +
     '          <StackPanel x:Name="EmptyState" HorizontalAlignment="Center" VerticalAlignment="Center" Spacing="12">' + sLineBreak +
-    '            <FontIcon Glyph="" FontSize="48" Foreground="#F0652B" HorizontalAlignment="Center" />' + sLineBreak +
+    '            <FontIcon Glyph="" FontSize="48" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" HorizontalAlignment="Center" />' + sLineBreak +
     '            <TextBlock x:Uid="EmptyTitle" Text="The roaster is ready" FontSize="20" FontWeight="SemiBold" HorizontalAlignment="Center" />' + sLineBreak +
     '            <TextBlock x:Uid="EmptyText" Text="Start a batch here or from the dashboard, and watch the curve grow." Style="{StaticResource Label}" HorizontalAlignment="Center" />' + sLineBreak +
     '            <Button x:Name="QuickStartButton" Style="{StaticResource AccentButtonStyle}" HorizontalAlignment="Center" AutomationProperties.Name="Start a batch" />' + sLineBreak +
@@ -306,13 +331,13 @@ begin
   EmptyState := FindElement<TWinUIStackPanel>('EmptyState');
   QuickStartButton := FindElement<TWinUIButton>('QuickStartButton');
   // Event wiring
-  // RoastPage.xaml(72): Click="PopOutClick"
+  // RoastPage.xaml(95): Click="PopOutClick"
   PopOutButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('PopOutClick'));
-  // RoastPage.xaml(79): Confirmed="DropConfirmed"
+  // RoastPage.xaml(102): Confirmed="DropConfirmed"
   DropButton.OnConfirmed := TWinUIWinValueEventHandler(PublishedMethod('DropConfirmed'));
-  // RoastPage.xaml(158): SizeChanged="PlotSizeChanged"
+  // RoastPage.xaml(181): SizeChanged="PlotSizeChanged"
   Plot.OnSizeChanged := TWinUISizeChangedEventHandler(PublishedMethod('PlotSizeChanged'));
-  // RoastPage.xaml(178): Click="QuickStartClick"
+  // RoastPage.xaml(201): Click="QuickStartClick"
   QuickStartButton.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('QuickStartClick'));
 end;
 

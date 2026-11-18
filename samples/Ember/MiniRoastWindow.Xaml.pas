@@ -56,7 +56,7 @@ const
     '      <RowDefinition Height="Auto" />' + sLineBreak +
     '    </Grid.RowDefinitions>' + sLineBreak +
     '    <StackPanel Orientation="Horizontal" Spacing="8">' + sLineBreak +
-    '      <FontIcon Glyph="" FontSize="14" Foreground="#F0652B" />' + sLineBreak +
+    '      <FontIcon Glyph="" FontSize="14" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />' + sLineBreak +
     '      <TextBlock x:Name="TitleText" FontSize="12" Opacity="0.75" TextTrimming="CharacterEllipsis" />' + sLineBreak +
     '    </StackPanel>' + sLineBreak +
     '    <Grid Grid.Row="1" ColumnSpacing="12">' + sLineBreak +
@@ -64,13 +64,13 @@ const
     '        <ColumnDefinition Width="*" />' + sLineBreak +
     '        <ColumnDefinition Width="Auto" />' + sLineBreak +
     '      </Grid.ColumnDefinitions>' + sLineBreak +
-    '      <TextBlock x:Name="TempText" FontSize="46" FontWeight="SemiBold" Foreground="#F0652B" VerticalAlignment="Center" />' + sLineBreak +
+    '      <TextBlock x:Name="TempText" FontSize="46" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" VerticalAlignment="Center" />' + sLineBreak +
     '      <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">' + sLineBreak +
     '        <TextBlock x:Name="TimeText" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Right" />' + sLineBreak +
     '        <TextBlock x:Name="PhaseText" FontSize="12" Opacity="0.75" HorizontalAlignment="Right" />' + sLineBreak +
     '      </StackPanel>' + sLineBreak +
     '    </Grid>' + sLineBreak +
-    '    <ProgressBar x:Name="Progress" Grid.Row="2" Maximum="660" Foreground="#F0652B" />' + sLineBreak +
+    '    <ProgressBar x:Name="Progress" Grid.Row="2" Maximum="660" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />' + sLineBreak +
     '  </Grid>' + sLineBreak;
   {$IFDEF DEBUG}
   // Hot reload compares it with the edited XAML: the same fields and events reload without a rebuild

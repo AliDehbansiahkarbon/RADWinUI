@@ -58,7 +58,7 @@ const
     '    </Style>' + sLineBreak +
     '    <Style x:Key="RowIcon" TargetType="FontIcon">' + sLineBreak +
     '      <Setter Property="FontSize" Value="20" />' + sLineBreak +
-    '      <Setter Property="Foreground" Value="#F0652B" />' + sLineBreak +
+    '      <Setter Property="Foreground" Value="{ThemeResource AccentTextFillColorPrimaryBrush}" />' + sLineBreak +
     '      <Setter Property="VerticalAlignment" Value="Center" />' + sLineBreak +
     '    </Style>' + sLineBreak +
     '  </Page.Resources>' + sLineBreak +

@@ -26,15 +26,15 @@ type
   TMainWindowBase = class(TWinUIWindow)
   protected
     Root: TWinUIGrid;                  // MainWindow.xaml(13) <Grid>
-    AppTitleBar: TWinUITitleBar;       // MainWindow.xaml(58) <TitleBar>
-    SearchBox: TWinUIAutoSuggestBox;   // MainWindow.xaml(64) <AutoSuggestBox>
-    Nav: TWinUINavigationView;         // MainWindow.xaml(79) <NavigationView>
-    RoastBadge: TWinUIButton;          // MainWindow.xaml(95) <Button>
-    BadgeGlow: TWinUIEllipse;          // MainWindow.xaml(103) <Ellipse>
-    BadgeTitle: TWinUITextBlock;       // MainWindow.xaml(107) <TextBlock>
-    BadgeText: TWinUITextBlock;        // MainWindow.xaml(108) <TextBlock>
-    BadgeProgress: TWinUIProgressBar;  // MainWindow.xaml(109) <ProgressBar>
-    ContentFrame: TWinUIPageFrame;     // MainWindow.xaml(115) <Frame>
+    AppTitleBar: TWinUITitleBar;       // MainWindow.xaml(39) <TitleBar>
+    SearchBox: TWinUIAutoSuggestBox;   // MainWindow.xaml(45) <AutoSuggestBox>
+    Nav: TWinUINavigationView;         // MainWindow.xaml(60) <NavigationView>
+    RoastBadge: TWinUIButton;          // MainWindow.xaml(76) <Button>
+    BadgeGlow: TWinUIEllipse;          // MainWindow.xaml(84) <Ellipse>
+    BadgeTitle: TWinUITextBlock;       // MainWindow.xaml(88) <TextBlock>
+    BadgeText: TWinUITextBlock;        // MainWindow.xaml(89) <TextBlock>
+    BadgeProgress: TWinUIProgressBar;  // MainWindow.xaml(90) <ProgressBar>
+    ContentFrame: TWinUIPageFrame;     // MainWindow.xaml(96) <Frame>
     procedure WireXaml;
     {$IFDEF DEBUG}
     procedure ReloadXaml(const AXaml: string);
@@ -56,41 +56,22 @@ const
   // wiring below, x:DataType and RADWinUI attributes are removed
   ContentXaml =
     '<Grid xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml" x:Name="Root">' + sLineBreak +
-    '    ' + sLineBreak +
     '    <Grid.Resources>' + sLineBreak +
     '      <ResourceDictionary>' + sLineBreak +
     '        <ResourceDictionary.ThemeDictionaries>' + sLineBreak +
     '          <ResourceDictionary x:Key="Light">' + sLineBreak +
-    '            <Color x:Key="SystemAccentColor">#E2572A</Color>' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#D9532A" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#E6D9532A" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#CCD9532A" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="#B8431F" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentTextFillColorSecondaryBrush" Color="#A33A1A" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentTextFillColorTertiaryBrush" Color="#C24A22" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="NavigationViewSelectionIndicatorForeground" Color="#E2572A" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentButtonBackground" Color="#D9532A" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#E2643A" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#C24A22" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentButtonForeground" Color="White" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="White" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="White" />' + sLineBreak +
+    '            <SolidColorBrush x:Key="EmberAccentSoft" Color="{ThemeResource SystemAccentColor}" Opacity="0.16" />' + sLineBreak +
+    '            <SolidColorBrush x:Key="EmberAccentFaint" Color="{ThemeResource SystemAccentColor}" Opacity="0.25" />' + sLineBreak +
+    '            <SolidColorBrush x:Key="EmberAccentHalf" Color="{ThemeResource SystemAccentColor}" Opacity="0.5" />' + sLineBreak +
+    '            <SolidColorBrush x:Key="EmberFrom" Color="{ThemeResource SystemAccentColorLight2}" />' + sLineBreak +
+    '            <SolidColorBrush x:Key="EmberTo" Color="{ThemeResource SystemAccentColorDark1}" />' + sLineBreak +
     '          </ResourceDictionary>' + sLineBreak +
     '          <ResourceDictionary x:Key="Dark">' + sLineBreak +
-    '            <Color x:Key="SystemAccentColor">#FF8A4C</Color>' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#FF8A4C" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#E6FF8A4C" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#CCFF8A4C" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="#FFB07A" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentTextFillColorSecondaryBrush" Color="#FFC29A" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentTextFillColorTertiaryBrush" Color="#FF9E66" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="NavigationViewSelectionIndicatorForeground" Color="#FF8A4C" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentButtonBackground" Color="#FF8A4C" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#FF9A62" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#E8773C" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentButtonForeground" Color="#1A0F0A" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#1A0F0A" />' + sLineBreak +
-    '            <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#1A0F0A" />' + sLineBreak +
+    '            <SolidColorBrush x:Key="EmberAccentSoft" Color="{ThemeResource SystemAccentColor}" Opacity="0.16" />' + sLineBreak +
+    '            <SolidColorBrush x:Key="EmberAccentFaint" Color="{ThemeResource SystemAccentColor}" Opacity="0.25" />' + sLineBreak +
+    '            <SolidColorBrush x:Key="EmberAccentHalf" Color="{ThemeResource SystemAccentColor}" Opacity="0.5" />' + sLineBreak +
+    '            <SolidColorBrush x:Key="EmberFrom" Color="{ThemeResource SystemAccentColorLight2}" />' + sLineBreak +
+    '            <SolidColorBrush x:Key="EmberTo" Color="{ThemeResource SystemAccentColorDark1}" />' + sLineBreak +
     '          </ResourceDictionary>' + sLineBreak +
     '        </ResourceDictionary.ThemeDictionaries>' + sLineBreak +
     '      </ResourceDictionary>' + sLineBreak +
@@ -102,7 +83,7 @@ const
     '' + sLineBreak +
     '    <TitleBar x:Name="AppTitleBar" Title="Ember" x:Uid="AppTitleBar" Subtitle="Roastery">' + sLineBreak +
     '      <TitleBar.IconSource>' + sLineBreak +
-    '        <FontIconSource Glyph="" Foreground="#FF7A3D" />' + sLineBreak +
+    '        <FontIconSource Glyph="" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />' + sLineBreak +
     '      </TitleBar.IconSource>' + sLineBreak +
     '      <TitleBar.Content>' + sLineBreak +
     '        ' + sLineBreak +
@@ -110,7 +91,7 @@ const
     '          <AutoSuggestBox.ItemTemplate>' + sLineBreak +
     '            <DataTemplate>' + sLineBreak +
     '              <StackPanel Orientation="Horizontal" Spacing="10">' + sLineBreak +
-    '                <FontIcon Glyph="{Binding Glyph}" FontSize="14" Foreground="#F0652B" />' + sLineBreak +
+    '                <FontIcon Glyph="{Binding Glyph}" FontSize="14" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />' + sLineBreak +
     '                <TextBlock Text="{Binding Name}" />' + sLineBreak +
     '                <TextBlock Text="{Binding Kind}" Opacity="0.6" />' + sLineBreak +
     '              </StackPanel>' + sLineBreak +
@@ -142,13 +123,13 @@ const
     '              <ColumnDefinition Width="*" />' + sLineBreak +
     '            </Grid.ColumnDefinitions>' + sLineBreak +
     '            <Grid Width="36" Height="36">' + sLineBreak +
-    '              <Ellipse x:Name="BadgeGlow" Fill="#33FF7A3D" />' + sLineBreak +
-    '              <FontIcon Glyph="" FontSize="18" Foreground="#FF7A3D" />' + sLineBreak +
+    '              <Ellipse x:Name="BadgeGlow" Fill="{ThemeResource EmberAccentSoft}" />' + sLineBreak +
+    '              <FontIcon Glyph="" FontSize="18" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />' + sLineBreak +
     '            </Grid>' + sLineBreak +
     '            <StackPanel Grid.Column="1" Spacing="2">' + sLineBreak +
     '              <TextBlock x:Name="BadgeTitle" x:Uid="BadgeTitle" Text="Roaster idle" FontWeight="SemiBold" TextTrimming="CharacterEllipsis" />' + sLineBreak +
     '              <TextBlock x:Name="BadgeText" x:Uid="BadgeText" Text="Ready for the next batch" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis" />' + sLineBreak +
-    '              <ProgressBar x:Name="BadgeProgress" Maximum="660" Value="0" Margin="0,6,0,0" Foreground="#FF7A3D" />' + sLineBreak +
+    '              <ProgressBar x:Name="BadgeProgress" Maximum="660" Value="0" Margin="0,6,0,0" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" />' + sLineBreak +
     '            </StackPanel>' + sLineBreak +
     '          </Grid>' + sLineBreak +
     '        </Button>' + sLineBreak +
@@ -196,11 +177,11 @@ begin
   BadgeProgress := FindElement<TWinUIProgressBar>('BadgeProgress');
   ContentFrame := FindElement<TWinUIPageFrame>('ContentFrame');
   // Event wiring
-  // MainWindow.xaml(64): QuerySubmitted="SearchSubmitted"
+  // MainWindow.xaml(45): QuerySubmitted="SearchSubmitted"
   SearchBox.OnQuerySubmitted := TWinUIAutoSuggestBoxQuerySubmittedEventHandler(PublishedMethod('SearchSubmitted'));
-  // MainWindow.xaml(64): TextChanged="SearchTextChanged"
+  // MainWindow.xaml(45): TextChanged="SearchTextChanged"
   SearchBox.OnTextChanged := TWinUIAutoSuggestBoxTextChangedEventHandler(PublishedMethod('SearchTextChanged'));
-  // MainWindow.xaml(95): Click="RoastBadgeClick"
+  // MainWindow.xaml(76): Click="RoastBadgeClick"
   RoastBadge.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('RoastBadgeClick'));
   // MainWindow.xaml(1): TitleBar="AppTitleBar"
   UseTitleBar(AppTitleBar);

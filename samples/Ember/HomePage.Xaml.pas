@@ -25,56 +25,56 @@ type
   {$M+}
   THomePageBase = class(TWinUIXamlPage)
   protected
-    GreetingText: TWinUITextBlock;         // HomePage.xaml(86) <TextBlock>
-    DateText: TWinUITextBlock;             // HomePage.xaml(87) <TextBlock>
-    NewOrderButton: TWinUIShineButton;     // HomePage.xaml(89) <ShineButton>
-    KpiRow: TWinUIGrid;                    // HomePage.xaml(94) <Grid>
-    RevenueCard: TWinUIBorder;             // HomePage.xaml(101) <Border>
-    RevenueValue: TWinUITextBlock;         // HomePage.xaml(105) <TextBlock>
-    RevenueDelta: TWinUITextBlock;         // HomePage.xaml(106) <TextBlock>
-    OrdersCard: TWinUIBorder;              // HomePage.xaml(109) <Border>
-    OpenOrdersValue: TWinUITextBlock;      // HomePage.xaml(113) <TextBlock>
-    StockCard: TWinUIBorder;               // HomePage.xaml(117) <Border>
-    StockValue: TWinUITextBlock;           // HomePage.xaml(121) <TextBlock>
-    StockBar: TWinUIProgressBar;           // HomePage.xaml(122) <ProgressBar>
-    BatchCard: TWinUIBorder;               // HomePage.xaml(125) <Border>
-    BatchValue: TWinUITextBlock;           // HomePage.xaml(129) <TextBlock>
-    BatchHint: TWinUITextBlock;            // HomePage.xaml(130) <TextBlock>
-    WeekCard: TWinUIBorder;                // HomePage.xaml(141) <Border>
-    WeekTotal: TWinUITextBlock;            // HomePage.xaml(149) <TextBlock>
-    Chart: TWinUIGrid;                     // HomePage.xaml(151) <Grid>
-    Value0: TWinUITextBlock;               // HomePage.xaml(162) <TextBlock>
-    Bar0: TWinUIBorder;                    // HomePage.xaml(163) <Border>
-    Day0: TWinUITextBlock;                 // HomePage.xaml(164) <TextBlock>
-    Value1: TWinUITextBlock;               // HomePage.xaml(167) <TextBlock>
-    Bar1: TWinUIBorder;                    // HomePage.xaml(168) <Border>
-    Day1: TWinUITextBlock;                 // HomePage.xaml(169) <TextBlock>
-    Value2: TWinUITextBlock;               // HomePage.xaml(172) <TextBlock>
-    Bar2: TWinUIBorder;                    // HomePage.xaml(173) <Border>
-    Day2: TWinUITextBlock;                 // HomePage.xaml(174) <TextBlock>
-    Value3: TWinUITextBlock;               // HomePage.xaml(177) <TextBlock>
-    Bar3: TWinUIBorder;                    // HomePage.xaml(178) <Border>
-    Day3: TWinUITextBlock;                 // HomePage.xaml(179) <TextBlock>
-    Value4: TWinUITextBlock;               // HomePage.xaml(182) <TextBlock>
-    Bar4: TWinUIBorder;                    // HomePage.xaml(183) <Border>
-    Day4: TWinUITextBlock;                 // HomePage.xaml(184) <TextBlock>
-    Value5: TWinUITextBlock;               // HomePage.xaml(187) <TextBlock>
-    Bar5: TWinUIBorder;                    // HomePage.xaml(188) <Border>
-    Day5: TWinUITextBlock;                 // HomePage.xaml(189) <TextBlock>
-    Value6: TWinUITextBlock;               // HomePage.xaml(192) <TextBlock>
-    Bar6: TWinUIBorder;                    // HomePage.xaml(193) <Border>
-    Day6: TWinUITextBlock;                 // HomePage.xaml(194) <TextBlock>
-    RoastCard: TWinUIBorder;               // HomePage.xaml(201) <Border>
-    CoffeeBox: TWinUIComboBox;             // HomePage.xaml(225) <ComboBox>
-    KgText: TWinUITextBlock;               // HomePage.xaml(230) <TextBlock>
-    KgSlider: TWinUISlider;                // HomePage.xaml(232) <Slider>
-    CoffeeNotes: TWinUITextBlock;          // HomePage.xaml(234) <TextBlock>
-    StartRoastButton: TWinUISlideButton;   // HomePage.xaml(236) <SlideButton>
-    TopCard: TWinUIBorder;                 // HomePage.xaml(248) <Border>
-    TopList: TWinUIItemsControl;           // HomePage.xaml(251) <ItemsControl>
-    RecentCard: TWinUIBorder;              // HomePage.xaml(272) <Border>
-    AllOrdersLink: TWinUIHyperlinkButton;  // HomePage.xaml(276) <HyperlinkButton>
-    RecentList: TWinUIItemsControl;        // HomePage.xaml(279) <ItemsControl>
+    GreetingText: TWinUITextBlock;         // HomePage.xaml(113) <TextBlock>
+    DateText: TWinUITextBlock;             // HomePage.xaml(114) <TextBlock>
+    NewOrderButton: TWinUIShineButton;     // HomePage.xaml(116) <ShineButton>
+    KpiRow: TWinUIGrid;                    // HomePage.xaml(121) <Grid>
+    RevenueCard: TWinUIBorder;             // HomePage.xaml(128) <Border>
+    RevenueValue: TWinUITextBlock;         // HomePage.xaml(132) <TextBlock>
+    RevenueDelta: TWinUITextBlock;         // HomePage.xaml(133) <TextBlock>
+    OrdersCard: TWinUIBorder;              // HomePage.xaml(136) <Border>
+    OpenOrdersValue: TWinUITextBlock;      // HomePage.xaml(140) <TextBlock>
+    StockCard: TWinUIBorder;               // HomePage.xaml(144) <Border>
+    StockValue: TWinUITextBlock;           // HomePage.xaml(148) <TextBlock>
+    StockBar: TWinUIProgressBar;           // HomePage.xaml(149) <ProgressBar>
+    BatchCard: TWinUIBorder;               // HomePage.xaml(152) <Border>
+    BatchValue: TWinUITextBlock;           // HomePage.xaml(156) <TextBlock>
+    BatchHint: TWinUITextBlock;            // HomePage.xaml(157) <TextBlock>
+    WeekCard: TWinUIBorder;                // HomePage.xaml(168) <Border>
+    WeekTotal: TWinUITextBlock;            // HomePage.xaml(176) <TextBlock>
+    Chart: TWinUIGrid;                     // HomePage.xaml(178) <Grid>
+    Value0: TWinUITextBlock;               // HomePage.xaml(189) <TextBlock>
+    Bar0: TWinUIBorder;                    // HomePage.xaml(190) <Border>
+    Day0: TWinUITextBlock;                 // HomePage.xaml(191) <TextBlock>
+    Value1: TWinUITextBlock;               // HomePage.xaml(194) <TextBlock>
+    Bar1: TWinUIBorder;                    // HomePage.xaml(195) <Border>
+    Day1: TWinUITextBlock;                 // HomePage.xaml(196) <TextBlock>
+    Value2: TWinUITextBlock;               // HomePage.xaml(199) <TextBlock>
+    Bar2: TWinUIBorder;                    // HomePage.xaml(200) <Border>
+    Day2: TWinUITextBlock;                 // HomePage.xaml(201) <TextBlock>
+    Value3: TWinUITextBlock;               // HomePage.xaml(204) <TextBlock>
+    Bar3: TWinUIBorder;                    // HomePage.xaml(205) <Border>
+    Day3: TWinUITextBlock;                 // HomePage.xaml(206) <TextBlock>
+    Value4: TWinUITextBlock;               // HomePage.xaml(209) <TextBlock>
+    Bar4: TWinUIBorder;                    // HomePage.xaml(210) <Border>
+    Day4: TWinUITextBlock;                 // HomePage.xaml(211) <TextBlock>
+    Value5: TWinUITextBlock;               // HomePage.xaml(214) <TextBlock>
+    Bar5: TWinUIBorder;                    // HomePage.xaml(215) <Border>
+    Day5: TWinUITextBlock;                 // HomePage.xaml(216) <TextBlock>
+    Value6: TWinUITextBlock;               // HomePage.xaml(219) <TextBlock>
+    Bar6: TWinUIBorder;                    // HomePage.xaml(220) <Border>
+    Day6: TWinUITextBlock;                 // HomePage.xaml(221) <TextBlock>
+    RoastCard: TWinUIBorder;               // HomePage.xaml(228) <Border>
+    CoffeeBox: TWinUIComboBox;             // HomePage.xaml(252) <ComboBox>
+    KgText: TWinUITextBlock;               // HomePage.xaml(257) <TextBlock>
+    KgSlider: TWinUISlider;                // HomePage.xaml(259) <Slider>
+    CoffeeNotes: TWinUITextBlock;          // HomePage.xaml(261) <TextBlock>
+    StartRoastButton: TWinUISlideButton;   // HomePage.xaml(263) <SlideButton>
+    TopCard: TWinUIBorder;                 // HomePage.xaml(275) <Border>
+    TopList: TWinUIItemsControl;           // HomePage.xaml(278) <ItemsControl>
+    RecentCard: TWinUIBorder;              // HomePage.xaml(299) <Border>
+    AllOrdersLink: TWinUIHyperlinkButton;  // HomePage.xaml(303) <HyperlinkButton>
+    RecentList: TWinUIItemsControl;        // HomePage.xaml(306) <ItemsControl>
     procedure WireXaml;
     {$IFDEF DEBUG}
     procedure ReloadXaml(const AXaml: string);
@@ -98,61 +98,88 @@ const
     '<Page xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:ns2="using:RADWinUI.Controls" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">' + sLineBreak +
     '  ' + sLineBreak +
     '  <Page.Resources>' + sLineBreak +
-    '    <Style x:Key="Card" TargetType="Border">' + sLineBreak +
-    '      <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />' + sLineBreak +
-    '      <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />' + sLineBreak +
-    '      <Setter Property="BorderThickness" Value="1" />' + sLineBreak +
-    '      <Setter Property="CornerRadius" Value="16" />' + sLineBreak +
-    '      <Setter Property="Padding" Value="22,18,22,20" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="CardTitle" TargetType="TextBlock">' + sLineBreak +
-    '      <Setter Property="FontSize" Value="16" />' + sLineBreak +
-    '      <Setter Property="FontWeight" Value="SemiBold" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="Label" TargetType="TextBlock">' + sLineBreak +
-    '      <Setter Property="FontSize" Value="13" />' + sLineBreak +
-    '      <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="Value" TargetType="TextBlock">' + sLineBreak +
-    '      <Setter Property="FontSize" Value="28" />' + sLineBreak +
-    '      <Setter Property="FontWeight" Value="SemiBold" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="Disc" TargetType="Border">' + sLineBreak +
-    '      <Setter Property="Width" Value="40" />' + sLineBreak +
-    '      <Setter Property="Height" Value="40" />' + sLineBreak +
-    '      <Setter Property="CornerRadius" Value="20" />' + sLineBreak +
-    '      <Setter Property="Background" Value="#26FF7A3D" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="DiscIcon" TargetType="FontIcon">' + sLineBreak +
-    '      <Setter Property="FontSize" Value="18" />' + sLineBreak +
-    '      <Setter Property="Foreground" Value="#F0652B" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="Bar" TargetType="Border">' + sLineBreak +
-    '      <Setter Property="Width" Value="34" />' + sLineBreak +
-    '      <Setter Property="Height" Value="40" />' + sLineBreak +
-    '      <Setter Property="CornerRadius" Value="8,8,4,4" />' + sLineBreak +
-    '      <Setter Property="Background" Value="#40F0652B" />' + sLineBreak +
-    '      <Setter Property="HorizontalAlignment" Value="Center" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="BarValue" TargetType="TextBlock">' + sLineBreak +
-    '      <Setter Property="FontSize" Value="11" />' + sLineBreak +
-    '      <Setter Property="HorizontalAlignment" Value="Center" />' + sLineBreak +
-    '      <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <Style x:Key="BarDay" TargetType="TextBlock">' + sLineBreak +
-    '      <Setter Property="FontSize" Value="12" />' + sLineBreak +
-    '      <Setter Property="HorizontalAlignment" Value="Center" />' + sLineBreak +
-    '      <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
-    '    <LinearGradientBrush x:Key="EmberBrush" StartPoint="0,0" EndPoint="1,1">' + sLineBreak +
-    '      <GradientStop Color="#FF9A4D" Offset="0" />' + sLineBreak +
-    '      <GradientStop Color="#E2452B" Offset="0.6" />' + sLineBreak +
-    '      <GradientStop Color="#9E2A1E" Offset="1" />' + sLineBreak +
-    '    </LinearGradientBrush>' + sLineBreak +
-    '    <LinearGradientBrush x:Key="TodayBarBrush" StartPoint="0,0" EndPoint="0,1">' + sLineBreak +
-    '      <GradientStop Color="#FF9A4D" Offset="0" />' + sLineBreak +
-    '      <GradientStop Color="#E2452B" Offset="1" />' + sLineBreak +
-    '    </LinearGradientBrush>' + sLineBreak +
+    '    <ResourceDictionary>' + sLineBreak +
+    '      <ResourceDictionary.ThemeDictionaries>' + sLineBreak +
+    '        <ResourceDictionary x:Key="Light">' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentSoft" Color="{ThemeResource SystemAccentColor}" Opacity="0.16" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentFaint" Color="{ThemeResource SystemAccentColor}" Opacity="0.25" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentHalf" Color="{ThemeResource SystemAccentColor}" Opacity="0.5" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberFrom" Color="{ThemeResource SystemAccentColorLight2}" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberTo" Color="{ThemeResource SystemAccentColorDark1}" />' + sLineBreak +
+    '          <LinearGradientBrush x:Key="EmberBrush" StartPoint="0,0" EndPoint="1,1">' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColorLight1}" Offset="0" />' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="0.6" />' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="1" />' + sLineBreak +
+    '          </LinearGradientBrush>' + sLineBreak +
+    '          <LinearGradientBrush x:Key="TodayBarBrush" StartPoint="0,0" EndPoint="0,1">' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColorLight1}" Offset="0" />' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="1" />' + sLineBreak +
+    '          </LinearGradientBrush>' + sLineBreak +
+    '        </ResourceDictionary>' + sLineBreak +
+    '        <ResourceDictionary x:Key="Dark">' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentSoft" Color="{ThemeResource SystemAccentColor}" Opacity="0.16" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentFaint" Color="{ThemeResource SystemAccentColor}" Opacity="0.25" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentHalf" Color="{ThemeResource SystemAccentColor}" Opacity="0.5" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberFrom" Color="{ThemeResource SystemAccentColorLight2}" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberTo" Color="{ThemeResource SystemAccentColorDark1}" />' + sLineBreak +
+    '          <LinearGradientBrush x:Key="EmberBrush" StartPoint="0,0" EndPoint="1,1">' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColorLight1}" Offset="0" />' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="0.6" />' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColorDark2}" Offset="1" />' + sLineBreak +
+    '          </LinearGradientBrush>' + sLineBreak +
+    '          <LinearGradientBrush x:Key="TodayBarBrush" StartPoint="0,0" EndPoint="0,1">' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColorLight1}" Offset="0" />' + sLineBreak +
+    '            <GradientStop Color="{ThemeResource SystemAccentColor}" Offset="1" />' + sLineBreak +
+    '          </LinearGradientBrush>' + sLineBreak +
+    '        </ResourceDictionary>' + sLineBreak +
+    '      </ResourceDictionary.ThemeDictionaries>' + sLineBreak +
+    '      <Style x:Key="Card" TargetType="Border">' + sLineBreak +
+    '        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />' + sLineBreak +
+    '        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />' + sLineBreak +
+    '        <Setter Property="BorderThickness" Value="1" />' + sLineBreak +
+    '        <Setter Property="CornerRadius" Value="16" />' + sLineBreak +
+    '        <Setter Property="Padding" Value="22,18,22,20" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="CardTitle" TargetType="TextBlock">' + sLineBreak +
+    '        <Setter Property="FontSize" Value="16" />' + sLineBreak +
+    '        <Setter Property="FontWeight" Value="SemiBold" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="Label" TargetType="TextBlock">' + sLineBreak +
+    '        <Setter Property="FontSize" Value="13" />' + sLineBreak +
+    '        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="Value" TargetType="TextBlock">' + sLineBreak +
+    '        <Setter Property="FontSize" Value="28" />' + sLineBreak +
+    '        <Setter Property="FontWeight" Value="SemiBold" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="Disc" TargetType="Border">' + sLineBreak +
+    '        <Setter Property="Width" Value="40" />' + sLineBreak +
+    '        <Setter Property="Height" Value="40" />' + sLineBreak +
+    '        <Setter Property="CornerRadius" Value="20" />' + sLineBreak +
+    '        <Setter Property="Background" Value="{ThemeResource EmberAccentSoft}" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="DiscIcon" TargetType="FontIcon">' + sLineBreak +
+    '        <Setter Property="FontSize" Value="18" />' + sLineBreak +
+    '        <Setter Property="Foreground" Value="{ThemeResource AccentTextFillColorPrimaryBrush}" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="Bar" TargetType="Border">' + sLineBreak +
+    '        <Setter Property="Width" Value="34" />' + sLineBreak +
+    '        <Setter Property="Height" Value="40" />' + sLineBreak +
+    '        <Setter Property="CornerRadius" Value="8,8,4,4" />' + sLineBreak +
+    '        <Setter Property="Background" Value="{ThemeResource EmberAccentFaint}" />' + sLineBreak +
+    '        <Setter Property="HorizontalAlignment" Value="Center" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="BarValue" TargetType="TextBlock">' + sLineBreak +
+    '        <Setter Property="FontSize" Value="11" />' + sLineBreak +
+    '        <Setter Property="HorizontalAlignment" Value="Center" />' + sLineBreak +
+    '        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '      <Style x:Key="BarDay" TargetType="TextBlock">' + sLineBreak +
+    '        <Setter Property="FontSize" Value="12" />' + sLineBreak +
+    '        <Setter Property="HorizontalAlignment" Value="Center" />' + sLineBreak +
+    '        <Setter Property="Foreground" Value="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '    </ResourceDictionary>' + sLineBreak +
     '  </Page.Resources>' + sLineBreak +
     '' + sLineBreak +
     '  <ScrollViewer>' + sLineBreak +
@@ -174,7 +201,8 @@ const
     '          <TextBlock x:Name="GreetingText" Text="Good morning" FontSize="32" FontWeight="SemiBold" />' + sLineBreak +
     '          <TextBlock x:Name="DateText" Style="{StaticResource Label}" FontSize="14" />' + sLineBreak +
     '        </StackPanel>' + sLineBreak +
-    '        <ns2:ShineButton x:Name="NewOrderButton" x:Uid="NewOrderButton" Grid.Column="1" Text="New order" VerticalAlignment="Center" AccentFrom="#FFB36B" AccentTo="#E2452B" />' + sLineBreak +
+    '        <ns2:ShineButton x:Name="NewOrderButton" x:Uid="NewOrderButton" Grid.Column="1" Text="New order" VerticalAlignment="Center" AccentFrom="{ThemeResource EmberFrom}" AccentTo="{ThemeResource Embe' +
+    'rTo}" />' + sLineBreak +
     '      </Grid>' + sLineBreak +
     '' + sLineBreak +
     '      ' + sLineBreak +
@@ -206,7 +234,7 @@ const
     '            <Border Style="{StaticResource Disc}"><FontIcon Style="{StaticResource DiscIcon}" Glyph="" /></Border>' + sLineBreak +
     '            <TextBlock x:Uid="StockLabel" Style="{StaticResource Label}" Text="Green coffee in stock" />' + sLineBreak +
     '            <TextBlock x:Name="StockValue" Style="{StaticResource Value}" />' + sLineBreak +
-    '            <ProgressBar x:Name="StockBar" Maximum="1000" Value="632" Foreground="#F0652B" Margin="0,6,0,0" />' + sLineBreak +
+    '            <ProgressBar x:Name="StockBar" Maximum="1000" Value="632" Margin="0,6,0,0" />' + sLineBreak +
     '          </StackPanel>' + sLineBreak +
     '        </Border>' + sLineBreak +
     '        <Border x:Name="BatchCard" Grid.Column="3" Style="{StaticResource Card}">' + sLineBreak +
@@ -318,7 +346,7 @@ const
     '              <TextBlock x:Name="CoffeeNotes" FontSize="13" Foreground="#D9FFFFFF" TextWrapping="Wrap" />' + sLineBreak +
     '            </StackPanel>' + sLineBreak +
     '            <ns2:SlideButton x:Name="StartRoastButton" x:Uid="StartRoastButton" Grid.Row="3" HorizontalAlignment="Stretch" Width="Auto" Text="Slide to start the roast" DoneText="Roasting" AccentFrom="' +
-    '#FFC38A" AccentTo="#FF7A3D" />' + sLineBreak +
+    '{ThemeResource EmberFrom}" AccentTo="{ThemeResource EmberTo}" />' + sLineBreak +
     '          </Grid>' + sLineBreak +
     '        </Border>' + sLineBreak +
     '      </Grid>' + sLineBreak +
@@ -345,7 +373,7 @@ const
     '                      <TextBlock Text="{Binding Name}" FontWeight="SemiBold" />' + sLineBreak +
     '                      <TextBlock Text="{Binding Origin}" FontSize="12" Opacity="0.65" />' + sLineBreak +
     '                    </StackPanel>' + sLineBreak +
-    '                    <ProgressBar Grid.Column="1" Value="{Binding Share}" Maximum="100" Foreground="#F0652B" VerticalAlignment="Center" />' + sLineBreak +
+    '                    <ProgressBar Grid.Column="1" Value="{Binding Share}" Maximum="100" VerticalAlignment="Center" />' + sLineBreak +
     '                    <TextBlock Grid.Column="2" Text="{Binding KgText}" HorizontalAlignment="Right" VerticalAlignment="Center" />' + sLineBreak +
     '                  </Grid>' + sLineBreak +
     '                </DataTemplate>' + sLineBreak +
@@ -375,7 +403,7 @@ const
     '                    </StackPanel>' + sLineBreak +
     '                    <StackPanel Grid.Column="2" VerticalAlignment="Center" HorizontalAlignment="Right">' + sLineBreak +
     '                      <TextBlock Text="{Binding TotalText}" FontWeight="SemiBold" HorizontalAlignment="Right" />' + sLineBreak +
-    '                      <TextBlock Text="{Binding Status}" FontSize="12" Foreground="#F0652B" HorizontalAlignment="Right" />' + sLineBreak +
+    '                      <TextBlock Text="{Binding Status}" FontSize="12" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" HorizontalAlignment="Right" />' + sLineBreak +
     '                    </StackPanel>' + sLineBreak +
     '                  </Grid>' + sLineBreak +
     '                </DataTemplate>' + sLineBreak +
@@ -463,15 +491,15 @@ begin
   AllOrdersLink := FindElement<TWinUIHyperlinkButton>('AllOrdersLink');
   RecentList := FindElement<TWinUIItemsControl>('RecentList');
   // Event wiring
-  // HomePage.xaml(89): Click="NewOrderClick"
+  // HomePage.xaml(116): Click="NewOrderClick"
   NewOrderButton.OnClick := TWinUIWinValueEventHandler(PublishedMethod('NewOrderClick'));
-  // HomePage.xaml(225): SelectionChanged="CoffeeChanged"
+  // HomePage.xaml(252): SelectionChanged="CoffeeChanged"
   CoffeeBox.OnSelectionChanged := TWinUISelectionChangedEventHandler(PublishedMethod('CoffeeChanged'));
-  // HomePage.xaml(232): ValueChanged="KgChanged"
+  // HomePage.xaml(259): ValueChanged="KgChanged"
   KgSlider.OnValueChanged := TWinUIRangeBaseValueChangedEventHandler(PublishedMethod('KgChanged'));
-  // HomePage.xaml(236): Confirmed="StartRoastConfirmed"
+  // HomePage.xaml(263): Confirmed="StartRoastConfirmed"
   StartRoastButton.OnConfirmed := TWinUIWinValueEventHandler(PublishedMethod('StartRoastConfirmed'));
-  // HomePage.xaml(276): Click="AllOrdersClick"
+  // HomePage.xaml(303): Click="AllOrdersClick"
   AllOrdersLink.Click.Add(NotifyProc<TWinUIRoutedEventArgs>('AllOrdersClick'));
 end;
 

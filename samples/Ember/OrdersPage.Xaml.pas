@@ -26,20 +26,20 @@ type
   {$M+}
   TOrdersPageBase = class(TWinUIXamlPage)
   protected
-    CountText: TWinUITextBlock;             // OrdersPage.xaml(35) <TextBlock>
-    StatusTabs: TWinUISlidingPillTabBar;    // OrdersPage.xaml(37) <SlidingPillTabBar>
-    GridCard: TWinUIBorder;                 // OrdersPage.xaml(51) <Border>
-    OrdersNavigator: TWinUIDBNavigator;     // OrdersPage.xaml(59) <DBNavigator>
-    OrdersGrid: TWinUIDBGrid;               // OrdersPage.xaml(63) <DBGrid>
-    FormCard: TWinUIBorder;                 // OrdersPage.xaml(69) <Border>
-    OrderNoText: TWinUIDBText;              // OrdersPage.xaml(75) <DBText>
-    TotalText: TWinUIDBText;                // OrdersPage.xaml(79) <DBText>
-    CustomerCombo: TWinUIDBLookupComboBox;  // OrdersPage.xaml(83) <DBLookupComboBox>
-    CoffeeCombo: TWinUIDBLookupComboBox;    // OrdersPage.xaml(85) <DBLookupComboBox>
-    KgBox: TWinUIDBNumberBox;               // OrdersPage.xaml(92) <DBNumberBox>
-    DatePicker: TWinUIDBDatePicker;         // OrdersPage.xaml(93) <DBDatePicker>
-    StatusCombo: TWinUIDBComboBox;          // OrdersPage.xaml(95) <DBComboBox>
-    NoteMemo: TWinUIDBMemo;                 // OrdersPage.xaml(97) <DBMemo>
+    CountText: TWinUITextBlock;             // OrdersPage.xaml(53) <TextBlock>
+    StatusTabs: TWinUISlidingPillTabBar;    // OrdersPage.xaml(55) <SlidingPillTabBar>
+    GridCard: TWinUIBorder;                 // OrdersPage.xaml(69) <Border>
+    OrdersNavigator: TWinUIDBNavigator;     // OrdersPage.xaml(77) <DBNavigator>
+    OrdersGrid: TWinUIDBGrid;               // OrdersPage.xaml(81) <DBGrid>
+    FormCard: TWinUIBorder;                 // OrdersPage.xaml(87) <Border>
+    OrderNoText: TWinUIDBText;              // OrdersPage.xaml(93) <DBText>
+    TotalText: TWinUIDBText;                // OrdersPage.xaml(97) <DBText>
+    CustomerCombo: TWinUIDBLookupComboBox;  // OrdersPage.xaml(101) <DBLookupComboBox>
+    CoffeeCombo: TWinUIDBLookupComboBox;    // OrdersPage.xaml(103) <DBLookupComboBox>
+    KgBox: TWinUIDBNumberBox;               // OrdersPage.xaml(110) <DBNumberBox>
+    DatePicker: TWinUIDBDatePicker;         // OrdersPage.xaml(111) <DBDatePicker>
+    StatusCombo: TWinUIDBComboBox;          // OrdersPage.xaml(113) <DBComboBox>
+    NoteMemo: TWinUIDBMemo;                 // OrdersPage.xaml(115) <DBMemo>
     procedure WireXaml;
     {$IFDEF DEBUG}
     procedure ReloadXaml(const AXaml: string);
@@ -63,13 +63,31 @@ const
     '<Page xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation" xmlns:ns2="using:RADWinUI.Controls" xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml">' + sLineBreak +
     '  ' + sLineBreak +
     '  <Page.Resources>' + sLineBreak +
-    '    <Style x:Key="Card" TargetType="Border">' + sLineBreak +
-    '      <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />' + sLineBreak +
-    '      <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />' + sLineBreak +
-    '      <Setter Property="BorderThickness" Value="1" />' + sLineBreak +
-    '      <Setter Property="CornerRadius" Value="16" />' + sLineBreak +
-    '      <Setter Property="Padding" Value="20,16,20,20" />' + sLineBreak +
-    '    </Style>' + sLineBreak +
+    '    <ResourceDictionary>' + sLineBreak +
+    '      <ResourceDictionary.ThemeDictionaries>' + sLineBreak +
+    '        <ResourceDictionary x:Key="Light">' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentSoft" Color="{ThemeResource SystemAccentColor}" Opacity="0.16" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentFaint" Color="{ThemeResource SystemAccentColor}" Opacity="0.25" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentHalf" Color="{ThemeResource SystemAccentColor}" Opacity="0.5" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberFrom" Color="{ThemeResource SystemAccentColorLight2}" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberTo" Color="{ThemeResource SystemAccentColorDark1}" />' + sLineBreak +
+    '        </ResourceDictionary>' + sLineBreak +
+    '        <ResourceDictionary x:Key="Dark">' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentSoft" Color="{ThemeResource SystemAccentColor}" Opacity="0.16" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentFaint" Color="{ThemeResource SystemAccentColor}" Opacity="0.25" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberAccentHalf" Color="{ThemeResource SystemAccentColor}" Opacity="0.5" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberFrom" Color="{ThemeResource SystemAccentColorLight2}" />' + sLineBreak +
+    '          <SolidColorBrush x:Key="EmberTo" Color="{ThemeResource SystemAccentColorDark1}" />' + sLineBreak +
+    '        </ResourceDictionary>' + sLineBreak +
+    '      </ResourceDictionary.ThemeDictionaries>' + sLineBreak +
+    '      <Style x:Key="Card" TargetType="Border">' + sLineBreak +
+    '        <Setter Property="Background" Value="{ThemeResource CardBackgroundFillColorDefaultBrush}" />' + sLineBreak +
+    '        <Setter Property="BorderBrush" Value="{ThemeResource CardStrokeColorDefaultBrush}" />' + sLineBreak +
+    '        <Setter Property="BorderThickness" Value="1" />' + sLineBreak +
+    '        <Setter Property="CornerRadius" Value="16" />' + sLineBreak +
+    '        <Setter Property="Padding" Value="20,16,20,20" />' + sLineBreak +
+    '      </Style>' + sLineBreak +
+    '    </ResourceDictionary>' + sLineBreak +
     '  </Page.Resources>' + sLineBreak +
     '' + sLineBreak +
     '  <Grid RowSpacing="18" Padding="0,4,0,0">' + sLineBreak +
@@ -88,8 +106,8 @@ const
     '        <TextBlock x:Name="CountText" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
     '      </StackPanel>' + sLineBreak +
     '      <ns2:SlidingPillTabBar x:Name="StatusTabs" x:Uid="StatusTabs" Grid.Column="1" Width="480" VerticalAlignment="Center" AutomationProperties.Name="Order status" Items="All:E8FD, Open:Clock, Roastin' +
-    'g:ECAD, Shipped:E73E" ShowLabels="True" AccentFrom="#FFB36B" AccentTo="#E2452B" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeResource CardStrokeColorDefaultBrush' +
-    '}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
+    'g:ECAD, Shipped:E73E" ShowLabels="True" AccentFrom="{ThemeResource EmberFrom}" AccentTo="{ThemeResource EmberTo}" Background="{ThemeResource CardBackgroundFillColorDefaultBrush}" BorderBrush="{ThemeRe' +
+    'source CardStrokeColorDefaultBrush}" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
     '    </Grid>' + sLineBreak +
     '' + sLineBreak +
     '    <Grid Grid.Row="1" ColumnSpacing="16">' + sLineBreak +
@@ -124,7 +142,8 @@ const
     '              </StackPanel>' + sLineBreak +
     '              <StackPanel HorizontalAlignment="Right">' + sLineBreak +
     '                <TextBlock x:Uid="TotalLabel" Text="Total" HorizontalAlignment="Right" Foreground="{ThemeResource TextFillColorSecondaryBrush}" />' + sLineBreak +
-    '                <ns2:DBText x:Name="TotalText" DataSource="OrdersSource" DataField="Total" FontSize="24" FontWeight="SemiBold" Foreground="#F0652B" HorizontalAlignment="Right" />' + sLineBreak +
+    '                <ns2:DBText x:Name="TotalText" DataSource="OrdersSource" DataField="Total" FontSize="24" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" HorizontalAl' +
+    'ignment="Right" />' + sLineBreak +
     '              </StackPanel>' + sLineBreak +
     '            </Grid>' + sLineBreak +
     '            <ns2:DBLookupComboBox x:Name="CustomerCombo" x:Uid="CustomerCombo" DataSource="OrdersSource" DataField="CustomerID" ListSource="CustomersSource" KeyField="ID" ListField="Name" Header="Cafe' +
@@ -182,7 +201,7 @@ begin
   StatusCombo := FindElement<TWinUIDBComboBox>('StatusCombo');
   NoteMemo := FindElement<TWinUIDBMemo>('NoteMemo');
   // Event wiring
-  // OrdersPage.xaml(37): SelectionChanged="StatusChanged"
+  // OrdersPage.xaml(55): SelectionChanged="StatusChanged"
   StatusTabs.OnSelectionChanged := TWinUIWinValueEventHandler(PublishedMethod('StatusChanged'));
 end;
 

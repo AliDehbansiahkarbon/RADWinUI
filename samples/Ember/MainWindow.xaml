@@ -11,41 +11,22 @@
        NavigationView drives a frame of pages, and the pane footer shows the
        roast that runs right now, whatever page is open. -->
   <Grid x:Name="Root">
-    <!-- Ember's own accent: an ember orange for selection, sliders, switches and accent buttons -->
     <Grid.Resources>
       <ResourceDictionary>
         <ResourceDictionary.ThemeDictionaries>
           <ResourceDictionary x:Key="Light">
-            <Color x:Key="SystemAccentColor">#E2572A</Color>
-            <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#D9532A"/>
-            <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#E6D9532A"/>
-            <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#CCD9532A"/>
-            <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="#B8431F"/>
-            <SolidColorBrush x:Key="AccentTextFillColorSecondaryBrush" Color="#A33A1A"/>
-            <SolidColorBrush x:Key="AccentTextFillColorTertiaryBrush" Color="#C24A22"/>
-            <SolidColorBrush x:Key="NavigationViewSelectionIndicatorForeground" Color="#E2572A"/>
-            <SolidColorBrush x:Key="AccentButtonBackground" Color="#D9532A"/>
-            <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#E2643A"/>
-            <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#C24A22"/>
-            <SolidColorBrush x:Key="AccentButtonForeground" Color="White"/>
-            <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="White"/>
-            <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="White"/>
+            <SolidColorBrush x:Key="EmberAccentSoft" Color="{ThemeResource SystemAccentColor}" Opacity="0.16"/>
+            <SolidColorBrush x:Key="EmberAccentFaint" Color="{ThemeResource SystemAccentColor}" Opacity="0.25"/>
+            <SolidColorBrush x:Key="EmberAccentHalf" Color="{ThemeResource SystemAccentColor}" Opacity="0.5"/>
+            <SolidColorBrush x:Key="EmberFrom" Color="{ThemeResource SystemAccentColorLight2}"/>
+            <SolidColorBrush x:Key="EmberTo" Color="{ThemeResource SystemAccentColorDark1}"/>
           </ResourceDictionary>
           <ResourceDictionary x:Key="Dark">
-            <Color x:Key="SystemAccentColor">#FF8A4C</Color>
-            <SolidColorBrush x:Key="AccentFillColorDefaultBrush" Color="#FF8A4C"/>
-            <SolidColorBrush x:Key="AccentFillColorSecondaryBrush" Color="#E6FF8A4C"/>
-            <SolidColorBrush x:Key="AccentFillColorTertiaryBrush" Color="#CCFF8A4C"/>
-            <SolidColorBrush x:Key="AccentTextFillColorPrimaryBrush" Color="#FFB07A"/>
-            <SolidColorBrush x:Key="AccentTextFillColorSecondaryBrush" Color="#FFC29A"/>
-            <SolidColorBrush x:Key="AccentTextFillColorTertiaryBrush" Color="#FF9E66"/>
-            <SolidColorBrush x:Key="NavigationViewSelectionIndicatorForeground" Color="#FF8A4C"/>
-            <SolidColorBrush x:Key="AccentButtonBackground" Color="#FF8A4C"/>
-            <SolidColorBrush x:Key="AccentButtonBackgroundPointerOver" Color="#FF9A62"/>
-            <SolidColorBrush x:Key="AccentButtonBackgroundPressed" Color="#E8773C"/>
-            <SolidColorBrush x:Key="AccentButtonForeground" Color="#1A0F0A"/>
-            <SolidColorBrush x:Key="AccentButtonForegroundPointerOver" Color="#1A0F0A"/>
-            <SolidColorBrush x:Key="AccentButtonForegroundPressed" Color="#1A0F0A"/>
+            <SolidColorBrush x:Key="EmberAccentSoft" Color="{ThemeResource SystemAccentColor}" Opacity="0.16"/>
+            <SolidColorBrush x:Key="EmberAccentFaint" Color="{ThemeResource SystemAccentColor}" Opacity="0.25"/>
+            <SolidColorBrush x:Key="EmberAccentHalf" Color="{ThemeResource SystemAccentColor}" Opacity="0.5"/>
+            <SolidColorBrush x:Key="EmberFrom" Color="{ThemeResource SystemAccentColorLight2}"/>
+            <SolidColorBrush x:Key="EmberTo" Color="{ThemeResource SystemAccentColorDark1}"/>
           </ResourceDictionary>
         </ResourceDictionary.ThemeDictionaries>
       </ResourceDictionary>
@@ -57,7 +38,7 @@
 
     <TitleBar x:Name="AppTitleBar" Title="Ember" x:Uid="AppTitleBar" Subtitle="Roastery">
       <TitleBar.IconSource>
-        <FontIconSource Glyph="&#xECAD;" Foreground="#FF7A3D"/>
+        <FontIconSource Glyph="&#xECAD;" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
       </TitleBar.IconSource>
       <TitleBar.Content>
         <!-- Typing filters the orders at once and suggests cafes and coffees; Enter or a suggestion opens Orders -->
@@ -66,7 +47,7 @@
           <AutoSuggestBox.ItemTemplate>
             <DataTemplate x:DataType="TSuggestion">
               <StackPanel Orientation="Horizontal" Spacing="10">
-                <FontIcon Glyph="{Binding Glyph}" FontSize="14" Foreground="#F0652B"/>
+                <FontIcon Glyph="{Binding Glyph}" FontSize="14" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
                 <TextBlock Text="{Binding Name}"/>
                 <TextBlock Text="{Binding Kind}" Opacity="0.6"/>
               </StackPanel>
@@ -100,13 +81,13 @@
               <ColumnDefinition Width="*"/>
             </Grid.ColumnDefinitions>
             <Grid Width="36" Height="36">
-              <Ellipse x:Name="BadgeGlow" Fill="#33FF7A3D"/>
-              <FontIcon Glyph="&#xECAD;" FontSize="18" Foreground="#FF7A3D"/>
+              <Ellipse x:Name="BadgeGlow" Fill="{ThemeResource EmberAccentSoft}"/>
+              <FontIcon Glyph="&#xECAD;" FontSize="18" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
             </Grid>
             <StackPanel Grid.Column="1" Spacing="2">
               <TextBlock x:Name="BadgeTitle" x:Uid="BadgeTitle" Text="Roaster idle" FontWeight="SemiBold" TextTrimming="CharacterEllipsis"/>
               <TextBlock x:Name="BadgeText" x:Uid="BadgeText" Text="Ready for the next batch" FontSize="12" Opacity="0.7" TextTrimming="CharacterEllipsis"/>
-              <ProgressBar x:Name="BadgeProgress" Maximum="660" Value="0" Margin="0,6,0,0" Foreground="#FF7A3D"/>
+              <ProgressBar x:Name="BadgeProgress" Maximum="660" Value="0" Margin="0,6,0,0" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
             </StackPanel>
           </Grid>
         </Button>

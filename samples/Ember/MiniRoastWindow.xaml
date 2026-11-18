@@ -14,7 +14,7 @@
       <RowDefinition Height="Auto"/>
     </Grid.RowDefinitions>
     <StackPanel Orientation="Horizontal" Spacing="8">
-      <FontIcon Glyph="&#xECAD;" FontSize="14" Foreground="#F0652B"/>
+      <FontIcon Glyph="&#xECAD;" FontSize="14" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
       <TextBlock x:Name="TitleText" FontSize="12" Opacity="0.75" TextTrimming="CharacterEllipsis" d:Text="Batch #42  Yirgacheffe"/>
     </StackPanel>
     <Grid Grid.Row="1" ColumnSpacing="12">
@@ -22,12 +22,12 @@
         <ColumnDefinition Width="*"/>
         <ColumnDefinition Width="Auto"/>
       </Grid.ColumnDefinitions>
-      <TextBlock x:Name="TempText" FontSize="46" FontWeight="SemiBold" Foreground="#F0652B" VerticalAlignment="Center" d:Text="196&#x00B0;"/>
+      <TextBlock x:Name="TempText" FontSize="46" FontWeight="SemiBold" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}" VerticalAlignment="Center" d:Text="196&#x00B0;"/>
       <StackPanel Grid.Column="1" VerticalAlignment="Center" HorizontalAlignment="Right">
         <TextBlock x:Name="TimeText" FontSize="22" FontWeight="SemiBold" HorizontalAlignment="Right" d:Text="8:10"/>
         <TextBlock x:Name="PhaseText" FontSize="12" Opacity="0.75" HorizontalAlignment="Right" d:Text="First crack"/>
       </StackPanel>
     </Grid>
-    <ProgressBar x:Name="Progress" Grid.Row="2" Maximum="660" Foreground="#F0652B"/>
+    <ProgressBar x:Name="Progress" Grid.Row="2" Maximum="660" Foreground="{ThemeResource AccentTextFillColorPrimaryBrush}"/>
   </Grid>
 </Window>
