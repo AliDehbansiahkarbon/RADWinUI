@@ -117,7 +117,7 @@ var
   Entry: TPaletteEntry;
   Changed, Handled: string;
   Retained: TRetainedNodes;
-  Payload: TIdePayload;
+  Payload, Other: TIdePayload;
 begin
   if ParamCount <> 1 then
   begin
@@ -452,6 +452,9 @@ begin
   Check((Payload.Value = 0) and not Payload.InTree, 'after the IDE starts a new tree the old payload reads as 0');
   Payload.SetValue($5678);
   Check((Payload.Value = $5678) and Payload.InTree, 'the payload the IDE stores in the new tree is kept');
+  Other := Default(TIdePayload);
+  Other.SetValue($9ABC);
+  Check((Payload.Value = $5678) and (Other.Value = $9ABC), 'every node keeps its own payload');
 
   if Failures > 0 then
   begin

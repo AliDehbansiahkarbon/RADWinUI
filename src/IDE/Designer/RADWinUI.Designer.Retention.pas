@@ -25,7 +25,8 @@ type
   TIdePayload = record
   strict private
     class var FTree: Integer;
-    FValue: IntPtr;
+    // "var" ends the class var block: without it every node shared one payload
+    var FValue: IntPtr;
     FSetIn: Integer;
   public
     /// <summary>The IDE starts a new tree: every payload set before is stale.</summary>
