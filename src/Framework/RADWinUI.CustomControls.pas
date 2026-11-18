@@ -112,7 +112,12 @@ type
     FEvents: TArray<TWinUIEvent<TWinValue>>;
     FHandlers: TArray<TWinUIWinValueEventHandler>;
     FInitialized: Boolean;
+    // Per brush property: the solid brush it holds and the token of our watch on its Color
+    FWatchedBrushes: TArray<IDependencyObject>;
+    FBrushTokens: TArray<Int64>;
     procedure Attach(AHost: TObject);
+    procedure WatchBrush(AIndex: Integer);
+    procedure UnwatchBrushes;
   private
     procedure HostPropertyChanged(AIndex: Integer);
   protected
@@ -1635,6 +1640,7 @@ destructor TWinUICustomControl.Destroy;
 begin
   if (FHost <> nil) and (TWinUIControlHost(FHost).FControl = Self) then
     TWinUIControlHost(FHost).FControl := nil;
+  UnwatchBrushes;
   // FHostRef is released after the inherited destructor has let go of the
   // inner object, when the fields are finalized.
   inherited;
@@ -1650,8 +1656,50 @@ end;
 
 procedure TWinUICustomControl.HostPropertyChanged(AIndex: Integer);
 begin
+  if CustomType.Properties[AIndex].Kind = TWinUIPropertyKind.Brush then
+    WatchBrush(AIndex);
   if FInitialized then
     PropertyChanged(AIndex);
+end;
+
+/// A theme resource brush changes its Color in place (the Windows accent, light and dark):
+/// the control repaints as if the property was set again.
+/// shortcut: solid brushes only, a gradient brush's stops are not watched; watch them if a control needs it.
+procedure TWinUICustomControl.WatchBrush(AIndex: Integer);
+var
+  Self_: TWinUICustomControl;
+  Brush: IDependencyObject;
+begin
+  if Length(FWatchedBrushes) <> CustomType.PropertyCount then
+  begin
+    SetLength(FWatchedBrushes, CustomType.PropertyCount);
+    SetLength(FBrushTokens, CustomType.PropertyCount);
+  end;
+  if FWatchedBrushes[AIndex] <> nil then
+    FWatchedBrushes[AIndex].UnregisterPropertyChangedCallback(SolidColorBrush.ColorProperty, FBrushTokens[AIndex]);
+  FWatchedBrushes[AIndex] := nil;
+  if not Supports(GetPropValue(AIndex), ISolidColorBrush) or not Supports(GetPropValue(AIndex), IDependencyObject, Brush) then
+    Exit;
+  Self_ := Self;
+  FBrushTokens[AIndex] := Brush.RegisterPropertyChangedCallback(SolidColorBrush.ColorProperty,
+    TDependencyPropertyChangedCallback.Create(
+    procedure(ASender: IDependencyObject; ADp: IDependencyProperty)
+    begin
+      if Self_.FInitialized then
+        Self_.PropertyChanged(AIndex);
+    end));
+  FWatchedBrushes[AIndex] := Brush;
+end;
+
+procedure TWinUICustomControl.UnwatchBrushes;
+var
+  I: Integer;
+begin
+  for I := 0 to High(FWatchedBrushes) do
+    if FWatchedBrushes[I] <> nil then
+      FWatchedBrushes[I].UnregisterPropertyChangedCallback(SolidColorBrush.ColorProperty, FBrushTokens[I]);
+  FWatchedBrushes := nil;
+  FBrushTokens := nil;
 end;
 
 function TWinUICustomControl.CustomType: TWinUICustomType;

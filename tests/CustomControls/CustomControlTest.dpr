@@ -172,6 +172,7 @@ var
   Part: TWinUITextBlock;
   Json: string;
   Brush: TWinUIBrush;
+  Tint: TWinUIColor;
 begin
   Inc(FStep);
   try
@@ -200,6 +201,12 @@ begin
           Badge.Changes := nil;
           Badge.Caption := 'Changed';
           Check((Length(Badge.Changes) = 1) and (Badge.Changes[0] = 0), 'PropertyChanged on a Pascal set');
+          // A theme resource brush (the Windows accent) changes its Color in place
+          Badge.Changes := nil;
+          Tint := TWinUISolidColorBrush(Brush).Color;
+          Tint.G := $10;
+          TWinUISolidColorBrush(Brush).Color := Tint;
+          Check((Length(Badge.Changes) = 1) and (Badge.Changes[0] = 4), 'PropertyChanged when the brush''s colour changes');
         end;
       2:
         begin
